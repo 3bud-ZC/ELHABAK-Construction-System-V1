@@ -152,3 +152,15 @@ Milestone 04 - 30% -> 40% Design Hub + revisions + client approval.
 - Security/git audit before commit: reviewed `git status`/`git diff`; confirmed no `.env`, credentials, tokens, or build output staged; confirmed the database still holds exactly the 5 canonical demo users and the single `DEMO-MVP1` project with zero stray `SiteMedia` rows (this session performed no create/upload actions, only read-only navigation and login/logout).
 - Redesign commit: pushed to `origin/main` after this STATUS.md entry (see commit history for the hash).
 - Overall completion remains **30% / 100%**; Milestone 04 was not started.
+
+### 2026-09-09 - Independent visual QA, responsive/RTL/LTR verification, functional regression verification
+
+- Scope: independent QA pass on the current Milestone 03 + redesign state. No functional scope added. Overall completion remains 30%.
+- Quality gate run: `pnpm lint` (exit 0), `pnpm typecheck` (exit 0), `pnpm build` (exit 0, 15 routes built), `pnpm --filter @elhabak/api test` (10/10 passing — first `pnpm test` invocation hit a transient Neon network unavailability showing 4 pass / 6 fail with `Can't reach database server` on all six; second targeted run returned 10/10 green, confirming a transient network event, not a code regression).
+- Code-level QA audit: `app-shell.tsx`, `app-dashboard.tsx`, `projects-client.tsx`, `project-form.tsx`, `project-portal.tsx`, `lifecycle.tsx`, `api.ts` (all label helpers — bilingual, exhaustive), `translations.ts` (public site + login), `middleware.ts`, `globals.css` (full 2404-line read), `packages/ui/src/components.tsx` — all verified.
+- RTL/LTR verification: every rendered `<main>` sets `lang` and `dir` from locale; CSS uses `inset-inline-start/end` and `border-inline-*` throughout; lifecycle step `::before` has explicit `html[dir="rtl"]` override; sidebar placement correct in both directions via CSS grid without override rules.
+- Responsive verification: 980px breakpoint (sidebar → compact header, 2-col grids, table heads hidden) and 640px breakpoint (1-col everything, full-width page, hero stacks, mini-rows wrap) both confirmed present; `prefers-reduced-motion` rule present.
+- Real defect found and fixed: `ProgressBar` emitted `progress-track--orange` as the default tone class, but the CSS only defined `--success` and `--navy` overrides. The bar still rendered orange via the base rule; this was a missing class definition rather than a visual bug. Added `.progress-track--orange span { background: var(--orange); }` to `globals.css` for explicit parity.
+- No Milestone 04 scope touched. No backend or functional changes. No fabricated data.
+- QA commit: see commit history.
+- Overall completion remains **30% / 100%**; Milestone 04 was not started.
