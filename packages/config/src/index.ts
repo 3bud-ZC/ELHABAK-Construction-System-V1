@@ -10,7 +10,10 @@ export const apiEnvSchema = z.object({
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
   AUTH_SESSION_SECRET: z.string().min(32),
   SESSION_COOKIE_NAME: z.string().min(1).default("elhabak_session"),
-  SESSION_EXPIRES_DAYS: z.coerce.number().int().min(1).max(30).default(7)
+  SESSION_EXPIRES_DAYS: z.coerce.number().int().min(1).max(30).default(7),
+  STORAGE_ROOT: z.string().trim().min(1).default("storage"),
+  MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(100).default(25),
+  ALLOWED_UPLOAD_MIME_TYPES: z.string().trim().min(1).default("image/jpeg,image/png,image/webp,video/mp4,video/webm")
 });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;

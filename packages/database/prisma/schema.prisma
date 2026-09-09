@@ -42,6 +42,11 @@ enum ProjectStatus {
   CANCELLED
 }
 
+enum SiteMediaType {
+  IMAGE
+  VIDEO
+}
+
 model User {
   id           String              @id @default(cuid())
   email        String              @unique
@@ -51,6 +56,9 @@ model User {
   isActive     Boolean             @default(true)
   clientProfile ClientProfile?
   assignments  ProjectAssignment[]
+  engineeredProjects Project[]     @relation("ProjectEngineer")
+  siteUpdates SiteUpdate[]
+  uploadedMedia SiteMedia[]
   auditLogs     AuditLog[]
   sessions      AuthSession[]
   createdAt    DateTime            @default(now())
@@ -93,16 +101,21 @@ model Project {
   progress    Int                 @default(0)
   clientId    String?
   client      ClientProfile?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  engineerId  String?
+  engineer    User?               @relation("ProjectEngineer", fields: [engineerId], references: [id], onDelete: SetNull)
   location    String?
   startDate   DateTime?
   targetDate  DateTime?
   notes       String?
   assignments ProjectAssignment[]
+  siteUpdates SiteUpdate[]
+  media       SiteMedia[]
   auditLogs   AuditLog[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
   @@index([clientId])
+  @@index([engineerId])
   @@index([phase, status])
 }
 
@@ -116,6 +129,41 @@ model ProjectAssignment {
 
   @@unique([projectId, userId])
   @@index([userId])
+}
+
+model SiteUpdate {
+  id        String      @id @default(cuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  note      String?
+  media     SiteMedia[]
+  createdAt DateTime    @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([authorId])
+}
+
+model SiteMedia {
+  id               String        @id @default(cuid())
+  siteUpdateId     String
+  siteUpdate       SiteUpdate    @relation(fields: [siteUpdateId], references: [id], onDelete: Cascade)
+  projectId        String
+  project          Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploaderId       String
+  uploader         User          @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  mediaType        SiteMediaType
+  storagePath      String
+  storedFilename   String
+  originalFilename String
+  mimeType         String
+  fileSize         Int
+  createdAt        DateTime      @default(now())
+
+  @@index([siteUpdateId])
+  @@index([projectId])
+  @@index([uploaderId])
 }
 
 model AuditLog {

@@ -100,11 +100,58 @@ async function main() {
     }
   });
 
+  const demoClient = await prisma.clientProfile.findUniqueOrThrow({
+    where: { userId: clientUser.id }
+  });
+  const demoEngineer = await prisma.user.findUniqueOrThrow({
+    where: { email: "demo.engineer@elhabak.local" }
+  });
+  const demoWorker = await prisma.user.findUniqueOrThrow({
+    where: { email: "demo.worker@elhabak.local" }
+  });
+
+  const demoProject = await prisma.project.upsert({
+    where: { code: "DEMO-MVP1" },
+    update: {
+      name: "DEMO MVP 1 Project",
+      category: "MIXED",
+      clientId: demoClient.id,
+      engineerId: demoEngineer.id,
+      location: "Demo Location - Sohag",
+      startDate: new Date("2026-09-01T00:00:00.000Z"),
+      targetDate: new Date("2026-10-15T00:00:00.000Z"),
+      phase: "EXECUTION",
+      progress: 35,
+      status: "ACTIVE",
+      notes: "Clearly labeled demo project for MVP 1 verification only."
+    },
+    create: {
+      code: "DEMO-MVP1",
+      name: "DEMO MVP 1 Project",
+      category: "MIXED",
+      clientId: demoClient.id,
+      engineerId: demoEngineer.id,
+      location: "Demo Location - Sohag",
+      startDate: new Date("2026-09-01T00:00:00.000Z"),
+      targetDate: new Date("2026-10-15T00:00:00.000Z"),
+      phase: "EXECUTION",
+      progress: 35,
+      status: "ACTIVE",
+      notes: "Clearly labeled demo project for MVP 1 verification only."
+    }
+  });
+
+  await prisma.projectAssignment.upsert({
+    where: { projectId_userId: { projectId: demoProject.id, userId: demoWorker.id } },
+    update: {},
+    create: { projectId: demoProject.id, userId: demoWorker.id }
+  });
+
   const count = await prisma.user.count({
     where: { email: { endsWith: "@elhabak.local" } }
   });
 
-  console.log(`Seed complete. Demo users present: ${count}.`);
+  console.log(`Seed complete. Demo users present: ${count}. Demo project ready: DEMO-MVP1.`);
 }
 
 main()

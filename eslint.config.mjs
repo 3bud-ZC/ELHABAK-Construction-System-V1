@@ -50,5 +50,9 @@ export default tseslint.config(
     files: ["**/vitest.config.ts"],
     extends: [tseslint.configs.disableTypeChecked]
   },
+  {
+    files: ["packages/database/scripts/**/*.ts"],
+    extends: [tseslint.configs.disableTypeChecked]
+  },
   prettier
 );

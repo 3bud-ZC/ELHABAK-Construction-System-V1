@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut, Users, UserRoundCog, Home } from "lucide-react";
+import { BriefcaseBusiness, Camera, LogOut, Users, UserRoundCog, Home } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
@@ -27,6 +27,8 @@ export function AppShell({ children }: AppShellProps) {
             home: "الرئيسية",
             users: "المستخدمون",
             clients: "العملاء",
+            projects: "المشاريع",
+            worker: "تحديثات الموقع",
             logout: "تسجيل الخروج",
             loading: "جاري تحميل النظام...",
             empty: "هذه المساحة جاهزة للوحدات القادمة بدون بيانات وهمية."
@@ -35,6 +37,8 @@ export function AppShell({ children }: AppShellProps) {
             home: "Home",
             users: "Users",
             clients: "Clients",
+            projects: "Projects",
+            worker: "Site Updates",
             logout: "Logout",
             loading: "Loading system...",
             empty: "This area is ready for upcoming modules without fake data."
@@ -90,6 +94,9 @@ export function AppShell({ children }: AppShellProps) {
           </Link>
           {user.role === "ADMIN" && (
             <>
+              <Link className={pathname.includes("/admin/projects") ? "active" : ""} href={href("/app/admin/projects")}>
+                <BriefcaseBusiness size={18} /> {labels.projects}
+              </Link>
               <Link className={pathname.includes("/admin/users") ? "active" : ""} href={href("/app/admin/users")}>
                 <Users size={18} /> {labels.users}
               </Link>
@@ -100,6 +107,12 @@ export function AppShell({ children }: AppShellProps) {
                 <UserRoundCog size={18} /> {labels.clients}
               </Link>
             </>
+          )}
+          {user.role !== "ADMIN" && (
+            <Link className={pathname.includes("/projects") ? "active" : ""} href={href("/app/projects")}>
+              {user.role === "WORKER" ? <Camera size={18} /> : <BriefcaseBusiness size={18} />}{" "}
+              {user.role === "WORKER" ? labels.worker : labels.projects}
+            </Link>
           )}
         </nav>
       </aside>

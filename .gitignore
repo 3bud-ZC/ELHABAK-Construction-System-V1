@@ -2,6 +2,8 @@ node_modules/
 .next/
 dist/
 coverage/
+storage/
+.codex-m03-qa/
 .env
 .env.*
 !.env.example

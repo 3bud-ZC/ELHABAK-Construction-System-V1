@@ -14,6 +14,23 @@ export const emailSchema = z.string().trim().email().max(254);
 export const nonEmptyStringSchema = z.string().trim().min(1).max(255);
 
 export const userRoleSchema = z.enum(["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER", "CLIENT"]);
+export const projectCategorySchema = z.enum([
+  "DESIGN",
+  "CONSTRUCTION",
+  "FINISHING",
+  "GENERAL_CONTRACTING",
+  "FURNITURE",
+  "MIXED"
+]);
+export const projectPhaseSchema = z.enum([
+  "SITE_INSPECTION",
+  "DESIGN",
+  "PRELIMINARY_ESTIMATION",
+  "EXECUTION",
+  "INITIAL_HANDOVER",
+  "FINAL_HANDOVER"
+]);
+export const projectStatusSchema = z.enum(["PLANNED", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"]);
 
 export const loginSchema = z.object({
   email: emailSchema,
@@ -68,8 +85,51 @@ export const updateClientSchema = z
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
 
+const optionalDateSchema = z.string().trim().date().optional().or(z.literal(""));
+
+export const createProjectSchema = z.object({
+  name: nonEmptyStringSchema,
+  code: z.string().trim().min(2).max(64),
+  category: projectCategorySchema,
+  clientId: z.string().trim().min(1),
+  engineerId: z.string().trim().min(1),
+  workerIds: z.array(z.string().trim().min(1)).default([]),
+  location: z.string().trim().max(500).optional().or(z.literal("")),
+  startDate: optionalDateSchema,
+  targetDate: optionalDateSchema,
+  phase: projectPhaseSchema.default("SITE_INSPECTION"),
+  progress: z.coerce.number().int().min(0).max(100).default(0),
+  status: projectStatusSchema.default("PLANNED"),
+  notes: z.string().trim().max(3000).optional().or(z.literal(""))
+});
+
+export const updateProjectSchema = z
+  .object({
+    name: nonEmptyStringSchema.optional(),
+    code: z.string().trim().min(2).max(64).optional(),
+    category: projectCategorySchema.optional(),
+    clientId: z.string().trim().min(1).optional(),
+    engineerId: z.string().trim().min(1).optional(),
+    workerIds: z.array(z.string().trim().min(1)).optional(),
+    location: z.string().trim().max(500).optional().or(z.literal("")),
+    startDate: optionalDateSchema,
+    targetDate: optionalDateSchema,
+    phase: projectPhaseSchema.optional(),
+    progress: z.coerce.number().int().min(0).max(100).optional(),
+    status: projectStatusSchema.optional(),
+    notes: z.string().trim().max(3000).optional().or(z.literal(""))
+  })
+  .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
+
+export const createSiteUpdateSchema = z.object({
+  note: z.string().trim().max(1000).optional().or(z.literal(""))
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;
+export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+export type CreateSiteUpdateInput = z.infer<typeof createSiteUpdateSchema>;
