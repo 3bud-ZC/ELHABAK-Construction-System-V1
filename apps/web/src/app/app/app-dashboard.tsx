@@ -136,7 +136,7 @@ export function AppDashboard() {
           ) : (
             <div className="data-table" style={{ marginBottom: "var(--space-6)" }}>
               {dashboard.projects.map((project) => (
-                <Link className="mini-project-row" href={href(`/app/admin/projects/${project.id}`)} key={project.id}>
+                <Link className="mini-project-row" href={href(`/app/projects/${project.id}`)} key={project.id}>
                   <div className="mini-project-row__id">
                     <strong>{project.name}</strong>
                     <span className="mono">{project.code}</span>

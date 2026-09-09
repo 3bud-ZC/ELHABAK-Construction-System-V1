@@ -31,6 +31,17 @@ export const projectPhaseSchema = z.enum([
   "FINAL_HANDOVER"
 ]);
 export const projectStatusSchema = z.enum(["PLANNED", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"]);
+export const designDisciplineSchema = z.enum([
+  "ARCHITECTURAL",
+  "STRUCTURAL",
+  "INTERIOR",
+  "ELECTRICAL",
+  "PLUMBING",
+  "FURNITURE",
+  "RENDERS",
+  "OTHER"
+]);
+export const designStatusSchema = z.enum(["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"]);
 
 export const loginSchema = z.object({
   email: emailSchema,
@@ -125,6 +136,47 @@ export const createSiteUpdateSchema = z.object({
   note: z.string().trim().max(1000).optional().or(z.literal(""))
 });
 
+const booleanFormValueSchema = z.preprocess(
+  (value) => value === true || value === "true" || value === "1",
+  z.boolean()
+);
+
+export const createDesignSchema = z.object({
+  title: nonEmptyStringSchema,
+  description: z.string().trim().max(3000).optional().or(z.literal("")),
+  discipline: designDisciplineSchema,
+  revisionNotes: z.string().trim().max(2000).optional().or(z.literal("")),
+  submitForReview: booleanFormValueSchema.default(false)
+});
+
+export const updateDesignSchema = z
+  .object({
+    title: nonEmptyStringSchema.optional(),
+    description: z.string().trim().max(3000).optional().or(z.literal("")),
+    discipline: designDisciplineSchema.optional()
+  })
+  .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
+
+export const createDesignRevisionSchema = z.object({
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  submitForReview: booleanFormValueSchema.default(false)
+});
+
+export const designDecisionSchema = z
+  .object({
+    action: z.enum(["APPROVE", "REJECT"]),
+    comment: z.string().trim().max(2000).optional().or(z.literal(""))
+  })
+  .refine((value) => value.action !== "REJECT" || Boolean(value.comment?.trim()), {
+    message: "A rejection comment is required.",
+    path: ["comment"]
+  });
+
+export const designCommentSchema = z.object({
+  revisionId: z.string().trim().min(1).optional(),
+  comment: z.string().trim().min(1).max(2000)
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
@@ -133,3 +185,8 @@ export type UpdateClientInput = z.infer<typeof updateClientSchema>;
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 export type CreateSiteUpdateInput = z.infer<typeof createSiteUpdateSchema>;
+export type CreateDesignInput = z.infer<typeof createDesignSchema>;
+export type UpdateDesignInput = z.infer<typeof updateDesignSchema>;
+export type CreateDesignRevisionInput = z.infer<typeof createDesignRevisionSchema>;
+export type DesignDecisionInput = z.infer<typeof designDecisionSchema>;
+export type DesignCommentInput = z.infer<typeof designCommentSchema>;

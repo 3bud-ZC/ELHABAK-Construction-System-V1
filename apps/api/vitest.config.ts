@@ -4,8 +4,10 @@ export default defineConfig({
   test: {
     globals: true,
     include: ["src/**/*.spec.ts"],
-    testTimeout: 30000,
-    hookTimeout: 30000,
+    setupFiles: ["./src/test-database-env.ts"],
+    fileParallelism: false,
+    testTimeout: 60000,
+    hookTimeout: 120000,
     sequence: {
       concurrent: false
     }

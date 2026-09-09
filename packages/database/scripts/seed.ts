@@ -1,7 +1,8 @@
 import { config } from "dotenv";
-import { resolve } from "node:path";
 import { hash } from "bcryptjs";
 import { PrismaClient, type UserRole } from "@prisma/client";
+import { mkdir, writeFile } from "node:fs/promises";
+import { isAbsolute, resolve } from "node:path";
 
 config({ path: resolve(__dirname, "../../../.env"), quiet: true });
 
@@ -147,11 +148,104 @@ async function main() {
     create: { projectId: demoProject.id, userId: demoWorker.id }
   });
 
+  const configuredStorage = process.env.STORAGE_ROOT ?? "storage";
+  const apiStorageRoot = isAbsolute(configuredStorage)
+    ? configuredStorage
+    : resolve(__dirname, "../../../apps/api", configuredStorage);
+  const demoDesignDirectory = resolve(apiStorageRoot, "projects", demoProject.id, "designs");
+  const demoStoredFilename = "demo-architectural-floor-plan-rev-01.pdf";
+  const demoStoragePath = `projects/${demoProject.id}/designs/${demoStoredFilename}`;
+  const demoPdf = createDemoPdf("ELHABAK - Architectural Floor Plan - REV 01");
+  await mkdir(demoDesignDirectory, { recursive: true });
+  await writeFile(resolve(demoDesignDirectory, demoStoredFilename), demoPdf);
+
+  let demoDesign = await prisma.designItem.findFirst({
+    where: { projectId: demoProject.id, title: "Architectural Floor Plan" }
+  });
+  if (!demoDesign) {
+    demoDesign = await prisma.designItem.create({
+      data: {
+        projectId: demoProject.id,
+        title: "Architectural Floor Plan",
+        description: "Demo architectural drawing prepared for client review.",
+        discipline: "ARCHITECTURAL",
+        status: "IN_REVIEW",
+        currentRevisionNumber: 1
+      }
+    });
+  } else {
+    demoDesign = await prisma.designItem.update({
+      where: { id: demoDesign.id },
+      data: {
+        description: "Demo architectural drawing prepared for client review.",
+        discipline: "ARCHITECTURAL"
+      }
+    });
+  }
+
+  const demoRevision = await prisma.designRevision.upsert({
+    where: { designId_revisionNumber: { designId: demoDesign.id, revisionNumber: 1 } },
+    update: {
+      storagePath: demoStoragePath,
+      storedFilename: demoStoredFilename,
+      originalFilename: "architectural-floor-plan-rev-01.pdf",
+      mimeType: "application/pdf",
+      fileSize: demoPdf.length,
+      uploaderId: demoEngineer.id
+    },
+    create: {
+      designId: demoDesign.id,
+      projectId: demoProject.id,
+      revisionNumber: 1,
+      status: "IN_REVIEW",
+      notes: "Initial architectural floor plan for client review.",
+      storagePath: demoStoragePath,
+      storedFilename: demoStoredFilename,
+      originalFilename: "architectural-floor-plan-rev-01.pdf",
+      mimeType: "application/pdf",
+      fileSize: demoPdf.length,
+      uploaderId: demoEngineer.id
+    }
+  });
+
+  const seedEvents = ["DESIGN_CREATED", "REVISION_UPLOADED", "SUBMITTED_FOR_REVIEW"] as const;
+  for (const action of seedEvents) {
+    const existingEvent = await prisma.designEvent.findFirst({
+      where: { designId: demoDesign.id, revisionId: demoRevision.id, action }
+    });
+    if (!existingEvent) {
+      await prisma.designEvent.create({ data: { designId: demoDesign.id, revisionId: demoRevision.id, actorId: demoEngineer.id, action } });
+    }
+  }
+
   const count = await prisma.user.count({
     where: { email: { endsWith: "@elhabak.local" } }
   });
 
-  console.log(`Seed complete. Demo users present: ${count}. Demo project ready: DEMO-MVP1.`);
+  console.log(`Seed complete. Demo users present: ${count}. DEMO-MVP1 and Design Hub sample ready.`);
+}
+
+function createDemoPdf(title: string) {
+  const escaped = title.replace(/[()\\]/g, (character) => `\\${character}`);
+  const stream = `BT /F1 24 Tf 72 500 Td (${escaped}) Tj ET`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+    `<< /Length ${Buffer.byteLength(stream, "ascii")} >>\nstream\n${stream}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>"
+  ];
+  let content = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(Buffer.byteLength(content, "ascii"));
+    content += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = Buffer.byteLength(content, "ascii");
+  content += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  content += offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`).join("");
+  content += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return Buffer.from(content, "ascii");
 }
 
 main()

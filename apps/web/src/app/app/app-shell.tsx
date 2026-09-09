@@ -106,7 +106,7 @@ export function AppShell({ children }: AppShellProps) {
           </Link>
           {user.role === "ADMIN" && (
             <>
-              <Link className={isActive("/app/admin/projects") ? "active" : ""} href={href("/app/admin/projects")}>
+              <Link className={isActive("/app/admin/projects") || isActive("/app/projects") ? "active" : ""} href={href("/app/admin/projects")}>
                 <BriefcaseBusiness size={17} /> {labels.projects}
               </Link>
               <Link className={isActive("/app/admin/clients") ? "active" : ""} href={href("/app/admin/clients")}>

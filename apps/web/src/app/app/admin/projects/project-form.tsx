@@ -215,7 +215,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
         body: JSON.stringify(payload)
       });
       setSuccess(labels.saved);
-      if (mode === "create") router.replace(locale === "ar" ? `/app/admin/projects/${saved.id}` : `/app/admin/projects/${saved.id}?lang=en`);
+      if (mode === "create") router.replace(locale === "ar" ? `/app/projects/${saved.id}` : `/app/projects/${saved.id}?lang=en`);
       else setProject(saved);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Request failed.");

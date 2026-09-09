@@ -36,3 +36,18 @@ export const projectPhases = [
   "FINAL_HANDOVER"
 ] as const;
 export type ProjectPhase = (typeof projectPhases)[number];
+
+export const designDisciplines = [
+  "ARCHITECTURAL",
+  "STRUCTURAL",
+  "INTERIOR",
+  "ELECTRICAL",
+  "PLUMBING",
+  "FURNITURE",
+  "RENDERS",
+  "OTHER"
+] as const;
+export type DesignDiscipline = (typeof designDisciplines)[number];
+
+export const designStatuses = ["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"] as const;
+export type DesignStatus = (typeof designStatuses)[number];

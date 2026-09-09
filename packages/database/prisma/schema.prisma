@@ -47,6 +47,34 @@ enum SiteMediaType {
   VIDEO
 }
 
+enum DesignDiscipline {
+  ARCHITECTURAL
+  STRUCTURAL
+  INTERIOR
+  ELECTRICAL
+  PLUMBING
+  FURNITURE
+  RENDERS
+  OTHER
+}
+
+enum DesignStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum DesignEventType {
+  DESIGN_CREATED
+  DESIGN_UPDATED
+  REVISION_UPLOADED
+  SUBMITTED_FOR_REVIEW
+  CLIENT_APPROVED
+  CLIENT_REJECTED
+  COMMENT_ADDED
+}
+
 model User {
   id           String              @id @default(cuid())
   email        String              @unique
@@ -59,6 +87,8 @@ model User {
   engineeredProjects Project[]     @relation("ProjectEngineer")
   siteUpdates SiteUpdate[]
   uploadedMedia SiteMedia[]
+  uploadedDesignRevisions DesignRevision[]
+  designEvents DesignEvent[]
   auditLogs     AuditLog[]
   sessions      AuthSession[]
   createdAt    DateTime            @default(now())
@@ -110,6 +140,8 @@ model Project {
   assignments ProjectAssignment[]
   siteUpdates SiteUpdate[]
   media       SiteMedia[]
+  designs     DesignItem[]
+  designRevisions DesignRevision[]
   auditLogs   AuditLog[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
@@ -164,6 +196,66 @@ model SiteMedia {
   @@index([siteUpdateId])
   @@index([projectId])
   @@index([uploaderId])
+}
+
+model DesignItem {
+  id                    String           @id @default(cuid())
+  projectId             String
+  project               Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title                 String
+  description           String?
+  discipline            DesignDiscipline
+  status                DesignStatus     @default(DRAFT)
+  currentRevisionNumber Int              @default(1)
+  revisions             DesignRevision[]
+  events                DesignEvent[]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@index([projectId, updatedAt])
+  @@index([projectId, status, discipline])
+}
+
+model DesignRevision {
+  id               String       @id @default(cuid())
+  designId         String
+  design           DesignItem   @relation(fields: [designId], references: [id], onDelete: Cascade)
+  projectId        String
+  project          Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisionNumber   Int
+  status           DesignStatus @default(DRAFT)
+  notes            String?
+  storagePath      String
+  storedFilename   String
+  originalFilename String
+  mimeType         String
+  fileSize         Int
+  uploaderId       String
+  uploader         User         @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  events           DesignEvent[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@unique([designId, revisionNumber])
+  @@index([projectId])
+  @@index([uploaderId])
+}
+
+model DesignEvent {
+  id         String          @id @default(cuid())
+  designId   String
+  design     DesignItem      @relation(fields: [designId], references: [id], onDelete: Cascade)
+  revisionId String?
+  revision   DesignRevision? @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  actorId    String
+  actor      User            @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     DesignEventType
+  comment    String?
+  createdAt  DateTime        @default(now())
+
+  @@index([designId, createdAt])
+  @@index([revisionId, createdAt])
+  @@index([actorId])
 }
 
 model AuditLog {

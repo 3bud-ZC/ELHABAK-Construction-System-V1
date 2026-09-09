@@ -10,6 +10,24 @@ export type ProjectPhase =
   | "INITIAL_HANDOVER"
   | "FINAL_HANDOVER";
 export type ProjectStatus = "PLANNED" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+export type DesignDiscipline =
+  | "ARCHITECTURAL"
+  | "STRUCTURAL"
+  | "INTERIOR"
+  | "ELECTRICAL"
+  | "PLUMBING"
+  | "FURNITURE"
+  | "RENDERS"
+  | "OTHER";
+export type DesignStatus = "DRAFT" | "IN_REVIEW" | "APPROVED" | "REJECTED";
+export type DesignEventType =
+  | "DESIGN_CREATED"
+  | "DESIGN_UPDATED"
+  | "REVISION_UPLOADED"
+  | "SUBMITTED_FOR_REVIEW"
+  | "CLIENT_APPROVED"
+  | "CLIENT_REJECTED"
+  | "COMMENT_ADDED";
 
 export type UserRecord = {
   id: string;
@@ -67,6 +85,44 @@ export type SiteMediaRecord = {
   createdAt?: string;
 };
 
+export type DesignRevisionRecord = {
+  id: string;
+  revisionNumber: number;
+  revisionCode: string;
+  status: DesignStatus;
+  notes: string | null;
+  originalFilename: string;
+  mimeType: "application/pdf" | "image/png" | "image/jpeg";
+  fileSize: number;
+  uploader: { id: string; displayName: string; role: UserRole };
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type DesignEventRecord = {
+  id: string;
+  revisionId: string | null;
+  action: DesignEventType;
+  comment: string | null;
+  actor: { id: string; displayName: string; role: UserRole };
+  createdAt: string;
+};
+
+export type DesignRecord = {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  discipline: DesignDiscipline;
+  status: DesignStatus;
+  currentRevisionNumber: number;
+  currentRevision: DesignRevisionRecord;
+  revisions: DesignRevisionRecord[];
+  events: DesignEventRecord[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
 
 export class ApiError extends Error {
@@ -109,8 +165,44 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   return (await response.json()) as T;
 }
 
+export function uploadRequest<T>(path: string, body: FormData, onProgress: (value: number) => void): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", `${apiBaseUrl}${path}`);
+    request.withCredentials = true;
+    request.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+    });
+    request.addEventListener("load", () => {
+      const payload = safeJson(request.responseText);
+      if (request.status >= 200 && request.status < 300) {
+        onProgress(100);
+        resolve(payload as T);
+        return;
+      }
+      const message = typeof payload?.message === "string" ? payload.message : "Request failed.";
+      reject(new ApiError(message, request.status));
+    });
+    request.addEventListener("error", () => reject(new ApiError("Network request failed.", 0)));
+    request.send(body);
+  });
+}
+
+function safeJson(value: string): { message?: unknown } {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 export function mediaUrl(projectId: string, mediaId: string) {
   return `${apiBaseUrl}/projects/${projectId}/media/${mediaId}`;
+}
+
+export function designFileUrl(projectId: string, designId: string, revisionId: string, download = false) {
+  return `${apiBaseUrl}/projects/${projectId}/designs/${designId}/revisions/${revisionId}/file${download ? "?download=1" : ""}`;
 }
 
 export function roleLabel(role: UserRole, locale: "ar" | "en") {
@@ -173,6 +265,66 @@ export function statusTone(status: ProjectStatus): BadgeTone {
   return tones[status];
 }
 
+export function designStatusLabel(status: DesignStatus, locale: "ar" | "en") {
+  const labels: Record<DesignStatus, { ar: string; en: string }> = {
+    DRAFT: { ar: "مسودة", en: "Draft" },
+    IN_REVIEW: { ar: "قيد المراجعة", en: "In review" },
+    APPROVED: { ar: "معتمد", en: "Approved" },
+    REJECTED: { ar: "مرفوض", en: "Rejected" }
+  };
+  return labels[status][locale];
+}
+
+export function designStatusTone(status: DesignStatus): BadgeTone {
+  return { DRAFT: "neutral", IN_REVIEW: "info", APPROVED: "success", REJECTED: "danger" }[status] as BadgeTone;
+}
+
+export function disciplineLabel(discipline: DesignDiscipline, locale: "ar" | "en") {
+  const labels: Record<DesignDiscipline, { ar: string; en: string }> = {
+    ARCHITECTURAL: { ar: "معماري", en: "Architectural" },
+    STRUCTURAL: { ar: "إنشائي", en: "Structural" },
+    INTERIOR: { ar: "تصميم داخلي", en: "Interior" },
+    ELECTRICAL: { ar: "كهرباء", en: "Electrical" },
+    PLUMBING: { ar: "صحي", en: "Plumbing" },
+    FURNITURE: { ar: "أثاث", en: "Furniture" },
+    RENDERS: { ar: "مناظير", en: "Renders" },
+    OTHER: { ar: "أخرى", en: "Other" }
+  };
+  return labels[discipline][locale];
+}
+
+export function designEventLabel(action: DesignEventType, locale: "ar" | "en") {
+  const labels: Record<DesignEventType, { ar: string; en: string }> = {
+    DESIGN_CREATED: { ar: "تم إنشاء التصميم", en: "Design created" },
+    DESIGN_UPDATED: { ar: "تم تحديث بيانات التصميم", en: "Design details updated" },
+    REVISION_UPLOADED: { ar: "تم رفع مراجعة جديدة", en: "New revision uploaded" },
+    SUBMITTED_FOR_REVIEW: { ar: "تم الإرسال لمراجعة العميل", en: "Submitted for client review" },
+    CLIENT_APPROVED: { ar: "اعتمد العميل المراجعة", en: "Client approved revision" },
+    CLIENT_REJECTED: { ar: "رفض العميل المراجعة", en: "Client rejected revision" },
+    COMMENT_ADDED: { ar: "تمت إضافة تعليق", en: "Comment added" }
+  };
+  return labels[action][locale];
+}
+
+export const DESIGN_DISCIPLINES: DesignDiscipline[] = [
+  "ARCHITECTURAL",
+  "STRUCTURAL",
+  "INTERIOR",
+  "ELECTRICAL",
+  "PLUMBING",
+  "FURNITURE",
+  "RENDERS",
+  "OTHER"
+];
+
+export const DESIGN_STATUSES: DesignStatus[] = ["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"];
+
+export function formatFileSize(bytes: number, locale: "ar" | "en") {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 1 }).format(bytes / 1024)} KB`;
+  return `${new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MB`;
+}
+
 export function accountStatusTone(isActive: boolean): BadgeTone {
   return isActive ? "success" : "neutral";
 }
@@ -206,6 +358,13 @@ export function actionLabel(action: string, locale: "ar" | "en"): string {
     "project.worker_assigned": { ar: "تم تعيين عامل/مقاول", en: "Worker assigned" },
     "project.worker_removed": { ar: "تمت إزالة عامل/مقاول", en: "Worker removed" },
     "site_update.submitted": { ar: "تحديث موقع جديد", en: "New site update" },
+    "design.created": { ar: "تم إنشاء تصميم جديد", en: "New design created" },
+    "design.updated": { ar: "تم تحديث بيانات تصميم", en: "Design details updated" },
+    "design.revision_uploaded": { ar: "تم رفع مراجعة تصميم", en: "Design revision uploaded" },
+    "design.submitted_for_review": { ar: "تم إرسال تصميم للمراجعة", en: "Design submitted for review" },
+    "design.client_approved": { ar: "اعتمد العميل تصميماً", en: "Client approved a design" },
+    "design.client_rejected": { ar: "رفض العميل تصميماً", en: "Client rejected a design" },
+    "design.comment_added": { ar: "تمت إضافة تعليق على تصميم", en: "Design comment added" },
     "client.created": { ar: "تم إنشاء حساب عميل", en: "Client account created" },
     "client.edited": { ar: "تم تعديل بيانات العميل", en: "Client details updated" },
     "user.created": { ar: "تم إنشاء مستخدم جديد", en: "New user created" },

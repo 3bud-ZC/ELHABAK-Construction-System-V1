@@ -1,10 +1,10 @@
 # ELHABAK Construction System V1 - STATUS
 
 ## Overall Completion
-**30% / 100%**
+**40% / 100%**
 
 ## Current Milestone
-**Milestone 03: 20-30% - Projects + Lifecycle + Worker/Client Vertical Slice - MVP 1**
+**Milestone 04 COMPLETE: 30-40% - Design Hub + Revisions + Client Approval + Project Workspace V2**
 
 ## MVP 1 ACCEPTANCE STATUS
 **READY FOR CLIENT REVIEW**
@@ -15,7 +15,7 @@
 - Branding assets: received
 - Repository: initialized and tracking GitHub `main`
 - Hard deadline: 30 September 2026
-- Coding implementation: Milestone 03 complete
+- Coding implementation: Milestone 04 complete
 
 ## Verified Completed
 - User roles defined: `ADMIN`, `ENGINEER`, `ACCOUNTANT`, `WORKER`, `CLIENT`
@@ -50,15 +50,25 @@
 - Arabic (default RTL) and English (LTR) copy implemented across all new Milestone 03 screens; no untranslated implementation strings
 - Visual/brand polish pass completed on the authenticated shell and Milestone 03 screens (see Run Log for specifics)
 - Full frontend UI/UX redesign completed: new design system (Almarai/Rubik typography, navy/orange/canvas token palette, 4px/8px spacing, reusable `Badge`/`MetricCard`/`PageHeader`/`EmptyState`/`LoadingState`/`ProgressBar` primitives in `@elhabak/ui`, shared `Lifecycle` component), a fixed right-hand RTL sidebar shell that mirrors correctly to a left sidebar in English, a project "command center" overview header with lifecycle visualization and info modules, table-based Projects/Users/Clients admin screens with status badges and filters, a mobile-first Worker upload flow, and a premium Client project view (see Run Log for specifics)
+- Design Hub data model added: `DesignItem`, `DesignRevision`, `DesignEvent`, `DesignDiscipline` (architectural/structural/interior/electrical/plumbing/furniture/renders/other), `DesignStatus` (draft/in_review/approved/rejected), `DesignEventType` (created/updated/revision_uploaded/submitted_for_review/client_approved/client_rejected/comment_added)
+- Design Hub API implemented (`apps/api/src/modules/designs`): list/filter (search, status, discipline), create with first revision, edit design metadata, upload new revision (auto-numbered, never overwrites a prior revision - enforced by a `(designId, revisionNumber)` unique constraint), submit-for-review, Client approve/reject decision (rejection requires a written reason), threaded comments (optionally tied to a specific revision), and a protected per-revision file endpoint
+- Design file upload security implemented: real magic-byte signature validation (PDF `%PDF-`, PNG, JPEG headers) in addition to declared MIME type and extension, rejecting spoofed files even when the client lies about content type; exclusive (`wx`) file writes; storage rolled back on any failed transaction
+- Design Hub authorization implemented in a dedicated `DesignAccessService`: Admin/Engineer manage (create/edit/upload revisions/submit), Client review-only (approve/reject/comment), Worker and Accountant fully denied, layered on top of the existing project-ownership/assignment check so cross-project access is denied regardless of Design Hub role
+- Fixed a real path-traversal check inconsistency found during this milestone's audit: the site-update media `store()` path safety check used a raw string-prefix comparison (`absolutePath.startsWith(this.root)`), which would incorrectly accept a sibling directory whose name merely starts with the same characters (e.g. a `storage-evil` folder next to `storage`); unified it with the corrected trailing-separator check (`absolutePath.startsWith(`${this.root}\\`)`) already used for the new design-file storage path
+- Project Workspace V2 implemented on the frontend: a shared `ProjectWorkspace` command-center header + tabbed navigation (Overview / Design / Site Activity) reused across all three project sub-routes for every non-Worker role, replacing the previous single monolithic project-portal page; Worker keeps a deliberately simpler Overview + Site Activity view with no Design tab
+- Design Hub frontend implemented: a filterable/searchable design register table with status/discipline badges and KPI counts, a drag-and-drop upload dialog with real upload progress, and a design detail page with inline PDF/image preview, revision history list, Client approval panel (Approve/Reject with required rejection reason), threaded comments, and a full approval/activity timeline with translated event labels in both languages
+- Idempotent seed extended with a real Design Hub sample: a genuine, valid, generated PDF (`%PDF-1.4` structure, no binary dependency) stored under protected storage and registered as an `IN_REVIEW` `DesignItem`/`DesignRevision`, so the demo project has a real design to review out of the box
+- Automated Milestone 04 test suite added (`apps/api/src/milestone-04.spec.ts`): anonymous/role/ownership/assignment access enforcement on direct IDs, real file-content validation (rejects a fake PDF with a spoofed extension/MIME), Worker and Client blocked from creating designs, owning-Client-only approve/reject with preserved history across a second revision, and protected-file IDOR checks proving a prior revision remains retrievable (never overwritten) while still denied to unrelated Clients/Engineers
 
 ## Current Blockers
-- None blocking Milestone 03 acceptance.
+- None blocking Milestone 04 acceptance.
 
 ## Known Issues / Follow-Up Notes
 - `pnpm db:migrate:deploy` hit a blank Prisma schema-engine failure against the Neon migration connection in Milestone 02; unchanged in Milestone 03. No `db push` was used. Repository migration SQL is applied with the workspace migration runner (`pnpm --filter @elhabak/database db:migrate:apply`), and replay reports zero pending migrations.
 - Next.js reports the `middleware` file convention as deprecated in favor of `proxy`; build passes. Still a future maintenance item, not a blocker.
 - Local dev note: `apps/api` reads its `.env` from its own working directory when started via `pnpm --filter @elhabak/api dev` (cwd = `apps/api`). A copy of the root `.env` was placed at `apps/api/.env` for local runtime verification (both paths are gitignored, no secret was committed). A future milestone could centralize env loading to avoid this duplication.
 - The Worker upload's mobile-first polish and the tablet-width project-row overflow fix were both found and fixed during this milestone's own QA pass (see Run Log); no other open visual defects were found in the screens covered by this milestone's scope.
+- Neon connectivity note (Milestone 04 close): the automated test suite's pooled connection endpoint (`DATABASE_URL`, the `-pooler` host) showed intermittent unavailability during this session ("Can't reach database server"), while the direct endpoint (`DIRECT_DATABASE_URL`) stayed reachable throughout, confirmed with independent raw `pg` connection checks. The three spec files run back-to-back in one process (three full NestJS + Prisma bootstraps against the pooled endpoint) showed non-deterministic failures during that window; the same `milestone-03.spec.ts` file passed 5/5 in isolation immediately after, and `milestone-04.spec.ts` and `milestone-02.spec.ts` both passed in the same full-suite run that showed the flakiness - so the instability tracks the shared pooled connection under sequential-bootstrap load, not application logic. Test-only mitigation added: `apps/api/src/test-database-env.ts` (a Vitest `setupFiles` entry) rewrites `DATABASE_URL` to the direct URL with conservative `connect_timeout`/`pool_timeout`/`connection_limit` parameters for the test process only; the running application in dev/production is unaffected and continues to use the pooled `DATABASE_URL` as configured. This does not weaken or hardcode any credential - both URLs come from the existing ignored `.env`.
 
 ## External / Client Assets Still Optional
 - Real company project portfolio content for the public website, if the client wants a portfolio section.
@@ -66,7 +76,7 @@
 - Do not fabricate missing content.
 
 ## Next Execution Target
-Milestone 04 - 30% -> 40% Design Hub + revisions + client approval.
+Milestone 05 - 40% -> 50% Site Operations & Progress Management.
 
 ## Run Log
 ### 2026-09-09 - Milestone 01 implementation
@@ -164,3 +174,17 @@ Milestone 04 - 30% -> 40% Design Hub + revisions + client approval.
 - No Milestone 04 scope touched. No backend or functional changes. No fabricated data.
 - QA commit: see commit history.
 - Overall completion remains **30% / 100%**; Milestone 04 was not started.
+
+### 2026-09-10 - Milestone 04 (Design Hub) handoff recovery, completion, and verification
+- Handoff context: a prior session had implemented most of Milestone 04 (Design Hub schema/migration/API/frontend, Project Workspace V2, `milestone-04.spec.ts`) across roughly 30 files but hit its usage limit before final verification, cleanup, and commit; the working tree was the source of truth and was audited and continued rather than redone.
+- Independently audited every new/modified Milestone 04 file: `schema.prisma` Design models against the committed migration SQL, `designs.service.ts`/`design-access.service.ts`/`designs.controller.ts`, `storage.service.ts`'s new magic-byte file validation, `packages/validation` schemas, the seed script's generated demo PDF, and the full frontend (`project-workspace.tsx`, `design-hub.tsx`, `design-detail.tsx`, route wrappers) - all internally consistent end to end (schema <-> migration <-> API <-> contracts <-> frontend).
+- Found and fixed a real security-consistency defect: `storage.service.ts`'s site-update `store()` method still used the old string-prefix path-safety check that the new design-file code had already replaced with a corrected trailing-separator check; unified both paths onto the safe helper (see Verified Completed for the exact defect).
+- Found and cleaned up 6 orphaned `@m03.elhabak.local` test users (with their sessions/audit rows) left in the real Neon database by an earlier interrupted test run whose `afterAll` cleanup never executed; verified no orphaned test projects and confirmed the canonical seed (5 demo users, `DEMO-MVP1`) was intact throughout.
+- Diagnosed the Neon pooled-connection instability with a bounded strategy rather than retrying indefinitely: confirmed direct-vs-pooled connectivity independently with raw `pg` checks, ran the full suite twice (capturing full output both times), then ran `milestone-03.spec.ts` alone to isolate cross-file contention from a real regression - it passed 5/5 in 106s, and `milestone-04.spec.ts` passed in the full-suite run that showed the flakiness, giving concrete evidence the Design Hub implementation itself is correct and the instability is environmental (see Known Issues for the full write-up).
+- Full quality gate run and passing: `pnpm db:validate`, `pnpm db:generate`, `pnpm --filter @elhabak/database db:migrate:apply` (0 pending - already applied), `pnpm db:seed`, `pnpm lint`, `pnpm typecheck`, `pnpm build` (all clean).
+- Real, credentialed browser QA performed against the running app (not just automated tests): as Admin, opened the Project Workspace command header and the Design Hub register showing the seeded "Architectural Floor Plan" design with correct KPI counts, opened the design detail page and confirmed the generated demo PDF renders through the authenticated preview endpoint; as Client, confirmed the Approve/Reject decision panel appears only while a revision is `IN_REVIEW`, submitted a real "Approve" decision end to end (`POST .../decision` -> `201`) and watched the revision badge flip to Approved and the decision panel disappear live; as Worker, confirmed via both a direct API call (`GET .../designs` -> `403`) and the rendered navigation (no Design tab) that Design Hub access is fully blocked.
+- Found and fixed a real regression during the mobile QA pass: the compact mobile/tablet navigation bar built during the earlier redesign had lost its `display: flex` declaration at some point during the Milestone 04 CSS additions (only `flex-direction` remained, which has no effect on the base rule's `display: grid`), so the authenticated nav had silently reverted to the tall stacked desktop layout on narrow viewports; confirmed via computed styles (not just a screenshot) and restored the missing declaration.
+- Verified responsive layout (no horizontal overflow, confirmed via `scrollWidth`/`clientWidth`) and Arabic RTL / English LTR mirroring (including full sidebar/nav direction, not just text alignment) on the Design Hub register and detail pages at mobile width after the fix.
+- Cleanup: no temporary `visual-qa-m04.ts` or similar scratch file was present in the working tree to remove; removed all temporary QA/diagnostic scripts created during this session's own verification work (connection checks, orphan cleanup) - none were left behind.
+- Security/git audit before commit: reviewed `git status`/`git diff`; confirmed no `.env`, database credentials, tokens, or build/QA artifacts staged; confirmed `test-database-env.ts` only rewrites the test process's own `DATABASE_URL` from existing ignored environment variables and introduces no hardcoded credential.
+- Overall completion updated to **40% / 100%**; Milestone 04 is complete and verified. Milestone 05 (Site Operations & Progress Management) has not been started.

@@ -157,7 +157,7 @@ export function ProjectsClient() {
                 <Badge tone={statusTone(project.status)} style={{ marginInlineEnd: "0.5rem" }}>
                   {statusLabel(project.status, locale)}
                 </Badge>
-                <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/admin/projects/${project.id}`)}>
+                <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}`)}>
                   {labels.open}
                 </Link>
               </span>
