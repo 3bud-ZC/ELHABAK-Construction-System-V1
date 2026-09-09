@@ -34,7 +34,6 @@
 - Login page intentionally has no fake authentication and keeps inputs/submit disabled until real auth is implemented
 
 ## Current Blockers
-- Local workspace is not currently a Git repository, so commit/push to `main` could not be performed from this checkout.
 - No local PostgreSQL server was running on the example connection string during runtime verification; API health correctly returned `database: "unavailable"`.
 
 ## External / Client Assets Still Optional
@@ -71,3 +70,14 @@ Milestone 02 — 10% → 20% Authentication + RBAC + Users/Clients Foundation.
 - Verification result: install, lint, typecheck, web production build, API production build, Prisma generation, Prisma validation, migration SQL generation, website routes, login routes, API health, and responsive RTL/LTR checks passed.
 - Known issue: API health returned `database: "unavailable"` because no local PostgreSQL server was running on the example URL; this is expected for the current local environment and did not block API startup.
 - Commit/push result: not performed because this checkout has no `.git` repository.
+
+### 2026-09-09 — Repository bootstrap recovery
+- Confirmed application files exist locally and the directory initially had no valid `.git` repository.
+- Confirmed `origin` remote: `https://github.com/3bud-ZC/ELHABAK-Construction-System-V1.git`.
+- Confirmed the remote had no refs before the first push.
+- Cleaned disposable Milestone 01 verification artifact: `.codex-brand-preview/`.
+- Updated `.gitignore` to exclude TypeScript incremental files with `*.tsbuildinfo`.
+- Staged audit confirmed no `node_modules`, build output, `.next`, `dist`, local database files, temporary preview folders, or real `.env` files were staged.
+- Initial Milestone 01 commit: `bbd87cd952a4f09194a1b92dce310731e3d94c9d` — `feat: establish ELHABAK platform foundation and public website`.
+- Push result: `main` pushed successfully to `origin/main` after one transient HTTP 408 retry.
+- Remaining blocker: no local PostgreSQL server was running on the example connection string; local API health can start and reports `database: "unavailable"` until PostgreSQL is available.
