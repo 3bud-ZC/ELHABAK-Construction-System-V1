@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest, phaseLabel, type ProjectRecord, type UserRecord } from "../../lib/api";
+import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
+import { Briefcase, Camera, FolderKanban, Users2 } from "lucide-react";
+import {
+  actionLabel,
+  apiRequest,
+  phaseLabel,
+  statusTone,
+  type ProjectRecord,
+  type UserRecord
+} from "../../lib/api";
 
 type DashboardSummary = {
   activeProjects: number;
@@ -26,28 +35,44 @@ export function AppDashboard() {
     () =>
       locale === "ar"
         ? {
-            title: "لوحة النظام",
-            adminLead: "مؤشرات حقيقية من قاعدة بيانات المشاريع.",
-            portalLead: "مشاريعك المصرح بها فقط.",
-            active: "المشاريع النشطة",
-            clients: "العملاء",
-            phases: "المراحل والتقدم",
+            title: "لوحة التحكم",
+            adminLead: "نظرة عامة على المشاريع الجارية والنشاط الحديث.",
+            portalLead: "المشاريع المصرح لك بالوصول إليها.",
+            active: "مشاريع نشطة",
+            clients: "عملاء",
+            phases: "المشاريع الجارية",
             updates: "آخر تحديثات الموقع",
             activity: "آخر النشاط",
             openProjects: "فتح المشاريع",
-            empty: "لا توجد بيانات مشاريع بعد."
+            open: "فتح",
+            emptyProjects: "لا توجد مشاريع بعد",
+            emptyProjectsHint: "ستظهر هنا المشاريع فور إنشائها.",
+            emptyUpdates: "لا توجد تحديثات موقع بعد",
+            emptyUpdatesHint: "ستظهر هنا تحديثات المهندسين والعمال الميدانية.",
+            emptyActivity: "لا يوجد نشاط مسجل بعد",
+            loadingLabel: "جاري تحميل البيانات...",
+            code: "الكود",
+            progress: "التقدم"
           }
         : {
             title: "Dashboard",
-            adminLead: "Real project data from the database.",
-            portalLead: "Only projects you are allowed to access.",
+            adminLead: "An overview of active projects and recent activity.",
+            portalLead: "Projects you are authorized to access.",
             active: "Active projects",
             clients: "Clients",
-            phases: "Phases and progress",
+            phases: "Active projects",
             updates: "Recent site updates",
             activity: "Recent activity",
             openProjects: "Open projects",
-            empty: "No project data yet."
+            open: "Open",
+            emptyProjects: "No projects yet",
+            emptyProjectsHint: "Projects will appear here once created.",
+            emptyUpdates: "No site updates yet",
+            emptyUpdatesHint: "Field updates from engineers and workers will appear here.",
+            emptyActivity: "No activity recorded yet",
+            loadingLabel: "Loading data...",
+            code: "Code",
+            progress: "Progress"
           },
     [locale]
   );
@@ -81,65 +106,91 @@ export function AppDashboard() {
 
   return (
     <section className="app-page">
-      <div className="page-heading page-heading--row">
-        <div>
-          <h1>{labels.title}</h1>
-          <p>{user?.role === "ADMIN" ? labels.adminLead : labels.portalLead}</p>
-        </div>
-        <Link className="ui-button ui-button--primary" href={href(user?.role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}>
-          {labels.openProjects}
-        </Link>
-      </div>
-      {loading && <div className="empty-state">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</div>}
+      <PageHeader
+        title={labels.title}
+        description={user?.role === "ADMIN" ? labels.adminLead : labels.portalLead}
+        actions={
+          <Link className="ui-button ui-button--primary" href={href(user?.role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}>
+            {labels.openProjects}
+          </Link>
+        }
+      />
+
+      {loading && <LoadingState label={labels.loadingLabel} />}
       {error && <div className="form-error">{error}</div>}
+
       {dashboard && (
         <>
           <div className="metric-grid">
-            <div className="metric-card"><span>{labels.active}</span><strong>{dashboard.activeProjects}</strong></div>
-            <div className="metric-card"><span>{labels.clients}</span><strong>{dashboard.clientCount}</strong></div>
+            <MetricCard icon={<FolderKanban size={18} />} tone="navy" label={labels.active} value={dashboard.activeProjects} />
+            <MetricCard icon={<Users2 size={18} />} tone="info" label={labels.clients} value={dashboard.clientCount} />
+            <MetricCard icon={<Camera size={18} />} tone="orange" label={labels.updates} value={dashboard.recentUpdates.length} />
+            <MetricCard icon={<Briefcase size={18} />} tone="success" label={labels.activity} value={dashboard.recentActivity.length} />
           </div>
-          <section className="updates-panel">
+
+          <div className="section-title">
             <h2>{labels.phases}</h2>
-            {dashboard.projects.length === 0 && <div className="empty-state">{labels.empty}</div>}
-            {dashboard.projects.map((project) => (
-              <article className="update-card" key={project.id}>
-                <strong>{project.name}</strong>
-                <span>{phaseLabel(project.phase, locale)} - {project.progress}%</span>
-                <div className="progress-track"><span style={{ width: `${project.progress}%` }} /></div>
-              </article>
-            ))}
-          </section>
-          <section className="updates-panel">
-            <h2>{labels.updates}</h2>
-            {dashboard.recentUpdates.length === 0 && <div className="empty-state">{labels.empty}</div>}
-            {dashboard.recentUpdates.map((update) => (
-              <article className="update-card" key={update.id}>
-                <strong>{update.projectName}</strong>
-                <span>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")} - {update.mediaCount}</span>
-                <p>{update.note || "-"}</p>
-              </article>
-            ))}
-          </section>
-          <section className="updates-panel">
+          </div>
+          {dashboard.projects.length === 0 ? (
+            <EmptyState title={labels.emptyProjects} description={labels.emptyProjectsHint} />
+          ) : (
+            <div className="data-table" style={{ marginBottom: "var(--space-6)" }}>
+              {dashboard.projects.map((project) => (
+                <Link className="mini-project-row" href={href(`/app/admin/projects/${project.id}`)} key={project.id}>
+                  <div className="mini-project-row__id">
+                    <strong>{project.name}</strong>
+                    <span className="mono">{project.code}</span>
+                  </div>
+                  <div className="mini-project-row__phase">{phaseLabel(project.phase, locale)}</div>
+                  <div className="mini-project-row__progress">
+                    <ProgressBar value={project.progress} />
+                    <strong>{project.progress}%</strong>
+                  </div>
+                  <Badge tone={statusTone(project.status)}>{project.client?.user.displayName ?? "-"}</Badge>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <div className="section-title">
             <h2>{labels.activity}</h2>
-            {dashboard.recentActivity.map((activity) => (
-              <article className="update-card" key={activity.id}>
-                <strong>{activity.action}</strong>
-                <span>{activity.actorName ?? "-"} / {activity.projectName ?? "-"}</span>
-              </article>
-            ))}
-          </section>
+          </div>
+          {dashboard.recentActivity.length === 0 ? (
+            <EmptyState title={labels.emptyActivity} />
+          ) : (
+            <div className="activity-list">
+              {dashboard.recentActivity.map((activity) => (
+                <div className="activity-row" key={activity.id}>
+                  <span className="activity-row__dot" aria-hidden="true" />
+                  <span className="activity-row__body">
+                    <strong>{actionLabel(activity.action, locale)}</strong>
+                    <span>
+                      {activity.actorName ?? "-"} {activity.projectName ? `• ${activity.projectName}` : ""}
+                    </span>
+                  </span>
+                  <time>{new Date(activity.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")}</time>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
+
       {!loading && user?.role !== "ADMIN" && (
         <div className="data-table">
-          {projects.length === 0 && <div className="empty-state">{labels.empty}</div>}
+          {projects.length === 0 && <EmptyState title={labels.emptyProjects} description={labels.emptyProjectsHint} />}
           {projects.map((project) => (
-            <article className="data-row project-row" key={project.id}>
-              <div><strong>{project.name}</strong><span>{project.code}</span></div>
-              <div><strong>{phaseLabel(project.phase, locale)}</strong><span>{project.progress}%</span></div>
-              <Link className="ui-button ui-button--secondary" href={href(`/app/projects/${project.id}`)}>{labels.openProjects}</Link>
-            </article>
+            <Link className="mini-project-row" href={href(`/app/projects/${project.id}`)} key={project.id}>
+              <div className="mini-project-row__id">
+                <strong>{project.name}</strong>
+                <span className="mono">{project.code}</span>
+              </div>
+              <div className="mini-project-row__phase">{phaseLabel(project.phase, locale)}</div>
+              <div className="mini-project-row__progress">
+                <ProgressBar value={project.progress} />
+                <strong>{project.progress}%</strong>
+              </div>
+            </Link>
           ))}
         </div>
       )}

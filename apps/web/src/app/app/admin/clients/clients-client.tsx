@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { apiRequest, type ClientRecord } from "../../../../lib/api";
+import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { UserRoundCog } from "lucide-react";
+import { accountStatusTone, apiRequest, type ClientRecord } from "../../../../lib/api";
 
 type Mode = "list" | "create" | "edit";
 
@@ -26,33 +28,49 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
       locale === "ar"
         ? {
             title: "العملاء",
+            lead: "إدارة حسابات العملاء وربطها بمشاريعهم.",
             create: "إنشاء عميل",
             edit: "تفاصيل العميل",
-            search: "بحث",
-            empty: "لا يوجد عملاء مطابقون.",
+            back: "العودة للعملاء",
+            search: "بحث بالاسم أو البريد الإلكتروني",
+            empty: "لا يوجد عملاء مطابقون",
+            emptyHint: "جرّب بحثاً مختلفاً أو أنشئ عميلاً جديداً.",
             name: "اسم العميل",
             email: "البريد الإلكتروني",
             phone: "الهاتف",
             notes: "ملاحظات",
             active: "الحساب نشط",
+            statusActive: "نشط",
+            statusInactive: "غير نشط",
             password: "كلمة مرور مؤقتة",
+            passwordHint: "اتركه فارغاً للإبقاء على كلمة المرور الحالية.",
             save: "حفظ",
-            saved: "تم الحفظ."
+            saved: "تم الحفظ.",
+            status: "الحالة",
+            loadingLabel: "جاري تحميل العملاء..."
           }
         : {
             title: "Clients",
+            lead: "Manage client accounts and their linked projects.",
             create: "Create client",
             edit: "Client details",
-            search: "Search",
-            empty: "No matching clients.",
+            back: "Back to clients",
+            search: "Search by name or email",
+            empty: "No matching clients",
+            emptyHint: "Try a different search or create a new client.",
             name: "Client name",
             email: "Email",
             phone: "Phone",
             notes: "Notes",
             active: "Account active",
+            statusActive: "Active",
+            statusInactive: "Inactive",
             password: "Temporary password",
+            passwordHint: "Leave blank to keep the current password.",
             save: "Save",
-            saved: "Saved."
+            saved: "Saved.",
+            status: "Status",
+            loadingLabel: "Loading clients..."
           },
     [locale]
   );
@@ -105,27 +123,47 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
   if (mode === "list") {
     return (
       <section className="app-page">
-        <div className="page-heading page-heading--row">
-          <div>
-            <h1>{labels.title}</h1>
-            <p>Admin-only client account foundation. Projects start in Milestone 03.</p>
-          </div>
-          <Link className="ui-button ui-button--primary" href="/app/admin/clients/new">
-            {labels.create}
-          </Link>
+        <PageHeader
+          title={labels.title}
+          description={labels.lead}
+          actions={
+            <Link className="ui-button ui-button--primary" href="/app/admin/clients/new">
+              {labels.create}
+            </Link>
+          }
+        />
+        <div className="table-toolbar">
+          <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
         </div>
-        <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
-        {loading ? <p>{locale === "ar" ? "جاري التحميل..." : "Loading..."}</p> : null}
-        {error ? <p className="form-error">{error}</p> : null}
-        {!loading && clients.length === 0 ? <div className="empty-state">{labels.empty}</div> : null}
-        {clients.length > 0 ? (
+        {error ? <div className="form-error">{error}</div> : null}
+        {loading ? <LoadingState label={labels.loadingLabel} /> : null}
+        {!loading && clients.length === 0 ? (
+          <EmptyState icon={<UserRoundCog size={20} />} title={labels.empty} description={labels.emptyHint} />
+        ) : null}
+        {!loading && clients.length > 0 ? (
           <div className="data-table">
+            <div className="data-table-head client-row">
+              <span>{labels.name}</span>
+              <span>{labels.email}</span>
+              <span>{labels.phone}</span>
+              <span>{labels.status}</span>
+            </div>
             {clients.map((client) => (
-              <Link className="data-row" href={`/app/admin/clients/${client.id}`} key={client.id}>
-                <strong>{client.user.displayName}</strong>
-                <span>{client.user.email}</span>
-                <span>{client.phone ?? "-"}</span>
-                <span>{client.user.isActive ? labels.active : locale === "ar" ? "غير نشط" : "Inactive"}</span>
+              <Link className="data-row client-row" href={`/app/admin/clients/${client.id}`} key={client.id}>
+                <div>
+                  <strong>{client.user.displayName}</strong>
+                </div>
+                <div>
+                  <span>{client.user.email}</span>
+                </div>
+                <div>
+                  <span className="mono">{client.phone ?? "-"}</span>
+                </div>
+                <div>
+                  <Badge tone={accountStatusTone(client.user.isActive)}>
+                    {client.user.isActive ? labels.statusActive : labels.statusInactive}
+                  </Badge>
+                </div>
               </Link>
             ))}
           </div>
@@ -136,10 +174,15 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
 
   return (
     <section className="app-page">
-      <div className="page-heading">
-        <h1>{mode === "create" ? labels.create : labels.edit}</h1>
-      </div>
-      {loading && mode === "edit" ? <p>{locale === "ar" ? "جاري التحميل..." : "Loading..."}</p> : null}
+      <PageHeader
+        title={mode === "create" ? labels.create : labels.edit}
+        actions={
+          <Link className="ui-button ui-button--secondary" href="/app/admin/clients">
+            {labels.back}
+          </Link>
+        }
+      />
+      {loading && mode === "edit" ? <LoadingState label={labels.loadingLabel} /> : null}
       <form className="admin-form" onSubmit={(event) => void submit(event)}>
         <label className="ui-field">
           <span>{labels.name}</span>
@@ -164,6 +207,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         <label className="ui-field">
           <span>{labels.password}</span>
           <input name="temporaryPassword" type="password" required={mode === "create"} minLength={10} />
+          {mode === "edit" && <span style={{ color: "var(--muted-soft)", fontSize: "0.78rem", fontWeight: 500 }}>{labels.passwordHint}</span>}
         </label>
         {error ? <p className="form-error">{error}</p> : null}
         {success ? <p className="form-success">{success}</p> : null}

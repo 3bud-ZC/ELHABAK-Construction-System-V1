@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BriefcaseBusiness, Camera, LogOut, Users, UserRoundCog, Home } from "lucide-react";
+import { BriefcaseBusiness, Camera, LayoutGrid, LogOut, Users, UserRoundCog } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
@@ -24,24 +24,24 @@ export function AppShell({ children }: AppShellProps) {
     () =>
       locale === "ar"
         ? {
-            home: "الرئيسية",
+            productTag: "نظام إدارة المشاريع",
+            dashboard: "لوحة التحكم",
             users: "المستخدمون",
             clients: "العملاء",
             projects: "المشاريع",
             worker: "تحديثات الموقع",
             logout: "تسجيل الخروج",
-            loading: "جاري تحميل النظام...",
-            empty: "هذه المساحة جاهزة للوحدات القادمة بدون بيانات وهمية."
+            loading: "جاري تحميل النظام..."
           }
         : {
-            home: "Home",
+            productTag: "Project Management System",
+            dashboard: "Dashboard",
             users: "Users",
             clients: "Clients",
             projects: "Projects",
             worker: "Site Updates",
             logout: "Logout",
-            loading: "Loading system...",
-            empty: "This area is ready for upcoming modules without fake data."
+            loading: "Loading system..."
           },
     [locale]
   );
@@ -74,6 +74,10 @@ export function AppShell({ children }: AppShellProps) {
     return targetLocale === "ar" ? path : `${path}?lang=en`;
   }
 
+  function isActive(path: string) {
+    return pathname === path || (path !== "/app" && pathname.startsWith(path));
+  }
+
   if (loading || !user) {
     return (
       <main className="app-loading" lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
@@ -82,52 +86,67 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
+  const initials = user.displayName
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
     <main className="app-shell" lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       <aside className="app-sidebar">
         <Link className="app-logo" href={href("/app")}>
-          <Image src="/brand/logo-primary-horizontal.png" alt="ELHABAK Construction" width={180} height={60} />
+          <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={180} height={75} priority />
         </Link>
+        <span className="app-product-tag">{labels.productTag}</span>
         <nav className="app-nav" aria-label="Application navigation">
-          <Link className={pathname === "/app" ? "active" : ""} href={href("/app")}>
-            <Home size={18} /> {labels.home}
+          <Link className={isActive("/app") && pathname === "/app" ? "active" : ""} href={href("/app")}>
+            <LayoutGrid size={17} /> {labels.dashboard}
           </Link>
           {user.role === "ADMIN" && (
             <>
-              <Link className={pathname.includes("/admin/projects") ? "active" : ""} href={href("/app/admin/projects")}>
-                <BriefcaseBusiness size={18} /> {labels.projects}
+              <Link className={isActive("/app/admin/projects") ? "active" : ""} href={href("/app/admin/projects")}>
+                <BriefcaseBusiness size={17} /> {labels.projects}
               </Link>
-              <Link className={pathname.includes("/admin/users") ? "active" : ""} href={href("/app/admin/users")}>
-                <Users size={18} /> {labels.users}
+              <Link className={isActive("/app/admin/clients") ? "active" : ""} href={href("/app/admin/clients")}>
+                <UserRoundCog size={17} /> {labels.clients}
               </Link>
-              <Link
-                className={pathname.includes("/admin/clients") ? "active" : ""}
-                href={href("/app/admin/clients")}
-              >
-                <UserRoundCog size={18} /> {labels.clients}
+              <Link className={isActive("/app/admin/users") ? "active" : ""} href={href("/app/admin/users")}>
+                <Users size={17} /> {labels.users}
               </Link>
             </>
           )}
           {user.role !== "ADMIN" && (
-            <Link className={pathname.includes("/projects") ? "active" : ""} href={href("/app/projects")}>
-              {user.role === "WORKER" ? <Camera size={18} /> : <BriefcaseBusiness size={18} />}{" "}
+            <Link className={isActive("/app/projects") ? "active" : ""} href={href("/app/projects")}>
+              {user.role === "WORKER" ? <Camera size={17} /> : <BriefcaseBusiness size={17} />}{" "}
               {user.role === "WORKER" ? labels.worker : labels.projects}
             </Link>
           )}
         </nav>
+        <div className="app-sidebar-footer">
+          <div className="app-user-card">
+            <span className="app-user-avatar">{initials}</span>
+            <span className="app-user-meta">
+              <strong>{user.displayName}</strong>
+              <span>{roleLabel(user.role, locale)}</span>
+            </span>
+          </div>
+        </div>
       </aside>
       <section className="app-main">
         <header className="app-topbar">
-          <div>
+          <div className="app-topbar-context">
             <strong>{user.displayName}</strong>
+            <span>&middot;</span>
             <span>{roleLabel(user.role, locale)}</span>
           </div>
           <div className="app-actions">
             <Link className="lang-link" href={href(pathname, alternate)}>
               {alternate === "ar" ? "العربية" : "English"}
             </Link>
-            <button className="ui-button ui-button--secondary" type="button" onClick={() => void logout()}>
-              <LogOut size={18} /> {labels.logout}
+            <button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => void logout()}>
+              <LogOut size={16} /> {labels.logout}
             </button>
           </div>
         </header>

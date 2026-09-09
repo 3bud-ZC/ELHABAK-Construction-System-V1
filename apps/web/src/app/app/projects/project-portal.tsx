@@ -3,15 +3,20 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { Calendar, Camera, FolderKanban, MapPin } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
   mediaUrl,
   phaseLabel,
+  roleLabel,
   statusLabel,
+  statusTone,
   type ProjectRecord,
   type UserRecord
 } from "../../../lib/api";
+import { Lifecycle } from "../../../components/lifecycle";
 
 type PortalProps = {
   projectId?: string;
@@ -37,42 +42,54 @@ export function ProjectPortal({ projectId }: PortalProps) {
         ? {
             title: "مشاريعي",
             workerTitle: "تحديثات الموقع",
-            lead: "المشاريع المصرح لك بها فقط.",
-            empty: "لا توجد مشاريع مخصصة لك.",
+            lead: "المشاريع المصرح لك بالوصول إليها.",
+            workerLead: "اختر مشروعاً لرفع تحديث ميداني جديد.",
+            empty: "لا توجد مشاريع مخصصة لك",
+            emptyHint: "سيظهر هنا أي مشروع يتم تعيينك عليه.",
             open: "فتح المشروع",
             back: "العودة للمشاريع",
             category: "الفئة",
-            phase: "المرحلة",
-            status: "الحالة",
-            progress: "التقدم",
+            location: "الموقع",
             dates: "التواريخ",
+            progress: "التقدم",
             updates: "تحديثات الموقع",
-            noUpdates: "لا توجد تحديثات موقع بعد.",
-            note: "ملاحظة قصيرة",
+            noUpdates: "لا توجد تحديثات موقع بعد",
+            noUpdatesHintWorker: "ارفع أول تحديث ميداني لهذا المشروع.",
+            noUpdatesHintClient: "ستظهر هنا تحديثات فريق العمل أولاً بأول.",
+            note: "ملاحظة قصيرة (اختياري)",
             files: "صور أو فيديو",
             submit: "إرسال التحديث",
-            uploaded: "تم إرسال تحديث الموقع.",
-            choose: "اختر مشروعاً للعرض."
+            uploaded: "تم إرسال تحديث الموقع بنجاح.",
+            choose: "اختر مشروعاً للعرض.",
+            noDates: "لم تحدد",
+            noLocation: "بلا موقع محدد",
+            loadingLabel: "جاري التحميل..."
           }
         : {
             title: "My Projects",
             workerTitle: "Site Updates",
-            lead: "Only projects you are allowed to access.",
-            empty: "No assigned projects.",
+            lead: "Projects you are authorized to access.",
+            workerLead: "Choose a project to upload a new field update.",
+            empty: "No assigned projects",
+            emptyHint: "Any project you are assigned to will appear here.",
             open: "Open project",
             back: "Back to projects",
             category: "Category",
-            phase: "Phase",
-            status: "Status",
-            progress: "Progress",
+            location: "Location",
             dates: "Dates",
+            progress: "Progress",
             updates: "Site updates",
-            noUpdates: "No site updates yet.",
-            note: "Short note",
+            noUpdates: "No site updates yet",
+            noUpdatesHintWorker: "Upload the first field update for this project.",
+            noUpdatesHintClient: "Updates from the field team will appear here as they happen.",
+            note: "Short note (optional)",
             files: "Photos or video",
             submit: "Submit update",
-            uploaded: "Site update submitted.",
-            choose: "Choose a project to view."
+            uploaded: "Site update submitted successfully.",
+            choose: "Choose a project to view.",
+            noDates: "Not set",
+            noLocation: "No location set",
+            loadingLabel: "Loading..."
           },
     [locale]
   );
@@ -141,77 +158,149 @@ export function ProjectPortal({ projectId }: PortalProps) {
   }
 
   if (loading) {
-    return <section className="app-page"><div className="empty-state">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</div></section>;
+    return (
+      <section className="app-page">
+        <LoadingState label={labels.loadingLabel} />
+      </section>
+    );
   }
 
+  const isWorker = user?.role === "WORKER";
+  const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", { dateStyle: "medium" });
+
   if (project) {
-    const isWorker = user?.role === "WORKER";
     return (
-      <section className="app-page worker-page">
-        <div className="page-heading page-heading--row">
-          <div>
-            <h1>{project.name}</h1>
-            <p>{project.code}</p>
-          </div>
-          <Link className="ui-button ui-button--secondary" href={href("/app/projects")}>{labels.back}</Link>
-        </div>
+      <section className={`app-page ${isWorker ? "worker-shell" : ""}`}>
+        <PageHeader
+          title={project.name}
+          description={project.code ?? undefined}
+          actions={
+            <Link className="ui-button ui-button--secondary ui-button--sm" href={href("/app/projects")}>
+              {labels.back}
+            </Link>
+          }
+        />
         {error && <div className="form-error">{error}</div>}
         {success && <div className="form-success">{success}</div>}
-        <div className="project-overview-grid">
-          <div className="empty-state"><strong>{labels.category}</strong><span>{categoryLabel(project.category, locale)}</span></div>
-          <div className="empty-state"><strong>{labels.phase}</strong><span>{phaseLabel(project.phase, locale)}</span></div>
-          <div className="empty-state"><strong>{labels.status}</strong><span>{statusLabel(project.status, locale)}</span></div>
-          <div className="empty-state"><strong>{labels.progress}</strong><span>{project.progress}%</span></div>
-        </div>
-        <div className="progress-track"><span style={{ width: `${project.progress}%` }} /></div>
-        <div className="lifecycle-strip">
-          {["SITE_INSPECTION", "DESIGN", "PRELIMINARY_ESTIMATION", "EXECUTION", "INITIAL_HANDOVER", "FINAL_HANDOVER"].map((phase) => {
-            const phases = ["SITE_INSPECTION", "DESIGN", "PRELIMINARY_ESTIMATION", "EXECUTION", "INITIAL_HANDOVER", "FINAL_HANDOVER"];
-            const state = phases.indexOf(phase) < phases.indexOf(project.phase) ? "done" : phase === project.phase ? "current" : "upcoming";
-            return <span className={state} key={phase}>{phaseLabel(phase as ProjectRecord["phase"], locale)}</span>;
-          })}
-        </div>
+
+        {!isWorker && (
+          <>
+            <div className="overview-header">
+              <div className="overview-header__top">
+                <div>
+                  <span className="overview-header__code mono">{project.code}</span>
+                  <h1>{project.name}</h1>
+                  <div className="overview-header__tags">
+                    <Badge tone="orange">{categoryLabel(project.category, locale)}</Badge>
+                    <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
+                  </div>
+                </div>
+                <div className="overview-header__progress">
+                  <span>{labels.progress}</span>
+                  <strong>{project.progress}%</strong>
+                  <div className="progress-track">
+                    <span style={{ width: `${project.progress}%` }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Lifecycle phase={project.phase} locale={locale} />
+
+            <div className="overview-modules" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: "var(--space-4)" }}>
+              <div className="overview-module">
+                <span className="overview-module__label">
+                  <MapPin size={14} /> {labels.location}
+                </span>
+                <strong>{project.location ?? labels.noLocation}</strong>
+              </div>
+              <div className="overview-module">
+                <span className="overview-module__label">
+                  <Calendar size={14} /> {labels.dates}
+                </span>
+                <strong>
+                  {project.startDate ? dateFormatter.format(new Date(project.startDate)) : labels.noDates}
+                  {" — "}
+                  {project.targetDate ? dateFormatter.format(new Date(project.targetDate)) : labels.noDates}
+                </strong>
+              </div>
+            </div>
+          </>
+        )}
 
         {isWorker && (
-          <form className="admin-form upload-form" onSubmit={(event) => void submitUpdate(event)}>
-            <label className="ui-field full-span">
-              {labels.note}
-              <textarea value={note} onChange={(event) => setNote(event.target.value)} />
-            </label>
-            <label className="ui-field full-span">
-              {labels.files}
-              <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" multiple onChange={chooseFiles} required />
-            </label>
-            {files.length > 0 && (
-              <div className="preview-grid full-span">
-                {files.map((file) => (
-                  <span key={`${file.name}-${file.size}`}>{file.name}</span>
-                ))}
+          <>
+            <div className="worker-project-card" style={{ marginBottom: "var(--space-4)" }}>
+              <div>
+                <strong>{phaseLabel(project.phase, locale)}</strong>
+                <span>{project.progress}% {locale === "ar" ? "منجز" : "complete"}</span>
               </div>
-            )}
-            <button className="ui-button ui-button--primary full-span" type="submit" disabled={uploading || files.length === 0}>
-              {uploading ? (locale === "ar" ? "جاري الإرسال..." : "Uploading...") : labels.submit}
-            </button>
-          </form>
+              <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
+            </div>
+            <div className="progress-track" style={{ marginBottom: "var(--space-5)" }}>
+              <span style={{ width: `${project.progress}%` }} />
+            </div>
+
+            <form className="admin-form upload-form" onSubmit={(event) => void submitUpdate(event)}>
+              <label className="ui-field full-span">
+                {labels.note}
+                <textarea value={note} onChange={(event) => setNote(event.target.value)} />
+              </label>
+              <label className="ui-field full-span">
+                {labels.files}
+                <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" multiple onChange={chooseFiles} required />
+              </label>
+              {files.length > 0 && (
+                <div className="preview-grid full-span">
+                  {files.map((file) => (
+                    <span key={`${file.name}-${file.size}`}>{file.name}</span>
+                  ))}
+                </div>
+              )}
+              <button className="ui-button ui-button--primary full-span" type="submit" disabled={uploading || files.length === 0}>
+                {uploading ? (locale === "ar" ? "جاري الإرسال..." : "Uploading...") : labels.submit}
+              </button>
+            </form>
+          </>
         )}
 
         <section className="updates-panel">
-          <h2>{labels.updates}</h2>
-          {project.siteUpdates.length === 0 && <div className="empty-state">{labels.noUpdates}</div>}
+          <div className="section-title">
+            <h2>{labels.updates}</h2>
+          </div>
+          {project.siteUpdates.length === 0 && (
+            <EmptyState
+              icon={<Camera size={20} />}
+              title={labels.noUpdates}
+              description={isWorker ? labels.noUpdatesHintWorker : labels.noUpdatesHintClient}
+            />
+          )}
           {project.siteUpdates.map((update) => (
             <article className="update-card" key={update.id}>
-              <strong>{update.author.displayName}</strong>
-              <span>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")}</span>
-              <p>{update.note || "-"}</p>
-              <div className="media-grid">
-                {update.media.map((media) =>
-                  media.mediaType === "IMAGE" ? (
-                    <img src={mediaUrl(project.id, media.id)} alt={media.originalFilename} key={media.id} />
-                  ) : (
-                    <video src={mediaUrl(project.id, media.id)} controls key={media.id} />
-                  )
-                )}
+              <div className="update-card__head">
+                <div className="update-card__author">
+                  <span className="update-card__avatar">{update.author.displayName.slice(0, 2).toUpperCase()}</span>
+                  <span>
+                    <strong>{update.author.displayName}</strong>
+                    <span>{roleLabel(update.author.role, locale)}</span>
+                  </span>
+                </div>
+                <time>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")}</time>
               </div>
+              {update.note && <p>{update.note}</p>}
+              {update.media.length > 0 && (
+                <div className="media-grid">
+                  {update.media.map((media) => (
+                    <figure key={media.id}>
+                      {media.mediaType === "IMAGE" ? (
+                        <img src={mediaUrl(project.id, media.id)} alt={media.originalFilename} loading="lazy" />
+                      ) : (
+                        <video src={mediaUrl(project.id, media.id)} controls preload="metadata" />
+                      )}
+                    </figure>
+                  ))}
+                </div>
+              )}
             </article>
           ))}
         </section>
@@ -221,23 +310,29 @@ export function ProjectPortal({ projectId }: PortalProps) {
 
   return (
     <section className="app-page">
-      <div className="page-heading">
-        <h1>{user?.role === "WORKER" ? labels.workerTitle : labels.title}</h1>
-        <p>{labels.lead}</p>
-      </div>
+      <PageHeader title={isWorker ? labels.workerTitle : labels.title} description={isWorker ? labels.workerLead : labels.lead} />
       {error && <div className="form-error">{error}</div>}
-      {projects.length === 0 && <div className="empty-state">{labels.empty}</div>}
-      <div className="data-table">
-        {projects.map((item) => (
-          <article className="data-row project-row" key={item.id}>
-            <div><strong>{item.name}</strong><span>{item.code}</span></div>
-            <div><strong>{labels.phase}</strong><span>{phaseLabel(item.phase, locale)}</span></div>
-            <div><strong>{labels.progress}</strong><span>{item.progress}%</span></div>
-            <Link className="ui-button ui-button--secondary" href={href(`/app/projects/${item.id}`)}>{labels.open}</Link>
-          </article>
-        ))}
-      </div>
-      {projects.length > 0 && <p className="muted-line">{labels.choose}</p>}
+      {projects.length === 0 && <EmptyState icon={<FolderKanban size={20} />} title={labels.empty} description={labels.emptyHint} />}
+      {projects.length > 0 && (
+        <div className="data-table">
+          {projects.map((item) => (
+            <Link className="mini-project-row" href={href(`/app/projects/${item.id}`)} key={item.id}>
+              <div className="mini-project-row__id">
+                <strong>{item.name}</strong>
+                <span className="mono">{item.code}</span>
+              </div>
+              <div className="mini-project-row__phase">{phaseLabel(item.phase, locale)}</div>
+              <div className="mini-project-row__progress">
+                <div className="progress-track">
+                  <span style={{ width: `${item.progress}%` }} />
+                </div>
+                <strong>{item.progress}%</strong>
+              </div>
+              <Badge tone={statusTone(item.status)}>{statusLabel(item.status, locale)}</Badge>
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

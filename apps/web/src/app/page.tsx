@@ -24,10 +24,10 @@ export default async function HomePage({ searchParams }: PageProps) {
         <div className="container header-inner">
           <a className="brand-link" href={langHref(locale)} aria-label="ELHABAK Construction">
             <Image
-              src="/brand/logo-primary-horizontal.png"
+              src="/brand/logo-horizontal.png"
               alt="ELHABAK Construction"
               width={240}
-              height={80}
+              height={100}
               priority
             />
           </a>
@@ -50,6 +50,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <section className="hero">
         <div className="container hero-inner">
           <div className="hero-copy">
+            <span className="hero-eyebrow">ELHABAK CONSTRUCTION</span>
             <h1>{t.home.heroTitle}</h1>
             <p>{t.home.heroSubtitle}</p>
             <div className="hero-actions">
@@ -62,10 +63,10 @@ export default async function HomePage({ searchParams }: PageProps) {
           <div className="hero-visual" aria-label={t.home.heroPanelTitle}>
             <div className="brand-monogram">
               <Image
-                src="/brand/logo-primary-vertical.png"
+                src="/brand/logo-vertical.png"
                 alt=""
-                width={360}
-                height={360}
+                width={300}
+                height={217}
                 priority
               />
             </div>
@@ -151,7 +152,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       <footer className="site-footer">
         <div className="container footer-inner">
-          <Image src="/brand/logo-primary-horizontal.png" alt="ELHABAK Construction" width={180} height={60} />
+          <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={180} height={75} />
           <span>{t.home.footerText}</span>
         </div>
       </footer>

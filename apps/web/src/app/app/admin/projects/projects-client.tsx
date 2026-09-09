@@ -3,13 +3,26 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest, categoryLabel, phaseLabel, statusLabel, type ProjectRecord } from "../../../../lib/api";
+import { Badge, EmptyState, LoadingState, PageHeader, ProgressBar } from "@elhabak/ui";
+import { FolderKanban } from "lucide-react";
+import {
+  apiRequest,
+  categoryLabel,
+  phaseLabel,
+  statusLabel,
+  statusTone,
+  type ProjectRecord,
+  type ProjectStatus
+} from "../../../../lib/api";
+
+const statuses: ProjectStatus[] = ["PLANNED", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"];
 
 export function ProjectsClient() {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<ProjectStatus | "">("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -18,36 +31,45 @@ export function ProjectsClient() {
       locale === "ar"
         ? {
             title: "المشاريع",
-            lead: "إدارة المشاريع والمرحلة والتقدم والفريق من قاعدة البيانات الفعلية.",
+            lead: "متابعة وإدارة جميع المشاريع الجارية والمرحلة والفريق المسؤول.",
             create: "إنشاء مشروع",
             search: "بحث بالاسم أو الكود أو العميل",
-            empty: "لا توجد مشاريع بعد.",
+            allStatuses: "كل الحالات",
+            empty: "لا توجد مشاريع مطابقة",
+            emptyHint: "جرّب تعديل البحث أو أنشئ مشروعاً جديداً.",
+            name: "المشروع",
             client: "العميل",
             engineer: "المهندس",
             phase: "المرحلة",
-            status: "الحالة",
             progress: "التقدم",
-            open: "فتح"
+            open: "فتح",
+            loadingLabel: "جاري تحميل المشاريع..."
           }
         : {
             title: "Projects",
-            lead: "Manage projects, phase, progress, and team from real database data.",
+            lead: "Track and manage every active project, its phase, and responsible team.",
             create: "Create Project",
             search: "Search by name, code, or client",
-            empty: "No projects yet.",
+            allStatuses: "All statuses",
+            empty: "No matching projects",
+            emptyHint: "Try a different search or create a new project.",
+            name: "Project",
             client: "Client",
             engineer: "Engineer",
             phase: "Phase",
-            status: "Status",
             progress: "Progress",
-            open: "Open"
+            open: "Open",
+            loadingLabel: "Loading projects..."
           },
     [locale]
   );
 
   useEffect(() => {
     let alive = true;
-    const path = query.trim() ? `/admin/projects?search=${encodeURIComponent(query.trim())}` : "/admin/projects";
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("search", query.trim());
+    if (status) params.set("status", status);
+    const path = `/admin/projects${params.toString() ? `?${params.toString()}` : ""}`;
     setLoading(true);
     apiRequest<ProjectRecord[]>(path)
       .then((result) => {
@@ -65,7 +87,7 @@ export function ProjectsClient() {
     return () => {
       alive = false;
     };
-  }, [query]);
+  }, [query, status]);
 
   function href(path: string) {
     return locale === "ar" ? path : `${path}?lang=en`;
@@ -73,50 +95,76 @@ export function ProjectsClient() {
 
   return (
     <section className="app-page">
-      <div className="page-heading page-heading--row">
-        <div>
-          <h1>{labels.title}</h1>
-          <p>{labels.lead}</p>
-        </div>
-        <Link className="ui-button ui-button--primary" href={href("/app/admin/projects/new")}>
-          {labels.create}
-        </Link>
+      <PageHeader
+        title={labels.title}
+        description={labels.lead}
+        actions={
+          <Link className="ui-button ui-button--primary" href={href("/app/admin/projects/new")}>
+            {labels.create}
+          </Link>
+        }
+      />
+
+      <div className="table-toolbar">
+        <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
+        <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus | "")}>
+          <option value="">{labels.allStatuses}</option>
+          {statuses.map((item) => (
+            <option value={item} key={item}>
+              {statusLabel(item, locale)}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
       {error && <div className="form-error">{error}</div>}
-      {loading && <div className="empty-state">{locale === "ar" ? "جاري التحميل..." : "Loading..."}</div>}
-      {!loading && projects.length === 0 && <div className="empty-state">{labels.empty}</div>}
+      {loading && <LoadingState label={labels.loadingLabel} />}
+      {!loading && projects.length === 0 && (
+        <EmptyState icon={<FolderKanban size={20} />} title={labels.empty} description={labels.emptyHint} />
+      )}
 
-      <div className="data-table">
-        {projects.map((project) => (
-          <article className="data-row project-row" key={project.id}>
-            <div>
-              <strong>{project.name}</strong>
-              <span>{project.code}</span>
-            </div>
-            <div>
-              <strong>{labels.client}</strong>
-              <span>{project.client?.user.displayName ?? "-"}</span>
-            </div>
-            <div>
-              <strong>{labels.engineer}</strong>
-              <span>{project.engineer?.displayName ?? "-"}</span>
-            </div>
-            <div>
-              <strong>{categoryLabel(project.category, locale)}</strong>
-              <span>{labels.phase}: {phaseLabel(project.phase, locale)}</span>
-            </div>
-            <div>
-              <strong>{statusLabel(project.status, locale)}</strong>
-              <span>{labels.progress}: {project.progress}%</span>
-            </div>
-            <Link className="ui-button ui-button--secondary" href={href(`/app/admin/projects/${project.id}`)}>
-              {labels.open}
-            </Link>
-          </article>
-        ))}
-      </div>
+      {!loading && projects.length > 0 && (
+        <div className="data-table">
+          <div className="data-table-head project-row">
+            <span>{labels.name}</span>
+            <span>{labels.client}</span>
+            <span>{labels.engineer}</span>
+            <span>{labels.phase}</span>
+            <span>{labels.progress}</span>
+            <span />
+          </div>
+          {projects.map((project) => (
+            <article className="data-row project-row" key={project.id}>
+              <div>
+                <strong>{project.name}</strong>
+                <span className="mono">{project.code}</span>
+              </div>
+              <div>
+                <strong>{project.client?.user.displayName ?? "-"}</strong>
+                <span>{categoryLabel(project.category, locale)}</span>
+              </div>
+              <div>
+                <strong>{project.engineer?.displayName ?? "-"}</strong>
+              </div>
+              <div>
+                <Badge tone="navy">{phaseLabel(project.phase, locale)}</Badge>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <ProgressBar value={project.progress} style={{ flex: "1 1 auto" }} />
+                <strong style={{ color: "var(--navy)", fontSize: "0.8rem", flex: "0 0 auto" }}>{project.progress}%</strong>
+              </div>
+              <span className="data-row-action">
+                <Badge tone={statusTone(project.status)} style={{ marginInlineEnd: "0.5rem" }}>
+                  {statusLabel(project.status, locale)}
+                </Badge>
+                <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/admin/projects/${project.id}`)}>
+                  {labels.open}
+                </Link>
+              </span>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

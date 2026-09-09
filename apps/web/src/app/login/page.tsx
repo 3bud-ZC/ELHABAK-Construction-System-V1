@@ -22,10 +22,10 @@ export default async function LoginPage({ searchParams }: PageProps) {
     <main className="login-shell" lang={locale} dir={dir}>
       <section className="login-brand">
         <Image
-          src="/brand/logo-primary-horizontal.png"
+          src="/brand/logo-horizontal.png"
           alt="ELHABAK Construction"
-          width={360}
-          height={120}
+          width={300}
+          height={125}
           priority
         />
         <h1>{t.title}</h1>

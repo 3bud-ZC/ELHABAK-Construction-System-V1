@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { apiRequest, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
+import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { UsersRound } from "lucide-react";
+import { accountStatusTone, apiRequest, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
 
 const roles: UserRole[] = ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER", "CLIENT"];
 
@@ -28,33 +30,45 @@ export function UsersClient({ mode, id }: UsersClientProps) {
       locale === "ar"
         ? {
             title: "المستخدمون",
+            lead: "إدارة حسابات فريق العمل وصلاحيات الوصول لكل دور.",
             create: "إنشاء مستخدم",
             edit: "تعديل مستخدم",
-            search: "بحث",
-            empty: "لا يوجد مستخدمون مطابقون.",
+            back: "العودة للمستخدمين",
+            search: "بحث بالاسم أو البريد الإلكتروني",
+            empty: "لا يوجد مستخدمون مطابقون",
+            emptyHint: "جرّب بحثاً مختلفاً أو أنشئ مستخدماً جديداً.",
             name: "الاسم",
             email: "البريد الإلكتروني",
             role: "الدور",
             active: "نشط",
+            inactive: "غير نشط",
             password: "كلمة مرور مؤقتة",
+            passwordHint: "اتركه فارغاً للإبقاء على كلمة المرور الحالية.",
             save: "حفظ",
             saved: "تم الحفظ.",
-            status: "الحالة"
+            status: "الحالة",
+            loadingLabel: "جاري تحميل المستخدمين..."
           }
         : {
             title: "Users",
+            lead: "Manage team accounts and role-based access across the system.",
             create: "Create user",
             edit: "Edit user",
-            search: "Search",
-            empty: "No matching users.",
+            back: "Back to users",
+            search: "Search by name or email",
+            empty: "No matching users",
+            emptyHint: "Try a different search or create a new user.",
             name: "Name",
             email: "Email",
             role: "Role",
             active: "Active",
+            inactive: "Inactive",
             password: "Temporary password",
+            passwordHint: "Leave blank to keep the current password.",
             save: "Save",
             saved: "Saved.",
-            status: "Status"
+            status: "Status",
+            loadingLabel: "Loading users..."
           },
     [locale]
   );
@@ -106,27 +120,45 @@ export function UsersClient({ mode, id }: UsersClientProps) {
   if (mode === "list") {
     return (
       <section className="app-page">
-        <div className="page-heading page-heading--row">
-          <div>
-            <h1>{labels.title}</h1>
-            <p>Admin-only user management backed by PostgreSQL.</p>
-          </div>
-          <Link className="ui-button ui-button--primary" href="/app/admin/users/new">
-            {labels.create}
-          </Link>
+        <PageHeader
+          title={labels.title}
+          description={labels.lead}
+          actions={
+            <Link className="ui-button ui-button--primary" href="/app/admin/users/new">
+              {labels.create}
+            </Link>
+          }
+        />
+        <div className="table-toolbar">
+          <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
         </div>
-        <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
-        {loading ? <p>{locale === "ar" ? "جاري التحميل..." : "Loading..."}</p> : null}
-        {error ? <p className="form-error">{error}</p> : null}
-        {!loading && users.length === 0 ? <div className="empty-state">{labels.empty}</div> : null}
-        {users.length > 0 ? (
+        {error ? <div className="form-error">{error}</div> : null}
+        {loading ? <LoadingState label={labels.loadingLabel} /> : null}
+        {!loading && users.length === 0 ? (
+          <EmptyState icon={<UsersRound size={20} />} title={labels.empty} description={labels.emptyHint} />
+        ) : null}
+        {!loading && users.length > 0 ? (
           <div className="data-table">
+            <div className="data-table-head user-row">
+              <span>{labels.name}</span>
+              <span>{labels.email}</span>
+              <span>{labels.role}</span>
+              <span>{labels.status}</span>
+            </div>
             {users.map((user) => (
-              <Link className="data-row" href={`/app/admin/users/${user.id}`} key={user.id}>
-                <strong>{user.displayName}</strong>
-                <span>{user.email}</span>
-                <span>{roleLabel(user.role, locale)}</span>
-                <span>{user.isActive ? labels.active : locale === "ar" ? "غير نشط" : "Inactive"}</span>
+              <Link className="data-row user-row" href={`/app/admin/users/${user.id}`} key={user.id}>
+                <div>
+                  <strong>{user.displayName}</strong>
+                </div>
+                <div>
+                  <span>{user.email}</span>
+                </div>
+                <div>
+                  <Badge tone="navy">{roleLabel(user.role, locale)}</Badge>
+                </div>
+                <div>
+                  <Badge tone={accountStatusTone(user.isActive)}>{user.isActive ? labels.active : labels.inactive}</Badge>
+                </div>
               </Link>
             ))}
           </div>
@@ -137,10 +169,15 @@ export function UsersClient({ mode, id }: UsersClientProps) {
 
   return (
     <section className="app-page">
-      <div className="page-heading">
-        <h1>{mode === "create" ? labels.create : labels.edit}</h1>
-      </div>
-      {loading && mode === "edit" ? <p>{locale === "ar" ? "جاري التحميل..." : "Loading..."}</p> : null}
+      <PageHeader
+        title={mode === "create" ? labels.create : labels.edit}
+        actions={
+          <Link className="ui-button ui-button--secondary" href="/app/admin/users">
+            {labels.back}
+          </Link>
+        }
+      />
+      {loading && mode === "edit" ? <LoadingState label={labels.loadingLabel} /> : null}
       <form className="admin-form" onSubmit={(event) => void submit(event)}>
         <label className="ui-field">
           <span>{labels.name}</span>
@@ -167,6 +204,7 @@ export function UsersClient({ mode, id }: UsersClientProps) {
         <label className="ui-field">
           <span>{labels.password}</span>
           <input name="temporaryPassword" type="password" required={mode === "create"} minLength={10} />
+          {mode === "edit" && <span style={{ color: "var(--muted-soft)", fontSize: "0.78rem", fontWeight: 500 }}>{labels.passwordHint}</span>}
         </label>
         {error ? <p className="form-error">{error}</p> : null}
         {success ? <p className="form-success">{success}</p> : null}

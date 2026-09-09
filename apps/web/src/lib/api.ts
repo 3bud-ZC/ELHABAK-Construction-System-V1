@@ -159,3 +159,60 @@ export function statusLabel(status: ProjectStatus, locale: "ar" | "en") {
   };
   return labels[status][locale];
 }
+
+export type BadgeTone = "neutral" | "navy" | "orange" | "success" | "info" | "danger";
+
+export function statusTone(status: ProjectStatus): BadgeTone {
+  const tones: Record<ProjectStatus, BadgeTone> = {
+    PLANNED: "info",
+    ACTIVE: "success",
+    ON_HOLD: "orange",
+    COMPLETED: "navy",
+    CANCELLED: "danger"
+  };
+  return tones[status];
+}
+
+export function accountStatusTone(isActive: boolean): BadgeTone {
+  return isActive ? "success" : "neutral";
+}
+
+export const LIFECYCLE_PHASES: ProjectPhase[] = [
+  "SITE_INSPECTION",
+  "DESIGN",
+  "PRELIMINARY_ESTIMATION",
+  "EXECUTION",
+  "INITIAL_HANDOVER",
+  "FINAL_HANDOVER"
+];
+
+export function initialsOf(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export function actionLabel(action: string, locale: "ar" | "en"): string {
+  const labels: Record<string, { ar: string; en: string }> = {
+    "project.created": { ar: "تم إنشاء مشروع جديد", en: "New project created" },
+    "project.edited": { ar: "تم تعديل بيانات المشروع", en: "Project details updated" },
+    "project.phase_changed": { ar: "تم تحديث مرحلة المشروع", en: "Project phase updated" },
+    "project.progress_changed": { ar: "تم تحديث نسبة الإنجاز", en: "Project progress updated" },
+    "project.engineer_assigned": { ar: "تم تعيين مهندس مسؤول", en: "Engineer assigned" },
+    "project.worker_assigned": { ar: "تم تعيين عامل/مقاول", en: "Worker assigned" },
+    "project.worker_removed": { ar: "تمت إزالة عامل/مقاول", en: "Worker removed" },
+    "site_update.submitted": { ar: "تحديث موقع جديد", en: "New site update" },
+    "client.created": { ar: "تم إنشاء حساب عميل", en: "Client account created" },
+    "client.edited": { ar: "تم تعديل بيانات العميل", en: "Client details updated" },
+    "user.created": { ar: "تم إنشاء مستخدم جديد", en: "New user created" },
+    "user.updated": { ar: "تم تعديل بيانات المستخدم", en: "User details updated" },
+    "user.role_changed": { ar: "تم تغيير دور المستخدم", en: "User role changed" },
+    "user.activated": { ar: "تم تفعيل الحساب", en: "Account activated" },
+    "user.deactivated": { ar: "تم إيقاف الحساب", en: "Account deactivated" }
+  };
+  return labels[action]?.[locale] ?? action;
+}
