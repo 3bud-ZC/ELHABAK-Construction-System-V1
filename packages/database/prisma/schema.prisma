@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ENGINEER
+  ACCOUNTANT
+  WORKER
+  CLIENT
+}
+
+enum ProjectCategory {
+  DESIGN
+  CONSTRUCTION
+  FINISHING
+  GENERAL_CONTRACTING
+  FURNITURE
+  MIXED
+}
+
+enum ProjectPhase {
+  SITE_INSPECTION
+  DESIGN
+  PRELIMINARY_ESTIMATION
+  EXECUTION
+  INITIAL_HANDOVER
+  FINAL_HANDOVER
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String              @id @default(cuid())
+  email        String              @unique
+  displayName  String
+  role         UserRole
+  passwordHash String?
+  isActive     Boolean             @default(true)
+  clientProfile ClientProfile?
+  assignments  ProjectAssignment[]
+  auditLogs     AuditLog[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([role])
+}
+
+model ClientProfile {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  phone     String?
+  notes     String?
+  projects  Project[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Project {
+  id          String              @id @default(cuid())
+  code        String?             @unique
+  name        String
+  category    ProjectCategory
+  phase       ProjectPhase        @default(SITE_INSPECTION)
+  status      ProjectStatus       @default(PLANNED)
+  progress    Int                 @default(0)
+  clientId    String?
+  client      ClientProfile?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  location    String?
+  startDate   DateTime?
+  targetDate  DateTime?
+  notes       String?
+  assignments ProjectAssignment[]
+  auditLogs   AuditLog[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([clientId])
+  @@index([phase, status])
+}
+
+model ProjectAssignment {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([projectId])
+  @@index([createdAt])
+}
