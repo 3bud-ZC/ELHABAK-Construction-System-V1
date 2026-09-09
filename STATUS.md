@@ -187,4 +187,6 @@ Milestone 05 - 40% -> 50% Site Operations & Progress Management.
 - Verified responsive layout (no horizontal overflow, confirmed via `scrollWidth`/`clientWidth`) and Arabic RTL / English LTR mirroring (including full sidebar/nav direction, not just text alignment) on the Design Hub register and detail pages at mobile width after the fix.
 - Cleanup: no temporary `visual-qa-m04.ts` or similar scratch file was present in the working tree to remove; removed all temporary QA/diagnostic scripts created during this session's own verification work (connection checks, orphan cleanup) - none were left behind.
 - Security/git audit before commit: reviewed `git status`/`git diff`; confirmed no `.env`, database credentials, tokens, or build/QA artifacts staged; confirmed `test-database-env.ts` only rewrites the test process's own `DATABASE_URL` from existing ignored environment variables and introduces no hardcoded credential.
+- Milestone 04 feature commit: `e0601f1` - `feat: complete design hub and client approval workflow`.
+- Push result: feature commit pushed successfully to `origin/main`.
 - Overall completion updated to **40% / 100%**; Milestone 04 is complete and verified. Milestone 05 (Site Operations & Progress Management) has not been started.
