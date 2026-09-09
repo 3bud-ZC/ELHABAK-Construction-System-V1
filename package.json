@@ -11,7 +11,10 @@
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @elhabak/database db:generate",
     "db:validate": "pnpm --filter @elhabak/database db:validate",
-    "db:migrate:dev": "pnpm --filter @elhabak/database db:migrate:dev"
+    "db:migrate:dev": "pnpm --filter @elhabak/database db:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @elhabak/database db:migrate:deploy",
+    "db:seed": "pnpm --filter @elhabak/database db:seed",
+    "test": "pnpm --filter @elhabak/api test"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

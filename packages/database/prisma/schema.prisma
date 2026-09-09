@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 enum UserRole {
@@ -51,10 +52,24 @@ model User {
   clientProfile ClientProfile?
   assignments  ProjectAssignment[]
   auditLogs     AuditLog[]
+  sessions      AuthSession[]
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 
   @@index([role])
+}
+
+model AuthSession {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model ClientProfile {

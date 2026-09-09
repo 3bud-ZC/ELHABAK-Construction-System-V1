@@ -36,5 +36,19 @@ export default tseslint.config(
     files: ["**/*.js", "**/*.mjs"],
     extends: [tseslint.configs.disableTypeChecked]
   },
+  {
+    files: ["**/*.spec.ts"],
+    rules: {
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off"
+    }
+  },
+  {
+    files: ["**/vitest.config.ts"],
+    extends: [tseslint.configs.disableTypeChecked]
+  },
   prettier
 );

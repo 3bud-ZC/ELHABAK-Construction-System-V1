@@ -65,11 +65,15 @@ export const dictionary = {
     contact: companyContact,
     login: {
       title: "دخول النظام",
-      subtitle: "واجهة الدخول جاهزة للربط بالمصادقة الحقيقية في Milestone 02.",
+      subtitle: "سجل الدخول بحسابك المعتمد للوصول إلى نظام إدارة الحباك.",
       email: "البريد الإلكتروني",
       password: "كلمة المرور",
       submit: "تسجيل الدخول",
-      disabled: "سيتم تفعيل الدخول بعد ربط المصادقة الحقيقية.",
+      invalid: "بيانات الدخول غير صحيحة.",
+      server: "تعذر الاتصال بالخادم. حاول مرة أخرى.",
+      required: "أدخل البريد الإلكتروني وكلمة المرور.",
+      showPassword: "إظهار كلمة المرور",
+      hidePassword: "إخفاء كلمة المرور",
       back: "العودة للموقع",
       language: "English"
     }
@@ -129,11 +133,15 @@ export const dictionary = {
     contact: companyContact,
     login: {
       title: "System login",
-      subtitle: "The login interface is ready for real authentication in Milestone 02.",
+      subtitle: "Sign in with an approved account to access the ELHABAK management system.",
       email: "Email address",
       password: "Password",
       submit: "Login",
-      disabled: "Login will be enabled after real authentication is integrated.",
+      invalid: "Invalid login details.",
+      server: "Server connection failed. Try again.",
+      required: "Enter email and password.",
+      showPassword: "Show password",
+      hidePassword: "Hide password",
       back: "Back to website",
       language: "العربية"
     }

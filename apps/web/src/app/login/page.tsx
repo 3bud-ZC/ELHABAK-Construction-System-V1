@@ -1,6 +1,7 @@
 import Image from "next/image";
-import { Button, Input } from "@elhabak/ui";
+import { Button } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../../i18n/translations";
+import { LoginForm } from "./login-form";
 
 type PageProps = {
   searchParams?: Promise<{ lang?: string }>;
@@ -42,14 +43,19 @@ export default async function LoginPage({ searchParams }: PageProps) {
           </div>
           <h2>{t.title}</h2>
           <p>{t.subtitle}</p>
-          <form className="login-form" aria-disabled="true">
-            <Input label={t.email} type="email" autoComplete="email" disabled />
-            <Input label={t.password} type="password" autoComplete="current-password" disabled />
-            <button className="ui-button ui-button--primary login-submit" type="button" disabled>
-              {t.submit}
-            </button>
-            <p className="login-disabled-note">{t.disabled}</p>
-          </form>
+          <LoginForm
+            locale={locale}
+            labels={{
+              email: t.email,
+              password: t.password,
+              submit: t.submit,
+              invalid: t.invalid,
+              server: t.server,
+              showPassword: t.showPassword,
+              hidePassword: t.hidePassword,
+              required: t.required
+            }}
+          />
         </div>
       </section>
     </main>
