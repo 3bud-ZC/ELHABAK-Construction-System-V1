@@ -481,6 +481,98 @@ export function financeActionLabel(action: string, locale: "ar" | "en"): string 
   return labels[action]?.[locale] ?? action;
 }
 
+export type DocumentCategory = "CONTRACT" | "PERMIT" | "REPORT" | "CORRESPONDENCE" | "HANDOVER" | "OTHER";
+export type DocumentRecordStatus = "ACTIVE" | "ARCHIVED";
+
+export type DocumentVersionRecord = {
+  id: string;
+  versionNumber: number;
+  versionCode: string;
+  originalFilename: string;
+  mimeType: string;
+  extension: string;
+  fileSize: number;
+  note: string | null;
+  checksumSha256?: string;
+  uploadedBy: { id: string; displayName: string; role: UserRole };
+  createdAt: string;
+};
+
+export type ProjectDocumentRecord = {
+  id: string;
+  projectId: string;
+  reference: string;
+  title: string;
+  description: string | null;
+  category: DocumentCategory;
+  status: DocumentRecordStatus;
+  isClientVisible: boolean;
+  currentVersionNumber: number;
+  currentVersion: DocumentVersionRecord | null;
+  versions: DocumentVersionRecord[];
+  createdBy: { id: string; displayName: string; role: UserRole };
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function documentFileUrl(projectId: string, documentId: string, versionId: string, download = false) {
+  return `${apiBaseUrl}/projects/${projectId}/documents/${documentId}/versions/${versionId}/file${download ? "?download=1" : ""}`;
+}
+
+export const DOCUMENT_CATEGORIES: DocumentCategory[] = ["CONTRACT", "PERMIT", "REPORT", "CORRESPONDENCE", "HANDOVER", "OTHER"];
+export const DOCUMENT_STATUSES: DocumentRecordStatus[] = ["ACTIVE", "ARCHIVED"];
+
+export function documentCategoryLabel(category: DocumentCategory, locale: "ar" | "en") {
+  const labels: Record<DocumentCategory, { ar: string; en: string }> = {
+    CONTRACT: { ar: "عقد / اتفاقية", en: "Contract" },
+    PERMIT: { ar: "تصريح", en: "Permit" },
+    REPORT: { ar: "تقرير", en: "Report" },
+    CORRESPONDENCE: { ar: "مراسلات", en: "Correspondence" },
+    HANDOVER: { ar: "مستندات التسليم", en: "Handover" },
+    OTHER: { ar: "أخرى", en: "Other" }
+  };
+  return labels[category][locale];
+}
+
+export function documentStatusLabel(status: DocumentRecordStatus, locale: "ar" | "en") {
+  return status === "ARCHIVED" ? (locale === "ar" ? "مؤرشف" : "Archived") : locale === "ar" ? "فعّال" : "Active";
+}
+
+export function documentStatusTone(status: DocumentRecordStatus): BadgeTone {
+  return status === "ARCHIVED" ? "neutral" : "success";
+}
+
+export function documentVisibilityLabel(isClientVisible: boolean, locale: "ar" | "en") {
+  if (locale === "ar") return isClientVisible ? "مشترك مع العميل" : "داخلي فقط";
+  return isClientVisible ? "Client Shared" : "Internal Only";
+}
+
+export function documentVisibilityTone(isClientVisible: boolean): BadgeTone {
+  return isClientVisible ? "info" : "neutral";
+}
+
+export function documentFormatCode(mime: string, filename: string): string {
+  const lower = filename.toLowerCase();
+  if (mime.includes("pdf") || lower.endsWith(".pdf")) return "PDF";
+  if (mime.includes("png") || lower.endsWith(".png")) return "PNG";
+  if (mime.includes("jpeg") || mime.includes("jpg") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "JPG";
+  if (mime.includes("wordprocessingml") || lower.endsWith(".docx")) return "DOCX";
+  if (mime.includes("spreadsheetml") || lower.endsWith(".xlsx")) return "XLSX";
+  return "FILE";
+}
+
+export function documentActionLabel(action: string, locale: "ar" | "en"): string {
+  const labels: Record<string, { ar: string; en: string }> = {
+    "documents.created": { ar: "تم تسجيل مستند جديد", en: "Document registered" },
+    "documents.metadata_updated": { ar: "تم تحديث بيانات المستند", en: "Document metadata updated" },
+    "documents.version_uploaded": { ar: "تم رفع نسخة جديدة", en: "New version uploaded" },
+    "documents.client_visibility_changed": { ar: "تم تغيير مشاركة المستند مع العميل", en: "Client visibility changed" },
+    "documents.archived": { ar: "تمت أرشفة المستند", en: "Document archived" },
+    "documents.restored": { ar: "تمت استعادة المستند", en: "Document restored" }
+  };
+  return labels[action]?.[locale] ?? action;
+}
+
 export function roleLabel(role: UserRole, locale: "ar" | "en") {
   const labels: Record<UserRole, { ar: string; en: string }> = {
     ADMIN: { ar: "مدير", en: "Admin" },

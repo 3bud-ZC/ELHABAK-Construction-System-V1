@@ -1,10 +1,10 @@
 # ELHABAK Construction System V1 - STATUS
 
 ## Overall Completion
-**60% / 100%**
+**70% / 100%**
 
 ## Current Milestone
-**Milestone 06 COMPLETE: 50-60% - Financial Architecture & Cost Engineering**
+**Milestone 07 COMPLETE: 60-70% - Documents & Secure Project Files**
 
 ## MVP 1 ACCEPTANCE STATUS
 **READY FOR CLIENT REVIEW**
@@ -15,7 +15,7 @@
 - Branding assets: received
 - Repository: initialized and tracking GitHub `main`
 - Hard deadline: 30 September 2026
-- Coding implementation: Milestone 06 complete
+- Coding implementation: Milestone 07 complete
 
 ## Verified Completed
 - User roles defined: `ADMIN`, `ENGINEER`, `ACCOUNTANT`, `WORKER`, `CLIENT`
@@ -89,9 +89,23 @@
 - Automated Milestone 06 test suite added (`apps/api/src/milestone-06.spec.ts`, 10 tests): authentication/role gates on every finance endpoint (anonymous `401`; Worker, unrelated Client, and unrelated Engineer `403`), Admin/Accountant full access vs Engineer/Client mutation denial, BOQ line-total arithmetic determinism (including an odd-decimal case cross-checked against the shared `computeLineTotalMinor` helper), a floating-point-drift proof (`0.10 + 0.20` summed from two persisted client payments returns exactly `"0.30"`, not `"0.30000000000000004"`), expense persistence and Client/Engineer denial of the expense and contractor-payment ledgers, client balance derivation including an intentional overpayment surfacing as a negative, un-clamped balance, protected receipt attachment authorization (owning-Client-only, cross-project-id `404`), internal attachment inaccessibility to Client with a real attachment id, void-with-reason and its audit trail, the lightweight finance project-context endpoint across every role, and versioned-estimate locking of a finalized version
 - Full automated test suite passes: 5 test files, 29 tests total (`milestone-02.spec.ts` through `milestone-06.spec.ts`)
 - Real, credentialed browser QA found and fixed two genuine defects beyond the new feature itself: (1) `formatMoney` was formatting Arabic-locale amounts with `Intl.NumberFormat("ar-EG")`, which renders Eastern Arabic-Indic digits (`٧٥٠٬٠٠٠٫٠٠`) - inconsistent with every other number in the app (progress percentage, BOQ quantities/codes) which stay in Western digits; fixed to always format in Western digits regardless of UI language. (2) Adding a 4th/5th item to the mobile collapsed top navigation (the "Finance" link) pushed `.app-sidebar`'s natural content width to 624px against a 390px viewport, causing real (non-scrollbar) horizontal clipping - root-caused to `.app-shell { grid-template-columns: 1fr; }` inside the `max-width: 980px` media query, which (unlike the desktop rule's `minmax(0, 1fr)`) has no `0` floor, so the single grid track sized to its content instead of the viewport; fixed by adding the same `minmax(0, 1fr)` floor for the mobile track (plus a defensive `min-width: 0` on the now-scrollable `.app-nav` flex item), confirmed via `scrollWidth`/`clientWidth` at 390px and 768px afterward
+- Document control schema and migration added: `ProjectDocument` (`reference`, `title`, `description`, `category`, `status`, `isClientVisible`, `currentVersionNumber`, `createdById`), `ProjectDocumentVersion` (`documentId`, `projectId`, `versionNumber`, `storagePath`, `storedFilename`, `originalFilename`, `mimeType`, `extension`, `fileSize`, `checksumSha256`, `note`, `uploadedById`), `DocumentCategory` (`CONTRACT`, `PERMIT`, `REPORT`, `CORRESPONDENCE`, `HANDOVER`, `OTHER`), and `DocumentRecordStatus` (`ACTIVE`, `ARCHIVED`)
+- Applied Prisma migration `20260910180000_document_control` to Neon PostgreSQL and generated updated `@elhabak/database` client
+- Validated input schemas in `@elhabak/validation`: `documentCategorySchema`, `documentRecordStatusSchema`, `createDocumentSchema`, `updateDocumentMetadataSchema`, `addDocumentVersionSchema`, and `setDocumentVisibilitySchema`
+- File security and magic-byte signature validation: enhanced `StorageService.validateDocumentFile` to check magic bytes for genuine PDF (`%PDF-`), PNG, JPEG, and DOCX/XLSX ZIP containers (`PK\x03\x04`), verifying extension, declared MIME, size limits, and raw binary headers; path traversal prevention using strict directory boundaries; atomic version file storage rolled back on failure
+- Documents API implemented (`apps/api/src/modules/documents`): `DocumentsController`, `DocumentsService`, and `DocumentAccessService` enforcing full RBAC - Admin and assigned Engineer can list, create, edit metadata, upload versions, toggle client visibility, archive, restore, and view document audit history; Client read-only for active shared documents (with 404 for internal/archived IDs to eliminate enumeration); Worker and Accountant completely denied (403)
+- Sequential batch database transactions implemented in `DocumentsService.create` and `addVersion`, ensuring 100% compatibility with connection poolers (PgBouncer/Neon)
+- Secure protected document download endpoint: `GET /projects/:id/documents/:docId/versions/:verId/file` with per-request RBAC authorization, private cache-control, no-sniff headers, and RFC 5987 UTF-8 encoded filename streaming; cross-project or unauthorized access rejected
+- Frontend Documents Hub implemented: `DocumentsHub` (`documents-hub.tsx`) with KPI cards (total, client visible, internal, categories), category and status filters, real-time search, document table, and upload modal
+- Frontend Document Detail page implemented: `DocumentDetail` (`document-detail.tsx`) with metadata editor, immutable version history timeline with download links and SHA-256 verification badges, client visibility toggle, archive/restore controls, and audit history log
+- Integrated Documents tab into `ProjectWorkspace` (`/app/projects/[id]/documents`) and added document breadcrumbs to `AppShell`
+- Idempotent demo seed extended with real generated PDFs on `DEMO-MVP1`: `DOC-001` (DEMO Site Inspection Report, client-visible) and `DOC-002` (DEMO Internal Coordination Memo, internal-only)
+- Automated Milestone 07 test suite added (`apps/api/src/milestone-07.spec.ts`): 7 comprehensive tests passing cleanly, verifying RBAC, file checksums, immutable versioning, magic-byte validation (rejecting spoofed PDFs and corrupted Office containers), client visibility and IDOR protection, visibility toggling, archive/restore, and cross-project download security
+- Full automated test suite passes: 6 test files, 36 tests total (`milestone-02.spec.ts` through `milestone-07.spec.ts`)
+- Live browser / HTTP QA performed end-to-end across all 5 roles (Admin, Engineer, Client, Worker, Accountant) and responsive viewports (1440px, 768px, 390px in Arabic RTL and English LTR), with complete post-QA cleanup of disposable test fixtures
 
 ## Current Blockers
-- None blocking Milestone 06 acceptance.
+- None blocking Milestone 07 acceptance.
 
 ## Known Issues / Follow-Up Notes
 - `pnpm db:migrate:deploy` hit a blank Prisma schema-engine failure against the Neon migration connection in Milestone 02; unchanged in Milestone 03. No `db push` was used. Repository migration SQL is applied with the workspace migration runner (`pnpm --filter @elhabak/database db:migrate:apply`), and replay reports zero pending migrations.
@@ -106,9 +120,22 @@
 - Do not fabricate missing content.
 
 ## Next Execution Target
-Milestone 07 - 60% -> 70% Documents & Secure Project Files.
+Milestone 08 - 70% -> 80% Project Communication & Realtime Collaboration (Chat, Voice Notes & In-App Notifications).
 
 ## Run Log
+### 2026-09-10 - Milestone 07 (Documents & Secure Project Files) implementation
+- Scope: full project document control and secure project file management - document register, version history (V01, V02...), SHA-256 file checksum integrity, file security with magic-byte validation (PDF, PNG, JPG, DOCX/XLSX ZIP containers), path-traversal prevention, RBAC and client visibility control (Admin/Engineer manage, Client read-only for active shared files, Worker/Accountant denied), 404 IDOR protection on private/archived document IDs, frontend Documents Hub and Document Detail screens, demo seed on DEMO-MVP1, automated tests, live browser QA, and responsive/RTL verification. Overall completion updated from 60% to strictly **70% / 100%**.
+- Architecture: document records are partitioned into `ProjectDocument` (metadata, category, status, visibility, currentVersionNumber) and immutable `ProjectDocumentVersion` records (versionNumber, storagePath, originalFilename, fileSize, mimeType, extension, checksumSha256, note, uploadedById). Prior version files are never overwritten and remain independently retrievable.
+- File Security: `StorageService.validateDocumentFile` checks declared MIME, extension, size, and raw binary magic bytes (`%PDF-` for PDF, `\x89PNG\r\n\x1a\n` for PNG, `\xff\xd8\xff` for JPG, `PK\x03\x04` for DOCX/XLSX ZIP containers). Storage paths resolve inside strict directory boundaries (`this.root\projects\:id\documents\:docId\v:ver\`) with directory traversal protection. File storage rollback executes if any subsequent database write fails.
+- Database & Connection Pooler: converted `addVersion` from an interactive transaction to sequential batch transaction (`$transaction([ ... ])`), matching `create` and providing 100% compatibility with PgBouncer / Neon connection pooling.
+- Client Visibility & IDOR Protection: Client visibility is enforced at database query level and serialization level. Clients querying internal or archived documents receive a strict `404 Not Found` (never a distinguishable 403), eliminating document ID enumeration. Direct version download endpoint enforces identical authorization.
+- Frontend: `DocumentsHub` (`documents-hub.tsx`) provides KPI cards, category/status filters, instant search, and upload modal with progress. `DocumentDetail` (`document-detail.tsx`) features editable metadata, immutable version list with download links and SHA-256 integrity badges, visibility toggle, archive/restore actions, and full audit history. Integrated into `ProjectWorkspace` tab bar and `AppShell` breadcrumbs.
+- Demo Seed: seeded `DEMO-MVP1` with `DOC-001` (DEMO Site Inspection Report, client-visible) and `DOC-002` (DEMO Internal Coordination Memo, internal-only), generating valid, genuine `%PDF-1.4` files without external dependencies. Seed is strictly idempotent.
+- Automated Tests: added `apps/api/src/milestone-07.spec.ts` (7 tests covering authentication/role gates, Admin/Engineer management, SHA-256 checksums, multi-version history, magic-byte validation rejecting spoofed PDFs and corrupted Office containers, client visibility filtering and 404 IDOR protection, visibility toggling, archive/restore, and cross-project download protection). Full test suite passes: 6 files, 36 tests (`milestone-02` through `milestone-07`).
+- Quality Gates: `pnpm db:validate`, `pnpm db:generate`, `pnpm --filter @elhabak/database db:migrate:apply`, `pnpm db:seed`, `pnpm lint` (0 errors), `pnpm typecheck` (all 8 workspace packages), `pnpm build` (all Next.js routes and NestJS API), `pnpm test` (36/36).
+- Live Browser QA: tested Admin (full management, upload V01, upload V02, download both versions, toggle visibility, archive, restore, audit check), Engineer (assigned project management, unassigned denied), Client (sees only DOC-001, DOC-002 returns 404, file download returns valid PDF, mutations denied with 403), Worker & Accountant (documents access denied with 403), and responsive viewports (1440px, 768px, 390px in Arabic RTL and English LTR). All test fixtures cleaned post-QA.
+- Did not touch Chat, Voice Notes, Notifications, Reports, or Milestone 08+ scope. Did not introduce external cloud storage.
+
 ### 2026-09-10 - Milestone 06 (Financial Architecture & Cost Engineering) implementation
 - Scope: full project-level Finance/Cost Control workspace - money model, preliminary estimation, BOQ, internal expenses, client payments, contractor payments, client-safe financial summary, protected receipt storage, financial audit history, role-based authorization (Admin/Accountant/Engineer/Client/Worker), automated tests, demo seed, and responsive/RTL QA. Overall completion updated from 50% to strictly **60% / 100%**.
 - Money model: integer minor units for amounts (1 EGP = 100 minor units) and integer milli-units for quantities (1 unit = 1000 milli-units), with all conversion and line-total arithmetic done via string parsing and `BigInt` (see `packages/validation/src/money.ts`); zero floating-point arithmetic anywhere in the financial code path. Verified live: two persisted client payments of 0.10 and 0.20 EGP sum to exactly "0.30" via the summary endpoint, and independently in the automated test suite.

@@ -14,7 +14,9 @@ export {
   ExpenseCategory,
   PaymentMethod,
   FinancialRecordStatus,
-  FinancialAttachmentKind
+  FinancialAttachmentKind,
+  DocumentCategory,
+  DocumentRecordStatus
 } from "@prisma/client";
 export type {
   User,
@@ -33,6 +35,8 @@ export type {
   Expense,
   ClientPayment,
   ContractorPayment,
-  FinancialAttachment
+  FinancialAttachment,
+  ProjectDocument,
+  ProjectDocumentVersion
 } from "@prisma/client";
 

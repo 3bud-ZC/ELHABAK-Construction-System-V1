@@ -125,6 +125,24 @@ enum FinancialAttachmentKind {
   CONTRACTOR_PAYMENT
 }
 
+// Milestone 07 - Documents & Secure Project Files.
+// General project records only: contracts, permits, reports, correspondence, handover
+// documentation. Design drawings stay in Design Hub, site photos/videos stay in Site
+// Operations, and financial evidence stays in Finance - this module never duplicates them.
+enum DocumentCategory {
+  CONTRACT
+  PERMIT
+  REPORT
+  CORRESPONDENCE
+  HANDOVER
+  OTHER
+}
+
+enum DocumentRecordStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model User {
   id           String              @id @default(cuid())
   email        String              @unique
@@ -148,6 +166,8 @@ model User {
   clientPaymentsCreated    ClientPayment[]            @relation("ClientPaymentCreatedBy")
   contractorPaymentsCreated ContractorPayment[]       @relation("ContractorPaymentCreatedBy")
   financialAttachmentsUploaded FinancialAttachment[]  @relation("FinancialAttachmentUploadedBy")
+  documentsCreated          ProjectDocument[]        @relation("ProjectDocumentCreatedBy")
+  documentVersionsUploaded  ProjectDocumentVersion[]  @relation("ProjectDocumentVersionUploadedBy")
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 
@@ -207,6 +227,8 @@ model Project {
   clientPayments     ClientPayment[]
   contractorPayments ContractorPayment[]
   financialAttachments FinancialAttachment[]
+  documents            ProjectDocument[]
+  documentVersions     ProjectDocumentVersion[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
@@ -507,4 +529,50 @@ model FinancialAttachment {
   @@index([expenseId])
   @@index([clientPaymentId])
   @@index([contractorPaymentId])
+}
+
+model ProjectDocument {
+  id                   String                @id @default(cuid())
+  projectId            String
+  project              Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reference            String
+  title                String
+  description          String?
+  category             DocumentCategory
+  status               DocumentRecordStatus  @default(ACTIVE)
+  isClientVisible      Boolean               @default(false)
+  currentVersionNumber Int                   @default(1)
+  versions             ProjectDocumentVersion[]
+  createdById          String
+  createdBy            User                  @relation("ProjectDocumentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@index([projectId, status])
+  @@index([projectId, category])
+  @@index([projectId, isClientVisible])
+}
+
+model ProjectDocumentVersion {
+  id               String          @id @default(cuid())
+  documentId       String
+  document         ProjectDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  projectId        String
+  project          Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versionNumber    Int
+  storagePath      String
+  storedFilename   String
+  originalFilename String
+  mimeType         String
+  extension        String
+  fileSize         Int
+  checksumSha256   String
+  note             String?
+  uploadedById     String
+  uploadedBy       User            @relation("ProjectDocumentVersionUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt        DateTime        @default(now())
+
+  @@unique([documentId, versionNumber])
+  @@index([projectId])
+  @@index([uploadedById])
 }

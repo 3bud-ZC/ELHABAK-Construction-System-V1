@@ -6,7 +6,7 @@ export default defineConfig({
     include: ["src/**/*.spec.ts"],
     setupFiles: ["./src/test-database-env.ts"],
     fileParallelism: false,
-    testTimeout: 60000,
+    testTimeout: 120000,
     hookTimeout: 120000,
     sequence: {
       concurrent: false

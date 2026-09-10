@@ -37,7 +37,8 @@ export function AppShell({ children }: AppShellProps) {
             edit: "تعديل",
             workspace: "مساحة المشروع",
             design: "التصميمات",
-            siteActivity: "نشاط الموقع"
+            siteActivity: "نشاط الموقع",
+            documents: "المستندات"
           }
         : {
             productTag: "Project Management System",
@@ -53,7 +54,8 @@ export function AppShell({ children }: AppShellProps) {
             edit: "Edit",
             workspace: "Workspace",
             design: "Design",
-            siteActivity: "Site Activity"
+            siteActivity: "Site Activity",
+            documents: "Documents"
           },
     [locale]
   );
@@ -79,6 +81,7 @@ export function AppShell({ children }: AppShellProps) {
       else if (seg === "design") crumbs.push(labels.design);
       else if (seg === "site-activity") crumbs.push(labels.siteActivity);
       else if (seg === "finance") crumbs.push(labels.finance);
+      else if (seg === "documents") crumbs.push(labels.documents);
       else if (!sawId) {
         crumbs.push(isAdmin ? labels.edit : labels.workspace);
         sawId = true;

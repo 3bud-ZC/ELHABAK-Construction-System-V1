@@ -3,7 +3,7 @@ import { parseApiEnv } from "@elhabak/config";
 import { createReadStream } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { basename, extname, join, resolve } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { ReadStream } from "node:fs";
 import type { SiteMediaType } from "@elhabak/database";
 
@@ -16,6 +16,13 @@ type StoredFile = {
 export type StoredDesignFile = {
   storedFilename: string;
   storagePath: string;
+};
+
+export type StoredDocumentFile = {
+  storedFilename: string;
+  storagePath: string;
+  extension: string;
+  checksumSha256: string;
 };
 
 @Injectable()
@@ -107,6 +114,50 @@ export class StorageService {
     return { storedFilename, storagePath: relativePath.replace(/\\/g, "/") };
   }
 
+  /**
+   * DOCX/XLSX validation is deliberately shallow: extension, declared MIME, and the ZIP
+   * local-file-header magic bytes (`PK\x03\x04`) are checked, since both formats are ZIP
+   * containers. This proves the upload is a genuine Office Open XML container, not that
+   * its internal XML parts are well-formed - deep OOXML content validation is not
+   * implemented, and this module makes no claim that it is.
+   */
+  validateDocumentFile(file: Express.Multer.File): string {
+    if (file.size === 0 || file.size > this.maxBytes) {
+      throw new BadRequestException(file.size === 0 ? "File is empty." : "File is too large.");
+    }
+
+    const extension = extname(file.originalname).toLowerCase();
+    const expectedMime = documentMimeFor(extension);
+    if (!expectedMime || expectedMime !== file.mimetype || !hasExpectedDocumentSignature(file.buffer, extension)) {
+      throw new BadRequestException("Only genuine PDF, PNG, JPG, JPEG, DOCX, and XLSX files are allowed.");
+    }
+    return extension;
+  }
+
+  async storeDocumentVersion(
+    projectId: string,
+    documentId: string,
+    versionNumber: number,
+    file: Express.Multer.File
+  ): Promise<StoredDocumentFile> {
+    const extension = this.validateDocumentFile(file);
+    const storedFilename = `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomUUID()}${extension}`;
+    const versionDir = join("projects", projectId, "documents", documentId, `v${versionNumber}`);
+    const relativePath = join(versionDir, storedFilename);
+    const absolutePath = this.absolutePath(relativePath);
+
+    await mkdir(resolve(this.root, versionDir), { recursive: true });
+    await writeFile(absolutePath, file.buffer, { flag: "wx" });
+    const checksumSha256 = createHash("sha256").update(file.buffer).digest("hex");
+
+    return {
+      storedFilename,
+      storagePath: relativePath.replace(/\\/g, "/"),
+      extension,
+      checksumSha256
+    };
+  }
+
   async remove(storagePath: string) {
     await unlink(this.absolutePath(storagePath)).catch(() => undefined);
   }
@@ -150,4 +201,28 @@ function hasExpectedSignature(buffer: Buffer, mimeType: string) {
     return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
   }
   return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+}
+
+function documentMimeFor(extension: string): string | null {
+  if (extension === ".pdf") return "application/pdf";
+  if (extension === ".png") return "image/png";
+  if (extension === ".jpg" || extension === ".jpeg") return "image/jpeg";
+  if (extension === ".docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (extension === ".xlsx") return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  return null;
+}
+
+function hasExpectedDocumentSignature(buffer: Buffer, extension: string) {
+  if (extension === ".pdf") return buffer.length >= 5 && buffer.subarray(0, 5).toString("ascii") === "%PDF-";
+  if (extension === ".png") {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (extension === ".jpg" || extension === ".jpeg") {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (extension === ".docx" || extension === ".xlsx") {
+    // ZIP local-file-header signature (PK\x03\x04) - both formats are Office Open XML ZIP containers.
+    return buffer.length >= 4 && buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04;
+  }
+  return false;
 }

@@ -345,6 +345,40 @@ export const voidRecordSchema = z.object({
   reason: z.string().trim().min(1).max(500)
 });
 
+export const documentCategorySchema = z.enum(["CONTRACT", "PERMIT", "REPORT", "CORRESPONDENCE", "HANDOVER", "OTHER"]);
+export const documentStatusSchema = z.enum(["ACTIVE", "ARCHIVED"]);
+
+const clientVisibleFormSchema = z.preprocess(
+  (value) => value === true || value === "true" || value === "1",
+  z.boolean()
+);
+
+export const createDocumentSchema = z.object({
+  reference: z.string().trim().min(1).max(60),
+  title: nonEmptyStringSchema,
+  description: z.string().trim().max(3000).optional().or(z.literal("")),
+  category: documentCategorySchema,
+  isClientVisible: clientVisibleFormSchema.default(false),
+  versionNote: z.string().trim().max(2000).optional().or(z.literal(""))
+});
+
+export const updateDocumentMetadataSchema = z
+  .object({
+    reference: z.string().trim().min(1).max(60).optional(),
+    title: nonEmptyStringSchema.optional(),
+    description: z.string().trim().max(3000).optional().or(z.literal("")),
+    category: documentCategorySchema.optional()
+  })
+  .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
+
+export const addDocumentVersionSchema = z.object({
+  note: z.string().trim().max(2000).optional().or(z.literal(""))
+});
+
+export const setDocumentVisibilitySchema = z.object({
+  isClientVisible: clientVisibleFormSchema
+});
+
 export type SetContractValueInput = z.infer<typeof setContractValueSchema>;
 export type CreateEstimateInput = z.infer<typeof createEstimateSchema>;
 export type UpdateEstimateInput = z.infer<typeof updateEstimateSchema>;
@@ -359,6 +393,10 @@ export type UpdateClientPaymentInput = z.infer<typeof updateClientPaymentSchema>
 export type ContractorPaymentInput = z.infer<typeof contractorPaymentSchema>;
 export type UpdateContractorPaymentInput = z.infer<typeof updateContractorPaymentSchema>;
 export type VoidRecordInput = z.infer<typeof voidRecordSchema>;
+export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;
+export type UpdateDocumentMetadataInput = z.infer<typeof updateDocumentMetadataSchema>;
+export type AddDocumentVersionInput = z.infer<typeof addDocumentVersionSchema>;
+export type SetDocumentVisibilityInput = z.infer<typeof setDocumentVisibilitySchema>;
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;

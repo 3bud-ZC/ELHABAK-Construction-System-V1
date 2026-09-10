@@ -2,6 +2,7 @@ import { config } from "dotenv";
 import { hash } from "bcryptjs";
 import { PrismaClient, type UserRole } from "@prisma/client";
 import { computeLineTotalMinor, decimalToMinorUnits } from "@elhabak/validation";
+import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 
@@ -341,11 +342,109 @@ async function main() {
     });
   }
 
+  const demoDocuments: Array<{
+    reference: string;
+    title: string;
+    description: string;
+    category: "REPORT" | "CORRESPONDENCE";
+    isClientVisible: boolean;
+    storedFilename: string;
+    originalFilename: string;
+    pdfTitle: string;
+  }> = [
+    {
+      reference: "DOC-001",
+      title: "DEMO Site Inspection Report",
+      description: "Demo site inspection summary shared with the client.",
+      category: "REPORT",
+      isClientVisible: true,
+      storedFilename: "demo-site-inspection-report-v1.pdf",
+      originalFilename: "site-inspection-report-v01.pdf",
+      pdfTitle: "ELHABAK - DEMO Site Inspection Report - V01"
+    },
+    {
+      reference: "DOC-002",
+      title: "DEMO Internal Coordination Memo",
+      description: "Demo internal coordination note - not shared with the client.",
+      category: "CORRESPONDENCE",
+      isClientVisible: false,
+      storedFilename: "demo-internal-coordination-memo-v1.pdf",
+      originalFilename: "internal-coordination-memo-v01.pdf",
+      pdfTitle: "ELHABAK - DEMO Internal Coordination Memo - V01"
+    }
+  ];
+
+  for (const demoDocument of demoDocuments) {
+    let document = await prisma.projectDocument.findFirst({
+      where: { projectId: demoProject.id, reference: demoDocument.reference }
+    });
+
+    const demoDocumentPdf = createDemoPdf(demoDocument.pdfTitle);
+
+    if (!document) {
+      document = await prisma.projectDocument.create({
+        data: {
+          projectId: demoProject.id,
+          reference: demoDocument.reference,
+          title: demoDocument.title,
+          description: demoDocument.description,
+          category: demoDocument.category,
+          isClientVisible: demoDocument.isClientVisible,
+          currentVersionNumber: 1,
+          createdById: demoEngineer.id
+        }
+      });
+    } else {
+      document = await prisma.projectDocument.update({
+        where: { id: document.id },
+        data: {
+          title: demoDocument.title,
+          description: demoDocument.description,
+          category: demoDocument.category,
+          isClientVisible: demoDocument.isClientVisible
+        }
+      });
+    }
+
+    const demoDocumentDirectory = resolve(apiStorageRoot, "projects", demoProject.id, "documents", document.id, "v1");
+    await mkdir(demoDocumentDirectory, { recursive: true });
+    await writeFile(resolve(demoDocumentDirectory, demoDocument.storedFilename), demoDocumentPdf);
+    const demoDocumentStoragePath = `projects/${demoProject.id}/documents/${document.id}/v1/${demoDocument.storedFilename}`;
+
+    await prisma.projectDocumentVersion.upsert({
+      where: { documentId_versionNumber: { documentId: document.id, versionNumber: 1 } },
+      update: {
+        storagePath: demoDocumentStoragePath,
+        storedFilename: demoDocument.storedFilename,
+        originalFilename: demoDocument.originalFilename,
+        mimeType: "application/pdf",
+        extension: ".pdf",
+        fileSize: demoDocumentPdf.length,
+        checksumSha256: createHash("sha256").update(demoDocumentPdf).digest("hex"),
+        uploadedById: demoEngineer.id
+      },
+      create: {
+        documentId: document.id,
+        projectId: demoProject.id,
+        versionNumber: 1,
+        storagePath: demoDocumentStoragePath,
+        storedFilename: demoDocument.storedFilename,
+        originalFilename: demoDocument.originalFilename,
+        mimeType: "application/pdf",
+        extension: ".pdf",
+        fileSize: demoDocumentPdf.length,
+        checksumSha256: createHash("sha256").update(demoDocumentPdf).digest("hex"),
+        note: "Initial demo version.",
+        uploadedById: demoEngineer.id
+      }
+    });
+  }
+
   const count = await prisma.user.count({
     where: { email: { endsWith: "@elhabak.local" } }
   });
 
-  console.log(`Seed complete. Demo users present: ${count}. DEMO-MVP1, Design Hub, and Finance samples ready.`);
+  console.log(`Seed complete. Demo users present: ${count}. DEMO-MVP1, Design Hub, Finance, and Documents samples ready.`);
 }
 
 function createDemoPdf(title: string) {
