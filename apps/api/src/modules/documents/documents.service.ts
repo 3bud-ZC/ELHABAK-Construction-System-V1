@@ -11,6 +11,7 @@ import type { RequestUser } from "../../shared/http.types";
 import { PrismaService } from "../../shared/prisma.service";
 import { parseBody } from "../../shared/zod";
 import { AuditService } from "../admin/audit.service";
+import { NotificationService } from "../notifications/notification.service";
 import { StorageService } from "../projects/storage.service";
 import { DocumentAccessService } from "./document-access.service";
 import { documentInclude, toDocumentResponse } from "./document-response";
@@ -24,7 +25,8 @@ export class DocumentsService {
     private readonly prisma: PrismaService,
     private readonly access: DocumentAccessService,
     private readonly storage: StorageService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly notifications: NotificationService
   ) {}
 
   async list(user: RequestUser, projectId: string, search?: string, category?: string, status?: string) {
@@ -108,6 +110,11 @@ export class DocumentsService {
       ]);
       persisted = true;
       await this.audit.record(user.id, "documents.created", { documentId, reference: input.reference.trim() }, projectId);
+
+      if (input.isClientVisible) {
+        await this.notifyClientDocumentShared(projectId, documentId, input.title.trim(), user);
+      }
+
       return this.get(user, projectId, documentId);
     } finally {
       if (!persisted) await this.storage.remove(stored.storagePath);
@@ -182,6 +189,10 @@ export class DocumentsService {
         { documentId, from: document.isClientVisible, to: input.isClientVisible },
         projectId
       );
+
+      if (input.isClientVisible) {
+        await this.notifyClientDocumentShared(projectId, documentId, document.title, user);
+      }
     }
     return this.get(user, projectId, documentId);
   }
@@ -245,6 +256,18 @@ export class DocumentsService {
       throw new NotFoundException("Document not found.");
     }
     return document;
+  }
+
+  private async notifyClientDocumentShared(projectId: string, documentId: string, title: string, actor: RequestUser) {
+    const { clientUserId } = await this.notifications.getProjectParticipants(projectId);
+    if (!clientUserId) return;
+    await this.notifications.notify([clientUserId], {
+      type: "DOCUMENT_SHARED",
+      title: `${title}: shared with you`,
+      projectId,
+      entityId: documentId,
+      actorId: actor.id
+    });
   }
 
   private async findDocument(projectId: string, documentId: string) {

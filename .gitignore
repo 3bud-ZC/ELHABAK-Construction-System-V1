@@ -3,7 +3,7 @@ node_modules/
 dist/
 coverage/
 storage/
-.codex-m03-qa/
+.codex-*-qa/
 .env
 .env.*
 !.env.example

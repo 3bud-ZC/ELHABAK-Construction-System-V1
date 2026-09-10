@@ -379,6 +379,21 @@ export const setDocumentVisibilitySchema = z.object({
   isClientVisible: clientVisibleFormSchema
 });
 
+export const chatMessageTypeSchema = z.enum(["TEXT", "VOICE"]);
+
+export const createChatMessageSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("TEXT"),
+    text: z.string().trim().min(1).max(2000)
+  }),
+  z.object({
+    type: z.literal("VOICE"),
+    durationSeconds: z.coerce.number().int().min(1).max(180)
+  })
+]);
+
+export type CreateChatMessageInput = z.infer<typeof createChatMessageSchema>;
+
 export type SetContractValueInput = z.infer<typeof setContractValueSchema>;
 export type CreateEstimateInput = z.infer<typeof createEstimateSchema>;
 export type UpdateEstimateInput = z.infer<typeof updateEstimateSchema>;

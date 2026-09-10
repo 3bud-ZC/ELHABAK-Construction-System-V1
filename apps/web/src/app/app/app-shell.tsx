@@ -6,6 +6,7 @@ import { BriefcaseBusiness, Camera, LayoutGrid, LogOut, Users, UserRoundCog, Wal
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
+import { NotificationBell } from "../../components/notification-bell";
 
 type AppShellProps = {
   children: ReactNode;
@@ -38,7 +39,9 @@ export function AppShell({ children }: AppShellProps) {
             workspace: "مساحة المشروع",
             design: "التصميمات",
             siteActivity: "نشاط الموقع",
-            documents: "المستندات"
+            documents: "المستندات",
+            chat: "الدردشة",
+            notifications: "الإشعارات"
           }
         : {
             productTag: "Project Management System",
@@ -55,7 +58,9 @@ export function AppShell({ children }: AppShellProps) {
             workspace: "Workspace",
             design: "Design",
             siteActivity: "Site Activity",
-            documents: "Documents"
+            documents: "Documents",
+            chat: "Chat",
+            notifications: "Notifications"
           },
     [locale]
   );
@@ -74,6 +79,7 @@ export function AppShell({ children }: AppShellProps) {
     else if (section === "clients") crumbs.push(labels.clients);
     else if (section === "users") crumbs.push(labels.users);
     else if (section === "finance") crumbs.push(labels.finance);
+    else if (section === "notifications") return [labels.notifications];
     else return [labels.dashboard];
     let sawId = false;
     for (const seg of rest.slice(i)) {
@@ -82,6 +88,7 @@ export function AppShell({ children }: AppShellProps) {
       else if (seg === "site-activity") crumbs.push(labels.siteActivity);
       else if (seg === "finance") crumbs.push(labels.finance);
       else if (seg === "documents") crumbs.push(labels.documents);
+      else if (seg === "chat") crumbs.push(labels.chat);
       else if (!sawId) {
         crumbs.push(isAdmin ? labels.edit : labels.workspace);
         sawId = true;
@@ -197,6 +204,7 @@ export function AppShell({ children }: AppShellProps) {
             ))}
           </nav>
           <div className="app-actions">
+            <NotificationBell locale={locale} />
             <Link className="lang-link" href={href(pathname, alternate)}>
               {alternate === "ar" ? "العربية" : "English"}
             </Link>

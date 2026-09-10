@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { parseApiEnv } from "@elhabak/config";
 import { createReadStream } from "node:fs";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
 import { basename, extname, join, resolve } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { ReadStream } from "node:fs";
@@ -23,6 +23,13 @@ export type StoredDocumentFile = {
   storagePath: string;
   extension: string;
   checksumSha256: string;
+};
+
+export type StoredVoiceNote = {
+  storedFilename: string;
+  storagePath: string;
+  extension: string;
+  mimeType: string;
 };
 
 @Injectable()
@@ -158,6 +165,39 @@ export class StorageService {
     };
   }
 
+  /**
+   * Only WebM and OGG are accepted: these are the two audio container formats produced by
+   * the browser MediaRecorder API that were actually exercised against this backend. No
+   * other browser-produced audio format is claimed to work.
+   */
+  validateVoiceNote(file: Express.Multer.File): string {
+    const maxVoiceBytes = 20 * 1024 * 1024;
+    if (file.size === 0 || file.size > maxVoiceBytes) {
+      throw new BadRequestException(file.size === 0 ? "Voice note is empty." : "Voice note is too large.");
+    }
+
+    const declaredMime = file.mimetype.split(";")[0]?.trim().toLowerCase() ?? "";
+    const extension = extname(file.originalname).toLowerCase();
+    const expected = voiceContainerFor(declaredMime, extension);
+    if (!expected || !hasExpectedVoiceSignature(file.buffer, expected.container)) {
+      throw new BadRequestException("Only genuine WebM or OGG audio recordings are allowed.");
+    }
+    return expected.extension;
+  }
+
+  async storeVoiceNote(projectId: string, messageId: string, file: Express.Multer.File): Promise<StoredVoiceNote> {
+    const extension = this.validateVoiceNote(file);
+    const declaredMime = file.mimetype.split(";")[0]?.trim().toLowerCase() ?? "audio/webm";
+    const storedFilename = `voice-${randomUUID()}${extension}`;
+    const relativePath = join("projects", projectId, "chat", "voice", messageId, storedFilename);
+    const absolutePath = this.absolutePath(relativePath);
+
+    await mkdir(resolve(this.root, "projects", projectId, "chat", "voice", messageId), { recursive: true });
+    await writeFile(absolutePath, file.buffer, { flag: "wx" });
+
+    return { storedFilename, storagePath: relativePath.replace(/\\/g, "/"), extension, mimeType: declaredMime };
+  }
+
   async remove(storagePath: string) {
     await unlink(this.absolutePath(storagePath)).catch(() => undefined);
   }
@@ -166,6 +206,15 @@ export class StorageService {
     const absolutePath = this.absolutePath(storagePath);
 
     return { stream: createReadStream(absolutePath), filename: basename(absolutePath) };
+  }
+
+  async statSize(storagePath: string): Promise<number> {
+    const stats = await stat(this.absolutePath(storagePath));
+    return stats.size;
+  }
+
+  openRange(storagePath: string, start: number, end: number): ReadStream {
+    return createReadStream(this.absolutePath(storagePath), { start, end });
   }
 
   private absolutePath(storagePath: string) {
@@ -210,6 +259,20 @@ function documentMimeFor(extension: string): string | null {
   if (extension === ".docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (extension === ".xlsx") return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   return null;
+}
+
+function voiceContainerFor(mimeType: string, extension: string): { container: "webm" | "ogg"; extension: string } | null {
+  if (mimeType === "audio/webm" || extension === ".webm") return { container: "webm", extension: ".webm" };
+  if (mimeType === "audio/ogg" || mimeType === "application/ogg" || extension === ".ogg") return { container: "ogg", extension: ".ogg" };
+  return null;
+}
+
+function hasExpectedVoiceSignature(buffer: Buffer, container: "webm" | "ogg") {
+  if (container === "webm") {
+    // EBML header magic bytes - shared by WebM and Matroska containers.
+    return buffer.length >= 4 && buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3;
+  }
+  return buffer.length >= 4 && buffer.subarray(0, 4).toString("ascii") === "OggS";
 }
 
 function hasExpectedDocumentSignature(buffer: Buffer, extension: string) {

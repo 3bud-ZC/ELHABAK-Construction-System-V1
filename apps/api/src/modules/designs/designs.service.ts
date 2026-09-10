@@ -11,6 +11,7 @@ import type { RequestUser } from "../../shared/http.types";
 import { PrismaService } from "../../shared/prisma.service";
 import { parseBody } from "../../shared/zod";
 import { AuditService } from "../admin/audit.service";
+import { NotificationService } from "../notifications/notification.service";
 import { StorageService } from "../projects/storage.service";
 import { DesignAccessService } from "./design-access.service";
 import { designInclude, toDesignResponse } from "./design-response";
@@ -33,7 +34,8 @@ export class DesignsService {
     private readonly prisma: PrismaService,
     private readonly access: DesignAccessService,
     private readonly storage: StorageService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly notifications: NotificationService
   ) {}
 
   async list(user: RequestUser, projectId: string, search?: string, status?: string, discipline?: string) {
@@ -196,6 +198,18 @@ export class DesignsService {
       this.prisma.designEvent.create({ data: { designId, revisionId, actorId: user.id, action: "SUBMITTED_FOR_REVIEW" } })
     ]);
     await this.audit.record(user.id, "design.submitted_for_review", { designId, revision: revision.revisionNumber }, projectId);
+
+    const { clientUserId } = await this.notifications.getProjectParticipants(projectId);
+    if (clientUserId) {
+      await this.notifications.notify([clientUserId], {
+        type: "DESIGN_REVIEW_REQUIRED",
+        title: `${design.title}: submitted for your review`,
+        projectId,
+        entityId: designId,
+        actorId: user.id
+      });
+    }
+
     return this.get(user, projectId, designId);
   }
 
@@ -218,6 +232,17 @@ export class DesignsService {
       })
     ]);
     await this.audit.record(user.id, status === "APPROVED" ? "design.client_approved" : "design.client_rejected", { designId, revision: revision.revisionNumber }, projectId);
+
+    const { adminIds, engineerId } = await this.notifications.getProjectParticipants(projectId);
+    await this.notifications.notify([...adminIds, ...(engineerId ? [engineerId] : [])], {
+      type: status === "APPROVED" ? "DESIGN_APPROVED" : "DESIGN_REJECTED",
+      title: status === "APPROVED" ? `${design.title}: approved by client` : `${design.title}: rejected by client`,
+      body: emptyToNull(input.comment),
+      projectId,
+      entityId: designId,
+      actorId: user.id
+    });
+
     return this.get(user, projectId, designId);
   }
 

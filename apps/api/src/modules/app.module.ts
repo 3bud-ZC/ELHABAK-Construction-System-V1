@@ -9,6 +9,9 @@ import { ProjectsModule } from "./projects/projects.module";
 import { DesignsModule } from "./designs/designs.module";
 import { FinanceModule } from "./finance/finance.module";
 import { DocumentsModule } from "./documents/documents.module";
+import { RealtimeModule } from "./realtime/realtime.module";
+import { NotificationsModule } from "./notifications/notifications.module";
+import { ChatModule } from "./chat/chat.module";
 
 @Module({
   imports: [
@@ -19,10 +22,13 @@ import { DocumentsModule } from "./documents/documents.module";
     DatabaseModule,
     AuthModule,
     AdminModule,
+    RealtimeModule,
+    NotificationsModule,
     ProjectsModule,
     DesignsModule,
     FinanceModule,
-    DocumentsModule
+    DocumentsModule,
+    ChatModule
   ],
   controllers: [HealthController]
 })

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Badge, ProgressBar } from "@elhabak/ui";
-import { Activity, ClipboardList, FileStack, MapPin, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Activity, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
   phaseLabel,
@@ -15,7 +15,7 @@ import {
   type UserRole
 } from "../lib/api";
 
-type WorkspaceSection = "overview" | "design" | "site" | "finance" | "documents";
+type WorkspaceSection = "overview" | "design" | "site" | "finance" | "documents" | "chat";
 
 /** The subset of a project every workspace header needs - satisfied by the full ProjectRecord and by the lightweight finance project-context response alike. */
 export type ProjectHeaderRecord = {
@@ -52,6 +52,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
         site: "نشاط الموقع",
         finance: "الشؤون المالية",
         documents: "المستندات",
+        chat: "الدردشة",
         status: "الحالة",
         unset: "غير محدد"
       }
@@ -66,6 +67,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
         site: "Site Activity",
         finance: "Finance",
         documents: "Documents",
+        chat: "Chat",
         edit: "Edit Project",
         status: "Status",
         unset: "Not set"
@@ -87,6 +89,9 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       : []),
     ...(role === "ADMIN" || role === "ENGINEER" || role === "CLIENT"
       ? [{ id: "documents" as const, label: labels.documents, href: `${base}/documents`, icon: FileStack }]
+      : []),
+    ...(role === "ADMIN" || role === "ENGINEER" || role === "WORKER" || role === "CLIENT"
+      ? [{ id: "chat" as const, label: labels.chat, href: `${base}/chat`, icon: MessageSquare }]
       : [])
   ];
 

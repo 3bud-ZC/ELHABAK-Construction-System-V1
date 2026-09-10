@@ -573,6 +573,123 @@ export function documentActionLabel(action: string, locale: "ar" | "en"): string
   return labels[action]?.[locale] ?? action;
 }
 
+export type ChatMessageType = "TEXT" | "VOICE";
+
+export type ChatVoiceMeta = {
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  durationSeconds: number | null;
+};
+
+export type ChatMessageRecord = {
+  id: string;
+  projectId: string;
+  type: ChatMessageType;
+  text: string | null;
+  voice: ChatVoiceMeta | null;
+  author: { id: string; displayName: string; role: UserRole };
+  createdAt: string;
+};
+
+export type ChatHistoryResponse = {
+  messages: ChatMessageRecord[];
+  nextCursor: string | null;
+};
+
+export type ChatReadState = {
+  lastReadAt: string;
+  unreadCount: number;
+};
+
+export function voiceNoteUrl(projectId: string, messageId: string) {
+  return `${apiBaseUrl}/projects/${projectId}/messages/${messageId}/voice`;
+}
+
+export function formatVoiceDuration(seconds: number) {
+  const total = Math.max(0, Math.round(seconds));
+  const minutes = Math.floor(total / 60);
+  const remaining = total % 60;
+  return `${minutes}:${String(remaining).padStart(2, "0")}`;
+}
+
+export type NotificationType =
+  | "CHAT_MESSAGE"
+  | "VOICE_MESSAGE"
+  | "DESIGN_REVIEW_REQUIRED"
+  | "DESIGN_APPROVED"
+  | "DESIGN_REJECTED"
+  | "SITE_UPDATE"
+  | "PROJECT_PROGRESS_CHANGED"
+  | "DOCUMENT_SHARED";
+
+export type NotificationRecord = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  projectId: string | null;
+  project: { id: string; code: string | null; name: string } | null;
+  entityId: string | null;
+  readAt: string | null;
+  createdAt: string;
+};
+
+export function notificationDestination(notification: NotificationRecord): string | null {
+  if (!notification.projectId) return null;
+  const base = `/app/projects/${notification.projectId}`;
+  switch (notification.type) {
+    case "CHAT_MESSAGE":
+    case "VOICE_MESSAGE":
+      return `${base}/chat`;
+    case "DESIGN_REVIEW_REQUIRED":
+    case "DESIGN_APPROVED":
+    case "DESIGN_REJECTED":
+      return notification.entityId ? `${base}/design/${notification.entityId}` : `${base}/design`;
+    case "DOCUMENT_SHARED":
+      return `${base}/documents`;
+    case "SITE_UPDATE":
+    case "PROJECT_PROGRESS_CHANGED":
+      return `${base}/site-activity`;
+    default:
+      return base;
+  }
+}
+
+export function notificationTypeLabel(type: NotificationType, locale: "ar" | "en") {
+  const labels: Record<NotificationType, { ar: string; en: string }> = {
+    CHAT_MESSAGE: { ar: "رسالة دردشة", en: "Chat message" },
+    VOICE_MESSAGE: { ar: "رسالة صوتية", en: "Voice message" },
+    DESIGN_REVIEW_REQUIRED: { ar: "مطلوب مراجعة تصميم", en: "Design review required" },
+    DESIGN_APPROVED: { ar: "تم اعتماد التصميم", en: "Design approved" },
+    DESIGN_REJECTED: { ar: "تم رفض التصميم", en: "Design rejected" },
+    SITE_UPDATE: { ar: "تحديث موقع", en: "Site update" },
+    PROJECT_PROGRESS_CHANGED: { ar: "تحديث نسبة الإنجاز", en: "Progress updated" },
+    DOCUMENT_SHARED: { ar: "مستند جديد", en: "Document shared" }
+  };
+  return labels[type][locale];
+}
+
+export function relativeTime(iso: string, locale: "ar" | "en") {
+  const then = new Date(iso).getTime();
+  const diffSeconds = Math.round((Date.now() - then) / 1000);
+  const rtf = new Intl.RelativeTimeFormat(locale === "ar" ? "ar" : "en", { numeric: "auto" });
+  const thresholds: Array<[number, Intl.RelativeTimeFormatUnit]> = [
+    [60, "second"],
+    [3600, "minute"],
+    [86400, "hour"],
+    [2592000, "day"],
+    [31536000, "month"]
+  ];
+  if (diffSeconds < 60) return rtf.format(-diffSeconds, "second");
+  for (let i = 1; i < thresholds.length; i += 1) {
+    const [limit] = thresholds[i]!;
+    const [divisor, unit] = thresholds[i - 1]!;
+    if (diffSeconds < limit) return rtf.format(-Math.round(diffSeconds / divisor), unit);
+  }
+  return rtf.format(-Math.round(diffSeconds / 31536000), "year");
+}
+
 export function roleLabel(role: UserRole, locale: "ar" | "en") {
   const labels: Record<UserRole, { ar: string; en: string }> = {
     ADMIN: { ar: "مدير", en: "Admin" },
@@ -771,7 +888,9 @@ export function actionLabel(action: string, locale: "ar" | "en"): string {
     "user.updated": { ar: "تم تعديل بيانات المستخدم", en: "User details updated" },
     "user.role_changed": { ar: "تم تغيير دور المستخدم", en: "User role changed" },
     "user.activated": { ar: "تم تفعيل الحساب", en: "Account activated" },
-    "user.deactivated": { ar: "تم إيقاف الحساب", en: "Account deactivated" }
+    "user.deactivated": { ar: "تم إيقاف الحساب", en: "Account deactivated" },
+    "chat.message_sent": { ar: "رسالة دردشة جديدة", en: "New chat message" },
+    "chat.voice_sent": { ar: "رسالة صوتية جديدة", en: "New voice note" }
   };
   return labels[action]?.[locale] ?? action;
 }

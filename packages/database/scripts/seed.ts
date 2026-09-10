@@ -440,11 +440,43 @@ async function main() {
     });
   }
 
+  const demoAdmin = await prisma.user.findUniqueOrThrow({
+    where: { email: "demo.admin@elhabak.local" }
+  });
+
+  const demoMessages: Array<{ authorId: string; text: string }> = [
+    { authorId: demoEngineer.id, text: "Good morning - foundation works for the demo project are progressing on schedule this week." },
+    { authorId: demoClient.userId, text: "Thank you for the update. Could you share a few site photos when you have a chance?" },
+    { authorId: demoEngineer.id, text: "Sure - I posted a new site update with photos on the Site Activity tab just now." },
+    { authorId: demoAdmin.id, text: "Reviewed the progress - everything looks aligned with the execution schedule." }
+  ];
+
+  for (const demoMessage of demoMessages) {
+    const existing = await prisma.projectMessage.findFirst({
+      where: { projectId: demoProject.id, authorId: demoMessage.authorId, text: demoMessage.text }
+    });
+    if (!existing) {
+      await prisma.projectMessage.create({
+        data: { projectId: demoProject.id, authorId: demoMessage.authorId, type: "TEXT", text: demoMessage.text }
+      });
+    }
+  }
+
+  // Every demo participant is caught up with the seeded chat - the demo should not open
+  // with an artificial unread badge for accounts that only just logged in.
+  for (const participantId of [demoAdmin.id, demoEngineer.id, demoWorker.id, demoClient.userId]) {
+    await prisma.projectChatReadState.upsert({
+      where: { projectId_userId: { projectId: demoProject.id, userId: participantId } },
+      update: { lastReadAt: new Date() },
+      create: { projectId: demoProject.id, userId: participantId, lastReadAt: new Date() }
+    });
+  }
+
   const count = await prisma.user.count({
     where: { email: { endsWith: "@elhabak.local" } }
   });
 
-  console.log(`Seed complete. Demo users present: ${count}. DEMO-MVP1, Design Hub, Finance, and Documents samples ready.`);
+  console.log(`Seed complete. Demo users present: ${count}. DEMO-MVP1, Design Hub, Finance, Documents, and Chat samples ready.`);
 }
 
 function createDemoPdf(title: string) {

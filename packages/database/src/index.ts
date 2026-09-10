@@ -16,7 +16,9 @@ export {
   FinancialRecordStatus,
   FinancialAttachmentKind,
   DocumentCategory,
-  DocumentRecordStatus
+  DocumentRecordStatus,
+  ChatMessageType,
+  NotificationType
 } from "@prisma/client";
 export type {
   User,
@@ -37,6 +39,9 @@ export type {
   ContractorPayment,
   FinancialAttachment,
   ProjectDocument,
-  ProjectDocumentVersion
+  ProjectDocumentVersion,
+  ProjectMessage,
+  ProjectChatReadState,
+  Notification
 } from "@prisma/client";
 

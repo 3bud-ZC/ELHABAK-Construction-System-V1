@@ -12,6 +12,7 @@ import { PrismaService } from "../../shared/prisma.service";
 import type { RequestUser } from "../../shared/http.types";
 import { parseBody } from "../../shared/zod";
 import { AuditService } from "../admin/audit.service";
+import { NotificationService } from "../notifications/notification.service";
 import { ProjectAccessService } from "./project-access.service";
 import { projectInclude, toProjectResponse } from "./project-response";
 import { StorageService } from "./storage.service";
@@ -22,7 +23,8 @@ export class ProjectsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly access: ProjectAccessService,
-    private readonly storage: StorageService
+    private readonly storage: StorageService,
+    private readonly notifications: NotificationService
   ) {}
 
   async adminList(search?: string, status?: Prisma.EnumProjectStatusFilter["equals"], phase?: Prisma.EnumProjectPhaseFilter["equals"]) {
@@ -236,6 +238,17 @@ export class ProjectsService {
       projectId
     );
 
+    if (input.progress !== previousProgress) {
+      const { adminIds, clientUserId } = await this.notifications.getProjectParticipants(projectId);
+      await this.notifications.notify([...adminIds, ...(clientUserId ? [clientUserId] : [])], {
+        type: "PROJECT_PROGRESS_CHANGED",
+        title: `${updated.name}: progress updated to ${input.progress}%`,
+        projectId,
+        entityId: projectId,
+        actorId: user.id
+      });
+    }
+
     return toProjectResponse(updated, user.role);
   }
 
@@ -332,6 +345,18 @@ export class ProjectsService {
       { projectId, type: input.type, mediaCount: files.length, isClientVisible: input.isClientVisible },
       projectId
     );
+
+    if (input.isClientVisible) {
+      const { adminIds, clientUserId } = await this.notifications.getProjectParticipants(projectId);
+      await this.notifications.notify([...adminIds, ...(clientUserId ? [clientUserId] : [])], {
+        type: "SITE_UPDATE",
+        title: `${user.displayName}: new site update`,
+        body: update.note,
+        projectId,
+        entityId: update.id,
+        actorId: user.id
+      });
+    }
 
     return {
       id: update.id,
