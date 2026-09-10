@@ -15,3 +15,4 @@ storage/
 Thumbs.db
 .codex-brand-preview/
 apps/api/prisma/dev.db
+.claude/

@@ -167,7 +167,7 @@ export function ProjectsClient() {
             <article className="data-row project-row" key={project.id}>
               <div>
                 <strong>{project.name}</strong>
-                <span className="mono">{project.code}</span>
+                <span className="project-code-tag mono"><bdi>{project.code}</bdi></span>
               </div>
               <div>
                 <strong>{project.client?.user.displayName ?? "-"}</strong>

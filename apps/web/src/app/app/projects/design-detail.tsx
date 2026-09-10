@@ -100,44 +100,182 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
   return <section className="app-page project-workspace-page">
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />
     <div className="design-detail-heading">
-      <div><span className="section-kicker">{labels.back} / <bdi>{selected.revisionCode}</bdi></span><h2>{design.title}</h2><div><Badge tone={designStatusTone(selected.status)}>{designStatusLabel(selected.status, locale)}</Badge><span>{disciplineLabel(design.discipline, locale)}</span></div></div>
-      <div className="design-detail-actions">{canManage && <><button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setEditing(true)}><Pencil size={15} />{labels.edit}</button><button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowRevision(true)}><UploadCloud size={15} />{labels.newRevision}</button></>}</div>
+      <div className="design-detail-identity">
+        <span className="section-kicker">{ar ? "مراقبة المستندات الهندسية" : "ENGINEERING DOCUMENT CONTROL"} // <bdi className="mono">{selected.revisionCode}</bdi></span>
+        <h2>{design.title}</h2>
+        <div className="design-detail-badges">
+          <Badge tone={designStatusTone(selected.status)}>{designStatusLabel(selected.status, locale)}</Badge>
+          <span className="discipline-tag mono">{disciplineLabel(design.discipline, locale)}</span>
+        </div>
+      </div>
+      <div className="design-detail-actions">
+        {canManage && (
+          <>
+            <button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setEditing(true)}>
+              <Pencil size={15} />{labels.edit}
+            </button>
+            <button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowRevision(true)}>
+              <UploadCloud size={15} />{labels.newRevision}
+            </button>
+          </>
+        )}
+      </div>
     </div>
-    {error && <div className="form-error">{error}</div>}{success && <div className="form-success">{success}</div>}
+    {error && <div className="form-error">{error}</div>}
+    {success && <div className="form-success">{success}</div>}
 
     <div className="design-detail-layout">
       <main className="design-preview-column">
         <section className="workspace-panel design-file-panel">
-          <div className="workspace-panel__title"><FileText size={17} /><h3>{labels.preview}</h3><a className="ui-button ui-button--secondary ui-button--sm" href={designFileUrl(projectId, designId, selected.id, true)}><Download size={15} />{labels.download}</a></div>
-          <FilePreview projectId={projectId} designId={designId} revision={selected} fallback={labels.pdfFallback} />
-          <dl className="file-meta"><div><dt>{labels.file}</dt><dd><bdi>{selected.originalFilename}</bdi></dd></div><div><dt>{labels.fileMeta}</dt><dd><bdi>{selected.mimeType} · {formatFileSize(selected.fileSize, locale)}</bdi></dd></div></dl>
+          <div className="workspace-panel__title">
+            <div className="workspace-panel__title-left">
+              <FileText size={16} />
+              <h3>{labels.preview}</h3>
+              <span className="drawing-sheet-tag mono"><bdi>{selected.revisionCode} · {selected.mimeType === "application/pdf" ? "PDF" : "IMG"}</bdi></span>
+            </div>
+            <a className="ui-button ui-button--secondary ui-button--sm" href={designFileUrl(projectId, designId, selected.id, true)}>
+              <Download size={14} />{labels.download} ({formatFileSize(selected.fileSize, locale)})
+            </a>
+          </div>
+          <div className="cad-preview-frame">
+            <FilePreview projectId={projectId} designId={designId} revision={selected} fallback={labels.pdfFallback} />
+          </div>
+          <div className="drawing-titleblock">
+            <div className="drawing-titleblock__cell">
+              <span className="titleblock-label">{labels.file}</span>
+              <strong className="mono"><bdi>{selected.originalFilename}</bdi></strong>
+            </div>
+            <div className="drawing-titleblock__cell">
+              <span className="titleblock-label">{labels.discipline}</span>
+              <strong>{disciplineLabel(design.discipline, locale)}</strong>
+            </div>
+            <div className="drawing-titleblock__cell">
+              <span className="titleblock-label">{labels.current}</span>
+              <strong className="mono"><bdi>{selected.revisionCode}</bdi></strong>
+            </div>
+            <div className="drawing-titleblock__cell">
+              <span className="titleblock-label">{labels.fileMeta}</span>
+              <strong className="mono"><bdi>{selected.mimeType} · {formatFileSize(selected.fileSize, locale)}</bdi></strong>
+            </div>
+          </div>
         </section>
 
-        {canDecide && <section className="approval-panel">
-          <div><span className="approval-panel__icon"><FileClock size={21} /></span><div><h3>{labels.approvalTitle}</h3><p>{labels.approvalLead}</p></div></div>
-          {!decision && <div className="approval-panel__actions"><button className="ui-button ui-button--success" type="button" onClick={() => setDecision("APPROVE")}><Check size={17} />{labels.approve}</button><button className="ui-button ui-button--danger" type="button" onClick={() => setDecision("REJECT")}><XCircle size={17} />{labels.reject}</button></div>}
-          {decision && <div className="approval-confirm"><label className="ui-field">{decision === "REJECT" ? labels.rejectionRequired : labels.commentOptional}<textarea value={decisionComment} onChange={(event) => setDecisionComment(event.target.value)} required={decision === "REJECT"} /></label><div><button className="ui-button ui-button--secondary" type="button" onClick={() => setDecision(null)} disabled={mutating}>{labels.cancel}</button><button className={`ui-button ${decision === "APPROVE" ? "ui-button--success" : "ui-button--danger"}`} type="button" disabled={mutating || (decision === "REJECT" && !decisionComment.trim())} onClick={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${selected.id}/decision`, { action: decision, comment: decisionComment }, decision === "APPROVE" ? labels.approved : labels.rejected)}>{labels.confirm} {decision === "APPROVE" ? labels.approve : labels.reject}</button></div></div>}
-        </section>}
+        {canDecide && (
+          <section className="approval-panel">
+            <div className="approval-panel__head">
+              <span className="approval-panel__icon"><FileClock size={20} /></span>
+              <div>
+                <h3>{labels.approvalTitle}</h3>
+                <p>{labels.approvalLead}</p>
+              </div>
+            </div>
+            {!decision && (
+              <div className="approval-panel__actions">
+                <button className="ui-button ui-button--success" type="button" onClick={() => setDecision("APPROVE")}>
+                  <Check size={16} />{labels.approve}
+                </button>
+                <button className="ui-button ui-button--danger" type="button" onClick={() => setDecision("REJECT")}>
+                  <XCircle size={16} />{labels.reject}
+                </button>
+              </div>
+            )}
+            {decision && (
+              <div className="approval-confirm">
+                <label className="ui-field">
+                  <span>{decision === "REJECT" ? labels.rejectionRequired : labels.commentOptional}</span>
+                  <textarea value={decisionComment} onChange={(event) => setDecisionComment(event.target.value)} required={decision === "REJECT"} placeholder={decision === "REJECT" ? (ar ? "اذكر سبب رفض المراجعة والملاحظات المطلوبة..." : "State reason for rejection and required changes...") : ""} />
+                </label>
+                <div className="approval-confirm__actions">
+                  <button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setDecision(null)} disabled={mutating}>
+                    {labels.cancel}
+                  </button>
+                  <button className={`ui-button ui-button--sm ${decision === "APPROVE" ? "ui-button--success" : "ui-button--danger"}`} type="button" disabled={mutating || (decision === "REJECT" && !decisionComment.trim())} onClick={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${selected.id}/decision`, { action: decision, comment: decisionComment }, decision === "APPROVE" ? labels.approved : labels.rejected)}>
+                    {labels.confirm} {decision === "APPROVE" ? labels.approve : labels.reject}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="workspace-panel">
-          <div className="workspace-panel__title"><MessageSquare size={17} /><h3>{labels.addComment}</h3></div>
-          <form className="comment-form" onSubmit={(event) => void addComment(event)}><textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder={labels.commentPlaceholder} maxLength={2000} /><button className="ui-button ui-button--primary ui-button--sm" type="submit" disabled={mutating || !comment.trim()}><Send size={15} />{labels.addComment}</button></form>
+          <div className="workspace-panel__title">
+            <MessageSquare size={16} />
+            <h3>{labels.addComment}</h3>
+          </div>
+          <form className="comment-form" onSubmit={(event) => void addComment(event)}>
+            <textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder={labels.commentPlaceholder} maxLength={2000} />
+            <div className="comment-form__footer">
+              <button className="ui-button ui-button--primary ui-button--sm" type="submit" disabled={mutating || !comment.trim()}>
+                <Send size={14} />{labels.addComment}
+              </button>
+            </div>
+          </form>
         </section>
       </main>
 
       <aside className="design-detail-sidebar">
         <section className="workspace-panel">
-          <div className="workspace-panel__title"><FileText size={17} /><h3>{labels.current}</h3></div>
-          <dl className="detail-list compact"><div><dt>{labels.current}</dt><dd><bdi className="revision-badge">{design.currentRevision.revisionCode}</bdi></dd></div><div><dt>{labels.discipline}</dt><dd>{disciplineLabel(design.discipline, locale)}</dd></div><div><dt>{labels.uploader}</dt><dd>{selected.uploader.displayName}</dd></div><div><dt>{labels.uploaded}</dt><dd><bdi>{dateTime(selected.createdAt)}</bdi></dd></div><div><dt>{labels.description}</dt><dd>{design.description || "—"}</dd></div></dl>
-          {canManage && design.currentRevision.status === "DRAFT" && <SubmitRevisionButton labels={labels} disabled={mutating} onConfirm={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${design.currentRevision.id}/submit`, {}, labels.submitted)} />}
+          <div className="workspace-panel__title">
+            <FileText size={16} />
+            <h3>{labels.current}</h3>
+          </div>
+          <dl className="detail-list compact">
+            <div><dt>{labels.current}</dt><dd><bdi className="revision-badge mono">{design.currentRevision.revisionCode}</bdi></dd></div>
+            <div><dt>{labels.discipline}</dt><dd>{disciplineLabel(design.discipline, locale)}</dd></div>
+            <div><dt>{labels.uploader}</dt><dd>{selected.uploader.displayName}</dd></div>
+            <div><dt>{labels.uploaded}</dt><dd><bdi className="mono">{dateTime(selected.createdAt)}</bdi></dd></div>
+            <div><dt>{labels.description}</dt><dd>{design.description || "—"}</dd></div>
+          </dl>
+          {canManage && design.currentRevision.status === "DRAFT" && (
+            <SubmitRevisionButton labels={labels} disabled={mutating} onConfirm={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${design.currentRevision.id}/submit`, {}, labels.submitted)} />
+          )}
         </section>
+
         <section className="workspace-panel">
-          <div className="workspace-panel__title"><FileClock size={17} /><h3>{labels.revisionHistory}</h3></div>
-          <div className="revision-list">{design.revisions.map((revision, index) => <button className={selected.id === revision.id ? "active" : ""} type="button" key={revision.id} onClick={() => setSelectedRevisionId(revision.id)}><span><bdi className="revision-badge">{revision.revisionCode}</bdi>{index === 0 && <small>{labels.newest}</small>}</span><Badge tone={designStatusTone(revision.status)}>{designStatusLabel(revision.status, locale)}</Badge><time><bdi>{dateTime(revision.createdAt)}</bdi></time><bdi>{revision.originalFilename}</bdi></button>)}</div>
+          <div className="workspace-panel__title">
+            <FileClock size={16} />
+            <h3>{labels.revisionHistory}</h3>
+          </div>
+          <div className="revision-list">
+            {design.revisions.map((revision, index) => (
+              <button className={`revision-card ${selected.id === revision.id ? "active" : ""}`} type="button" key={revision.id} onClick={() => setSelectedRevisionId(revision.id)}>
+                <div className="revision-card__header">
+                  <span className="revision-badge mono"><bdi>{revision.revisionCode}</bdi></span>
+                  {index === 0 && <span className="revision-tag revision-tag--newest">{labels.newest}</span>}
+                  <Badge tone={designStatusTone(revision.status)}>{designStatusLabel(revision.status, locale)}</Badge>
+                </div>
+                <time className="mono"><bdi>{dateTime(revision.createdAt)}</bdi></time>
+                <span className="revision-card__filename mono"><bdi>{revision.originalFilename}</bdi></span>
+              </button>
+            ))}
+          </div>
         </section>
+
         <section className="workspace-panel">
-          <div className="workspace-panel__title"><FileClock size={17} /><h3>{labels.activity}</h3></div>
-          <div className="activity-timeline">{design.events.map((event) => { const revision = design.revisions.find((item) => item.id === event.revisionId); return <article key={event.id}><i /><div><strong>{designEventLabel(event.action, locale)}</strong><span>{event.actor.displayName} · {roleLabel(event.actor.role, locale)}{revision ? <> · <bdi>{revision.revisionCode}</bdi></> : null}</span><time><bdi>{dateTime(event.createdAt)}</bdi></time>{event.comment && <p>{event.comment}</p>}</div></article>; })}</div>
+          <div className="workspace-panel__title">
+            <FileClock size={16} />
+            <h3>{labels.activity}</h3>
+          </div>
+          <div className="activity-timeline">
+            {design.events.map((event) => {
+              const revision = design.revisions.find((item) => item.id === event.revisionId);
+              return (
+                <article key={event.id} className="activity-item">
+                  <i className="activity-node" aria-hidden="true" />
+                  <div className="activity-content">
+                    <div className="activity-header">
+                      <strong>{designEventLabel(event.action, locale)}</strong>
+                      {revision && <span className="activity-revision mono"><bdi>{revision.revisionCode}</bdi></span>}
+                    </div>
+                    <span className="activity-actor">{event.actor.displayName} · {roleLabel(event.actor.role, locale)}</span>
+                    <time className="activity-time mono"><bdi>{dateTime(event.createdAt)}</bdi></time>
+                    {event.comment && <p className="activity-comment">{event.comment}</p>}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </section>
       </aside>
     </div>

@@ -22,6 +22,26 @@ import {
   type UserRecord
 } from "../../../lib/api";
 
+function disciplineShortCode(d: DesignDiscipline): string {
+  switch (d) {
+    case "ARCHITECTURAL": return "ARCH";
+    case "STRUCTURAL": return "STRUC";
+    case "INTERIOR": return "INT";
+    case "ELECTRICAL": return "ELEC";
+    case "PLUMBING": return "MECH";
+    case "FURNITURE": return "FURN";
+    case "RENDERS": return "3D";
+    default: return "GEN";
+  }
+}
+
+function fileFormatCode(mime: string, filename: string): string {
+  if (mime.includes("pdf") || filename.toLowerCase().endsWith(".pdf")) return "PDF";
+  if (mime.includes("png") || filename.toLowerCase().endsWith(".png")) return "PNG";
+  if (mime.includes("jpeg") || mime.includes("jpg") || filename.toLowerCase().endsWith(".jpg") || filename.toLowerCase().endsWith(".jpeg")) return "JPG";
+  return "FILE";
+}
+
 export function DesignHub({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
@@ -39,17 +59,19 @@ export function DesignHub({ projectId }: { projectId: string }) {
 
   const ar = locale === "ar";
   const labels = useMemo(() => ar ? {
-    title: "سجل التصميمات", lead: "إدارة الرسومات والمخرجات التصميمية ومراجعاتها واعتمادات العميل.",
-    upload: "إضافة تصميم", search: "بحث بالعنوان أو المراجعة أو اسم الملف", allStatuses: "كل الحالات", allDisciplines: "كل التخصصات",
-    empty: "لا توجد تصميمات مسجلة", emptyHint: "ابدأ بإضافة أول ملف تصميم لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
-    design: "التصميم", discipline: "التخصص", revision: "المراجعة", status: "الحالة", updated: "آخر تحديث", owner: "رافع الملف", action: "الإجراء", open: "فتح",
-    pending: "بانتظار اعتمادك", inReview: "قيد المراجعة", pendingHint: "مراجعات جاهزة للفحص والاعتماد أو الرفض.", total: "إجمالي التصميمات", approved: "معتمد", loading: "جاري تحميل سجل التصميمات..."
+    title: "سجل المخططات والتصميمات", lead: "مركز مراقبة المستندات الهندسية ومراجعات الرسومات واعتمادات العميل.",
+    upload: "إضافة تصميم جديد", search: "بحث بالكود أو العنوان أو اسم الملف...", allStatuses: "كل الحالات", allDisciplines: "كل التخصصات الهندسية",
+    empty: "لا توجد تصميمات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند تصميم لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
+    design: "كود ومسمى المخطط", discipline: "التخصص", revision: "المراجعة", status: "حالة الاعتماد", updated: "تاريخ التحديث", owner: "المسؤول", action: "الإجراء", open: "فتح المخطط",
+    formatSize: "الملف والحجم", authorDate: "الرافع والتاريخ",
+    pending: "بانتظار الاعتماد", inReview: "قيد الفحص والمراجعة", pendingHint: "مستندات جاهزة للمعاينة وتسجيل القرار.", total: "إجمالي المخططات", approved: "معتمد نهائياً", loading: "جاري تحميل سجل المخططات..."
   } : {
-    title: "Design register", lead: "Control project drawings, deliverables, revisions, and client approvals.",
-    upload: "Add design", search: "Search title, revision, or filename", allStatuses: "All statuses", allDisciplines: "All disciplines",
-    empty: "No designs registered", emptyHint: "Add the first design file for this project.", noResults: "No matching designs", noResultsHint: "Change your search or current filters.",
-    design: "Design", discipline: "Discipline", revision: "Revision", status: "Status", updated: "Updated", owner: "Uploader", action: "Action", open: "Open",
-    pending: "Awaiting your approval", inReview: "In review", pendingHint: "Revisions ready to inspect, approve, or reject.", total: "Total designs", approved: "Approved", loading: "Loading design register..."
+    title: "Drawing & Design Register", lead: "Engineering document control center for drawings, technical revisions, and client sign-offs.",
+    upload: "Add New Design", search: "Search by code, title, or filename...", allStatuses: "All Statuses", allDisciplines: "All Disciplines",
+    empty: "No designs registered", emptyHint: "Register the first design document for this project.", noResults: "No matching designs", noResultsHint: "Change search query or filter criteria.",
+    design: "DWG Code & Title", discipline: "Discipline", revision: "Rev", status: "Approval State", updated: "Updated", owner: "Author", action: "Action", open: "Open DWG",
+    formatSize: "Format & Size", authorDate: "Author & Date",
+    pending: "Awaiting Sign-off", inReview: "In Technical Review", pendingHint: "Documents ready for inspection and decision.", total: "Total Drawings", approved: "Approved", loading: "Loading drawing register..."
   }, [ar]);
 
   const loadDesigns = useCallback(async () => {
@@ -99,8 +121,12 @@ export function DesignHub({ projectId }: { projectId: string }) {
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />
 
     <div className="design-hub-heading">
-      <div><span className="section-kicker">{ar ? "مراقبة المستندات" : "DOCUMENT CONTROL"}</span><h2>{labels.title}</h2><p>{labels.lead}</p></div>
-      {canManage && <button className="ui-button ui-button--accent" type="button" onClick={() => setShowUpload(true)}><FilePlus2 size={17} />{labels.upload}</button>}
+      <div>
+        <span className="section-kicker">{ar ? "مراقبة المستندات الهندسية" : "ENGINEERING DOCUMENT CONTROL"}</span>
+        <h2>{labels.title}</h2>
+        <p>{labels.lead}</p>
+      </div>
+      {canManage && <button className="ui-button ui-button--accent" type="button" onClick={() => setShowUpload(true)}><FilePlus2 size={16} />{labels.upload}</button>}
     </div>
 
     <div className="design-kpi-strip">
@@ -111,8 +137,8 @@ export function DesignHub({ projectId }: { projectId: string }) {
     </div>
 
     <div className="design-toolbar">
-      <label className="design-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>
-      <label className="design-filter"><Filter size={15} /><select value={status} onChange={(event) => setStatus(event.target.value as DesignStatus | "")}><option value="">{labels.allStatuses}</option>{DESIGN_STATUSES.map((item) => <option key={item} value={item}>{designStatusLabel(item, locale)}</option>)}</select></label>
+      <label className="design-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>
+      <label className="design-filter"><Filter size={14} /><select value={status} onChange={(event) => setStatus(event.target.value as DesignStatus | "")}><option value="">{labels.allStatuses}</option>{DESIGN_STATUSES.map((item) => <option key={item} value={item}>{designStatusLabel(item, locale)}</option>)}</select></label>
       <label className="design-filter"><select value={discipline} onChange={(event) => setDiscipline(event.target.value as DesignDiscipline | "")}><option value="">{labels.allDisciplines}</option>{DESIGN_DISCIPLINES.map((item) => <option key={item} value={item}>{disciplineLabel(item, locale)}</option>)}</select></label>
     </div>
 
@@ -121,16 +147,58 @@ export function DesignHub({ projectId }: { projectId: string }) {
     {loading && <DesignRegisterSkeleton />}
     {!loading && designs.length === 0 && <EmptyState icon={<FilePlus2 size={21} />} title={filtered ? labels.noResults : labels.empty} description={filtered ? labels.noResultsHint : labels.emptyHint} action={!filtered && canManage ? <button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowUpload(true)}>{labels.upload}</button> : undefined} />}
     {!loading && designs.length > 0 && <div className="design-register">
-      <div className="design-register__head"><span>{labels.design}</span><span>{labels.discipline}</span><span>{labels.revision}</span><span>{labels.status}</span><span>{labels.updated}</span><span>{labels.owner}</span><span>{labels.action}</span></div>
-      {designs.map((design) => <article className="design-register__row" key={design.id}>
-        <div className="design-register__identity"><strong>{design.title}</strong><bdi>{design.currentRevision.originalFilename}</bdi></div>
-        <span data-label={labels.discipline}>{disciplineLabel(design.discipline, locale)}</span>
-        <span data-label={labels.revision}><bdi className="revision-badge">{design.currentRevision.revisionCode}</bdi></span>
-        <span data-label={labels.status}><Badge tone={designStatusTone(design.status)}>{designStatusLabel(design.status, locale)}</Badge></span>
-        <time data-label={labels.updated}><bdi>{new Date(design.updatedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}</bdi></time>
-        <span data-label={labels.owner}>{design.currentRevision.uploader.displayName}</span>
-        <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${projectId}/design/${design.id}`)}>{labels.open}</Link>
-      </article>)}
+      <div className="design-register__head">
+        <span>{labels.design}</span>
+        <span>{labels.discipline}</span>
+        <span>{labels.revision}</span>
+        <span>{labels.formatSize}</span>
+        <span>{labels.status}</span>
+        <span>{labels.authorDate}</span>
+        <span>{labels.action}</span>
+      </div>
+      {designs.map((design, idx) => {
+        const shortDiscipline = disciplineShortCode(design.discipline);
+        const format = fileFormatCode(design.currentRevision.mimeType, design.currentRevision.originalFilename);
+        const docCode = `${shortDiscipline}-${String(idx + 1).padStart(3, "0")}`;
+        return (
+          <article className="design-register__row" key={design.id}>
+            <div className="design-register__identity">
+              <div className="design-register__code-row">
+                <span className="doc-code mono"><bdi>{docCode}</bdi></span>
+                <strong>{design.title}</strong>
+              </div>
+              <span className="design-register__filename mono"><bdi>{design.currentRevision.originalFilename}</bdi></span>
+            </div>
+            <div className="design-register__cell" data-label={labels.discipline}>
+              <span className={`discipline-chip discipline-chip--${shortDiscipline.toLowerCase()}`}>
+                <bdi className="mono">{shortDiscipline}</bdi>
+                <span>{disciplineLabel(design.discipline, locale)}</span>
+              </span>
+            </div>
+            <div className="design-register__cell" data-label={labels.revision}>
+              <bdi className="revision-badge mono">{design.currentRevision.revisionCode}</bdi>
+            </div>
+            <div className="design-register__cell" data-label={labels.formatSize}>
+              <div className="format-size-group">
+                <span className={`format-pill format-pill--${format.toLowerCase()}`}>{format}</span>
+                <span className="file-size-tag mono"><bdi>{formatFileSize(design.currentRevision.fileSize, locale)}</bdi></span>
+              </div>
+            </div>
+            <div className="design-register__cell" data-label={labels.status}>
+              <Badge tone={designStatusTone(design.status)}>{designStatusLabel(design.status, locale)}</Badge>
+            </div>
+            <div className="design-register__cell design-register__meta-cell" data-label={labels.authorDate}>
+              <strong>{design.currentRevision.uploader.displayName}</strong>
+              <time className="mono"><bdi>{new Date(design.updatedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}</bdi></time>
+            </div>
+            <div className="design-register__action-cell">
+              <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${projectId}/design/${design.id}`)}>
+                {labels.open}
+              </Link>
+            </div>
+          </article>
+        );
+      })}
     </div>}
 
     {showUpload && <DesignUploadDialog projectId={projectId} locale={locale} onClose={() => setShowUpload(false)} onCreated={() => { setShowUpload(false); setSuccess(ar ? "تمت إضافة التصميم إلى السجل." : "Design added to register."); void Promise.all([loadDesigns(), refreshMetrics()]); }} />}

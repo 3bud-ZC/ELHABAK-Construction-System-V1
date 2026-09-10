@@ -322,20 +322,23 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </>
           )}
 
-          <form className="form-panels" onSubmit={(event) => void submit(event)} style={{ marginTop: "var(--space-6)" }}>
+          <form className="form-panels" onSubmit={(event) => void submit(event)}>
             <div className="form-panel">
-              <h3 className="form-panel__title">{labels.basicInfo}</h3>
+              <div className="form-panel__head">
+                <span className="form-panel__index">01</span>
+                <h3 className="form-panel__title">{labels.basicInfo}</h3>
+              </div>
               <div className="form-grid">
                 <label className="ui-field">
-                  {labels.name}
+                  <span>{labels.name} <strong className="required-star">*</strong></span>
                   <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
                 </label>
                 <label className="ui-field">
-                  {labels.code}
-                  <input className="mono" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} required />
+                  <span>{labels.code} <strong className="required-star">*</strong></span>
+                  <input className="mono" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} required placeholder="PRJ-XXXX" />
                 </label>
                 <label className="ui-field">
-                  {labels.category}
+                  <span>{labels.category}</span>
                   <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value as ProjectCategory })}>
                     {categories.map((category) => (
                       <option value={category} key={category}>
@@ -345,21 +348,24 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </select>
                 </label>
                 <label className="ui-field">
-                  {labels.location}
+                  <span>{labels.location}</span>
                   <input value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
                 </label>
                 <label className="ui-field full-span">
-                  {labels.notes}
+                  <span>{labels.notes}</span>
                   <textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
                 </label>
               </div>
             </div>
 
             <div className="form-panel">
-              <h3 className="form-panel__title">{labels.teamAssignment}</h3>
+              <div className="form-panel__head">
+                <span className="form-panel__index">02</span>
+                <h3 className="form-panel__title">{labels.teamAssignment}</h3>
+              </div>
               <div className="form-grid">
                 <label className="ui-field">
-                  {labels.client}
+                  <span>{labels.client} <strong className="required-star">*</strong></span>
                   <select value={form.clientId} onChange={(event) => setForm({ ...form, clientId: event.target.value })} required>
                     <option value="">-</option>
                     {clients.map((client) => (
@@ -370,7 +376,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </select>
                 </label>
                 <label className="ui-field">
-                  {labels.engineer}
+                  <span>{labels.engineer} <strong className="required-star">*</strong></span>
                   <select value={form.engineerId} onChange={(event) => setForm({ ...form, engineerId: event.target.value })} required>
                     <option value="">-</option>
                     {engineers.map((engineer) => (
@@ -381,7 +387,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </select>
                 </label>
                 <label className="ui-field full-span">
-                  {labels.workers}
+                  <span>{labels.workers}</span>
                   <div className="checkbox-grid">
                     {workers.map((worker) => (
                       <label className="check-field" key={worker.id}>
@@ -395,24 +401,30 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </div>
 
             <div className="form-panel">
-              <h3 className="form-panel__title">{labels.schedule}</h3>
+              <div className="form-panel__head">
+                <span className="form-panel__index">03</span>
+                <h3 className="form-panel__title">{labels.schedule}</h3>
+              </div>
               <div className="form-grid">
                 <label className="ui-field">
-                  {labels.startDate}
+                  <span>{labels.startDate}</span>
                   <input type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value })} />
                 </label>
                 <label className="ui-field">
-                  {labels.targetDate}
+                  <span>{labels.targetDate}</span>
                   <input type="date" value={form.targetDate} onChange={(event) => setForm({ ...form, targetDate: event.target.value })} />
                 </label>
               </div>
             </div>
 
             <div className="form-panel">
-              <h3 className="form-panel__title">{labels.statusPhase}</h3>
+              <div className="form-panel__head">
+                <span className="form-panel__index">04</span>
+                <h3 className="form-panel__title">{labels.statusPhase}</h3>
+              </div>
               <div className="form-grid">
                 <label className="ui-field">
-                  {labels.phase}
+                  <span>{labels.phase}</span>
                   <select value={form.phase} onChange={(event) => setForm({ ...form, phase: event.target.value as ProjectPhase })}>
                     {phases.map((phase) => (
                       <option value={phase} key={phase}>
@@ -422,7 +434,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </select>
                 </label>
                 <label className="ui-field">
-                  {labels.status}
+                  <span>{labels.status}</span>
                   <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as ProjectStatus })}>
                     {statuses.map((statusOption) => (
                       <option value={statusOption} key={statusOption}>
@@ -432,13 +444,16 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </select>
                 </label>
                 <label className="ui-field full-span">
-                  {labels.progress}
+                  <span>{labels.progress} (%)</span>
                   <input type="number" min="0" max="100" value={form.progress} onChange={(event) => setForm({ ...form, progress: event.target.value })} />
                 </label>
               </div>
             </div>
 
-            <div className="form-actions">
+            <div className="form-actions-bar">
+              <Link className="ui-button ui-button--secondary" href="/app/admin/projects">
+                {labels.back}
+              </Link>
               <button className="ui-button ui-button--primary" type="submit" disabled={saving}>
                 {saving ? (locale === "ar" ? "جاري الحفظ..." : "Saving...") : labels.save}
               </button>

@@ -80,7 +80,13 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      <Section id="about" className="about-band" title={t.home.aboutTitle} lead={t.home.aboutLead}>
+      <Section
+        id="about"
+        className="about-band"
+        eyebrow={locale === "ar" ? "٠١ // عن الشركة" : "01 // ABOUT ELHABAK"}
+        title={t.home.aboutTitle}
+        lead={t.home.aboutLead}
+      >
         <div className="about-grid">
           <div className="about-note">
             <strong>ELHABAK CONSTRUCTION</strong>
@@ -93,7 +99,12 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </Section>
 
-      <Section id="services" title={t.home.servicesTitle} lead={t.home.servicesLead}>
+      <Section
+        id="services"
+        eyebrow={locale === "ar" ? "٠٢ // نطاق الخدمات" : "02 // SERVICES PORTFOLIO"}
+        title={t.home.servicesTitle}
+        lead={t.home.servicesLead}
+      >
         <div className="services-grid">
           {t.services.map(([title, body], index) => (
             <Card className="service-card" key={title}>
@@ -108,45 +119,68 @@ export default async function HomePage({ searchParams }: PageProps) {
       <Section
         id="process"
         className="process-band"
+        eyebrow={locale === "ar" ? "٠٣ // مسار التسليم الهندسي" : "03 // ENGINEERING DELIVERY SEQUENCE"}
         title={t.home.processTitle}
         lead={t.home.processLead}
       >
-        <div className="process-grid">
-          {t.process.map(([title, body], index) => (
-            <div className="process-step" key={title}>
-              <span className="process-index">{String(index + 1).padStart(2, "0")}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </div>
-          ))}
+        <div className="process-pipeline">
+          <div className="process-pipeline__track" aria-hidden="true" />
+          <div className="process-grid">
+            {t.process.map(([title, body], index) => (
+              <div className="process-step" key={title}>
+                <div className="process-step__indicator" aria-hidden="true">
+                  <span className="process-step__node" />
+                </div>
+                <div className="process-step__body">
+                  <div className="process-step__meta">
+                    <span className="process-index">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="process-step__phase-label">PHASE {String(index + 1).padStart(2, "0")}</span>
+                  </div>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </Section>
 
-      <Section id="why" title={t.home.whyTitle} lead={t.home.whyLead}>
+      <Section
+        id="why"
+        eyebrow={locale === "ar" ? "٠٤ // معايير الجودة" : "04 // QUALITY STANDARDS"}
+        title={t.home.whyTitle}
+        lead={t.home.whyLead}
+      >
         <div className="why-grid">
           {t.why.map((item) => (
             <div className="why-item" key={item}>
-              <CheckCircle2 aria-hidden="true" size={24} />
+              <CheckCircle2 aria-hidden="true" size={20} />
               <span>{item}</span>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section id="contact" className="contact-band" title={t.home.contactTitle} lead={t.home.contactLead}>
+      <Section
+        id="contact"
+        className="contact-band"
+        eyebrow={locale === "ar" ? "٠٥ // بيانات التواصل الرسمية" : "05 // OFFICIAL CONTACT"}
+        title={t.home.contactTitle}
+        lead={t.home.contactLead}
+      >
         <div className="contact-grid">
           <a className="contact-item" href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}>
-            <Phone aria-hidden="true" />
+            <Phone aria-hidden="true" size={18} />
             <strong>{locale === "ar" ? "الهاتف" : "Phone"}</strong>
             <span>{t.contact.phone}</span>
           </a>
           <a className="contact-item" href={`mailto:${t.contact.email}`}>
-            <Mail aria-hidden="true" />
+            <Mail aria-hidden="true" size={18} />
             <strong>{locale === "ar" ? "البريد الإلكتروني" : "Email"}</strong>
             <span>{t.contact.email}</span>
           </a>
           <div className="contact-item">
-            <MapPin aria-hidden="true" />
+            <MapPin aria-hidden="true" size={18} />
             <strong>{locale === "ar" ? "العنوان" : "Address"}</strong>
             <span>{t.contact.address}</span>
           </div>

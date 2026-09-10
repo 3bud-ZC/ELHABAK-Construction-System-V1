@@ -24,6 +24,7 @@ export function UsersClient({ mode, id }: UsersClientProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const locale = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ar";
+  const ar = locale === "ar";
 
   const labels = useMemo(
     () =>
@@ -201,39 +202,74 @@ export function UsersClient({ mode, id }: UsersClientProps) {
         }
       />
       {loading && mode === "edit" ? <LoadingState label={labels.loadingLabel} /> : null}
-      <form className="admin-form" onSubmit={(event) => void submit(event)}>
-        <label className="ui-field">
-          <span>{labels.name}</span>
-          <input name="displayName" required defaultValue={record?.displayName ?? ""} />
-        </label>
-        <label className="ui-field">
-          <span>{labels.email}</span>
-          <input name="email" type="email" required defaultValue={record?.email ?? ""} />
-        </label>
-        <label className="ui-field">
-          <span>{labels.role}</span>
-          <select name="role" defaultValue={record?.role ?? "ENGINEER"}>
-            {roles.map((role) => (
-              <option value={role} key={role}>
-                {roleLabel(role, locale)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="check-field">
-          <input name="isActive" type="checkbox" defaultChecked={record?.isActive ?? true} />
-          <span>{labels.active}</span>
-        </label>
-        <label className="ui-field">
-          <span>{labels.password}</span>
-          <input name="temporaryPassword" type="password" required={mode === "create"} minLength={10} />
-          {mode === "edit" && <span style={{ color: "var(--muted-soft)", fontSize: "0.78rem", fontWeight: 500 }}>{labels.passwordHint}</span>}
-        </label>
+      <form className="admin-form admin-form--elevated" onSubmit={(event) => void submit(event)}>
+        <div className="form-section">
+          <div className="form-section__header">
+            <span className="form-section__index">01</span>
+            <h4>{ar ? "البيانات الأساسية" : "Basic Information"}</h4>
+          </div>
+          <div className="form-grid">
+            <label className="ui-field">
+              <span>{labels.name} <strong className="required-star">*</strong></span>
+              <input name="displayName" required defaultValue={record?.displayName ?? ""} placeholder={ar ? "الاسم الكامل" : "Full Name"} />
+            </label>
+            <label className="ui-field">
+              <span>{labels.email} <strong className="required-star">*</strong></span>
+              <input name="email" type="email" required defaultValue={record?.email ?? ""} placeholder="user@elhabak.eg" />
+            </label>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <div className="form-section__header">
+            <span className="form-section__index">02</span>
+            <h4>{ar ? "الدور الوظيفي وحالة الحساب" : "Role & Account Status"}</h4>
+          </div>
+          <div className="form-grid">
+            <label className="ui-field">
+              <span>{labels.role} <strong className="required-star">*</strong></span>
+              <select name="role" defaultValue={record?.role ?? "ENGINEER"}>
+                {roles.map((role) => (
+                  <option value={role} key={role}>
+                    {roleLabel(role, locale)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="field-group-center">
+              <label className="check-field check-field--toggle">
+                <input name="isActive" type="checkbox" defaultChecked={record?.isActive ?? true} />
+                <span>{labels.active}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <div className="form-section__header">
+            <span className="form-section__index">03</span>
+            <h4>{ar ? "بيانات الدخول" : "Credentials"}</h4>
+          </div>
+          <div className="form-grid">
+            <label className="ui-field full-span">
+              <span>{labels.password} {mode === "create" && <strong className="required-star">*</strong>}</span>
+              <input name="temporaryPassword" type="password" required={mode === "create"} minLength={10} placeholder={mode === "create" ? (ar ? "كلمة مرور مؤقتة (١٠ أحرف على الأقل)" : "Temporary password (min 10 characters)") : (ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password")} />
+              {mode === "edit" && <span className="field-hint">{labels.passwordHint}</span>}
+            </label>
+          </div>
+        </div>
+
         {error ? <p className="form-error">{error}</p> : null}
         {success ? <p className="form-success">{success}</p> : null}
-        <button className="ui-button ui-button--primary" disabled={saving} type="submit">
-          {saving ? (locale === "ar" ? "جاري الحفظ..." : "Saving...") : labels.save}
-        </button>
+
+        <div className="form-actions-bar">
+          <Link className="ui-button ui-button--secondary" href="/app/admin/users">
+            {labels.back}
+          </Link>
+          <button className="ui-button ui-button--primary" disabled={saving} type="submit">
+            {saving ? (locale === "ar" ? "جاري الحفظ..." : "Saving...") : labels.save}
+          </button>
+        </div>
       </form>
     </section>
   );

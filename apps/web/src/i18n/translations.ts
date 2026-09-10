@@ -50,11 +50,12 @@ export const dictionary = {
       ["Furniture / Furnishing", "تأثيث وفرش مرتبط باحتياجات المساحة والتصميم."]
     ],
     process: [
-      ["المعاينة", "فهم الموقع واحتياجات العميل قبل تثبيت نطاق العمل."],
-      ["التصميم", "إعداد ومراجعة التصميمات المناسبة للمشروع."],
-      ["المقايسة التقريبية", "توضيح البنود والتكلفة المتوقعة قبل التنفيذ."],
-      ["التنفيذ", "متابعة تقدم الأعمال وتوثيق القرارات والتحديثات."],
-      ["التسليم", "مراجعة الأعمال وتسليمها وفق المرحلة المتفق عليها."]
+      ["المعاينة", "فهم الموقع واحتياجات العميل ومطابقة الأبعاد قبل تثبيت نطاق العمل."],
+      ["التصميم", "إعداد ومراجعة المخططات الهندسية والمعمارية ونماذج التشطيب."],
+      ["المقايسة التقريبية", "حصر البنود والمواصفات وحساب التكلفة التقديرية وجداول الكميات."],
+      ["التنفيذ", "الإشراف الميداني وضبط الجودة وتوثيق تقدم الأعمال وتحديثات الموقع."],
+      ["التسليم الابتدائي", "فحص ومطابقة الأعمال المنجزة وإعداد قوائم الملاحظات والمعالجة."],
+      ["التسليم النهائي", "الاعتماد النهائي للأعمال وإغلاق المشروع وتسليم المخرجات للعميل."]
     ],
     why: [
       "نطاق خدمات واضح من التصميم حتى التأثيث.",
@@ -118,11 +119,12 @@ export const dictionary = {
       ["Furniture / Furnishing", "Furniture and furnishing aligned with the space and design direction."]
     ],
     process: [
-      ["Site inspection", "Understand the location and client needs before fixing the work scope."],
-      ["Design", "Prepare and review suitable project designs."],
-      ["Preliminary estimation", "Clarify items and expected cost before execution."],
-      ["Execution", "Track progress and document decisions and updates."],
-      ["Handover", "Review and hand over work according to the agreed stage."]
+      ["Site Inspection", "Field assessment and site verification before confirming the project scope."],
+      ["Design", "Engineering and architectural drawings, structural plans, and finishing schemes."],
+      ["Preliminary Estimation", "Detailed bill of quantities (BOQ), specification checks, and cost baseline."],
+      ["Execution", "On-site engineering supervision, quality control, and milestone verification."],
+      ["Initial Handover", "Snagging, inspection of executed works, and resolution of punch-list items."],
+      ["Final Handover", "Final sign-off, project closeout, and documentation handover to the client."]
     ],
     why: [
       "Clear service scope from design through furnishing.",

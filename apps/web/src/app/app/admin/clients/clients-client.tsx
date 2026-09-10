@@ -22,6 +22,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const locale = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ar";
+  const ar = locale === "ar";
 
   const labels = useMemo(
     () =>
@@ -206,37 +207,63 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         }
       />
       {loading && mode === "edit" ? <LoadingState label={labels.loadingLabel} /> : null}
-      <form className="admin-form" onSubmit={(event) => void submit(event)}>
-        <label className="ui-field">
-          <span>{labels.name}</span>
-          <input name="displayName" required defaultValue={record?.user.displayName ?? ""} />
-        </label>
-        <label className="ui-field">
-          <span>{labels.email}</span>
-          <input name="email" type="email" required defaultValue={record?.user.email ?? ""} />
-        </label>
-        <label className="ui-field">
-          <span>{labels.phone}</span>
-          <input name="phone" defaultValue={record?.phone ?? ""} />
-        </label>
-        <label className="ui-field">
-          <span>{labels.notes}</span>
-          <textarea name="notes" defaultValue={record?.notes ?? ""} />
-        </label>
-        <label className="check-field">
-          <input name="isActive" type="checkbox" defaultChecked={record?.user.isActive ?? true} />
-          <span>{labels.active}</span>
-        </label>
-        <label className="ui-field">
-          <span>{labels.password}</span>
-          <input name="temporaryPassword" type="password" required={mode === "create"} minLength={10} />
-          {mode === "edit" && <span style={{ color: "var(--muted-soft)", fontSize: "0.78rem", fontWeight: 500 }}>{labels.passwordHint}</span>}
-        </label>
+      <form className="admin-form admin-form--elevated" onSubmit={(event) => void submit(event)}>
+        <div className="form-section">
+          <div className="form-section__header">
+            <span className="form-section__index">01</span>
+            <h4>{ar ? "بيانات العميل والتواصل" : "Client & Contact Details"}</h4>
+          </div>
+          <div className="form-grid">
+            <label className="ui-field">
+              <span>{labels.name} <strong className="required-star">*</strong></span>
+              <input name="displayName" required defaultValue={record?.user.displayName ?? ""} placeholder={ar ? "اسم العميل أو الجهة" : "Client or Organization Name"} />
+            </label>
+            <label className="ui-field">
+              <span>{labels.email} <strong className="required-star">*</strong></span>
+              <input name="email" type="email" required defaultValue={record?.user.email ?? ""} placeholder="client@example.com" />
+            </label>
+            <label className="ui-field">
+              <span>{labels.phone}</span>
+              <input name="phone" defaultValue={record?.phone ?? ""} placeholder="01xxxxxxxxx" />
+            </label>
+            <div className="field-group-center">
+              <label className="check-field check-field--toggle">
+                <input name="isActive" type="checkbox" defaultChecked={record?.user.isActive ?? true} />
+                <span>{labels.active}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <div className="form-section__header">
+            <span className="form-section__index">02</span>
+            <h4>{ar ? "حساب الدخول والملاحظات" : "Login Account & Notes"}</h4>
+          </div>
+          <div className="form-grid">
+            <label className="ui-field full-span">
+              <span>{labels.password} {mode === "create" && <strong className="required-star">*</strong>}</span>
+              <input name="temporaryPassword" type="password" required={mode === "create"} minLength={10} placeholder={mode === "create" ? (ar ? "كلمة مرور مؤقتة لحساب العميل (١٠ أحرف على الأقل)" : "Temporary password for client account (min 10 characters)") : (ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password")} />
+              {mode === "edit" && <span className="field-hint">{labels.passwordHint}</span>}
+            </label>
+            <label className="ui-field full-span">
+              <span>{labels.notes}</span>
+              <textarea name="notes" defaultValue={record?.notes ?? ""} placeholder={ar ? "ملاحظات إضافية حول العميل ونطاق المشاريع..." : "Optional notes regarding client requirements..."} />
+            </label>
+          </div>
+        </div>
+
         {error ? <p className="form-error">{error}</p> : null}
         {success ? <p className="form-success">{success}</p> : null}
-        <button className="ui-button ui-button--primary" disabled={saving} type="submit">
-          {saving ? (locale === "ar" ? "جاري الحفظ..." : "Saving...") : labels.save}
-        </button>
+
+        <div className="form-actions-bar">
+          <Link className="ui-button ui-button--secondary" href="/app/admin/clients">
+            {labels.back}
+          </Link>
+          <button className="ui-button ui-button--primary" disabled={saving} type="submit">
+            {saving ? (locale === "ar" ? "جاري الحفظ..." : "Saving...") : labels.save}
+          </button>
+        </div>
       </form>
     </section>
   );
