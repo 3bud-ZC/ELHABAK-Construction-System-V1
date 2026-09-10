@@ -379,4 +379,33 @@ Milestone 09 - 80% -> 90% Reports, PDF Export, Search, Bilingual Completion & Fu
   - `pnpm test`: PASS (20/20 tests passed across milestone-02, milestone-03, milestone-04, and milestone-05)
 - Overall Completion: strictly **50% / 100%**. Milestone 05: COMPLETE. Milestone 06: NOT STARTED.
 
+### 2026-09-10 - Railway Client Review Deployment (Milestone 08, 80% / 100% Complete, Ready for Client Review)
+- Scope: Fully configured, provisioned, deployed, and verified the complete ELHABAK Construction System V1 MVP on Railway for live client review.
+- Railway Project: `practical-friendship` (ID: `ce22fbb5-2ff9-4e24-9234-91e6bf38c090`) on environment `production` (ID: `464dd53d-6fca-4c1f-b991-42e999ac09f6`).
+- Service 1: `elhabak-api` (ID: `89bc1dda-8401-4e99-b648-4d94efd95547`)
+  - Source: GitHub `3bud-ZC/ELHABAK-Construction-System-V1` (`main`)
+  - Builder: Dockerfile (`Dockerfile.api`)
+  - Root Directory: `/`
+  - Persistent Volume: `elhabak-api-volume` (ID: `3a447c0e-93d0-46e8-a371-86253f777669`) mounted at `/app/storage`
+  - Healthcheck Path: `/health`
+  - Public Domain: `https://elhabak-api-production.up.railway.app`
+  - Verified Live Status: HTTP 200 OK (`{"status":"ok","service":"elhabak-api","database":"connected"}`)
+  - Realtime Engine: Socket.IO initialized and accepting connections with WebSocket upgrades verified (`/socket.io/?EIO=4&transport=polling`)
+- Service 2: `elhabak-web` (ID: `b309643e-2a11-48b3-8420-ebdd473e0184`)
+  - Source: GitHub `3bud-ZC/ELHABAK-Construction-System-V1` (`main`)
+  - Builder: Dockerfile (`Dockerfile.web`)
+  - Root Directory: `/`
+  - Public Domain: `https://elhabak-web-production.up.railway.app`
+  - Verified Live Status: HTTP 200 OK (Next.js App Router, bilingual RTL/LTR shell, login screen, responsive layouts)
+- Cross-Origin Authentication & Security:
+  - Configured `WEB_ORIGIN=https://elhabak-web-production.up.railway.app` in `elhabak-api`
+  - Verified cross-site HTTP-only session cookies with `SameSite=None; Secure=true; HttpOnly=true; Path=/`
+  - Verified authenticated session lifecycle (`POST /auth/login` -> `200 OK`, `GET /auth/me` -> `200 OK`, `GET /projects` -> `200 OK`)
+  - Verified login and role resolution across all 5 demo user roles: `ADMIN`, `ENGINEER`, `ACCOUNTANT`, `WORKER`, and `CLIENT`
+- Custom Domain Configuration:
+  - Custom domain `elhabak.abud.fun` created and attached to `elhabak-web` on Railway (ID: `d29a0e1b-59d3-4d80-8254-5691475585b6`)
+  - Required DNS Record: Type `CNAME`, Host `elhabak` (or `elhabak.abud.fun`), Target `1n9udt5a.up.railway.app`
+  - Current Status: `DNS_RECORD_STATUS_REQUIRES_UPDATE` (ready to route as soon as CNAME record is added at domain registrar/DNS provider)
+- Overall Completion: strictly **80% / 100%**. Milestone 08: COMPLETE. MVP: READY FOR CLIENT REVIEW.
+
 
