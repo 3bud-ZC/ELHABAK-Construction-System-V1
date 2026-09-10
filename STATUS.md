@@ -405,7 +405,8 @@ Milestone 09 - 80% -> 90% Reports, PDF Export, Search, Bilingual Completion & Fu
 - Custom Domain Configuration:
   - Custom domain `elhabak.abud.fun` created and attached to `elhabak-web` on Railway (ID: `d29a0e1b-59d3-4d80-8254-5691475585b6`)
   - Required DNS Record: Type `CNAME`, Host `elhabak` (or `elhabak.abud.fun`), Target `1n9udt5a.up.railway.app`
-  - Current Status: `DNS_RECORD_STATUS_REQUIRES_UPDATE` (ready to route as soon as CNAME record is added at domain registrar/DNS provider)
+  - Authoritative DNS Verification (2026-09-11): Queried `malavika.ns.cloudflare.com` and `eoin.ns.cloudflare.com`; `elhabak.abud.fun` returns `NXDOMAIN`. Railway custom domain status reports `DNS_RECORD_STATUS_REQUIRES_UPDATE` and `CERTIFICATE_STATUS_TYPE_VALIDATING_OWNERSHIP`.
+  - Deployment State: All Web, API, Database, and Realtime services are fully live, functional, and verified on the Railway production domain (`https://elhabak-web-production.up.railway.app`). Once the CNAME record is added to Cloudflare, Railway will issue SSL automatically and `WEB_ORIGIN` / `NEXT_PUBLIC_SITE_URL` can be updated.
 - Overall Completion: strictly **80% / 100%**. Milestone 08: COMPLETE. MVP: READY FOR CLIENT REVIEW.
 
 
