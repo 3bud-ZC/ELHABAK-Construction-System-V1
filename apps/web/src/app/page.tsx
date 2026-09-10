@@ -54,7 +54,9 @@ export default async function HomePage({ searchParams }: PageProps) {
             <h1>{t.home.heroTitle}</h1>
             <p>{t.home.heroSubtitle}</p>
             <div className="hero-actions">
-              <Button href="#contact">{t.home.primaryCta}</Button>
+              <Button href="#contact" variant="accent">
+                {t.home.primaryCta}
+              </Button>
               <Button href="#services" variant="ghost">
                 {t.home.secondaryCta}
               </Button>
@@ -93,8 +95,9 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       <Section id="services" title={t.home.servicesTitle} lead={t.home.servicesLead}>
         <div className="services-grid">
-          {t.services.map(([title, body]) => (
+          {t.services.map(([title, body], index) => (
             <Card className="service-card" key={title}>
+              <span className="service-card__index">{String(index + 1).padStart(2, "0")}</span>
               <h3>{title}</h3>
               <p>{body}</p>
             </Card>

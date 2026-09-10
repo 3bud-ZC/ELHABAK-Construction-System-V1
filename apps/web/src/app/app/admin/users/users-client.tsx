@@ -47,7 +47,9 @@ export function UsersClient({ mode, id }: UsersClientProps) {
             save: "حفظ",
             saved: "تم الحفظ.",
             status: "الحالة",
-            loadingLabel: "جاري تحميل المستخدمين..."
+            loadingLabel: "جاري تحميل المستخدمين...",
+            total: "إجمالي المستخدمين",
+            activeCount: "حسابات نشطة"
           }
         : {
             title: "Users",
@@ -68,12 +70,20 @@ export function UsersClient({ mode, id }: UsersClientProps) {
             save: "Save",
             saved: "Saved.",
             status: "Status",
-            loadingLabel: "Loading users..."
+            loadingLabel: "Loading users...",
+            total: "Total users",
+            activeCount: "Active accounts"
           },
     [locale]
   );
 
+  const activeCount = useMemo(() => users.filter((item) => item.isActive).length, [users]);
+
   useEffect(() => {
+    if (mode === "create") {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const request =
       mode === "list"
@@ -129,6 +139,19 @@ export function UsersClient({ mode, id }: UsersClientProps) {
             </Link>
           }
         />
+        {!loading && (
+          <div className="design-kpi-strip design-kpi-strip--compact">
+            <span>
+              <small>{labels.total}</small>
+              <strong>{users.length}</strong>
+            </span>
+            <span>
+              <small>{labels.activeCount}</small>
+              <strong>{activeCount}</strong>
+            </span>
+            <p>{labels.lead}</p>
+          </div>
+        )}
         <div className="table-toolbar">
           <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
         </div>

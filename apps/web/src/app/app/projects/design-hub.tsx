@@ -100,7 +100,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
 
     <div className="design-hub-heading">
       <div><span className="section-kicker">{ar ? "مراقبة المستندات" : "DOCUMENT CONTROL"}</span><h2>{labels.title}</h2><p>{labels.lead}</p></div>
-      {canManage && <button className="ui-button ui-button--primary" type="button" onClick={() => setShowUpload(true)}><FilePlus2 size={17} />{labels.upload}</button>}
+      {canManage && <button className="ui-button ui-button--accent" type="button" onClick={() => setShowUpload(true)}><FilePlus2 size={17} />{labels.upload}</button>}
     </div>
 
     <div className="design-kpi-strip">
@@ -119,7 +119,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
     {error && <div className="form-error">{error}</div>}
     {success && <div className="form-success">{success}</div>}
     {loading && <DesignRegisterSkeleton />}
-    {!loading && designs.length === 0 && <EmptyState icon={<FilePlus2 size={21} />} title={filtered ? labels.noResults : labels.empty} description={filtered ? labels.noResultsHint : labels.emptyHint} action={!filtered && canManage ? <button className="ui-button ui-button--primary ui-button--sm" type="button" onClick={() => setShowUpload(true)}>{labels.upload}</button> : undefined} />}
+    {!loading && designs.length === 0 && <EmptyState icon={<FilePlus2 size={21} />} title={filtered ? labels.noResults : labels.empty} description={filtered ? labels.noResultsHint : labels.emptyHint} action={!filtered && canManage ? <button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowUpload(true)}>{labels.upload}</button> : undefined} />}
     {!loading && designs.length > 0 && <div className="design-register">
       <div className="design-register__head"><span>{labels.design}</span><span>{labels.discipline}</span><span>{labels.revision}</span><span>{labels.status}</span><span>{labels.updated}</span><span>{labels.owner}</span><span>{labels.action}</span></div>
       {designs.map((design) => <article className="design-register__row" key={design.id}>
@@ -189,7 +189,7 @@ function DesignUploadDialog({ projectId, locale, onClose, onCreated }: { project
         <fieldset disabled={uploading}><legend>{labels.revision}</legend><p className="field-hint"><bdi>REV 01</bdi> · {labels.revisionHint}</p><label className="ui-field">{labels.notes}<textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={2000} /></label></fieldset>
         {error && <div className="form-error">{error}</div>}
         {uploading && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
-        <footer><button className="ui-button ui-button--secondary" type="submit" disabled={uploading}>{labels.draft}</button><button className="ui-button ui-button--primary" type="button" disabled={uploading} onClick={(event) => void submit(event, true)}>{labels.review}</button></footer>
+        <footer><button className="ui-button ui-button--secondary" type="submit" disabled={uploading}>{labels.draft}</button><button className="ui-button ui-button--accent" type="button" disabled={uploading} onClick={(event) => void submit(event, true)}>{labels.review}</button></footer>
       </form>
     </section>
   </div>;

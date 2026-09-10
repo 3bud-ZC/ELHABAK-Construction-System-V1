@@ -43,7 +43,10 @@ export function ProjectsClient() {
             phase: "المرحلة",
             progress: "التقدم",
             open: "فتح",
-            loadingLabel: "جاري تحميل المشاريع..."
+            loadingLabel: "جاري تحميل المشاريع...",
+            total: "إجمالي المشاريع",
+            activeCount: "نشطة حالياً",
+            avgProgress: "متوسط التقدم"
           }
         : {
             title: "Projects",
@@ -59,9 +62,18 @@ export function ProjectsClient() {
             phase: "Phase",
             progress: "Progress",
             open: "Open",
-            loadingLabel: "Loading projects..."
+            loadingLabel: "Loading projects...",
+            total: "Total projects",
+            activeCount: "Currently active",
+            avgProgress: "Average progress"
           },
     [locale]
+  );
+
+  const activeCount = useMemo(() => projects.filter((project) => project.status === "ACTIVE").length, [projects]);
+  const avgProgress = useMemo(
+    () => (projects.length ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / projects.length) : 0),
+    [projects]
   );
 
   useEffect(() => {
@@ -104,6 +116,24 @@ export function ProjectsClient() {
           </Link>
         }
       />
+
+      {!loading && (
+        <div className="design-kpi-strip">
+          <span>
+            <small>{labels.total}</small>
+            <strong>{projects.length}</strong>
+          </span>
+          <span>
+            <small>{labels.activeCount}</small>
+            <strong>{activeCount}</strong>
+          </span>
+          <span>
+            <small>{labels.avgProgress}</small>
+            <strong>{avgProgress}%</strong>
+          </span>
+          <p>{labels.lead}</p>
+        </div>
+      )}
 
       <div className="table-toolbar">
         <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />

@@ -31,7 +31,12 @@ export function AppShell({ children }: AppShellProps) {
             projects: "المشاريع",
             worker: "تحديثات الموقع",
             logout: "تسجيل الخروج",
-            loading: "جاري تحميل النظام..."
+            loading: "جاري تحميل النظام...",
+            new: "إنشاء",
+            edit: "تعديل",
+            workspace: "مساحة المشروع",
+            design: "التصميمات",
+            siteActivity: "نشاط الموقع"
           }
         : {
             productTag: "Project Management System",
@@ -41,10 +46,42 @@ export function AppShell({ children }: AppShellProps) {
             projects: "Projects",
             worker: "Site Updates",
             logout: "Logout",
-            loading: "Loading system..."
+            loading: "Loading system...",
+            new: "New",
+            edit: "Edit",
+            workspace: "Workspace",
+            design: "Design",
+            siteActivity: "Site Activity"
           },
     [locale]
   );
+
+  const breadcrumb = useMemo(() => {
+    const raw = pathname.split("/").filter(Boolean);
+    const rest = raw.slice(1);
+    if (rest.length === 0) return [labels.dashboard];
+    let i = 0;
+    const isAdmin = rest[i] === "admin";
+    if (isAdmin) i++;
+    const section = rest[i];
+    i++;
+    const crumbs: string[] = [];
+    if (section === "projects") crumbs.push(labels.projects);
+    else if (section === "clients") crumbs.push(labels.clients);
+    else if (section === "users") crumbs.push(labels.users);
+    else return [labels.dashboard];
+    let sawId = false;
+    for (const seg of rest.slice(i)) {
+      if (seg === "new") crumbs.push(labels.new);
+      else if (seg === "design") crumbs.push(labels.design);
+      else if (seg === "site-activity") crumbs.push(labels.siteActivity);
+      else if (!sawId) {
+        crumbs.push(isAdmin ? labels.edit : labels.workspace);
+        sawId = true;
+      }
+    }
+    return crumbs;
+  }, [pathname, labels]);
 
   useEffect(() => {
     let alive = true;
@@ -136,11 +173,14 @@ export function AppShell({ children }: AppShellProps) {
       </aside>
       <section className="app-main">
         <header className="app-topbar">
-          <div className="app-topbar-context">
-            <strong>{user.displayName}</strong>
-            <span>&middot;</span>
-            <span>{roleLabel(user.role, locale)}</span>
-          </div>
+          <nav className="app-breadcrumb" aria-label={locale === "ar" ? "مسار الصفحة" : "Breadcrumb"}>
+            {breadcrumb.map((crumb, index) => (
+              <span key={crumb + index}>
+                {index > 0 && <span className="app-breadcrumb__sep" aria-hidden="true" />}
+                <span className={index === breadcrumb.length - 1 ? "app-breadcrumb__current" : undefined}>{crumb}</span>
+              </span>
+            ))}
+          </nav>
           <div className="app-actions">
             <Link className="lang-link" href={href(pathname, alternate)}>
               {alternate === "ar" ? "العربية" : "English"}

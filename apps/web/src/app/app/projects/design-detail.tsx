@@ -101,7 +101,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />
     <div className="design-detail-heading">
       <div><span className="section-kicker">{labels.back} / <bdi>{selected.revisionCode}</bdi></span><h2>{design.title}</h2><div><Badge tone={designStatusTone(selected.status)}>{designStatusLabel(selected.status, locale)}</Badge><span>{disciplineLabel(design.discipline, locale)}</span></div></div>
-      <div className="design-detail-actions">{canManage && <><button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setEditing(true)}><Pencil size={15} />{labels.edit}</button><button className="ui-button ui-button--primary ui-button--sm" type="button" onClick={() => setShowRevision(true)}><UploadCloud size={15} />{labels.newRevision}</button></>}</div>
+      <div className="design-detail-actions">{canManage && <><button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setEditing(true)}><Pencil size={15} />{labels.edit}</button><button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowRevision(true)}><UploadCloud size={15} />{labels.newRevision}</button></>}</div>
     </div>
     {error && <div className="form-error">{error}</div>}{success && <div className="form-success">{success}</div>}
 
@@ -154,8 +154,8 @@ function FilePreview({ projectId, designId, revision, fallback }: { projectId: s
 
 function SubmitRevisionButton({ labels, disabled, onConfirm }: { labels: Record<string, string>; disabled: boolean; onConfirm: () => void }) {
   const [confirming, setConfirming] = useState(false);
-  if (!confirming) return <button className="ui-button ui-button--primary full-width" type="button" onClick={() => setConfirming(true)}><Send size={15} />{labels.submit}</button>;
-  return <div className="inline-confirm"><strong>{labels.submitConfirm}</strong><div><button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setConfirming(false)}>{labels.cancel}</button><button className="ui-button ui-button--primary ui-button--sm" type="button" onClick={onConfirm} disabled={disabled}>{labels.confirm}</button></div></div>;
+  if (!confirming) return <button className="ui-button ui-button--accent full-width" type="button" onClick={() => setConfirming(true)}><Send size={15} />{labels.submit}</button>;
+  return <div className="inline-confirm"><strong>{labels.submitConfirm}</strong><div><button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setConfirming(false)}>{labels.cancel}</button><button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={onConfirm} disabled={disabled}>{labels.confirm}</button></div></div>;
 }
 
 function RevisionUploadDialog({ projectId, design, locale, onClose, onUpdated }: { projectId: string; design: DesignRecord; locale: "ar" | "en"; onClose: () => void; onUpdated: (design: DesignRecord) => void }) {
