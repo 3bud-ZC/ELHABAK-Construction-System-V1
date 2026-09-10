@@ -55,7 +55,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
     ? {
         loading: "جاري تحميل تفاصيل المستند...", back: "سجل المستندات", current: "النسخة الحالية", category: "الفئة", uploader: "رافع الملف", uploaded: "تاريخ الرفع",
         description: "الوصف", file: "ملف النسخة", preview: "معاينة الملف", download: "تنزيل", versionHistory: "سجل النسخ", newest: "الأحدث",
-        activity: "السجل المالي والنشاط", newVersion: "رفع نسخة جديدة", edit: "تعديل البيانات", save: "حفظ التعديلات", title: "عنوان المستند",
+        activity: "سجل التدقيق والنشاط", newVersion: "رفع نسخة جديدة", edit: "تعديل البيانات", save: "حفظ التعديلات", title: "عنوان المستند",
         updated: "تم تحديث بيانات المستند.", pdfFallback: "إذا لم تظهر المعاينة، نزّل الملف لفتحه.", fileMeta: "بيانات الملف", checksum: "بصمة الملف (SHA-256)",
         share: "مشاركة مع العميل", hide: "إخفاء عن العميل", shareConfirm: "تمت مشاركة المستند مع العميل.", hideConfirm: "تم إخفاء المستند عن العميل.",
         archive: "أرشفة", restore: "استعادة", archiveConfirm: "هل تريد أرشفة هذا المستند؟ سيبقى متاحاً للمستخدمين الداخليين المخوّلين.",
