@@ -47,7 +47,7 @@ export class AuthController {
 
     return serialize(options.name, token, {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: options.sameSite,
       secure: options.secure,
       path: "/",
       maxAge: options.maxAge
@@ -59,7 +59,7 @@ export class AuthController {
 
     return serialize(options.name, "", {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: options.sameSite,
       secure: options.secure,
       path: "/",
       maxAge: 0

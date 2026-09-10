@@ -2,7 +2,10 @@
 
 import { io, type Socket } from "socket.io-client";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const socketUrl =
+  process.env.NEXT_PUBLIC_SOCKET_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:4000";
 
 let socket: Socket | null = null;
 
@@ -15,7 +18,7 @@ let socket: Socket | null = null;
  */
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io(apiBaseUrl, {
+    socket = io(socketUrl, {
       withCredentials: true,
       autoConnect: true,
       reconnection: true,

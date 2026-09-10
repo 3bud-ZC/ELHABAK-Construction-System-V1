@@ -1,0 +1,50 @@
+# Dependency and build caches
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+build
+**/build
+coverage
+**/coverage
+.turbo
+**/*.tsbuildinfo
+
+# Local and persistent storage
+storage
+**/storage
+apps/api/storage
+
+# Secrets and environment files
+.env
+.env.*
+.env*.local
+!.env.example
+!.env*.example
+
+# Git and IDE
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+.claude
+.gemini
+
+# QA and test artifacts
+.codex-*-qa
+.codex-brand-preview
+test-results
+cypress/videos
+cypress/screenshots
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Media and OS files
+.DS_Store
+Thumbs.db

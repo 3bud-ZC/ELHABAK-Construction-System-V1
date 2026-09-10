@@ -30,7 +30,16 @@ async function bootstrap() {
     })
   );
 
-  await app.listen(env.API_PORT);
+  const expressApp = app.getHttpAdapter().getInstance() as { set?: (key: string, value: unknown) => void };
+  if (typeof expressApp?.set === "function") {
+    expressApp.set("trust proxy", 1);
+  }
+
+  // Railway (and most PaaS hosts) assign the listen port via PORT at runtime; API_PORT
+  // remains the local-dev default when PORT is not set. The server must bind 0.0.0.0, not
+  // the Express/Nest default of localhost-only, or the platform's health check can't reach it.
+  const port = env.PORT ?? env.API_PORT ?? 4000;
+  await app.listen(port, "0.0.0.0");
 }
 
 void bootstrap();

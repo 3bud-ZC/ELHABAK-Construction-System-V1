@@ -1,0 +1,74 @@
+# ---------------------------------------------------
+# Base image with Node, OpenSSL (for Prisma), and pnpm
+# ---------------------------------------------------
+FROM node:22-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssl ca-certificates && \
+    rm -rf /var/lib/apt/lists/* && \
+    npm install -g pnpm@11.7.0
+
+WORKDIR /app
+
+# ---------------------------------------------------
+# Dependencies stage
+# ---------------------------------------------------
+FROM base AS deps
+WORKDIR /app
+
+# Copy root workspace manifests
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+
+# Copy all workspace package manifests to resolve dependency graph
+COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
+COPY packages/config/package.json ./packages/config/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/database/package.json ./packages/database/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/validation/package.json ./packages/validation/
+
+RUN pnpm install --frozen-lockfile
+
+# ---------------------------------------------------
+# Builder stage
+# ---------------------------------------------------
+FROM deps AS builder
+WORKDIR /app
+
+# Copy shared configs and source files
+COPY tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
+
+ENV NODE_ENV=production
+
+# Generate Prisma Client and build API with all its workspace dependencies
+RUN pnpm --filter @elhabak/database db:generate && \
+    pnpm --filter @elhabak/api... build
+
+# ---------------------------------------------------
+# Production runner stage
+# ---------------------------------------------------
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV STORAGE_ROOT=/app/storage
+ENV PORT=4000
+
+# Create persistent storage volume directory
+RUN mkdir -p /app/storage
+
+# Copy workspace dependencies and built packages
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/api ./apps/api
+
+EXPOSE 4000
+
+# Railway sets PORT at runtime. API listens on env.PORT ?? env.API_PORT ?? 4000 binding to 0.0.0.0.
+CMD ["node", "apps/api/dist/main.js"]

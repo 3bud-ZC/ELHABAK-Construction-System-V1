@@ -10,6 +10,7 @@ type CookieOptions = {
   name: string;
   maxAge: number;
   secure: boolean;
+  sameSite: "lax" | "none";
 };
 
 @Injectable()
@@ -21,10 +22,18 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   get cookieOptions(): CookieOptions {
+    const isProduction = this.env.NODE_ENV === "production";
+
     return {
       name: this.env.SESSION_COOKIE_NAME,
       maxAge: this.env.SESSION_EXPIRES_DAYS * 24 * 60 * 60,
-      secure: this.env.NODE_ENV === "production"
+      secure: isProduction,
+      // The Railway deployment serves the web app and API from separate domains, so the
+      // browser treats every API request as cross-site. SameSite=Lax cookies are never sent
+      // on a cross-site fetch/XHR (only on top-level navigation), which would silently break
+      // login. SameSite=None requires Secure, so this only applies once NODE_ENV=production
+      // guarantees HTTPS; local dev (same host, different port) keeps the stricter Lax default.
+      sameSite: isProduction ? "none" : "lax"
     };
   }
 

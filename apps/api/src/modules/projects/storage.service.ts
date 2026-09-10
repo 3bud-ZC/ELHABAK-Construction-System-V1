@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { parseApiEnv } from "@elhabak/config";
 import { createReadStream } from "node:fs";
 import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
-import { basename, extname, join, resolve } from "node:path";
+import { basename, extname, join, resolve, sep } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { ReadStream } from "node:fs";
 import type { SiteMediaType } from "@elhabak/database";
@@ -218,8 +218,8 @@ export class StorageService {
   }
 
   private absolutePath(storagePath: string) {
-    const absolutePath = resolve(this.root, storagePath.replace(/\//g, "\\"));
-    const rootPrefix = `${this.root}\\`;
+    const absolutePath = resolve(this.root, storagePath);
+    const rootPrefix = this.root.endsWith(sep) ? this.root : `${this.root}${sep}`;
     if (absolutePath !== this.root && !absolutePath.startsWith(rootPrefix)) {
       throw new BadRequestException("Invalid storage path.");
     }

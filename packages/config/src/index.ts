@@ -4,10 +4,15 @@ const nodeEnvSchema = z.enum(["development", "test", "production"]).default("dev
 
 export const apiEnvSchema = z.object({
   NODE_ENV: nodeEnvSchema,
+  PORT: z.coerce.number().int().min(1).max(65535).optional(),
   API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   DATABASE_URL: z.string().url().startsWith("postgresql://"),
   DIRECT_DATABASE_URL: z.string().url().startsWith("postgresql://").optional(),
-  WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
+  WEB_ORIGIN: z
+    .string()
+    .url()
+    .transform((val) => val.replace(/\/+$/, ""))
+    .default("http://localhost:3000"),
   AUTH_SESSION_SECRET: z.string().min(32),
   SESSION_COOKIE_NAME: z.string().min(1).default("elhabak_session"),
   SESSION_EXPIRES_DAYS: z.coerce.number().int().min(1).max(30).default(7),
@@ -24,7 +29,8 @@ export function parseApiEnv(env: NodeJS.ProcessEnv): ApiEnv {
 
 export const webPublicEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
-  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:4000")
+  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:4000"),
+  NEXT_PUBLIC_SOCKET_URL: z.string().url().optional()
 });
 
 export type WebPublicEnv = z.infer<typeof webPublicEnvSchema>;
