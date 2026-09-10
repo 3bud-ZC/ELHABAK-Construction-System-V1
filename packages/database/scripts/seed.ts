@@ -1,8 +1,17 @@
 import { config } from "dotenv";
 import { hash } from "bcryptjs";
 import { PrismaClient, type UserRole } from "@prisma/client";
+import { computeLineTotalMinor, decimalToMinorUnits } from "@elhabak/validation";
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
+
+function egp(amount: string): number {
+  return decimalToMinorUnits(amount, 2);
+}
+
+function units(quantity: string): number {
+  return decimalToMinorUnits(quantity, 3);
+}
 
 config({ path: resolve(__dirname, "../../../.env"), quiet: true });
 
@@ -218,11 +227,125 @@ async function main() {
     }
   }
 
+  const demoAccountant = await prisma.user.findUniqueOrThrow({
+    where: { email: "demo.accountant@elhabak.local" }
+  });
+
+  await prisma.projectFinancialProfile.upsert({
+    where: { projectId: demoProject.id },
+    update: { contractValueMinor: egp("750000.00"), updatedById: demoAccountant.id },
+    create: { projectId: demoProject.id, contractValueMinor: egp("750000.00"), updatedById: demoAccountant.id }
+  });
+
+  const demoBoqItems: Array<{
+    code: string;
+    section: string;
+    description: string;
+    unit: "M2" | "M3" | "ITEM";
+    quantity: string;
+    unitRate: string;
+    sortOrder: number;
+  }> = [
+    { code: "BOQ-001", section: "Sitework", description: "Excavation and site preparation", unit: "M3", quantity: "180.000", unitRate: "220.00", sortOrder: 1 },
+    { code: "BOQ-002", section: "Structure", description: "Reinforced concrete foundation works", unit: "M3", quantity: "95.500", unitRate: "1850.00", sortOrder: 2 },
+    { code: "BOQ-003", section: "Structure", description: "Block masonry walls", unit: "M2", quantity: "340.000", unitRate: "310.00", sortOrder: 3 },
+    { code: "BOQ-004", section: "Finishing", description: "Ceramic floor tiling", unit: "M2", quantity: "210.000", unitRate: "285.00", sortOrder: 4 },
+    { code: "BOQ-005", section: "MEP", description: "Electrical rough-in and distribution board", unit: "ITEM", quantity: "1.000", unitRate: "65000.00", sortOrder: 5 }
+  ];
+
+  for (const boqItem of demoBoqItems) {
+    const existing = await prisma.bOQItem.findFirst({ where: { projectId: demoProject.id, code: boqItem.code } });
+    const quantityMilli = units(boqItem.quantity);
+    const unitRateMinor = egp(boqItem.unitRate);
+    const lineTotalMinor = computeLineTotalMinor(quantityMilli, unitRateMinor);
+    if (!existing) {
+      await prisma.bOQItem.create({
+        data: {
+          projectId: demoProject.id,
+          code: boqItem.code,
+          section: boqItem.section,
+          description: boqItem.description,
+          unit: boqItem.unit,
+          quantityMilli,
+          unitRateMinor,
+          lineTotalMinor,
+          sortOrder: boqItem.sortOrder,
+          createdById: demoAccountant.id
+        }
+      });
+    }
+  }
+
+  const demoClientPayments = [
+    { reference: "RCPT-DEMO-001", amount: "225000.00", paymentDate: new Date("2026-09-02T00:00:00.000Z"), method: "BANK_TRANSFER" as const, description: "First installment - 30% on MVP acceptance" },
+    { reference: "RCPT-DEMO-002", amount: "150000.00", paymentDate: new Date("2026-09-20T00:00:00.000Z"), method: "CHECK" as const, description: "Second installment - execution milestone" }
+  ];
+
+  for (const payment of demoClientPayments) {
+    const existing = await prisma.clientPayment.findFirst({ where: { projectId: demoProject.id, reference: payment.reference } });
+    if (!existing) {
+      await prisma.clientPayment.create({
+        data: {
+          projectId: demoProject.id,
+          amountMinor: egp(payment.amount),
+          paymentDate: payment.paymentDate,
+          method: payment.method,
+          reference: payment.reference,
+          description: payment.description,
+          createdById: demoAccountant.id
+        }
+      });
+    }
+  }
+
+  const demoExpenses = [
+    { reference: "EXP-DEMO-001", category: "MATERIAL" as const, description: "Cement and steel rebar delivery", amount: "48500.00", expenseDate: new Date("2026-09-05T00:00:00.000Z"), vendor: "Sohag Building Materials Co." },
+    { reference: "EXP-DEMO-002", category: "LABOR" as const, description: "Foundation crew wages - week 1", amount: "21000.00", expenseDate: new Date("2026-09-08T00:00:00.000Z"), vendor: "Site labor team" }
+  ];
+
+  for (const expense of demoExpenses) {
+    const existing = await prisma.expense.findFirst({ where: { projectId: demoProject.id, reference: expense.reference } });
+    if (!existing) {
+      await prisma.expense.create({
+        data: {
+          projectId: demoProject.id,
+          category: expense.category,
+          description: expense.description,
+          amountMinor: egp(expense.amount),
+          expenseDate: expense.expenseDate,
+          vendor: expense.vendor,
+          reference: expense.reference,
+          createdById: demoAccountant.id
+        }
+      });
+    }
+  }
+
+  const demoContractorPaymentReference = "PAY-DEMO-001";
+  const existingContractorPayment = await prisma.contractorPayment.findFirst({
+    where: { projectId: demoProject.id, reference: demoContractorPaymentReference }
+  });
+  if (!existingContractorPayment) {
+    await prisma.contractorPayment.create({
+      data: {
+        projectId: demoProject.id,
+        payee: "El-Nour Masonry Subcontractor",
+        amountMinor: egp("35000.00"),
+        paymentDate: new Date("2026-09-09T00:00:00.000Z"),
+        method: "CASH",
+        category: "SUBCONTRACTOR",
+        reference: demoContractorPaymentReference,
+        description: "Block masonry works - partial payment",
+        createdById: demoAccountant.id
+      }
+    });
+  }
+
   const count = await prisma.user.count({
     where: { email: { endsWith: "@elhabak.local" } }
   });
 
-  console.log(`Seed complete. Demo users present: ${count}. DEMO-MVP1 and Design Hub sample ready.`);
+  console.log(`Seed complete. Demo users present: ${count}. DEMO-MVP1, Design Hub, and Finance samples ready.`);
 }
 
 function createDemoPdf(title: string) {

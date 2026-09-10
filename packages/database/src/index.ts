@@ -9,7 +9,12 @@ export {
   SiteUpdateType,
   DesignDiscipline,
   DesignStatus,
-  DesignEventType
+  DesignEventType,
+  BoqUnit,
+  ExpenseCategory,
+  PaymentMethod,
+  FinancialRecordStatus,
+  FinancialAttachmentKind
 } from "@prisma/client";
 export type {
   User,
@@ -20,6 +25,14 @@ export type {
   DesignItem,
   DesignRevision,
   DesignEvent,
-  AuditLog
+  AuditLog,
+  ProjectFinancialProfile,
+  CostEstimate,
+  CostEstimateItem,
+  BOQItem,
+  Expense,
+  ClientPayment,
+  ContractorPayment,
+  FinancialAttachment
 } from "@prisma/client";
 

@@ -83,6 +83,30 @@ export class StorageService {
     return { storedFilename, storagePath: relativePath.replace(/\\/g, "/") };
   }
 
+  validateFinanceAttachment(file: Express.Multer.File) {
+    if (file.size === 0 || file.size > this.maxBytes) {
+      throw new BadRequestException(file.size === 0 ? "File is empty." : "File is too large.");
+    }
+
+    const extension = extname(file.originalname).toLowerCase();
+    const expectedMime = designMimeFor(extension);
+    if (!expectedMime || expectedMime !== file.mimetype || !hasExpectedSignature(file.buffer, expectedMime)) {
+      throw new BadRequestException("Only genuine PDF, PNG, JPG, and JPEG files are allowed.");
+    }
+  }
+
+  async storeFinanceAttachment(projectId: string, file: Express.Multer.File): Promise<StoredDesignFile> {
+    this.validateFinanceAttachment(file);
+    const extension = extname(file.originalname).toLowerCase();
+    const storedFilename = `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomUUID()}${extension}`;
+    const relativePath = join("projects", projectId, "finance", storedFilename);
+    const absolutePath = this.absolutePath(relativePath);
+
+    await mkdir(resolve(this.root, "projects", projectId, "finance"), { recursive: true });
+    await writeFile(absolutePath, file.buffer, { flag: "wx" });
+    return { storedFilename, storagePath: relativePath.replace(/\\/g, "/") };
+  }
+
   async remove(storagePath: string) {
     await unlink(this.absolutePath(storagePath)).catch(() => undefined);
   }

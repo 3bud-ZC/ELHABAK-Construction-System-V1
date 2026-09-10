@@ -229,6 +229,258 @@ export function designFileUrl(projectId: string, designId: string, revisionId: s
   return `${apiBaseUrl}/projects/${projectId}/designs/${designId}/revisions/${revisionId}/file${download ? "?download=1" : ""}`;
 }
 
+export type BoqUnit = "M" | "M2" | "M3" | "ITEM" | "LOT";
+export type ExpenseCategory = "MATERIAL" | "LABOR" | "TRANSPORT" | "EQUIPMENT" | "SUBCONTRACTOR" | "OTHER";
+export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "CHECK" | "OTHER";
+export type FinancialRecordStatus = "ACTIVE" | "VOID";
+
+export type FinanceProjectContext = {
+  id: string;
+  code: string | null;
+  name: string;
+  category: ProjectCategory;
+  phase: ProjectPhase;
+  status: ProjectStatus;
+  progress: number;
+  location: string | null;
+  client: { id: string; phone: string | null; user: UserRecord } | null;
+  engineer: UserRecord | null;
+};
+
+export type FinanceProjectListItem = {
+  id: string;
+  code: string | null;
+  name: string;
+  category: ProjectCategory;
+  phase: ProjectPhase;
+  status: ProjectStatus;
+  progress: number;
+  client: { id: string; user: UserRecord } | null;
+};
+
+export type FinanceSummary = {
+  currency: string;
+  contractValue: string | null;
+  boqTotal?: string;
+  estimateTotal?: string;
+  clientPaymentsTotal?: string;
+  paidAmount?: string;
+  outstandingBalance: string | null;
+  expensesTotal?: string;
+  contractorPaymentsTotal?: string;
+  committedCostTotal?: string;
+};
+
+export type FinancialAttachmentRecord = {
+  id: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedBy?: UserRecord;
+  createdAt: string;
+};
+
+export type BoqItemRecord = {
+  id: string;
+  code: string;
+  section: string | null;
+  description: string;
+  unit: BoqUnit;
+  quantity: string;
+  unitRate: string;
+  lineTotal: string;
+  note: string | null;
+  sortOrder: number;
+  createdBy: UserRecord;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BoqListResponse = {
+  items: BoqItemRecord[];
+  overallTotal: string;
+  sectionTotals: Array<{ section: string | null; total: string }>;
+};
+
+export type CostEstimateItemRecord = {
+  id: string;
+  description: string;
+  unit: BoqUnit;
+  quantity: string;
+  unitRate: string;
+  lineTotal: string;
+  note: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CostEstimateRecord = {
+  id: string;
+  title: string;
+  version: number;
+  isCurrent: boolean;
+  description: string | null;
+  items: CostEstimateItemRecord[];
+  total: string;
+  createdBy: UserRecord;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExpenseRecord = {
+  id: string;
+  category: ExpenseCategory;
+  description: string;
+  amount: string;
+  currency: string;
+  expenseDate: string;
+  vendor: string | null;
+  reference: string | null;
+  note: string | null;
+  status: FinancialRecordStatus;
+  voidReason: string | null;
+  attachments: FinancialAttachmentRecord[];
+  createdBy: UserRecord;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ClientPaymentRecord = {
+  id: string;
+  amount: string;
+  currency: string;
+  paymentDate: string;
+  method: PaymentMethod;
+  reference: string | null;
+  description: string | null;
+  status: FinancialRecordStatus;
+  voidReason?: string | null;
+  attachments: FinancialAttachmentRecord[];
+  createdBy?: UserRecord;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ContractorPaymentRecord = {
+  id: string;
+  payee: string;
+  amount: string;
+  currency: string;
+  paymentDate: string;
+  method: PaymentMethod;
+  category: ExpenseCategory | null;
+  reference: string | null;
+  description: string | null;
+  status: FinancialRecordStatus;
+  voidReason: string | null;
+  attachments: FinancialAttachmentRecord[];
+  createdBy: UserRecord;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FinanceHistoryEvent = {
+  id: string;
+  action: string;
+  metadata: Record<string, unknown> | null;
+  actor: { id: string; displayName: string; role: string } | null;
+  createdAt: string;
+};
+
+export function financeAttachmentUrl(
+  projectId: string,
+  kind: "expenses" | "client-payments" | "contractor-payments",
+  recordId: string,
+  attachmentId: string
+) {
+  return `${apiBaseUrl}/projects/${projectId}/finance/${kind}/${recordId}/attachments/${attachmentId}/file`;
+}
+
+export const BOQ_UNITS: BoqUnit[] = ["M", "M2", "M3", "ITEM", "LOT"];
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = ["MATERIAL", "LABOR", "TRANSPORT", "EQUIPMENT", "SUBCONTRACTOR", "OTHER"];
+export const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "BANK_TRANSFER", "CHECK", "OTHER"];
+
+export function boqUnitLabel(unit: BoqUnit, locale: "ar" | "en") {
+  const labels: Record<BoqUnit, { ar: string; en: string }> = {
+    M: { ar: "م", en: "m" },
+    M2: { ar: "م²", en: "m²" },
+    M3: { ar: "م³", en: "m³" },
+    ITEM: { ar: "قطعة", en: "item" },
+    LOT: { ar: "دفعة", en: "lot" }
+  };
+  return labels[unit][locale];
+}
+
+export function expenseCategoryLabel(category: ExpenseCategory, locale: "ar" | "en") {
+  const labels: Record<ExpenseCategory, { ar: string; en: string }> = {
+    MATERIAL: { ar: "مواد", en: "Material" },
+    LABOR: { ar: "عمالة", en: "Labor" },
+    TRANSPORT: { ar: "نقل", en: "Transport" },
+    EQUIPMENT: { ar: "معدات", en: "Equipment" },
+    SUBCONTRACTOR: { ar: "مقاول فرعي", en: "Subcontractor" },
+    OTHER: { ar: "أخرى", en: "Other" }
+  };
+  return labels[category][locale];
+}
+
+export function paymentMethodLabel(method: PaymentMethod, locale: "ar" | "en") {
+  const labels: Record<PaymentMethod, { ar: string; en: string }> = {
+    CASH: { ar: "نقدي", en: "Cash" },
+    BANK_TRANSFER: { ar: "تحويل بنكي", en: "Bank transfer" },
+    CHECK: { ar: "شيك", en: "Check" },
+    OTHER: { ar: "أخرى", en: "Other" }
+  };
+  return labels[method][locale];
+}
+
+export function financialStatusLabel(status: FinancialRecordStatus, locale: "ar" | "en") {
+  return status === "VOID" ? (locale === "ar" ? "ملغي" : "Void") : locale === "ar" ? "فعّال" : "Active";
+}
+
+export function financialStatusTone(status: FinancialRecordStatus): BadgeTone {
+  return status === "VOID" ? "danger" : "success";
+}
+
+export function formatMoney(decimalAmount: string, currency: string, locale: "ar" | "en") {
+  const isNegative = decimalAmount.trim().startsWith("-");
+  const numeric = Number(decimalAmount);
+  // Always render in Western digits: BOQ quantities, codes, and progress elsewhere in the
+  // app never switch to Eastern Arabic-Indic numerals, and financial figures must stay
+  // scannable and consistent with those regardless of UI language.
+  const formatted = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(numeric));
+  const sign = isNegative ? "-" : "";
+  return locale === "ar" ? `${sign}${formatted} ${currency}` : `${currency} ${sign}${formatted}`;
+}
+
+export function financeActionLabel(action: string, locale: "ar" | "en"): string {
+  const labels: Record<string, { ar: string; en: string }> = {
+    "finance.contract_value_set": { ar: "تحديد/تعديل القيمة التعاقدية", en: "Contract value set" },
+    "finance.estimate_created": { ar: "إنشاء مقايسة تقريبية", en: "Estimate created" },
+    "finance.estimate_updated": { ar: "تحديث بيانات المقايسة", en: "Estimate updated" },
+    "finance.estimate_versioned": { ar: "إصدار نسخة جديدة من المقايسة", en: "New estimate version started" },
+    "finance.estimate_item_added": { ar: "إضافة بند للمقايسة", en: "Estimate item added" },
+    "finance.estimate_item_updated": { ar: "تعديل بند في المقايسة", en: "Estimate item updated" },
+    "finance.estimate_item_removed": { ar: "حذف بند من المقايسة", en: "Estimate item removed" },
+    "finance.boq_item_created": { ar: "إضافة بند لجدول الكميات", en: "BOQ item created" },
+    "finance.boq_item_updated": { ar: "تعديل بند في جدول الكميات", en: "BOQ item updated" },
+    "finance.boq_item_deleted": { ar: "حذف بند من جدول الكميات", en: "BOQ item deleted" },
+    "finance.expense_recorded": { ar: "تسجيل مصروف داخلي", en: "Expense recorded" },
+    "finance.expense_updated": { ar: "تعديل مصروف داخلي", en: "Expense updated" },
+    "finance.expense_voided": { ar: "إلغاء مصروف داخلي", en: "Expense voided" },
+    "finance.client_payment_recorded": { ar: "تسجيل دفعة من العميل", en: "Client payment recorded" },
+    "finance.client_payment_updated": { ar: "تعديل دفعة عميل", en: "Client payment updated" },
+    "finance.client_payment_voided": { ar: "إلغاء دفعة عميل", en: "Client payment voided" },
+    "finance.contractor_payment_recorded": { ar: "تسجيل دفعة لمقاول", en: "Contractor payment recorded" },
+    "finance.contractor_payment_updated": { ar: "تعديل دفعة مقاول", en: "Contractor payment updated" },
+    "finance.contractor_payment_voided": { ar: "إلغاء دفعة مقاول", en: "Contractor payment voided" }
+  };
+  return labels[action]?.[locale] ?? action;
+}
+
 export function roleLabel(role: UserRole, locale: "ar" | "en") {
   const labels: Record<UserRole, { ar: string; en: string }> = {
     ADMIN: { ar: "مدير", en: "Admin" },

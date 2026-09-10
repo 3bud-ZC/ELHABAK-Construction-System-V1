@@ -83,6 +83,48 @@ enum DesignEventType {
   COMMENT_ADDED
 }
 
+// Milestone 06 - Financial Architecture & Cost Engineering.
+// Money model: every monetary amount is stored as an INTEGER in minor currency units
+// (1 EGP = 100 minor units). Every quantity is stored as an INTEGER in milli-units
+// (1 unit = 1000 milli-units, i.e. up to 3 decimal places). This guarantees exact,
+// deterministic totals and balances with no JavaScript floating-point arithmetic.
+// See packages/validation/src/money.ts for the shared conversion helpers.
+// V1 supports a single project currency (EGP by default) with no FX conversion.
+enum BoqUnit {
+  M
+  M2
+  M3
+  ITEM
+  LOT
+}
+
+enum ExpenseCategory {
+  MATERIAL
+  LABOR
+  TRANSPORT
+  EQUIPMENT
+  SUBCONTRACTOR
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHECK
+  OTHER
+}
+
+enum FinancialRecordStatus {
+  ACTIVE
+  VOID
+}
+
+enum FinancialAttachmentKind {
+  EXPENSE
+  CLIENT_PAYMENT
+  CONTRACTOR_PAYMENT
+}
+
 model User {
   id           String              @id @default(cuid())
   email        String              @unique
@@ -99,6 +141,13 @@ model User {
   designEvents DesignEvent[]
   auditLogs     AuditLog[]
   sessions      AuthSession[]
+  financialProfilesUpdated ProjectFinancialProfile[] @relation("FinancialProfileUpdatedBy")
+  costEstimatesCreated     CostEstimate[]             @relation("CostEstimateCreatedBy")
+  boqItemsCreated          BOQItem[]                  @relation("BOQItemCreatedBy")
+  expensesCreated          Expense[]                  @relation("ExpenseCreatedBy")
+  clientPaymentsCreated    ClientPayment[]            @relation("ClientPaymentCreatedBy")
+  contractorPaymentsCreated ContractorPayment[]       @relation("ContractorPaymentCreatedBy")
+  financialAttachmentsUploaded FinancialAttachment[]  @relation("FinancialAttachmentUploadedBy")
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 
@@ -151,6 +200,13 @@ model Project {
   designs     DesignItem[]
   designRevisions DesignRevision[]
   auditLogs   AuditLog[]
+  financialProfile   ProjectFinancialProfile?
+  costEstimates      CostEstimate[]
+  boqItems           BOQItem[]
+  expenses           Expense[]
+  clientPayments     ClientPayment[]
+  contractorPayments ContractorPayment[]
+  financialAttachments FinancialAttachment[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
@@ -285,4 +341,170 @@ model AuditLog {
   @@index([actorId])
   @@index([projectId])
   @@index([createdAt])
+}
+
+model ProjectFinancialProfile {
+  id                 String   @id @default(cuid())
+  projectId          String   @unique
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  currency           String   @default("EGP")
+  contractValueMinor Int?
+  updatedById        String?
+  updatedBy          User?    @relation("FinancialProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model CostEstimate {
+  id          String             @id @default(cuid())
+  projectId   String
+  project     Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  version     Int                @default(1)
+  isCurrent   Boolean            @default(true)
+  description String?
+  items       CostEstimateItem[]
+  createdById String
+  createdBy   User               @relation("CostEstimateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([projectId, isCurrent])
+  @@index([projectId, version])
+}
+
+model CostEstimateItem {
+  id             String       @id @default(cuid())
+  estimateId     String
+  estimate       CostEstimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  description    String
+  unit           BoqUnit
+  quantityMilli  Int
+  unitRateMinor  Int
+  lineTotalMinor Int
+  note           String?
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([estimateId, sortOrder])
+}
+
+model BOQItem {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  code           String
+  section        String?
+  description    String
+  unit           BoqUnit
+  quantityMilli  Int
+  unitRateMinor  Int
+  lineTotalMinor Int
+  note           String?
+  sortOrder      Int      @default(0)
+  createdById    String
+  createdBy      User     @relation("BOQItemCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([projectId, sortOrder])
+  @@index([projectId, section])
+}
+
+model Expense {
+  id          String                @id @default(cuid())
+  projectId   String
+  project     Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category    ExpenseCategory
+  description String
+  amountMinor Int
+  currency    String                @default("EGP")
+  expenseDate DateTime
+  vendor      String?
+  reference   String?
+  note        String?
+  status      FinancialRecordStatus @default(ACTIVE)
+  voidReason  String?
+  attachments FinancialAttachment[]
+  createdById String
+  createdBy   User                  @relation("ExpenseCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([projectId, expenseDate])
+  @@index([projectId, category])
+  @@index([projectId, status])
+}
+
+model ClientPayment {
+  id          String                @id @default(cuid())
+  projectId   String
+  project     Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  amountMinor Int
+  currency    String                @default("EGP")
+  paymentDate DateTime
+  method      PaymentMethod
+  reference   String?
+  description String?
+  status      FinancialRecordStatus @default(ACTIVE)
+  voidReason  String?
+  attachments FinancialAttachment[]
+  createdById String
+  createdBy   User                  @relation("ClientPaymentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([projectId, paymentDate])
+  @@index([projectId, status])
+}
+
+model ContractorPayment {
+  id          String                @id @default(cuid())
+  projectId   String
+  project     Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  payee       String
+  amountMinor Int
+  currency    String                @default("EGP")
+  paymentDate DateTime
+  method      PaymentMethod
+  category    ExpenseCategory?
+  reference   String?
+  description String?
+  status      FinancialRecordStatus @default(ACTIVE)
+  voidReason  String?
+  attachments FinancialAttachment[]
+  createdById String
+  createdBy   User                  @relation("ContractorPaymentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([projectId, paymentDate])
+  @@index([projectId, status])
+}
+
+model FinancialAttachment {
+  id                  String                  @id @default(cuid())
+  projectId           String
+  project             Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind                FinancialAttachmentKind
+  expenseId           String?
+  expense             Expense?                @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  clientPaymentId     String?
+  clientPayment       ClientPayment?           @relation(fields: [clientPaymentId], references: [id], onDelete: Cascade)
+  contractorPaymentId String?
+  contractorPayment   ContractorPayment?       @relation(fields: [contractorPaymentId], references: [id], onDelete: Cascade)
+  storagePath         String
+  storedFilename      String
+  originalFilename    String
+  mimeType             String
+  fileSize            Int
+  uploadedById         String
+  uploadedBy           User                   @relation("FinancialAttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt            DateTime               @default(now())
+
+  @@index([projectId])
+  @@index([expenseId])
+  @@index([clientPaymentId])
+  @@index([contractorPaymentId])
 }

@@ -7,6 +7,7 @@ import { AuthModule } from "./auth/auth.module";
 import { HealthController } from "./health.controller";
 import { ProjectsModule } from "./projects/projects.module";
 import { DesignsModule } from "./designs/designs.module";
+import { FinanceModule } from "./finance/finance.module";
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { DesignsModule } from "./designs/designs.module";
     AuthModule,
     AdminModule,
     ProjectsModule,
-    DesignsModule
+    DesignsModule,
+    FinanceModule
   ],
   controllers: [HealthController]
 })

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BriefcaseBusiness, Camera, LayoutGrid, LogOut, Users, UserRoundCog } from "lucide-react";
+import { BriefcaseBusiness, Camera, LayoutGrid, LogOut, Users, UserRoundCog, Wallet } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
@@ -30,6 +30,7 @@ export function AppShell({ children }: AppShellProps) {
             clients: "العملاء",
             projects: "المشاريع",
             worker: "تحديثات الموقع",
+            finance: "الشؤون المالية",
             logout: "تسجيل الخروج",
             loading: "جاري تحميل النظام...",
             new: "إنشاء",
@@ -45,6 +46,7 @@ export function AppShell({ children }: AppShellProps) {
             clients: "Clients",
             projects: "Projects",
             worker: "Site Updates",
+            finance: "Finance",
             logout: "Logout",
             loading: "Loading system...",
             new: "New",
@@ -69,12 +71,14 @@ export function AppShell({ children }: AppShellProps) {
     if (section === "projects") crumbs.push(labels.projects);
     else if (section === "clients") crumbs.push(labels.clients);
     else if (section === "users") crumbs.push(labels.users);
+    else if (section === "finance") crumbs.push(labels.finance);
     else return [labels.dashboard];
     let sawId = false;
     for (const seg of rest.slice(i)) {
       if (seg === "new") crumbs.push(labels.new);
       else if (seg === "design") crumbs.push(labels.design);
       else if (seg === "site-activity") crumbs.push(labels.siteActivity);
+      else if (seg === "finance") crumbs.push(labels.finance);
       else if (!sawId) {
         crumbs.push(isAdmin ? labels.edit : labels.workspace);
         sawId = true;
@@ -152,9 +156,17 @@ export function AppShell({ children }: AppShellProps) {
               <Link className={isActive("/app/admin/users") ? "active" : ""} href={href("/app/admin/users")}>
                 <Users size={17} /> {labels.users}
               </Link>
+              <Link className={isActive("/app/finance") ? "active" : ""} href={href("/app/finance")}>
+                <Wallet size={17} /> {labels.finance}
+              </Link>
             </>
           )}
-          {user.role !== "ADMIN" && (
+          {user.role === "ACCOUNTANT" && (
+            <Link className={isActive("/app/finance") ? "active" : ""} href={href("/app/finance")}>
+              <Wallet size={17} /> {labels.finance}
+            </Link>
+          )}
+          {user.role !== "ADMIN" && user.role !== "ACCOUNTANT" && (
             <Link className={isActive("/app/projects") ? "active" : ""} href={href("/app/projects")}>
               {user.role === "WORKER" ? <Camera size={17} /> : <BriefcaseBusiness size={17} />}{" "}
               {user.role === "WORKER" ? labels.worker : labels.projects}

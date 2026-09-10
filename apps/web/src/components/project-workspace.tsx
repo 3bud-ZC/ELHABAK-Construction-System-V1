@@ -2,20 +2,37 @@
 
 import Link from "next/link";
 import { Badge, ProgressBar } from "@elhabak/ui";
-import { Activity, ClipboardList, MapPin, Pencil, UserRound, UsersRound } from "lucide-react";
+import { Activity, ClipboardList, MapPin, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
   phaseLabel,
   statusLabel,
   statusTone,
-  type ProjectRecord,
+  type ProjectCategory,
+  type ProjectPhase,
+  type ProjectStatus,
+  type UserRecord,
   type UserRole
 } from "../lib/api";
 
-type WorkspaceSection = "overview" | "design" | "site";
+type WorkspaceSection = "overview" | "design" | "site" | "finance";
+
+/** The subset of a project every workspace header needs - satisfied by the full ProjectRecord and by the lightweight finance project-context response alike. */
+export type ProjectHeaderRecord = {
+  id: string;
+  code: string | null;
+  name: string;
+  category: ProjectCategory;
+  phase: ProjectPhase;
+  status: ProjectStatus;
+  progress: number;
+  location: string | null;
+  client: { id: string; user: UserRecord } | null;
+  engineer: UserRecord | null;
+};
 
 type ProjectWorkspaceProps = {
-  project: ProjectRecord;
+  project: ProjectHeaderRecord;
   locale: "ar" | "en";
   role: UserRole;
   active: WorkspaceSection;
@@ -33,6 +50,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
         overview: "نظرة عامة",
         design: "التصميمات",
         site: "نشاط الموقع",
+        finance: "الشؤون المالية",
         status: "الحالة",
         unset: "غير محدد"
       }
@@ -45,6 +63,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
         overview: "Overview",
         design: "Design Hub",
         site: "Site Activity",
+        finance: "Finance",
         edit: "Edit Project",
         status: "Status",
         unset: "Not set"
@@ -56,11 +75,14 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
 
   const base = `/app/projects/${project.id}`;
   const sections: Array<{ id: WorkspaceSection; label: string; href: string; icon: typeof ClipboardList }> = [
-    { id: "overview", label: labels.overview, href: base, icon: ClipboardList },
+    ...(role === "ACCOUNTANT" ? [] : [{ id: "overview" as const, label: labels.overview, href: base, icon: ClipboardList }]),
     ...(role === "ADMIN" || role === "ENGINEER" || role === "CLIENT"
       ? [{ id: "design" as const, label: labels.design, href: `${base}/design`, icon: Pencil }]
       : []),
-    { id: "site", label: labels.site, href: `${base}/site-activity`, icon: Activity }
+    ...(role === "ACCOUNTANT" ? [] : [{ id: "site" as const, label: labels.site, href: `${base}/site-activity`, icon: Activity }]),
+    ...(role === "ADMIN" || role === "ACCOUNTANT" || role === "ENGINEER" || role === "CLIENT"
+      ? [{ id: "finance" as const, label: labels.finance, href: `${base}/finance`, icon: Wallet }]
+      : [])
   ];
 
   return (
