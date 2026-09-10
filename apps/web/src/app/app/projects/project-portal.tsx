@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
-import { Calendar, Camera, FolderKanban, Info, UsersRound } from "lucide-react";
+import { Calendar, FolderKanban, Info, UsersRound } from "lucide-react";
+
 import {
   apiRequest,
   categoryLabel,
-  mediaUrl,
   phaseLabel,
-  roleLabel,
   statusLabel,
   statusTone,
   type ProjectRecord,
@@ -18,6 +17,7 @@ import {
 } from "../../../lib/api";
 import { Lifecycle } from "../../../components/lifecycle";
 import { ProjectWorkspace } from "../../../components/project-workspace";
+import { SiteOperations } from "./site-operations";
 
 type PortalProps = { projectId?: string; view?: "overview" | "site" };
 
@@ -29,11 +29,8 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [note, setNote] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+
 
   const labels = useMemo(() => locale === "ar" ? {
     title: "مشاريعي", workerTitle: "تحديثات الموقع", lead: "المشاريع المصرح لك بالوصول إليها.", workerLead: "اختر مشروعاً لرفع تحديث ميداني جديد.",
@@ -72,28 +69,6 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
 
   function href(path: string) { return locale === "ar" ? path : `${path}?lang=en`; }
 
-  function chooseFiles(event: ChangeEvent<HTMLInputElement>) {
-    setFiles(Array.from(event.target.files ?? []));
-    setSuccess("");
-  }
-
-  async function submitUpdate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!project) return;
-    setUploading(true); setError(""); setSuccess("");
-    const body = new FormData();
-    body.set("note", note);
-    files.forEach((file) => body.append("media", file));
-    try {
-      await apiRequest(`/projects/${project.id}/site-updates`, { method: "POST", body });
-      setProject(await apiRequest<ProjectRecord>(`/projects/${project.id}`));
-      setFiles([]); setNote("");
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      setSuccess(labels.uploaded);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Request failed.");
-    } finally { setUploading(false); }
-  }
 
   if (loading) return <section className="app-page"><LoadingState label={labels.loadingLabel} /></section>;
 
@@ -101,13 +76,17 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", { dateStyle: "medium" });
 
   if (project && user) {
+    if (view === "site") {
+      return <SiteOperations projectId={project.id} />;
+    }
+
     return (
       <section className={`app-page project-workspace-page ${isWorker ? "worker-shell" : ""}`}>
-        <ProjectWorkspace project={project} locale={locale} role={user.role} active={view === "site" ? "site" : "overview"} />
+        <ProjectWorkspace project={project} locale={locale} role={user.role} active="overview" />
         {error && <div className="form-error">{error}</div>}
-        {success && <div className="form-success">{success}</div>}
 
         {view === "overview" && <div className="project-overview-v2">
+
           <Lifecycle phase={project.phase} locale={locale} />
           <div className="workspace-grid">
             <section className="workspace-panel">
@@ -134,30 +113,11 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
             </section>
           </div>
         </div>}
-
-        {view === "site" && <>
-          <div className="section-title section-title--with-lead"><div><h2>{labels.updates}</h2><p>{labels.updatesLead}</p></div></div>
-          {(isWorker || user.role === "ENGINEER") && <form className="admin-form upload-form site-upload-panel" onSubmit={(event) => void submitUpdate(event)}>
-            <label className="ui-field full-span">{labels.note}<textarea value={note} onChange={(event) => setNote(event.target.value)} /></label>
-            <label className="ui-field full-span">{labels.files}<input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm" multiple onChange={chooseFiles} required /></label>
-            {files.length > 0 && <div className="preview-grid full-span">{files.map((file) => <bdi key={`${file.name}-${file.size}`}>{file.name}</bdi>)}</div>}
-            <button className="ui-button ui-button--primary full-span" type="submit" disabled={uploading || files.length === 0}>{uploading ? (locale === "ar" ? "جاري الإرسال..." : "Uploading...") : labels.submit}</button>
-          </form>}
-          <section className="updates-panel">
-            {project.siteUpdates.length === 0 && <EmptyState icon={<Camera size={20} />} title={labels.noUpdates} description={isWorker ? labels.noUpdatesHintWorker : labels.noUpdatesHintClient} />}
-            {project.siteUpdates.map((update) => <article className="update-card" key={update.id}>
-              <div className="update-card__head">
-                <div className="update-card__author"><span className="update-card__avatar">{update.author.displayName.slice(0, 2).toUpperCase()}</span><span><strong>{update.author.displayName}</strong><span>{roleLabel(update.author.role, locale)}</span></span></div>
-                <time><bdi>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")}</bdi></time>
-              </div>
-              {update.note && <p>{update.note}</p>}
-              {update.media.length > 0 && <div className="media-grid">{update.media.map((media) => <figure key={media.id}>{media.mediaType === "IMAGE" ? <img src={mediaUrl(project.id, media.id)} alt={media.originalFilename} loading="lazy" /> : <video src={mediaUrl(project.id, media.id)} controls preload="metadata" />}</figure>)}</div>}
-            </article>)}
-          </section>
-        </>}
       </section>
     );
   }
+
+
 
   return <section className="app-page">
     <PageHeader title={isWorker ? labels.workerTitle : labels.title} description={isWorker ? labels.workerLead : labels.lead} />

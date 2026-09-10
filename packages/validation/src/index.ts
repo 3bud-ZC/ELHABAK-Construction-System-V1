@@ -132,14 +132,45 @@ export const updateProjectSchema = z
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
 
-export const createSiteUpdateSchema = z.object({
-  note: z.string().trim().max(1000).optional().or(z.literal(""))
-});
+export const siteUpdateTypeSchema = z.enum([
+  "PROGRESS",
+  "INSPECTION",
+  "ISSUE",
+  "MATERIAL",
+  "GENERAL"
+]);
 
 const booleanFormValueSchema = z.preprocess(
   (value) => value === true || value === "true" || value === "1",
   z.boolean()
 );
+
+const booleanWithDefaultTrueSchema = z.preprocess(
+  (value) => {
+    if (value === undefined || value === null || value === "") return true;
+    if (value === "false" || value === false || value === "0") return false;
+    return true;
+  },
+  z.boolean()
+);
+
+export const createSiteUpdateSchema = z.object({
+  note: z.string().trim().max(1000).optional().or(z.literal("")),
+  type: siteUpdateTypeSchema.default("GENERAL"),
+  progressImpact: z.coerce.number().int().min(0).max(100).optional(),
+  isClientVisible: booleanWithDefaultTrueSchema.default(true)
+});
+
+export const updateProjectProgressSchema = z.object({
+  progress: z.coerce.number().int().min(0).max(100),
+  note: z.string().trim().max(1000).optional().or(z.literal(""))
+});
+
+export const updateProjectPhaseSchema = z.object({
+  phase: projectPhaseSchema,
+  note: z.string().trim().max(1000).optional().or(z.literal(""))
+});
+
 
 export const createDesignSchema = z.object({
   title: nonEmptyStringSchema,
@@ -185,8 +216,12 @@ export type UpdateClientInput = z.infer<typeof updateClientSchema>;
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 export type CreateSiteUpdateInput = z.infer<typeof createSiteUpdateSchema>;
+export type SiteUpdateType = z.infer<typeof siteUpdateTypeSchema>;
+export type UpdateProjectProgressInput = z.infer<typeof updateProjectProgressSchema>;
+export type UpdateProjectPhaseInput = z.infer<typeof updateProjectPhaseSchema>;
 export type CreateDesignInput = z.infer<typeof createDesignSchema>;
 export type UpdateDesignInput = z.infer<typeof updateDesignSchema>;
 export type CreateDesignRevisionInput = z.infer<typeof createDesignRevisionSchema>;
 export type DesignDecisionInput = z.infer<typeof designDecisionSchema>;
 export type DesignCommentInput = z.infer<typeof designCommentSchema>;
+

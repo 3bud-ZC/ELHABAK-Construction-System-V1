@@ -14,7 +14,7 @@ export const projectInclude = {
 
 export type ProjectWithRelations = Prisma.ProjectGetPayload<{ include: typeof projectInclude }>;
 
-export function toProjectResponse(project: ProjectWithRelations) {
+export function toProjectResponse(project: ProjectWithRelations, viewerRole?: string) {
   return {
     id: project.id,
     code: project.code,
@@ -38,19 +38,27 @@ export function toProjectResponse(project: ProjectWithRelations) {
       : null,
     engineer: project.engineer ? toRequestUser(project.engineer) : null,
     workers: project.assignments.filter((assignment) => assignment.user.role === "WORKER").map((assignment) => toRequestUser(assignment.user)),
-    siteUpdates: project.siteUpdates.map((update) => ({
-      id: update.id,
-      note: update.note,
-      createdAt: update.createdAt.toISOString(),
-      author: { id: update.author.id, displayName: update.author.displayName, role: update.author.role },
-      media: update.media.map((media) => ({
-        id: media.id,
-        mediaType: media.mediaType,
-        originalFilename: media.originalFilename,
-        mimeType: media.mimeType,
-        fileSize: media.fileSize,
-        createdAt: media.createdAt.toISOString()
+    siteUpdates: project.siteUpdates
+      .filter((update) => (viewerRole === "CLIENT" ? update.isClientVisible : true))
+      .map((update) => ({
+        id: update.id,
+        type: update.type,
+        phase: update.phase,
+        progressImpact: update.progressImpact,
+        isClientVisible: update.isClientVisible,
+        note: update.note,
+        createdAt: update.createdAt.toISOString(),
+        updatedAt: update.updatedAt.toISOString(),
+        author: { id: update.author.id, displayName: update.author.displayName, role: update.author.role },
+        media: update.media.map((media) => ({
+          id: media.id,
+          mediaType: media.mediaType,
+          originalFilename: media.originalFilename,
+          mimeType: media.mimeType,
+          fileSize: media.fileSize,
+          createdAt: media.createdAt.toISOString()
+        }))
       }))
-    }))
   };
 }
+

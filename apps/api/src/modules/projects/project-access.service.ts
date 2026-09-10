@@ -21,7 +21,35 @@ export class ProjectAccessService {
     }
   }
 
-  async assertWorkerCanUpdate(user: RequestUser, projectId: string) {
+  async assertCanManageProgressAndPhase(user: RequestUser, projectId: string) {
+    if (user.role === "ADMIN") {
+      return;
+    }
+
+    if (user.role !== "ENGINEER") {
+      throw new ForbiddenException("Only administrators and assigned engineers can update project progress and phase.");
+    }
+
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: {
+        id: true,
+        engineerId: true,
+        assignments: { where: { userId: user.id }, select: { userId: true } }
+      }
+    });
+
+    if (!project) {
+      throw new NotFoundException("Project not found.");
+    }
+
+    const isAssigned = project.engineerId === user.id || project.assignments.length > 0;
+    if (!isAssigned) {
+      throw new ForbiddenException("Project access denied.");
+    }
+  }
+
+  async assertCanSubmitSiteUpdate(user: RequestUser, projectId: string) {
     if (user.role === "ADMIN") {
       return;
     }
@@ -29,19 +57,29 @@ export class ProjectAccessService {
       throw new ForbiddenException("Project update access denied.");
     }
 
-    const assignment = await this.prisma.projectAssignment.findUnique({
-      where: { projectId_userId: { projectId, userId: user.id } },
-      include: { user: true }
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: {
+        id: true,
+        engineerId: true,
+        assignments: { where: { userId: user.id }, select: { userId: true } }
+      }
     });
 
-    if (!assignment) {
-      const project = await this.prisma.project.findUnique({ where: { id: projectId }, select: { id: true } });
-      if (!project) {
-        throw new NotFoundException("Project not found.");
-      }
+    if (!project) {
+      throw new NotFoundException("Project not found.");
+    }
+
+    const isAssigned = project.engineerId === user.id || project.assignments.length > 0;
+    if (!isAssigned) {
       throw new ForbiddenException("Project update access denied.");
     }
   }
+
+  async assertWorkerCanUpdate(user: RequestUser, projectId: string) {
+    return this.assertCanSubmitSiteUpdate(user, projectId);
+  }
+
 
   projectWhereFor(user: RequestUser) {
     if (user.role === "ADMIN") {

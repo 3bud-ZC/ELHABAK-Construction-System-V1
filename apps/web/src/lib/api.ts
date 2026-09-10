@@ -68,15 +68,39 @@ export type ProjectRecord = {
   siteUpdates: SiteUpdateRecord[];
 };
 
+export type SiteUpdateType = "PROGRESS" | "INSPECTION" | "ISSUE" | "MATERIAL" | "GENERAL";
+
 export type SiteUpdateRecord = {
   id: string;
+  type: SiteUpdateType;
+  phase?: ProjectPhase | null;
+  progressImpact?: number | null;
+  isClientVisible: boolean;
   note: string | null;
   createdAt: string;
+  updatedAt?: string;
   author: { id: string; displayName: string; role: UserRole };
   media: SiteMediaRecord[];
 };
 
+export type TimelineEventRecord = {
+  id: string;
+  kind: "SITE_UPDATE" | "PROGRESS_CHANGE" | "PHASE_CHANGE" | "PROJECT_CREATED";
+  type?: SiteUpdateType;
+  title: string;
+  description?: string | null;
+  timestamp: string;
+  actor: { id: string; displayName: string; role: string } | null;
+  phase?: string | null;
+  progress?: number | null;
+  isClientVisible?: boolean;
+  media?: SiteMediaRecord[];
+  metadata?: Record<string, unknown> | null;
+};
+
+
 export type SiteMediaRecord = {
+
   id: string;
   mediaType: "IMAGE" | "VIDEO";
   originalFilename: string;
@@ -318,6 +342,38 @@ export const DESIGN_DISCIPLINES: DesignDiscipline[] = [
 ];
 
 export const DESIGN_STATUSES: DesignStatus[] = ["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"];
+
+export const SITE_UPDATE_TYPES: SiteUpdateType[] = [
+  "PROGRESS",
+  "INSPECTION",
+  "ISSUE",
+  "MATERIAL",
+  "GENERAL"
+];
+
+export function siteUpdateTypeLabel(type: string, locale: "ar" | "en") {
+  const labels: Record<string, { ar: string; en: string }> = {
+    PROGRESS: { ar: "تقدم أعمال", en: "Progress" },
+    INSPECTION: { ar: "معاينة / فحص", en: "Inspection" },
+    ISSUE: { ar: "ملاحظة / مشكلة", en: "Issue / Defect" },
+    MATERIAL: { ar: "توريدات ومواد", en: "Materials" },
+    GENERAL: { ar: "تحديث عام", en: "General" }
+  };
+  return labels[type]?.[locale] ?? type;
+}
+
+export function siteUpdateTypeTone(type: string): BadgeTone {
+  const tones: Record<string, BadgeTone> = {
+    PROGRESS: "success",
+    INSPECTION: "info",
+    ISSUE: "danger",
+    MATERIAL: "orange",
+    GENERAL: "navy"
+  };
+  return tones[type] ?? "neutral";
+}
+
+
 
 export function formatFileSize(bytes: number, locale: "ar" | "en") {
   if (bytes < 1024) return `${bytes} B`;

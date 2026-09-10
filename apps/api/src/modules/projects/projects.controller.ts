@@ -1,4 +1,18 @@
-import { Controller, Get, Header, Param, Post, Req, Res, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors
+} from "@nestjs/common";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import type { Response } from "express";
 import { memoryStorage } from "multer";
@@ -26,6 +40,33 @@ export class ProjectsController {
     return this.projectsService.getForUser(user, id);
   }
 
+  @Patch(":id/progress")
+  updateProgress(
+    @CurrentUser() user: RequestUser,
+    @Param("id") id: string,
+    @Body() body: unknown
+  ) {
+    return this.projectsService.updateProgress(user, id, body);
+  }
+
+  @Patch(":id/phase")
+  updatePhase(
+    @CurrentUser() user: RequestUser,
+    @Param("id") id: string,
+    @Body() body: unknown
+  ) {
+    return this.projectsService.updatePhase(user, id, body);
+  }
+
+  @Get(":id/timeline")
+  getTimeline(
+    @CurrentUser() user: RequestUser,
+    @Param("id") id: string,
+    @Query("type") type?: string
+  ) {
+    return this.projectsService.getTimeline(user, id, type);
+  }
+
   @Post(":id/site-updates")
   @UseInterceptors(FilesInterceptor("media", 8, { storage: memoryStorage() }))
   createSiteUpdate(
@@ -36,6 +77,7 @@ export class ProjectsController {
   ) {
     return this.projectsService.createSiteUpdate(user, id, request.body, files);
   }
+
 
   @Get(":projectId/media/:mediaId")
   @Header("Cache-Control", "private, no-store")

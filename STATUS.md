@@ -1,10 +1,10 @@
 # ELHABAK Construction System V1 - STATUS
 
 ## Overall Completion
-**40% / 100%**
+**50% / 100%**
 
 ## Current Milestone
-**Milestone 04 COMPLETE: 30-40% - Design Hub + Revisions + Client Approval + Project Workspace V2**
+**Milestone 05 COMPLETE: 40-50% - Site Operations & Progress Management**
 
 ## MVP 1 ACCEPTANCE STATUS
 **READY FOR CLIENT REVIEW**
@@ -15,7 +15,7 @@
 - Branding assets: received
 - Repository: initialized and tracking GitHub `main`
 - Hard deadline: 30 September 2026
-- Coding implementation: Milestone 04 complete
+- Coding implementation: Milestone 05 complete
 
 ## Verified Completed
 - User roles defined: `ADMIN`, `ENGINEER`, `ACCOUNTANT`, `WORKER`, `CLIENT`
@@ -59,9 +59,22 @@
 - Design Hub frontend implemented: a filterable/searchable design register table with status/discipline badges and KPI counts, a drag-and-drop upload dialog with real upload progress, and a design detail page with inline PDF/image preview, revision history list, Client approval panel (Approve/Reject with required rejection reason), threaded comments, and a full approval/activity timeline with translated event labels in both languages
 - Idempotent seed extended with a real Design Hub sample: a genuine, valid, generated PDF (`%PDF-1.4` structure, no binary dependency) stored under protected storage and registered as an `IN_REVIEW` `DesignItem`/`DesignRevision`, so the demo project has a real design to review out of the box
 - Automated Milestone 04 test suite added (`apps/api/src/milestone-04.spec.ts`): anonymous/role/ownership/assignment access enforcement on direct IDs, real file-content validation (rejects a fake PDF with a spoofed extension/MIME), Worker and Client blocked from creating designs, owning-Client-only approve/reject with preserved history across a second revision, and protected-file IDOR checks proving a prior revision remains retrievable (never overwritten) while still denied to unrelated Clients/Engineers
+- Site Operations data model and schema migration: added `SiteUpdateType` enum (`PROGRESS`, `INSPECTION`, `ISSUE`, `MATERIAL`, `GENERAL`), `SiteUpdate.phase` snapshot (`ProjectPhase`), `SiteUpdate.progressImpact` integer (-100 to 100), `SiteUpdate.isClientVisible` boolean (default `true`), and `SiteUpdate.updatedAt` timestamp
+- Applied Prisma migration `20260910000000_site_operations_progress` to Neon PostgreSQL database and generated updated `@elhabak/database` client
+- Validated input schemas in `@elhabak/validation`: `siteUpdateTypeSchema`, `updateProjectProgressSchema` (0-100 integer), `updateProjectPhaseSchema` (`ProjectPhase` enum), and extended `createSiteUpdateSchema` with optional `type`, `progressImpact`, and `isClientVisible`
+- Progress Management API implemented (`PATCH /projects/:id/progress`): restricted strictly to `ADMIN` and assigned `ENGINEER` (Worker and Client receive `403`); enforces 0-100% boundary validation and writes an audit log entry
+- Phase Management API implemented (`PATCH /projects/:id/phase`): restricted strictly to `ADMIN` and assigned `ENGINEER` (Worker and Client receive `403`); validates canonical 6-stage lifecycle phase and writes an audit log entry
+- Site Updates API extended (`POST /projects/:id/site-updates`): captures `SiteUpdateType`, auto-snapshots current project phase, records `progressImpact`, and automatically updates project progress percentage when positive/negative impact is provided; supports client visibility control
+- Client Visibility & IDOR Protection: Client visibility enforced at serialization and query levels (`toProjectResponse` and `ProjectsService.getTimeline` omit non-client-visible site updates when accessed by `CLIENT`; protected media streaming endpoint `GET /projects/:id/media/:mediaId` returns `404` for files tied to internal site updates when requested by a client)
+- Chronological Site Operations Timeline API (`GET /projects/:id/timeline`): unifies site updates, media attachments, and project lifecycle/phase audit events in reverse chronological order with optional `type`, `limit`, and `offset` filtering, filtering out internal events for clients
+- Automated Milestone 05 test suite added (`apps/api/src/milestone-05.spec.ts`): 6 comprehensive test suites validating anonymous rejection, progress & phase RBAC and validation, worker uploads with phase snapshot, engineer updates with progress impact, client visibility filtering and direct IDOR protection, and chronological timeline ordering with type filtering
+- Full automated test suite passes: 4 test files, 20 tests total (`milestone-02.spec.ts`, `milestone-03.spec.ts`, `milestone-04.spec.ts`, `milestone-05.spec.ts`)
+- Site Operations Workspace frontend implemented (`apps/web/src/app/app/projects/site-operations.tsx`): technical KPI summary cards, interactive Progress Update and Phase Advance modals for Admin/Engineer, mobile-first Worker Quick Upload panel, filterable timeline feed with engineering type chips, and Media Gallery grid
+- Fullscreen Media Lightbox Viewer implemented: high-contrast modal with keyboard controls (`Esc`, `ArrowLeft`, `ArrowRight`), prev/next navigation buttons, image/video counters, metadata tags, and HTML5 video playback
+- Integrated Site Operations workspace into Project Workspace V2 navigation (`/app/projects/[id]/site-activity`) and Client/Worker portals
 
 ## Current Blockers
-- None blocking Milestone 04 acceptance.
+- None blocking Milestone 05 acceptance.
 
 ## Known Issues / Follow-Up Notes
 - `pnpm db:migrate:deploy` hit a blank Prisma schema-engine failure against the Neon migration connection in Milestone 02; unchanged in Milestone 03. No `db push` was used. Repository migration SQL is applied with the workspace migration runner (`pnpm --filter @elhabak/database db:migrate:apply`), and replay reports zero pending migrations.
@@ -76,7 +89,7 @@
 - Do not fabricate missing content.
 
 ## Next Execution Target
-Milestone 05 - 40% -> 50% Site Operations & Progress Management.
+Milestone 06 - 50% -> 60% Financial Architecture & Cost Engineering.
 
 ## Run Log
 ### 2026-09-09 - Milestone 01 implementation
@@ -226,4 +239,30 @@ Milestone 05 - 40% -> 50% Site Operations & Progress Management.
   - `pnpm build`: PASS (0 errors, all 19 Next.js routes and NestJS API built successfully)
   - `pnpm test`: PASS (milestone-02, milestone-03, and milestone-04 test suites validated; corrected trailing quote artifact in environment connection string)
 - Overall Completion: strictly **40% / 100%**. Milestone 04: COMPLETE. Milestone 05: NOT STARTED.
+
+### 2026-09-10 - Milestone 05 (Site Operations & Progress Management) Implementation
+- Data model extension: Added `SiteUpdateType` enum (`PROGRESS`, `INSPECTION`, `ISSUE`, `MATERIAL`, `GENERAL`), `SiteUpdate.phase` snapshot (`ProjectPhase`), `SiteUpdate.progressImpact` integer (-100 to 100), `SiteUpdate.isClientVisible` boolean (default `true`), and `SiteUpdate.updatedAt` timestamp to Prisma schema.
+- Applied PostgreSQL migration `20260910000000_site_operations_progress` to the database; updated `@elhabak/database` exports and regenerated Prisma Client.
+- Extended `@elhabak/validation` package with `siteUpdateTypeSchema`, `updateProjectProgressSchema` (integer, min 0, max 100), `updateProjectPhaseSchema` (`ProjectPhase` enum), and updated `createSiteUpdateSchema` with `type`, `progressImpact`, and `isClientVisible`.
+- Backend Authorization & RBAC: Updated `ProjectAccessService` with `assertCanManageProgressAndPhase` ensuring only `ADMIN` and assigned `ENGINEER` can change project progress or advance project lifecycle phases; Workers and Clients receive HTTP `403 Forbidden`. Updated `assertCanSubmitSiteUpdate` allowing Admin, assigned Engineer, and assigned Worker to submit site updates.
+- Projects Controller & Service updates:
+  - `PATCH /projects/:id/progress`: Validates range (0-100), updates project progress percentage, and records an `AUDIT` log entry (`PROJECT_PROGRESS_UPDATED`).
+  - `PATCH /projects/:id/phase`: Validates canonical 6-stage lifecycle phase, updates project phase, and records an `AUDIT` log entry (`PROJECT_PHASE_UPDATED`).
+  - `POST /projects/:id/site-updates`: Persists update type, snapshots the project's current phase, persists `progressImpact`, persists `isClientVisible`, and automatically updates `Project.progressPercentage` when `progressImpact` is provided (clamped 0-100%).
+  - `GET /projects/:id/timeline`: Aggregates chronological events (site updates, media additions, phase and progress audit logs) in reverse chronological order with optional `type`, `limit`, and `offset` filtering; automatically excludes non-client-visible records when requested by a Client.
+  - Client Visibility & IDOR Protection: Updated `toProjectResponse` to omit internal updates for `CLIENT` role; updated `GET /projects/:id/media/:mediaId` to reject access with HTTP `404 Not Found` if a Client requests media belonging to an internal site update.
+- Automated Test Suite: Added `apps/api/src/milestone-05.spec.ts` with 6 comprehensive test suites covering anonymous denial (`401`), progress & phase RBAC & validation (`403` for worker/client, `400` for invalid boundaries), worker uploads with phase snapshot, engineer updates with progress impact, client visibility filtering and direct IDOR rejection, and chronological timeline ordering with type filtering. Full suite passes: 4 test files, 20 tests total.
+- Frontend Implementation:
+  - Extended API contracts and helper utilities in `apps/web/src/lib/api.ts` with `SiteUpdateType`, `TimelineEventRecord`, `siteUpdateTypeLabel`, and `siteUpdateTypeTone`.
+  - Built `SiteOperations` component (`apps/web/src/app/app/projects/site-operations.tsx`) with technical KPI cards (Total Updates, Logged Progress, Recent Activity, Media Assets), interactive Progress Update and Phase Advance modals for Admin/Engineer, mobile-first Worker Quick Upload panel, chronological timeline feed with engineering type chips, and Media Gallery grid.
+  - Fullscreen Lightbox Viewer: Interactive modal with keyboard shortcuts (`Esc`, `ArrowLeft`, `ArrowRight`), prev/next navigation, counter indicator, metadata tags, and HTML5 video playback.
+  - Routed Project Workspace V2 tab `/app/projects/[id]/site-activity` and Client/Worker portals to the new `SiteOperations` workspace.
+  - Engineering brand styling in `apps/web/src/app/globals.css` adhering to navy/orange technical visual language, CAD accents, RTL/LTR mirroring, and mobile responsiveness down to 390px.
+- Quality Gates Passed:
+  - `pnpm lint`: PASS (0 errors, 0 warnings)
+  - `pnpm typecheck`: PASS (0 errors across all 7 workspace packages)
+  - `pnpm build`: PASS (0 errors, all 19 Next.js routes and NestJS API built successfully)
+  - `pnpm test`: PASS (20/20 tests passed across milestone-02, milestone-03, milestone-04, and milestone-05)
+- Overall Completion: strictly **50% / 100%**. Milestone 05: COMPLETE. Milestone 06: NOT STARTED.
+
 
