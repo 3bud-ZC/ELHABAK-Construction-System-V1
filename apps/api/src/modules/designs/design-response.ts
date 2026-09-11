@@ -1,8 +1,10 @@
 import type { Prisma } from "@elhabak/database";
 
+const actorSelect = { id: true, displayName: true, role: true } satisfies Prisma.UserSelect;
+
 export const designInclude = {
-  revisions: { include: { uploader: true }, orderBy: { revisionNumber: "desc" } },
-  events: { include: { actor: true }, orderBy: { createdAt: "desc" } }
+  revisions: { include: { uploader: { select: actorSelect } }, orderBy: { revisionNumber: "desc" } },
+  events: { include: { actor: { select: actorSelect } }, orderBy: { createdAt: "desc" } }
 } satisfies Prisma.DesignItemInclude;
 
 export type DesignWithRelations = Prisma.DesignItemGetPayload<{ include: typeof designInclude }>;

@@ -261,6 +261,8 @@ model Project {
   @@index([clientId])
   @@index([engineerId])
   @@index([phase, status])
+  @@index([status])
+  @@index([updatedAt])
 }
 
 model ProjectAssignment {

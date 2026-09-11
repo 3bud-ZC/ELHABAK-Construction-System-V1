@@ -12,9 +12,9 @@ import {
   phaseLabel,
   statusLabel,
   statusTone,
-  type ProjectRecord,
-  type UserRecord
+  type ProjectRecord
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 import { Lifecycle } from "../../../components/lifecycle";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import { SiteOperations } from "./site-operations";
@@ -24,7 +24,7 @@ type PortalProps = { projectId?: string; view?: "overview" | "site" };
 export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,12 +53,8 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    Promise.all([
-      apiRequest<{ user: UserRecord }>("/auth/me"),
-      projectId ? apiRequest<ProjectRecord>(`/projects/${projectId}`) : apiRequest<ProjectRecord[]>("/projects")
-    ]).then(([me, result]) => {
+    (projectId ? apiRequest<ProjectRecord>(`/projects/${projectId}`) : apiRequest<ProjectRecord[]>("/projects")).then((result) => {
       if (!alive) return;
-      setUser(me.user);
       if (Array.isArray(result)) { setProjects(result); setProject(null); }
       else { setProject(result); setProjects([]); }
       setError("");
@@ -72,10 +68,10 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
 
   if (loading) return <section className="app-page"><LoadingState label={labels.loadingLabel} /></section>;
 
-  const isWorker = user?.role === "WORKER";
+  const isWorker = user.role === "WORKER";
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", { dateStyle: "medium" });
 
-  if (project && user) {
+  if (project) {
     if (view === "site") {
       return <SiteOperations projectId={project.id} />;
     }

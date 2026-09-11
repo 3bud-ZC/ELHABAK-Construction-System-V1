@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard } from "@elhabak/ui";
 import {
   Banknote,
@@ -42,9 +42,9 @@ import {
   type FinanceHistoryEvent,
   type FinanceProjectContext,
   type FinanceSummary,
-  type PaymentMethod,
-  type UserRecord
+  type PaymentMethod
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 
 type FinanceSubTab = "summary" | "estimate" | "boq" | "expenses" | "client-payments" | "contractor-payments" | "history";
 
@@ -52,7 +52,7 @@ export function Finance({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [context, setContext] = useState<FinanceProjectContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -60,13 +60,9 @@ export function Finance({ projectId }: { projectId: string }) {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    Promise.all([
-      apiRequest<{ user: UserRecord }>("/auth/me"),
-      apiRequest<FinanceProjectContext>(`/projects/${projectId}/finance/context`)
-    ])
-      .then(([me, ctx]) => {
+    apiRequest<FinanceProjectContext>(`/projects/${projectId}/finance/context`)
+      .then((ctx) => {
         if (!alive) return;
-        setUser(me.user);
         setContext(ctx);
         setError("");
       })
@@ -86,7 +82,7 @@ export function Finance({ projectId }: { projectId: string }) {
     : { loading: "Loading finance workspace...", denied: "You don't have access to this section", deniedHint: "This section is not available for your current role." };
 
   if (loading) return <section className="app-page"><LoadingState label={labels.loading} /></section>;
-  if (!user || !context) {
+  if (!context) {
     return (
       <section className="app-page">
         <EmptyState icon={<Wallet size={20} />} title={labels.denied} description={error || labels.deniedHint} />
@@ -361,8 +357,11 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
     load();
   }, [load]);
 
-  const current = estimates.find((estimate) => estimate.isCurrent) ?? null;
-  const history = estimates.filter((estimate) => !estimate.isCurrent);
+  const current = useMemo(() => estimates.find((estimate) => estimate.isCurrent) ?? null, [estimates]);
+  const history = useMemo(
+    () => estimates.filter((estimate) => !estimate.isCurrent).sort((a, b) => b.version - a.version),
+    [estimates]
+  );
 
   async function removeItem(itemId: string) {
     if (!current || !window.confirm(labels.removeConfirm)) return;
@@ -428,7 +427,6 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
             <div style={{ marginTop: "1.2rem" }}>
               <span className="section-kicker">{ar ? "نسخ سابقة" : "PREVIOUS VERSIONS"}</span>
               {history
-                .sort((a, b) => b.version - a.version)
                 .map((estimate) => (
                   <div className="finance-totals-strip" key={estimate.id} style={{ marginTop: "0.5rem" }}>
                     <span><small>{labels.version}</small><strong>{estimate.version}</strong></span>

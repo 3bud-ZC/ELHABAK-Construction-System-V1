@@ -10,9 +10,9 @@ import {
   apiRequest,
   phaseLabel,
   statusTone,
-  type ProjectRecord,
-  type UserRecord
+  type ProjectRecord
 } from "../../lib/api";
+import { useCurrentUser } from "../../lib/user-context";
 
 type DashboardSummary = {
   activeProjects: number;
@@ -25,7 +25,7 @@ type DashboardSummary = {
 export function AppDashboard() {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,16 +79,14 @@ export function AppDashboard() {
 
   useEffect(() => {
     let alive = true;
-    apiRequest<{ user: UserRecord }>("/auth/me")
-      .then(async (me) => {
-        if (!alive) return;
-        setUser(me.user);
-        if (me.user.role === "ADMIN") {
-          setDashboard(await apiRequest<DashboardSummary>("/admin/projects/dashboard/summary"));
-        } else {
-          setProjects(await apiRequest<ProjectRecord[]>("/projects"));
-        }
-      })
+    const request = user.role === "ADMIN"
+      ? apiRequest<DashboardSummary>("/admin/projects/dashboard/summary").then((result) => {
+          if (alive) setDashboard(result);
+        })
+      : apiRequest<ProjectRecord[]>("/projects").then((result) => {
+          if (alive) setProjects(result);
+        });
+    request
       .catch((requestError: Error) => {
         if (alive) setError(requestError.message);
       })
@@ -98,7 +96,7 @@ export function AppDashboard() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [user.role]);
 
   function href(path: string) {
     return locale === "ar" ? path : `${path}?lang=en`;
@@ -108,9 +106,9 @@ export function AppDashboard() {
     <section className="app-page">
       <PageHeader
         title={labels.title}
-        description={user?.role === "ADMIN" ? labels.adminLead : labels.portalLead}
+        description={user.role === "ADMIN" ? labels.adminLead : labels.portalLead}
         actions={
-          <Link className="ui-button ui-button--primary" href={href(user?.role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}>
+          <Link className="ui-button ui-button--primary" href={href(user.role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}>
             {labels.openProjects}
           </Link>
         }
@@ -176,7 +174,7 @@ export function AppDashboard() {
         </>
       )}
 
-      {!loading && user?.role !== "ADMIN" && (
+      {!loading && user.role !== "ADMIN" && (
         <div className="data-table">
           {projects.length === 0 && <EmptyState title={labels.emptyProjects} description={labels.emptyProjectsHint} />}
           {projects.map((project) => (

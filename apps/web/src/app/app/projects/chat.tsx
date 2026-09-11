@@ -13,9 +13,9 @@ import {
   voiceNoteUrl,
   type ChatHistoryResponse,
   type ChatMessageRecord,
-  type ProjectRecord,
-  type UserRecord
+  type ProjectRecord
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 import { getSocket, joinProjectRoom, leaveProjectRoom } from "../../../lib/socket";
 
 type ChatWorkspaceProps = { projectId: string };
@@ -30,7 +30,7 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
 
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [messages, setMessages] = useState<ChatMessageRecord[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -117,12 +117,10 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
   const loadInitial = useCallback(async () => {
     setLoading(true);
     try {
-      const [me, projectData, history] = await Promise.all([
-        apiRequest<{ user: UserRecord }>("/auth/me"),
+      const [projectData, history] = await Promise.all([
         apiRequest<ProjectRecord>(`/projects/${projectId}`),
         apiRequest<ChatHistoryResponse>(`/projects/${projectId}/messages?limit=30`)
       ]);
-      setUser(me.user);
       setProject(projectData);
       setMessages(history.messages);
       setNextCursor(history.nextCursor);
@@ -344,7 +342,7 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
     );
   }
 
-  if (!project || !user) {
+  if (!project) {
     return (
       <section className="app-page">
         <EmptyState title={error || labels.empty} description="" />
@@ -352,8 +350,8 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
     );
   }
 
-  const dateFormatter = new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { day: "numeric", month: "long", year: "numeric" });
-  const timeFormatter = new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit" });
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { day: "numeric", month: "long", year: "numeric" }), [ar]);
+  const timeFormatter = useMemo(() => new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit" }), [ar]);
 
   return (
     <section className="app-page project-workspace-page chat-page">

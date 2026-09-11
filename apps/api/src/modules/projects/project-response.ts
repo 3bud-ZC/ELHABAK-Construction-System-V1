@@ -1,18 +1,27 @@
 import type { Prisma } from "@elhabak/database";
 import { toRequestUser } from "../auth/auth.service";
 
-export const projectInclude = {
-  client: { include: { user: true } },
-  engineer: true,
-  assignments: { include: { user: true }, orderBy: { createdAt: "asc" } },
-  siteUpdates: {
-    include: { author: true, media: { orderBy: { createdAt: "asc" } } },
-    orderBy: { createdAt: "desc" },
-    take: 20
-  }
-} satisfies Prisma.ProjectInclude;
+const userSummarySelect = { id: true, email: true, displayName: true, role: true, isActive: true } satisfies Prisma.UserSelect;
 
-export type ProjectWithRelations = Prisma.ProjectGetPayload<{ include: typeof projectInclude }>;
+/**
+ * `siteUpdates` is filtered to client-visible rows in the query itself (not after fetch) when the
+ * viewer is a CLIENT, so the `take: 20` window is never filled by internal-only rows a client can't see.
+ */
+export function projectIncludeFor(viewerRole?: string) {
+  return {
+    client: { include: { user: { select: userSummarySelect } } },
+    engineer: { select: userSummarySelect },
+    assignments: { include: { user: { select: userSummarySelect } }, orderBy: { createdAt: "asc" } },
+    siteUpdates: {
+      ...(viewerRole === "CLIENT" ? { where: { isClientVisible: true } } : {}),
+      include: { author: { select: { id: true, displayName: true, role: true } }, media: { orderBy: { createdAt: "asc" } } },
+      orderBy: { createdAt: "desc" },
+      take: 20
+    }
+  } satisfies Prisma.ProjectInclude;
+}
+
+export type ProjectWithRelations = Prisma.ProjectGetPayload<{ include: ReturnType<typeof projectIncludeFor> }>;
 
 export function toProjectResponse(project: ProjectWithRelations, viewerRole?: string) {
   return {

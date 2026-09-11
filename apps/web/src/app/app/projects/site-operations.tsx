@@ -42,9 +42,9 @@ import {
   type SiteMediaRecord,
   type SiteUpdateType,
   type TimelineEventRecord,
-  type UserRecord,
   type UserRole
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 
 type SiteOperationsProps = {
   projectId: string;
@@ -55,7 +55,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
 
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEventRecord[]>([]);
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("ALL");
@@ -209,12 +209,10 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
   const loadData = useCallback(async () => {
     try {
-      const [me, projectData, timelineData] = await Promise.all([
-        apiRequest<{ user: UserRecord }>("/auth/me"),
+      const [projectData, timelineData] = await Promise.all([
         apiRequest<ProjectRecord>(`/projects/${projectId}`),
         apiRequest<TimelineEventRecord[]>(`/projects/${projectId}/timeline${selectedTypeFilter !== "ALL" ? `?type=${selectedTypeFilter}` : ""}`)
       ]);
-      setUser(me.user);
       setProject(projectData);
       setTimelineEvents(timelineData);
       setNewProgress(projectData.progress);
@@ -227,13 +225,35 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
     }
   }, [projectId, selectedTypeFilter]);
 
+  // Initial load and reload after a mutation (progress/phase/report/upload) - fetches the
+  // full project record, so it must not re-run on every timeline type-filter change.
   useEffect(() => {
     void loadData();
-  }, [loadData]);
+  }, [projectId]);
+
+  // Changing the type filter only needs a fresh timeline, not the whole project record.
+  const didMountTimelineFilter = useRef(false);
+  useEffect(() => {
+    if (!didMountTimelineFilter.current) {
+      didMountTimelineFilter.current = true;
+      return;
+    }
+    let alive = true;
+    apiRequest<TimelineEventRecord[]>(`/projects/${projectId}/timeline${selectedTypeFilter !== "ALL" ? `?type=${selectedTypeFilter}` : ""}`)
+      .then((result) => {
+        if (alive) setTimelineEvents(result);
+      })
+      .catch((err) => {
+        if (alive) setError(err instanceof Error ? err.message : "Failed to load timeline.");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [projectId, selectedTypeFilter]);
 
   // Authorization flags
   const canManageProgressAndPhase = useMemo(() => {
-    if (!user || !project) return false;
+    if (!project) return false;
     if (user.role === "ADMIN") return true;
     if (user.role === "ENGINEER") {
       return project.engineer?.id === user.id || project.workers.some((w) => w.id === user.id);
@@ -242,8 +262,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   }, [user, project]);
 
 
-  const isWorker = user?.role === "WORKER";
-  const isClient = user?.role === "CLIENT";
+  const isWorker = user.role === "WORKER";
+  const isClient = user.role === "CLIENT";
 
   // Gallery items flattened
   const allGalleryMedia = useMemo(() => {
@@ -418,7 +438,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
     );
   }
 
-  if (!project || !user) {
+  if (!project) {
     return (
       <section className="app-page">
         <EmptyState

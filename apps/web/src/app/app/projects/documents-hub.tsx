@@ -21,23 +21,22 @@ import {
   type DocumentCategory,
   type DocumentRecordStatus,
   type ProjectDocumentRecord,
-  type ProjectRecord,
-  type UserRecord
+  type ProjectRecord
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 
 export function DocumentsHub({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
-    Promise.all([apiRequest<{ user: UserRecord }>("/auth/me"), apiRequest<ProjectRecord>(`/projects/${projectId}`)])
-      .then(([me, projectResult]) => {
+    apiRequest<ProjectRecord>(`/projects/${projectId}`)
+      .then((projectResult) => {
         if (alive) {
-          setUser(me.user);
           setProject(projectResult);
         }
       })
@@ -54,7 +53,7 @@ export function DocumentsHub({ projectId }: { projectId: string }) {
     ? { loading: "جاري تحميل المستندات...", denied: "لا يمكنك الوصول إلى هذا القسم", deniedHint: "هذا القسم غير متاح لدورك الحالي." }
     : { loading: "Loading documents...", denied: "You don't have access to this section", deniedHint: "This section is not available for your current role." };
 
-  if (!user || !project) {
+  if (!project) {
     if (error) {
       return (
         <section className="app-page">

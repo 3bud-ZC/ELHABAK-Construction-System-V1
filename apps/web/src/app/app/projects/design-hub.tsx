@@ -18,9 +18,9 @@ import {
   type DesignDiscipline,
   type DesignRecord,
   type DesignStatus,
-  type ProjectRecord,
-  type UserRecord
+  type ProjectRecord
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 
 function disciplineShortCode(d: DesignDiscipline): string {
   switch (d) {
@@ -45,7 +45,7 @@ function fileFormatCode(mime: string, filename: string): string {
 export function DesignHub({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [designs, setDesigns] = useState<DesignRecord[]>([]);
   const [metrics, setMetrics] = useState({ total: 0, pending: 0, approved: 0 });
@@ -99,8 +99,8 @@ export function DesignHub({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([apiRequest<{ user: UserRecord }>("/auth/me"), apiRequest<ProjectRecord>(`/projects/${projectId}`)])
-      .then(([me, projectResult]) => { if (alive) { setUser(me.user); setProject(projectResult); } })
+    apiRequest<ProjectRecord>(`/projects/${projectId}`)
+      .then((projectResult) => { if (alive) setProject(projectResult); })
       .catch((requestError: Error) => { if (alive) setError(requestError.message); });
     return () => { alive = false; };
   }, [projectId]);
@@ -112,10 +112,10 @@ export function DesignHub({ projectId }: { projectId: string }) {
     const result = await apiRequest<DesignRecord[]>(`/projects/${projectId}/designs`);
     setMetrics({ total: result.length, pending: result.filter((design) => design.status === "IN_REVIEW").length, approved: result.filter((design) => design.status === "APPROVED").length });
   }
-  const canManage = user?.role === "ADMIN" || user?.role === "ENGINEER";
+  const canManage = user.role === "ADMIN" || user.role === "ENGINEER";
   const filtered = Boolean(query.trim() || status || discipline);
 
-  if (!project || !user) return <section className="app-page"><LoadingState label={labels.loading} />{error && <div className="form-error">{error}</div>}</section>;
+  if (!project) return <section className="app-page"><LoadingState label={labels.loading} />{error && <div className="form-error">{error}</div>}</section>;
 
   return <section className="app-page project-workspace-page">
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />

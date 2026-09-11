@@ -6,6 +6,16 @@ import { PrismaService } from "../../shared/prisma.service";
 import { AuditService } from "./audit.service";
 import { parseBody } from "../../shared/zod";
 
+const clientUserSelect = {
+  id: true,
+  email: true,
+  displayName: true,
+  role: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true
+} satisfies Prisma.UserSelect;
+
 @Injectable()
 export class AdminClientsService {
   constructor(
@@ -28,7 +38,7 @@ export class AdminClientsService {
 
     const clients = await this.prisma.clientProfile.findMany({
       where,
-      include: { user: true },
+      include: { user: { select: clientUserSelect } },
       orderBy: { createdAt: "desc" }
     });
 
@@ -38,7 +48,7 @@ export class AdminClientsService {
   async get(id: string) {
     const client = await this.prisma.clientProfile.findUnique({
       where: { id },
-      include: { user: true }
+      include: { user: { select: clientUserSelect } }
     });
 
     if (!client) {
@@ -77,7 +87,7 @@ export class AdminClientsService {
 
       const client = await this.prisma.clientProfile.create({
         data,
-        include: { user: true }
+        include: { user: { select: clientUserSelect } }
       });
 
       await this.audit.record(actorId, "client.created", {
@@ -96,7 +106,7 @@ export class AdminClientsService {
     const input = parseBody(updateClientSchema, rawBody);
     const existing = await this.prisma.clientProfile.findUnique({
       where: { id },
-      include: { user: true }
+      include: { user: { select: clientUserSelect } }
     });
 
     if (!existing) {
@@ -136,7 +146,7 @@ export class AdminClientsService {
       const client = await this.prisma.clientProfile.update({
         where: { id },
         data,
-        include: { user: true }
+        include: { user: { select: clientUserSelect } }
       });
 
       await this.audit.record(actorId, "client.edited", {

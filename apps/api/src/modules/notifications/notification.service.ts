@@ -30,21 +30,37 @@ export class NotificationService {
   /** Creates one notification per recipient (excluding the actor) and pushes a realtime update to each. */
   async notify(recipientIds: string[], input: NotifyInput) {
     const unique = [...new Set(recipientIds)].filter((id) => id && id !== input.actorId);
-    for (const userId of unique) {
-      const notification = await this.prisma.notification.create({
-        data: {
-          userId,
-          projectId: input.projectId ?? null,
-          type: input.type,
-          title: input.title,
-          body: input.body ?? null,
-          entityId: input.entityId ?? null
-        }
-      });
-      const unreadCount = await this.prisma.notification.count({ where: { userId, readAt: null } });
-      this.realtime.emitToUser(userId, "notification:new", {
+    if (unique.length === 0) {
+      return;
+    }
+
+    const [notifications, unreadCounts] = await Promise.all([
+      this.prisma.$transaction(
+        unique.map((userId) =>
+          this.prisma.notification.create({
+            data: {
+              userId,
+              projectId: input.projectId ?? null,
+              type: input.type,
+              title: input.title,
+              body: input.body ?? null,
+              entityId: input.entityId ?? null
+            }
+          })
+        )
+      ),
+      this.prisma.notification.groupBy({
+        by: ["userId"],
+        where: { userId: { in: unique }, readAt: null },
+        _count: { _all: true }
+      })
+    ]);
+
+    const unreadCountByUser = new Map(unreadCounts.map((row) => [row.userId, row._count._all]));
+    for (const notification of notifications) {
+      this.realtime.emitToUser(notification.userId, "notification:new", {
         notification: toNotificationResponse({ ...notification, project: null }),
-        unreadCount
+        unreadCount: unreadCountByUser.get(notification.userId) ?? 1
       });
     }
   }

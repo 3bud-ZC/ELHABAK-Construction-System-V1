@@ -7,6 +7,16 @@ import { PrismaService } from "../../shared/prisma.service";
 import { AuditService } from "./audit.service";
 import { parseBody } from "../../shared/zod";
 
+const userResponseSelect = {
+  id: true,
+  email: true,
+  displayName: true,
+  role: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true
+} satisfies Prisma.UserSelect;
+
 @Injectable()
 export class AdminUsersService {
   constructor(
@@ -32,6 +42,7 @@ export class AdminUsersService {
 
     const users = await this.prisma.user.findMany({
       where,
+      select: userResponseSelect,
       orderBy: [{ createdAt: "desc" }]
     });
 
@@ -39,7 +50,7 @@ export class AdminUsersService {
   }
 
   async get(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({ where: { id }, select: userResponseSelect });
 
     if (!user) {
       throw new NotFoundException("User not found.");
@@ -60,7 +71,8 @@ export class AdminUsersService {
           role: input.role,
           isActive: input.isActive,
           passwordHash
-        }
+        },
+        select: userResponseSelect
       });
 
       await this.audit.record(actorId, "user.created", {
@@ -77,7 +89,7 @@ export class AdminUsersService {
 
   async update(actorId: string, id: string, rawBody: unknown) {
     const input = parseBody(updateUserSchema, rawBody);
-    const existing = await this.prisma.user.findUnique({ where: { id } });
+    const existing = await this.prisma.user.findUnique({ where: { id }, select: { role: true, isActive: true } });
 
     if (!existing) {
       throw new NotFoundException("User not found.");
@@ -102,7 +114,7 @@ export class AdminUsersService {
     }
 
     try {
-      const user = await this.prisma.user.update({ where: { id }, data });
+      const user = await this.prisma.user.update({ where: { id }, data, select: userResponseSelect });
 
       if (input.role !== undefined && input.role !== existing.role) {
         await this.audit.record(actorId, "user.role_changed", {

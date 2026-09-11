@@ -25,6 +25,7 @@ import {
   type ProjectRecord,
   type UserRecord
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 
 type HistoryEvent = {
   id: string;
@@ -38,7 +39,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [document, setDocument] = useState<ProjectDocumentRecord | null>(null);
   const [history, setHistory] = useState<HistoryEvent[]>([]);
@@ -74,16 +75,14 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [me, projectResult, documentResult] = await Promise.all([
-        apiRequest<{ user: UserRecord }>("/auth/me"),
+      const [projectResult, documentResult] = await Promise.all([
         apiRequest<ProjectRecord>(`/projects/${projectId}`),
         apiRequest<ProjectDocumentRecord>(`/projects/${projectId}/documents/${documentId}`)
       ]);
-      setUser(me.user);
       setProject(projectResult);
       setDocument(documentResult);
       setSelectedVersionId((current) => (current && documentResult.versions.some((item) => item.id === current) ? current : documentResult.currentVersion?.id ?? ""));
-      if (me.user.role === "ADMIN" || me.user.role === "ENGINEER") {
+      if (user.role === "ADMIN" || user.role === "ENGINEER") {
         apiRequest<HistoryEvent[]>(`/projects/${projectId}/documents/${documentId}/history`)
           .then(setHistory)
           .catch(() => undefined);
@@ -94,7 +93,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
     } finally {
       setLoading(false);
     }
-  }, [documentId, projectId]);
+  }, [documentId, projectId, user.role]);
 
   useEffect(() => {
     void load();
@@ -116,7 +115,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
     }
   }
 
-  if (loading || !project || !user || !document) {
+  if (loading || !project || !document) {
     return (
       <section className="app-page">
         <LoadingState label={labels.loading} />

@@ -38,9 +38,12 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 WORKDIR /app
 
-# Copy shared configs and source files
+# Copy shared configs and source files. Only @elhabak/config, @elhabak/database, and
+# @elhabak/validation are actual apps/api dependencies (contracts/ui are web-only).
 COPY tsconfig.base.json ./
-COPY packages ./packages
+COPY packages/config ./packages/config
+COPY packages/database ./packages/database
+COPY packages/validation ./packages/validation
 COPY apps/api ./apps/api
 
 ENV NODE_ENV=production

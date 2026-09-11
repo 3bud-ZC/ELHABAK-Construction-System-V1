@@ -6,14 +6,14 @@ import "./globals.css";
 
 const almarai = Almarai({
   subsets: ["arabic"],
-  weight: ["300", "400", "700", "800"],
+  weight: ["400", "700", "800"],
   variable: "--font-arabic",
   display: "swap"
 });
 
 const rubik = Rubik({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-latin",
   display: "swap"
 });

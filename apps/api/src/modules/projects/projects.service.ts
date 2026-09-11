@@ -14,7 +14,7 @@ import { parseBody } from "../../shared/zod";
 import { AuditService } from "../admin/audit.service";
 import { NotificationService } from "../notifications/notification.service";
 import { ProjectAccessService } from "./project-access.service";
-import { projectInclude, toProjectResponse } from "./project-response";
+import { projectIncludeFor, toProjectResponse } from "./project-response";
 import { StorageService } from "./storage.service";
 
 @Injectable()
@@ -43,7 +43,7 @@ export class ProjectsService {
 
     const projects = await this.prisma.project.findMany({
       where,
-      include: projectInclude,
+      include: projectIncludeFor("ADMIN"),
       orderBy: { updatedAt: "desc" }
     });
     return projects.map((p) => toProjectResponse(p, "ADMIN"));
@@ -55,17 +55,24 @@ export class ProjectsService {
       this.prisma.project.count({ where: { status: "ACTIVE" } }),
       this.prisma.clientProfile.count(),
       this.prisma.project.findMany({
-        include: projectInclude,
+        include: projectIncludeFor("ADMIN"),
         orderBy: { updatedAt: "desc" },
         take: 6
       }),
       this.prisma.siteUpdate.findMany({
-        include: { project: true, author: true, media: true },
+        include: {
+          project: { select: { id: true, name: true } },
+          author: { select: { id: true, displayName: true, role: true } },
+          media: { select: { id: true } }
+        },
         orderBy: { createdAt: "desc" },
         take: 5
       }),
       this.prisma.auditLog.findMany({
-        include: { actor: true, project: true },
+        include: {
+          actor: { select: { id: true, displayName: true } },
+          project: { select: { id: true, name: true } }
+        },
         orderBy: { createdAt: "desc" },
         take: 8
       })
@@ -97,7 +104,7 @@ export class ProjectsService {
   async visibleList(user: RequestUser) {
     const projects = await this.prisma.project.findMany({
       where: this.access.projectWhereFor(user),
-      include: projectInclude,
+      include: projectIncludeFor(user.role),
       orderBy: { updatedAt: "desc" }
     });
     return projects.map((p) => toProjectResponse(p, user.role));
@@ -105,7 +112,7 @@ export class ProjectsService {
 
   async getForUser(user: RequestUser, id: string) {
     await this.access.assertCanRead(user, id);
-    const project = await this.prisma.project.findUnique({ where: { id }, include: projectInclude });
+    const project = await this.prisma.project.findUnique({ where: { id }, include: projectIncludeFor(user.role) });
     if (!project) {
       throw new NotFoundException("Project not found.");
     }
@@ -114,7 +121,7 @@ export class ProjectsService {
 
 
   async get(id: string) {
-    const project = await this.prisma.project.findUnique({ where: { id }, include: projectInclude });
+    const project = await this.prisma.project.findUnique({ where: { id }, include: projectIncludeFor() });
     if (!project) {
       throw new NotFoundException("Project not found.");
     }
@@ -144,7 +151,7 @@ export class ProjectsService {
           notes: emptyToNullValue(input.notes),
           assignments: { create: input.workerIds.map((userId) => ({ user: { connect: { id: userId } } })) }
         },
-        include: projectInclude
+        include: projectIncludeFor()
       });
       await this.audit.record(actorId, "project.created", { projectId: project.id, code: project.code ?? "" }, project.id);
       if (input.engineerId) await this.audit.record(actorId, "project.engineer_assigned", { engineerId: input.engineerId }, project.id);
@@ -187,7 +194,7 @@ export class ProjectsService {
     }
 
     try {
-      const project = await this.prisma.project.update({ where: { id }, data, include: projectInclude });
+      const project = await this.prisma.project.update({ where: { id }, data, include: projectIncludeFor() });
       await this.audit.record(actorId, "project.edited", { projectId: id }, id);
       if (input.phase !== undefined && input.phase !== existing.phase) {
         await this.audit.record(actorId, "project.phase_changed", { from: existing.phase, to: input.phase }, id);
@@ -228,7 +235,7 @@ export class ProjectsService {
     const updated = await this.prisma.project.update({
       where: { id: projectId },
       data: { progress: input.progress },
-      include: projectInclude
+      include: projectIncludeFor()
     });
 
     await this.audit.record(
@@ -268,7 +275,7 @@ export class ProjectsService {
     const updated = await this.prisma.project.update({
       where: { id: projectId },
       data: { phase: input.phase },
-      include: projectInclude
+      include: projectIncludeFor()
     });
 
     await this.audit.record(
@@ -519,12 +526,12 @@ export class ProjectsService {
 
 
   private async assertClient(clientId: string) {
-    const client = await this.prisma.clientProfile.findUnique({ where: { id: clientId } });
+    const client = await this.prisma.clientProfile.findUnique({ where: { id: clientId }, select: { id: true } });
     if (!client) throw new BadRequestException("Client is invalid.");
   }
 
   private async assertUserRole(userId: string, role: UserRole) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { role: true, isActive: true } });
     if (!user || user.role !== role || !user.isActive) {
       throw new BadRequestException(`User must be active ${role}.`);
     }
@@ -533,8 +540,13 @@ export class ProjectsService {
   private async assertWorkerIds(workerIds: string[]) {
     const unique = [...new Set(workerIds)];
     if (unique.length !== workerIds.length) throw new BadRequestException("Duplicate workers are not allowed.");
-    for (const workerId of unique) {
-      await this.assertUserRole(workerId, "WORKER");
+    if (unique.length === 0) return;
+    const workers = await this.prisma.user.findMany({
+      where: { id: { in: unique }, role: "WORKER", isActive: true },
+      select: { id: true }
+    });
+    if (workers.length !== unique.length) {
+      throw new BadRequestException("User must be active WORKER.");
     }
   }
 }

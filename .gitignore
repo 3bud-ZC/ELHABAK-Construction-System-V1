@@ -16,3 +16,9 @@ Thumbs.db
 .codex-brand-preview/
 apps/api/prisma/dev.db
 .claude/
+.vscode/
+.idea/
+test-results/
+cypress/videos/
+cypress/screenshots/
+*.log

@@ -1,7 +1,7 @@
 import type { Prisma } from "@elhabak/database";
 
 export const chatMessageInclude = {
-  author: true
+  author: { select: { id: true, displayName: true, role: true } }
 } satisfies Prisma.ProjectMessageInclude;
 
 export type ChatMessageWithAuthor = Prisma.ProjectMessageGetPayload<{ include: typeof chatMessageInclude }>;

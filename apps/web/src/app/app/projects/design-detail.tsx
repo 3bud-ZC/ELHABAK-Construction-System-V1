@@ -19,15 +19,15 @@ import {
   type DesignDiscipline,
   type DesignRecord,
   type DesignRevisionRecord,
-  type ProjectRecord,
-  type UserRecord
+  type ProjectRecord
 } from "../../../lib/api";
+import { useCurrentUser } from "../../../lib/user-context";
 
 export function DesignDetail({ projectId, designId }: { projectId: string; designId: string }) {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
-  const [user, setUser] = useState<UserRecord | null>(null);
+  const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [design, setDesign] = useState<DesignRecord | null>(null);
   const [selectedRevisionId, setSelectedRevisionId] = useState("");
@@ -62,10 +62,10 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [me, projectResult, designResult] = await Promise.all([
-        apiRequest<{ user: UserRecord }>("/auth/me"), apiRequest<ProjectRecord>(`/projects/${projectId}`), apiRequest<DesignRecord>(`/projects/${projectId}/designs/${designId}`)
+      const [projectResult, designResult] = await Promise.all([
+        apiRequest<ProjectRecord>(`/projects/${projectId}`), apiRequest<DesignRecord>(`/projects/${projectId}/designs/${designId}`)
       ]);
-      setUser(me.user); setProject(projectResult); setDesign(designResult);
+      setProject(projectResult); setDesign(designResult);
       setSelectedRevisionId((current) => current && designResult.revisions.some((item) => item.id === current) ? current : designResult.currentRevision.id);
       setError("");
     } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Request failed."); }
@@ -83,7 +83,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     finally { setMutating(false); }
   }
 
-  if (loading || !project || !user || !design) return <section className="app-page"><LoadingState label={labels.loading} />{error && <div className="form-error">{error}</div>}</section>;
+  if (loading || !project || !design) return <section className="app-page"><LoadingState label={labels.loading} />{error && <div className="form-error">{error}</div>}</section>;
 
   const selected = design.revisions.find((revision) => revision.id === selectedRevisionId) ?? design.currentRevision;
   const canManage = user.role === "ADMIN" || user.role === "ENGINEER";

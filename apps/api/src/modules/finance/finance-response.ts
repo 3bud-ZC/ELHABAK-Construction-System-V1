@@ -2,7 +2,9 @@ import type { Prisma } from "@elhabak/database";
 import { formatMoneyMajor, formatQuantityMajor } from "@elhabak/validation";
 import { toRequestUser } from "../auth/auth.service";
 
-export const boqItemInclude = { createdBy: true } satisfies Prisma.BOQItemInclude;
+const actorSelect = { id: true, email: true, displayName: true, role: true, isActive: true } satisfies Prisma.UserSelect;
+
+export const boqItemInclude = { createdBy: { select: actorSelect } } satisfies Prisma.BOQItemInclude;
 export type BOQItemWithRelations = Prisma.BOQItemGetPayload<{ include: typeof boqItemInclude }>;
 
 export function toBoqItemResponse(item: BOQItemWithRelations) {
@@ -42,7 +44,7 @@ export function toEstimateItemResponse(item: CostEstimateItemRecord) {
 }
 
 export const estimateInclude = {
-  createdBy: true,
+  createdBy: { select: actorSelect },
   items: { orderBy: { sortOrder: "asc" } }
 } satisfies Prisma.CostEstimateInclude;
 export type CostEstimateWithRelations = Prisma.CostEstimateGetPayload<{ include: typeof estimateInclude }>;
@@ -64,7 +66,7 @@ export function toEstimateResponse(estimate: CostEstimateWithRelations) {
   };
 }
 
-export const attachmentInclude = { uploadedBy: true } satisfies Prisma.FinancialAttachmentInclude;
+export const attachmentInclude = { uploadedBy: { select: actorSelect } } satisfies Prisma.FinancialAttachmentInclude;
 export type FinancialAttachmentWithRelations = Prisma.FinancialAttachmentGetPayload<{ include: typeof attachmentInclude }>;
 
 export function toAttachmentResponse(attachment: FinancialAttachmentWithRelations) {
@@ -78,7 +80,7 @@ export function toAttachmentResponse(attachment: FinancialAttachmentWithRelation
   };
 }
 
-export const expenseInclude = { createdBy: true, attachments: { include: attachmentInclude } } satisfies Prisma.ExpenseInclude;
+export const expenseInclude = { createdBy: { select: actorSelect }, attachments: { include: attachmentInclude } } satisfies Prisma.ExpenseInclude;
 export type ExpenseWithRelations = Prisma.ExpenseGetPayload<{ include: typeof expenseInclude }>;
 
 export function toExpenseResponse(expense: ExpenseWithRelations) {
@@ -101,7 +103,7 @@ export function toExpenseResponse(expense: ExpenseWithRelations) {
   };
 }
 
-export const clientPaymentInclude = { createdBy: true, attachments: { include: attachmentInclude } } satisfies Prisma.ClientPaymentInclude;
+export const clientPaymentInclude = { createdBy: { select: actorSelect }, attachments: { include: attachmentInclude } } satisfies Prisma.ClientPaymentInclude;
 export type ClientPaymentWithRelations = Prisma.ClientPaymentGetPayload<{ include: typeof clientPaymentInclude }>;
 
 export function toClientPaymentResponse(payment: ClientPaymentWithRelations) {
@@ -137,7 +139,7 @@ export function toClientSafePaymentResponse(payment: ClientPaymentWithRelations)
   };
 }
 
-export const contractorPaymentInclude = { createdBy: true, attachments: { include: attachmentInclude } } satisfies Prisma.ContractorPaymentInclude;
+export const contractorPaymentInclude = { createdBy: { select: actorSelect }, attachments: { include: attachmentInclude } } satisfies Prisma.ContractorPaymentInclude;
 export type ContractorPaymentWithRelations = Prisma.ContractorPaymentGetPayload<{ include: typeof contractorPaymentInclude }>;
 
 export function toContractorPaymentResponse(payment: ContractorPaymentWithRelations) {

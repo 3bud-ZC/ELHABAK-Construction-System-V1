@@ -1,8 +1,10 @@
 import type { Prisma } from "@elhabak/database";
 
+const actorSelect = { id: true, displayName: true, role: true } satisfies Prisma.UserSelect;
+
 export const documentInclude = {
-  versions: { include: { uploadedBy: true }, orderBy: { versionNumber: "desc" } },
-  createdBy: true
+  versions: { include: { uploadedBy: { select: actorSelect } }, orderBy: { versionNumber: "desc" } },
+  createdBy: { select: actorSelect }
 } satisfies Prisma.ProjectDocumentInclude;
 
 export type DocumentWithRelations = Prisma.ProjectDocumentGetPayload<{ include: typeof documentInclude }>;

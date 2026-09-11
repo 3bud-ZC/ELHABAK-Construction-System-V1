@@ -6,6 +6,7 @@ import { BriefcaseBusiness, Camera, LayoutGrid, LogOut, Menu, Users, UserRoundCo
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
+import { UserContext } from "../../lib/user-context";
 import { NotificationBell } from "../../components/notification-bell";
 
 type AppShellProps = {
@@ -163,6 +164,7 @@ export function AppShell({ children }: AppShellProps) {
     .toUpperCase();
 
   return (
+    <UserContext.Provider value={user}>
     <main className="app-shell" lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       {drawerOpen && (
         <button
@@ -259,5 +261,6 @@ export function AppShell({ children }: AppShellProps) {
         {children}
       </section>
     </main>
+    </UserContext.Provider>
   );
 }
