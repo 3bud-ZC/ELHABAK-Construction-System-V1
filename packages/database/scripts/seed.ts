@@ -32,6 +32,11 @@ type DemoUser = {
   displayName: string;
   role: UserRole;
   passwordEnv: string;
+  // The sole account meant to ever be an active production login (see the client-review
+  // access run in STATUS.md). Every other entry here is a local-development/demo fixture:
+  // re-seeding must never flip one back to active once an operator has deactivated it in
+  // production, so only this flag's account has its `isActive` forced on every run.
+  forceActive: boolean;
 };
 
 const demoUsers: DemoUser[] = [
@@ -40,31 +45,36 @@ const demoUsers: DemoUser[] = [
     legacyEmail: "demo.admin@elhabak.local",
     displayName: "Eng. Mohamed Elhabak",
     role: "ADMIN",
-    passwordEnv: "DEMO_ADMIN_PASSWORD"
+    passwordEnv: "DEMO_ADMIN_PASSWORD",
+    forceActive: true
   },
   {
     email: "demo.engineer@elhabak.local",
     displayName: "Demo Engineer",
     role: "ENGINEER",
-    passwordEnv: "DEMO_ENGINEER_PASSWORD"
+    passwordEnv: "DEMO_ENGINEER_PASSWORD",
+    forceActive: false
   },
   {
     email: "demo.accountant@elhabak.local",
     displayName: "Demo Accountant",
     role: "ACCOUNTANT",
-    passwordEnv: "DEMO_ACCOUNTANT_PASSWORD"
+    passwordEnv: "DEMO_ACCOUNTANT_PASSWORD",
+    forceActive: false
   },
   {
     email: "demo.worker@elhabak.local",
     displayName: "Demo Worker",
     role: "WORKER",
-    passwordEnv: "DEMO_WORKER_PASSWORD"
+    passwordEnv: "DEMO_WORKER_PASSWORD",
+    forceActive: false
   },
   {
     email: "demo.client@elhabak.local",
     displayName: "Demo Client",
     role: "CLIENT",
-    passwordEnv: "DEMO_CLIENT_PASSWORD"
+    passwordEnv: "DEMO_CLIENT_PASSWORD",
+    forceActive: false
   }
 ];
 
@@ -94,7 +104,7 @@ async function main() {
           email: demoUser.email,
           displayName: demoUser.displayName,
           role: demoUser.role,
-          isActive: true,
+          isActive: demoUser.forceActive ? true : undefined,
           passwordHash
         }
       });
@@ -104,7 +114,7 @@ async function main() {
         update: {
           displayName: demoUser.displayName,
           role: demoUser.role,
-          isActive: true,
+          isActive: demoUser.forceActive ? true : undefined,
           passwordHash
         },
         create: {
