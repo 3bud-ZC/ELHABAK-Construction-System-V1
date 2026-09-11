@@ -6,6 +6,7 @@ import { IoAdapter } from "@nestjs/platform-socket.io";
 import { parseApiEnv } from "@elhabak/config";
 import { ApiExceptionFilter } from "./shared/api-exception.filter";
 
+// Entry point for ELHABAK API - includes mobile authentication normalization
 async function bootstrap() {
   config({ quiet: true });
   const env = parseApiEnv(process.env);
