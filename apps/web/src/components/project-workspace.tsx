@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Badge, ProgressBar } from "@elhabak/ui";
-import { Activity, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Activity, ChevronDown, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
   phaseLabel,
@@ -54,7 +54,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
         documents: "المستندات",
         chat: "الدردشة",
         status: "الحالة",
-        unset: "غير محدد"
+        unset: "غير محدد",
+        moreDetails: "تفاصيل إضافية"
       }
     : {
         phase: "Current phase",
@@ -70,7 +71,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
         chat: "Chat",
         edit: "Edit Project",
         status: "Status",
-        unset: "Not set"
+        unset: "Not set",
+        moreDetails: "More details"
       };
 
   function href(path: string) {
@@ -132,12 +134,21 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
           </div>
         </div>
 
-        <div className="project-command-header__facts">
-          <span><UsersRound size={14} /><small>{labels.client}</small><strong>{project.client?.user.displayName ?? labels.unset}</strong></span>
-          <span><UserRound size={14} /><small>{labels.engineer}</small><strong>{project.engineer?.displayName ?? labels.unset}</strong></span>
-          <span><MapPin size={14} /><small>{labels.location}</small><strong>{project.location ?? labels.unset}</strong></span>
-          <span><Activity size={14} /><small>{labels.status}</small><strong>{statusLabel(project.status, locale)}</strong></span>
-        </div>
+        {/* A <details> element: collapsed by default so Client/Engineer/Location/Status (already
+            shown as a badge above) don't force the whole desktop command header onto a 390px
+            screen; the 701px+ CSS tier forces it open and hides the toggle so desktop is unaffected. */}
+        <details className="project-command-header__details">
+          <summary className="project-command-header__details-toggle">
+            {labels.moreDetails}
+            <ChevronDown size={14} aria-hidden="true" />
+          </summary>
+          <div className="project-command-header__facts">
+            <span><UsersRound size={14} /><small>{labels.client}</small><strong>{project.client?.user.displayName ?? labels.unset}</strong></span>
+            <span><UserRound size={14} /><small>{labels.engineer}</small><strong>{project.engineer?.displayName ?? labels.unset}</strong></span>
+            <span><MapPin size={14} /><small>{labels.location}</small><strong>{project.location ?? labels.unset}</strong></span>
+            <span><Activity size={14} /><small>{labels.status}</small><strong>{statusLabel(project.status, locale)}</strong></span>
+          </div>
+        </details>
       </header>
 
       <div className="project-workspace-bar">

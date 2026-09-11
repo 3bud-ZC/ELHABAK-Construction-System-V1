@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { BriefcaseBusiness, Camera, LayoutGrid, LogOut, Users, UserRoundCog, Wallet } from "lucide-react";
+import { BriefcaseBusiness, Camera, LayoutGrid, LogOut, Menu, Users, UserRoundCog, Wallet, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
@@ -20,6 +20,7 @@ export function AppShell({ children }: AppShellProps) {
   const alternate = locale === "ar" ? "en" : "ar";
   const [user, setUser] = useState<UserRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const labels = useMemo(
     () =>
@@ -41,7 +42,9 @@ export function AppShell({ children }: AppShellProps) {
             siteActivity: "نشاط الموقع",
             documents: "المستندات",
             chat: "الدردشة",
-            notifications: "الإشعارات"
+            notifications: "الإشعارات",
+            openMenu: "فتح القائمة",
+            closeMenu: "إغلاق القائمة"
           }
         : {
             productTag: "Project Management System",
@@ -60,7 +63,9 @@ export function AppShell({ children }: AppShellProps) {
             siteActivity: "Site Activity",
             documents: "Documents",
             chat: "Chat",
-            notifications: "Notifications"
+            notifications: "Notifications",
+            openMenu: "Open menu",
+            closeMenu: "Close menu"
           },
     [locale]
   );
@@ -116,6 +121,19 @@ export function AppShell({ children }: AppShellProps) {
     };
   }, [locale, router]);
 
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setDrawerOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [drawerOpen]);
+
   async function logout() {
     await apiRequest<{ ok: true }>("/auth/logout", { method: "POST", body: "{}" }).catch(() => undefined);
     router.replace(locale === "ar" ? "/login" : "/login?lang=en");
@@ -146,7 +164,23 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <main className="app-shell" lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
-      <aside className="app-sidebar">
+      {drawerOpen && (
+        <button
+          type="button"
+          className="app-mobile-backdrop"
+          aria-label={labels.closeMenu}
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+      <aside className={drawerOpen ? "app-sidebar app-sidebar--open" : "app-sidebar"}>
+        <button
+          type="button"
+          className="app-mobile-close"
+          aria-label={labels.closeMenu}
+          onClick={() => setDrawerOpen(false)}
+        >
+          <X size={20} />
+        </button>
         <Link className="app-logo" href={href("/app")}>
           <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={180} height={75} priority />
         </Link>
@@ -195,6 +229,15 @@ export function AppShell({ children }: AppShellProps) {
       </aside>
       <section className="app-main">
         <header className="app-topbar">
+          <button
+            type="button"
+            className="app-mobile-toggle"
+            aria-label={labels.openMenu}
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Menu size={20} />
+          </button>
           <nav className="app-breadcrumb" aria-label={locale === "ar" ? "مسار الصفحة" : "Breadcrumb"}>
             {breadcrumb.map((crumb, index) => (
               <span key={crumb + index}>

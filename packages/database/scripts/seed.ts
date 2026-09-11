@@ -28,6 +28,7 @@ const prisma = new PrismaClient({
 
 type DemoUser = {
   email: string;
+  legacyEmail?: string;
   displayName: string;
   role: UserRole;
   passwordEnv: string;
@@ -35,8 +36,9 @@ type DemoUser = {
 
 const demoUsers: DemoUser[] = [
   {
-    email: "demo.admin@elhabak.local",
-    displayName: "Demo Admin",
+    email: "mohamed.elhabak@elhabak.local",
+    legacyEmail: "demo.admin@elhabak.local",
+    displayName: "Eng. Mohamed Elhabak",
     role: "ADMIN",
     passwordEnv: "DEMO_ADMIN_PASSWORD"
   },
@@ -76,22 +78,44 @@ async function main() {
 
     const passwordHash = await hash(password, 12);
 
-    await prisma.user.upsert({
-      where: { email: demoUser.email },
-      update: {
-        displayName: demoUser.displayName,
-        role: demoUser.role,
-        isActive: true,
-        passwordHash
-      },
-      create: {
-        email: demoUser.email,
-        displayName: demoUser.displayName,
-        role: demoUser.role,
-        isActive: true,
-        passwordHash
-      }
-    });
+    const existingByCurrentEmail = await prisma.user.findUnique({ where: { email: demoUser.email } });
+    const legacyUser = !existingByCurrentEmail && demoUser.legacyEmail
+      ? await prisma.user.findUnique({ where: { email: demoUser.legacyEmail } })
+      : null;
+
+    if (legacyUser) {
+      // Idempotent identity migration: rename the existing canonical account in place so its
+      // id (and every relation - projects, AuditLog, messages, notifications) is preserved.
+      // Re-running the seed afterward finds it by the new email and falls through to the
+      // upsert branch below, so this rename never re-runs and never creates a duplicate.
+      await prisma.user.update({
+        where: { id: legacyUser.id },
+        data: {
+          email: demoUser.email,
+          displayName: demoUser.displayName,
+          role: demoUser.role,
+          isActive: true,
+          passwordHash
+        }
+      });
+    } else {
+      await prisma.user.upsert({
+        where: { email: demoUser.email },
+        update: {
+          displayName: demoUser.displayName,
+          role: demoUser.role,
+          isActive: true,
+          passwordHash
+        },
+        create: {
+          email: demoUser.email,
+          displayName: demoUser.displayName,
+          role: demoUser.role,
+          isActive: true,
+          passwordHash
+        }
+      });
+    }
   }
 
   const clientUser = await prisma.user.findUniqueOrThrow({
@@ -441,7 +465,7 @@ async function main() {
   }
 
   const demoAdmin = await prisma.user.findUniqueOrThrow({
-    where: { email: "demo.admin@elhabak.local" }
+    where: { email: "mohamed.elhabak@elhabak.local" }
   });
 
   const demoMessages: Array<{ authorId: string; text: string }> = [

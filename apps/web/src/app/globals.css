@@ -127,7 +127,7 @@ h4 {
 /* ---------- public website ---------- */
 
 .site-shell {
-  min-height: 100vh;
+  min-height: 100svh;
   overflow-x: clip;
   background: var(--white);
 }
@@ -829,7 +829,7 @@ html[dir="rtl"] .process-pipeline__track {
 /* ---------- login ---------- */
 
 .login-shell {
-  min-height: 100vh;
+  min-height: 100svh;
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(380px, 0.62fr);
   background: var(--white);
@@ -1022,7 +1022,7 @@ html[dir="rtl"] .process-pipeline__track {
 /* ---------- authenticated app shell ---------- */
 
 .app-loading {
-  min-height: 100vh;
+  min-height: 100svh;
   display: grid;
   place-items: center;
   background: var(--canvas);
@@ -1031,7 +1031,7 @@ html[dir="rtl"] .process-pipeline__track {
 }
 
 .app-shell {
-  min-height: 100vh;
+  min-height: 100svh;
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   background: var(--canvas);
@@ -1046,7 +1046,7 @@ html[dir="rtl"] .process-pipeline__track {
   padding: var(--space-4) var(--space-3);
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
 }
 
@@ -1239,6 +1239,41 @@ html[dir="rtl"] .process-pipeline__track {
   align-items: center;
   gap: 0.6rem;
   flex: 0 0 auto;
+}
+
+/* Mobile app-shell nav: a hamburger toggle + off-canvas drawer replaces the sidebar below
+   980px instead of squeezing it into a cramped horizontal strip. Hidden on desktop; the
+   980px tier below turns each one on and gives `.app-sidebar` its fixed drawer position. */
+.app-mobile-toggle,
+.app-mobile-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+}
+
+.app-mobile-toggle {
+  color: var(--navy);
+}
+
+.app-mobile-toggle:hover {
+  background: rgba(22, 35, 75, 0.06);
+}
+
+.app-mobile-close {
+  color: var(--white);
+  align-self: flex-end;
+  margin-bottom: var(--space-2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.app-mobile-backdrop {
+  display: none;
 }
 
 .app-page {
@@ -2386,77 +2421,66 @@ html[dir="rtl"] .process-pipeline__track {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Off-canvas drawer: the sidebar is fixed and translated fully off-screen (toward the
+     trailing edge - the right side in RTL Arabic, the left side in English via :dir()) until
+     `.app-sidebar--open` is applied by the hamburger toggle in app-shell.tsx. This replaces
+     the old approach of squeezing the sidebar into a horizontal strip, which could not fit
+     Dashboard/Projects/Clients/Users/Finance without either clipping or endless scrolling. */
+  .app-mobile-toggle {
+    display: inline-flex;
+  }
+
   .app-sidebar {
     grid-column: 1;
-    position: sticky;
-    top: 0;
-    z-index: 15;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: 0.55rem var(--space-4);
-    overflow: visible;
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 60;
+    width: min(84vw, 300px);
+    height: 100dvh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: calc(var(--space-4) + env(safe-area-inset-top)) var(--space-3) calc(var(--space-4) + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    box-shadow: 0 0 32px rgba(15, 23, 42, 0.28);
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+  }
+
+  :dir(ltr) .app-sidebar {
+    transform: translateX(-100%);
+  }
+
+  /* !important is deliberate: `:dir(ltr) .app-sidebar` above sets the closed-state transform
+     for English, and this open-state override must always win over it regardless of cascade
+     specificity/order in either writing direction. */
+  .app-sidebar--open {
+    transform: translateX(0) !important;
+  }
+
+  .app-mobile-close {
+    display: inline-flex;
+  }
+
+  .app-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: rgba(10, 14, 30, 0.5);
+    cursor: pointer;
   }
 
   .app-main {
     grid-column: 1;
   }
 
-  .app-logo {
-    margin-bottom: 0;
-    flex: 0 0 auto;
-  }
-
   .app-logo img {
     width: 118px;
-  }
-
-  .app-product-tag {
-    display: none;
-  }
-
-  .app-nav {
-    display: flex;
-    flex-direction: row;
-    flex: 1 1 auto;
-    min-width: 0;
-    gap: 0.2rem;
-    overflow-x: auto;
-    justify-content: flex-end;
-  }
-
-  .app-nav-label {
-    display: none;
-  }
-
-  .app-nav a {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 0.5rem 0.6rem;
-    font-size: 0.8rem;
-    border-inline-start: 0;
-    border-bottom: 2px solid transparent;
-  }
-
-  .app-nav a.active {
-    border-bottom-color: var(--orange);
-  }
-
-  .app-sidebar-footer {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-    flex: 0 0 auto;
-  }
-
-  .app-user-card {
-    padding: 0;
-  }
-
-  .app-user-meta {
-    display: none;
   }
 
   .app-page {
@@ -2520,7 +2544,8 @@ html[dir="rtl"] .process-pipeline__track {
   }
 
   .login-brand {
-    min-height: 380px;
+    min-height: 220px;
+    padding: clamp(1.5rem, 5vw, 3rem);
   }
 }
 
@@ -2529,6 +2554,24 @@ html[dir="rtl"] .process-pipeline__track {
   .ui-section__inner {
     width: 100%;
     padding-inline: 12px;
+  }
+
+  /* Touch-target audit: every generic button grows to the ~44px minimum on phones without
+     changing the deliberately denser desktop sizing (.ui-button/.ui-button--sm stay untouched
+     above this breakpoint). */
+  .ui-button {
+    min-height: 44px;
+  }
+
+  .ui-button--sm {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .icon-button,
+  .site-modal-close {
+    min-width: 40px;
+    min-height: 40px;
   }
 
   .header-inner {
@@ -2566,20 +2609,33 @@ html[dir="rtl"] .process-pipeline__track {
     flex-wrap: wrap;
     row-gap: 0.4rem;
     min-height: auto;
-    padding: 0.55rem var(--space-4);
+    padding: calc(0.55rem + env(safe-area-inset-top)) var(--space-4) 0.55rem;
   }
 
-  .app-sidebar {
-    padding: 0.45rem var(--space-3);
+  /* On a 390px phone the login screen should be the card, not a decorative navy panel -
+     the panel's own heading/subtitle repeat verbatim in the card below, so they're dropped
+     here rather than making the visitor scroll past the same two lines of copy twice. */
+  .login-brand {
+    min-height: auto;
+    padding: var(--space-4) var(--space-4) var(--space-3);
+  }
+
+  .login-brand h1,
+  .login-brand p {
+    display: none;
+  }
+
+  .login-brand img {
+    width: min(180px, 52vw);
+    margin-bottom: 0;
+  }
+
+  .login-panel {
+    padding: var(--space-4);
   }
 
   .app-logo img {
     width: 100px;
-  }
-
-  .app-nav a {
-    padding: 0.4rem 0.5rem;
-    font-size: 0.75rem;
   }
 
   .app-page {
@@ -2977,6 +3033,46 @@ html[dir="rtl"] .process-pipeline__track {
   white-space: nowrap;
 }
 
+.project-command-header__details-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.6rem var(--space-4);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.74rem;
+  font-weight: 700;
+  list-style: none;
+}
+
+.project-command-header__details-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.project-command-header__details-toggle svg {
+  transition: transform 0.15s ease;
+}
+
+.project-command-header__details[open] .project-command-header__details-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* Above the phone/tablet tier, the details/summary always shows expanded and the toggle is
+   hidden entirely - only 390px-class viewports need the header collapsed by default (this is
+   also what keeps the Chat page's message list/composer from being pushed off-screen below
+   an otherwise very tall command header, see the .chat-shell mobile rule). */
+@media (min-width: 701px) {
+  .project-command-header__details-toggle {
+    display: none;
+  }
+
+  .project-command-header__facts {
+    display: grid !important;
+  }
+}
+
 .project-workspace-container {
   display: flex;
   flex-direction: column;
@@ -3363,7 +3459,7 @@ html[dir="rtl"] .process-pipeline__track {
 
 .design-dialog {
   width: min(720px, 100%);
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-lg);
@@ -4645,7 +4741,8 @@ a.ui-button:focus-visible {
 
   .design-dialog {
     width: 100%;
-    max-height: 94vh;
+    max-height: min(94vh, 94dvh);
+    padding-bottom: env(safe-area-inset-bottom);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 
@@ -5477,7 +5574,7 @@ a.ui-button:focus-visible {
 
 .lightbox-container {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -5516,6 +5613,8 @@ a.ui-button:focus-visible {
   border: none;
   color: #fff;
   cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
   padding: 6px;
   border-radius: 50%;
   display: flex;
@@ -5549,7 +5648,7 @@ a.ui-button:focus-visible {
 
 .lightbox-image-wrap img {
   max-width: 100%;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   object-fit: contain;
   border-radius: var(--radius-sm);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -5871,6 +5970,37 @@ a.ui-button:focus-visible {
   }
 }
 
+@media (max-width: 980px) {
+  /* The chat-shell's old `calc(100dvh - Npx)` sizing assumed a fixed amount of chrome above
+     it, but the real Project Command Header + workspace tab bar are much taller once stacked
+     on a phone/tablet - live testing at 390px found the composer sitting ~190px below the
+     visible viewport (and still ~28px below it at 768px). Rather than guess yet another
+     fragile constant for the *entire* header's height, `.chat-page` becomes a flex column
+     bounded to the viewport (minus just the sticky topbar, which is a stable, predictable
+     height even when it wraps), so the header/tab bar keep their natural size and
+     `.chat-shell` flexes to fill whatever is actually left - correct regardless of how tall
+     the (collapsible below 700px) header ends up being. */
+  .project-workspace-page.chat-page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 110px);
+    min-height: 0;
+    gap: var(--space-3);
+    padding-block: var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+
+  .project-workspace-page.chat-page > * {
+    flex: 0 0 auto;
+  }
+
+  .project-workspace-page.chat-page > .chat-shell {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
 @media (max-width: 700px) {
   .finance-register {
     grid-template-columns: minmax(0, 1fr);
@@ -5899,6 +6029,8 @@ a.ui-button:focus-visible {
   display: inline-grid;
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   place-items: center;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -6151,7 +6283,7 @@ a.ui-button:focus-visible {
 
 .chat-shell {
   display: flex;
-  height: calc(100vh - 320px);
+  height: calc(100dvh - 320px);
   min-height: 420px;
   max-height: 760px;
   flex-direction: column;
@@ -6284,7 +6416,7 @@ a.ui-button:focus-visible {
   flex: 0 0 auto;
   border-top: 1px solid var(--border);
   background: var(--canvas);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
 }
 
 .chat-composer__error {
@@ -6423,7 +6555,7 @@ a.ui-button:focus-visible {
 
 @media (max-width: 980px) {
   .chat-shell {
-    height: calc(100vh - 280px);
+    height: calc(100dvh - 280px);
     min-height: 380px;
   }
 }
@@ -6443,6 +6575,23 @@ a.ui-button:focus-visible {
 
   .notification-panel {
     width: min(340px, 92vw);
+    max-height: min(70vh, 70dvh);
+  }
+
+  .notification-bell__trigger {
+    width: 44px;
+    height: 44px;
+  }
+
+  .chat-composer__mic,
+  .chat-composer__send {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .voice-message__toggle {
+    width: 40px;
+    height: 40px;
   }
 }
 

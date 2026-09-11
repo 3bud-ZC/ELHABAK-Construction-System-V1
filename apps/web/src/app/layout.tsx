@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Almarai, Rubik } from "next/font/google";
 import { Suspense } from "react";
 import { DirectionSync } from "./direction-sync";
@@ -21,6 +21,12 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: "ELHABAK Construction System V1",
   description: "Official ELHABAK Construction website and system entry."
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover"
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
