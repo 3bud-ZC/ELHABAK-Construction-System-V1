@@ -5,6 +5,29 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { apiRequest } from "../../lib/api";
 
+/**
+ * Mirrors the server-side stripping in `emailSchema` (packages/validation): mobile
+ * clipboards frequently embed zero-width/bidirectional-control characters when an email
+ * is copied out of an RTL (Arabic) message, e.g. a WhatsApp chat. Doing this client-side
+ * too means the user sees the clean value they are about to submit, not just a server
+ * error; the server remains the authoritative check regardless.
+ */
+function normalizeEmailForSubmit(value: string): string {
+  const invisibleRanges: Array<[number, number]> = [
+    [0x200b, 0x200f],
+    [0x202a, 0x202e],
+    [0x2066, 0x2069],
+    [0xfeff, 0xfeff]
+  ];
+  const stripped = Array.from(value)
+    .filter((ch) => {
+      const codePoint = ch.codePointAt(0) as number;
+      return !invisibleRanges.some(([low, high]) => codePoint >= low && codePoint <= high);
+    })
+    .join("");
+  return stripped.trim();
+}
+
 type LoginFormProps = {
   locale: "ar" | "en";
   labels: {
@@ -31,7 +54,9 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
     event.preventDefault();
     setError(null);
 
-    if (!email.trim() || !password) {
+    const normalizedEmail = normalizeEmailForSubmit(email);
+
+    if (!normalizedEmail || !password) {
       setError(labels.required);
       return;
     }
@@ -41,7 +66,7 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
     try {
       const result = await apiRequest<{ user: { role: string } }>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: normalizedEmail, password })
       });
 
       const target = result.user.role === "ADMIN" ? "/app/admin/users" : "/app";
@@ -60,7 +85,11 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
         <input
           id="email"
           type="email"
-          autoComplete="email"
+          inputMode="email"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           disabled={loading}
@@ -73,6 +102,9 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
             id="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={loading}

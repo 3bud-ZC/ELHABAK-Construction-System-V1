@@ -135,6 +135,54 @@ describe("Milestone 02 auth, RBAC, users, clients", () => {
     adminCookie = readCookie(secondLogin);
   });
 
+  it("normalizes a mobile-clipboard-contaminated email/password on login without weakening validation", async () => {
+    // Invisible zero-width/bidi-control characters (LRM, RLM, an LRI/PDI pair, and a BOM)
+    // that a mobile clipboard commonly embeds when text is copied out of an RTL (Arabic)
+    // conversation, e.g. WhatsApp. Built from code points, not escape-sequence literals.
+    const lrm = String.fromCodePoint(0x200e);
+    const rlm = String.fromCodePoint(0x200f);
+    const lri = String.fromCodePoint(0x2066);
+    const pdi = String.fromCodePoint(0x2069);
+    const bom = String.fromCodePoint(0xfeff);
+
+    const contaminatedEmail = `${rlm}${lrm}  ${bom}${lri}${adminEmail.toUpperCase()}${pdi}${rlm}\n`;
+
+    const contaminatedLogin = await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: contaminatedEmail, password })
+      .expect(200);
+    expect(contaminatedLogin.body.user.email).toBe(adminEmail);
+    readCookie(contaminatedLogin);
+
+    // Plain leading/trailing whitespace continues to work (pre-existing `.trim()` behavior).
+    await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: `  ${adminEmail}  `, password })
+      .expect(200);
+
+    // A trailing clipboard newline after the password is stripped, but the password itself
+    // is never lowercased/trimmed/altered otherwise - a genuinely wrong password (even one
+    // that only differs by trailing whitespace the user actually typed) is still rejected.
+    await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: adminEmail, password: `${password}\n` })
+      .expect(200);
+    await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: adminEmail, password: `${password} ` })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: adminEmail, password: "wrong-password" })
+      .expect(401);
+
+    // An email that is invalid even after stripping/trimming is still rejected as malformed.
+    await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: `${rlm}not-an-email${lrm}`, password })
+      .expect(400);
+  });
+
   it("enforces RBAC for anonymous, wrong role, and admin access", async () => {
     await request(app.getHttpServer()).get("/admin/users").expect(401);
 

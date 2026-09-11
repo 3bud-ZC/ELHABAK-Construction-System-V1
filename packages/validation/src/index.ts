@@ -12,7 +12,32 @@ export const healthResponseSchema = z.object({
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
 
-export const emailSchema = z.string().trim().email().max(254);
+/**
+ * Strips zero-width and bidirectional-control characters (LRM, RLM, LRE/RLE/PDF,
+ * LRI/RLI/FSI/PDI, ZWSP, ZWNJ, ZWJ, BOM) that mobile clipboards commonly embed when text
+ * is copied out of an RTL (Arabic) context - e.g. an email address pasted from a WhatsApp
+ * conversation. Without this, `.email()` rejects an otherwise-valid address because the
+ * invisible marks aren't whitespace and survive a plain `.trim()`.
+ */
+function stripInvisibleUnicode(value: string): string {
+  const invisibleRanges: Array<[number, number]> = [
+    [0x200b, 0x200f],
+    [0x202a, 0x202e],
+    [0x2066, 0x2069],
+    [0xfeff, 0xfeff]
+  ];
+  return Array.from(value)
+    .filter((ch) => {
+      const codePoint = ch.codePointAt(0) as number;
+      return !invisibleRanges.some(([low, high]) => codePoint >= low && codePoint <= high);
+    })
+    .join("");
+}
+
+export const emailSchema = z
+  .string()
+  .transform((value) => stripInvisibleUnicode(value).trim())
+  .pipe(z.string().email().max(254));
 
 export const nonEmptyStringSchema = z.string().trim().min(1).max(255);
 
@@ -46,9 +71,24 @@ export const designDisciplineSchema = z.enum([
 ]);
 export const designStatusSchema = z.enum(["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"]);
 
+/**
+ * Strips only a trailing carriage-return/line-feed a mobile clipboard sometimes appends
+ * when a password is copied from a messaging app (the paste event can include the line
+ * break that followed it in the source message). Intentional characters anywhere else in
+ * the password - including leading/trailing spaces - are left untouched, since those may
+ * be a deliberate part of the password.
+ */
+function stripTrailingClipboardNewline(value: string): string {
+  let end = value.length;
+  while (end > 0 && (value.charCodeAt(end - 1) === 10 || value.charCodeAt(end - 1) === 13)) {
+    end -= 1;
+  }
+  return value.slice(0, end);
+}
+
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1).max(256)
+  password: z.string().min(1).max(256).transform(stripTrailingClipboardNewline)
 });
 
 export const userPublicSchema = z.object({
