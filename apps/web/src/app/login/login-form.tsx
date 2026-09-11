@@ -79,7 +79,7 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
   }
 
   return (
-    <form className="login-form" onSubmit={(event) => void submit(event)}>
+    <form className="login-form" noValidate onSubmit={(event) => void submit(event)}>
       <label className="ui-field" htmlFor="email">
         <span>{labels.email}</span>
         <input
