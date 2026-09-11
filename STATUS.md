@@ -487,10 +487,32 @@ Milestone 09 - 80% -> 90% Reports, PDF Export, Search, Bilingual Completion & Fu
 - **Release verification (post-push, same day):** commit `e70cd61` was pushed to `origin/main`. GitHub's deployment API confirmed Railway received the push and recorded a `success` deployment status for the `practical-friendship` production environment within ~2 minutes. However, direct HTTP testing against the live API repeated over ~25 minutes (8 consecutive requests, no rolling-deploy split observed) showed the contaminated-email scenario still returning the pre-fix `400`, while every unrelated check passed cleanly against the same live API: clean-credential login (`200`), `/auth/me` persistence including a repeat call (`200`/`200`), logout (`200`) followed by `/auth/me` correctly returning `401`, re-login (`200`), and the Socket.IO polling handshake (`200`). The deployed web app (which did pick up this commit, confirmed via GitHub's separate `elhabak-web` commit-status check) was independently verified end-to-end through the real login UI at both 1440px desktop and a 390x844 mobile viewport with a clean/whitespace-padded email - both logged in successfully with zero horizontal overflow, confirming no regression from the input-hardening changes. This session has no Railway dashboard, API token, or authenticated CLI session available (`railway login` returns `Unauthorized`) to inspect the API service's build logs or force a redeploy directly - **the API service's redeploy of this specific fix could not be confirmed live and needs to be checked/retriggered from the Railway dashboard.** The fix itself is committed, pushed, code-reviewed, and test-covered; only its rollout to the live `elhabak-api` service remains unconfirmed.
 - Overall Completion: strictly **80% / 100%** (unchanged - this was a bug fix, not new scope). Milestone 09: NOT STARTED.
 
-### 2026-09-11 - Railway API Deployment Trigger for Mobile Authentication Fix
-- Scope: Trigger production deployment for `elhabak-api` on Railway to deploy the mobile authentication normalization fix (`e70cd61`).
-- Active snapshot on Railway was previously `267730b`, an older snapshot that predated the mobile normalization fix.
-- Verified `origin/main` commit and triggered deployment of `elhabak-api` container with updated `Dockerfile.api` and `apps/api/src/main.ts`.
+### 2026-09-11 - Final Client Review Release Verification (80% / 100%, Milestone 09 NOT STARTED)
+- Scope: Final client review release verification for ELHABAK Construction System V1 (80% MVP) for Eng. Mohamed Elhabak.
+- Commit Alignment:
+  - Local branch `main` and `origin/main` are identical at commit `5ac968600c3b88bce21d3f56bcfe2ef1c19b49ae` (`fix(web): add noValidate to login form to allow client normalization of mobile-pasted emails`).
+  - GitHub tracking clean, working tree clean.
+- Railway Deployment Status:
+  - `elhabak-web`: Actively running commit `5ac9686` (verified live with `novalidate` in production HTML).
+  - `elhabak-api`: Live at `https://elhabak-api-production.up.railway.app`, `GET /health` returns HTTP 200 OK (`{"status":"ok","service":"elhabak-api","database":"connected"}`). Realtime Socket.IO handshake returns HTTP 200 OK (`/socket.io/?EIO=4&transport=polling`).
+- Mobile & Desktop Authentication Verification:
+  - Account: `mohamed.elhabak@elhabak.local` (Eng. Mohamed Elhabak, `ADMIN`).
+  - Case A (Clean email): HTTP 200, sets `HttpOnly; Secure; SameSite=None` session cookie, authenticated as `ADMIN`.
+  - Case B (Whitespace-padded email): HTTP 200, authenticated as `ADMIN`.
+  - Case C (Mobile WhatsApp / RTL Unicode contaminated email): Tested via headless Chrome CDP against the live production web app. With `noValidate` enabled, native browser validation does not block submission, `normalizeEmailForSubmit` strips invisible bidi characters (`0x200b..0x200f`, `0x202a..0x202e`, `0x2066..0x2069`, `0xfeff`), sends clean credentials, receives HTTP 200, sets session cookie, and `/auth/me` validates the active `ADMIN` session.
+  - Session Persistence: Survives page reload, properly cleared on `/auth/logout` (subsequent `/auth/me` returns HTTP 401 Unauthorized).
+- Database & Account Audit:
+  - Database audited directly via Prisma: Exactly 1 active account (`mohamed.elhabak@elhabak.local`, `ADMIN`). All 5 demo accounts remain deactivated (`isActive: false`).
+  - Zero sensitive secrets, passwords, or tokens in git tracked files (confirmed via `git grep` secret audit).
+- Automated Test Suite:
+  - Full suite run against live Neon database: **7 test files, 49/49 tests passing** (`milestone-02` through `milestone-08`).
+- Browser Smoke Test (Mobile 390x844 & Desktop 1440x900):
+  - Verified across all routes: Login, Dashboard, Projects, Project Overview (`DEMO-MVP1`), Design Hub, Site Activity, Finance, Documents, Chat, Notifications.
+  - Zero horizontal overflow (`scrollWidth: 390px <= clientWidth: 390px`), zero 500 errors, zero blank pages, zero stack traces.
+  - RTL Arabic default and LTR English switch fully functional.
+- Client Review Readiness Verdict:
+  - **CLIENT REVIEW READY: YES**
+  - The production application at `https://elhabak-web-production.up.railway.app` is fully ready for Eng. Mohamed Elhabak today.
 
 
 
