@@ -22,6 +22,7 @@ export function AppShell({ children }: AppShellProps) {
   const [user, setUser] = useState<UserRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [exitingImpersonation, setExitingImpersonation] = useState(false);
 
   const labels = useMemo(
     () =>
@@ -45,7 +46,10 @@ export function AppShell({ children }: AppShellProps) {
             chat: "الدردشة",
             notifications: "الإشعارات",
             openMenu: "فتح القائمة",
-            closeMenu: "إغلاق القائمة"
+            closeMenu: "إغلاق القائمة",
+            impersonating: "أنت الآن تستعرض النظام بصلاحيات",
+            returnToAdmin: "العودة لحساب المدير",
+            returning: "جاري العودة..."
           }
         : {
             productTag: "Project Management System",
@@ -66,7 +70,10 @@ export function AppShell({ children }: AppShellProps) {
             chat: "Chat",
             notifications: "Notifications",
             openMenu: "Open menu",
-            closeMenu: "Close menu"
+            closeMenu: "Close menu",
+            impersonating: "You are viewing the system as",
+            returnToAdmin: "Return to Admin",
+            returning: "Returning..."
           },
     [locale]
   );
@@ -138,6 +145,20 @@ export function AppShell({ children }: AppShellProps) {
   async function logout() {
     await apiRequest<{ ok: true }>("/auth/logout", { method: "POST", body: "{}" }).catch(() => undefined);
     router.replace(locale === "ar" ? "/login" : "/login?lang=en");
+  }
+
+  async function exitImpersonation() {
+    setExitingImpersonation(true);
+    try {
+      const result = await apiRequest<{ user: UserRecord }>("/auth/impersonation/exit", {
+        method: "POST",
+        body: "{}"
+      });
+      setUser(result.user);
+      router.replace(href("/app/admin/users"));
+    } finally {
+      setExitingImpersonation(false);
+    }
   }
 
   function href(path: string, targetLocale = locale) {
@@ -258,6 +279,16 @@ export function AppShell({ children }: AppShellProps) {
             </button>
           </div>
         </header>
+        {user.impersonation ? (
+          <div className="impersonation-banner" role="status">
+            <span>
+              {labels.impersonating}: <strong>{user.displayName}</strong>
+            </span>
+            <button type="button" onClick={() => void exitImpersonation()} disabled={exitingImpersonation}>
+              {exitingImpersonation ? labels.returning : labels.returnToAdmin}
+            </button>
+          </div>
+        ) : null}
         {children}
       </section>
     </main>

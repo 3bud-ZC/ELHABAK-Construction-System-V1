@@ -5,6 +5,7 @@ import { AuthService, normalizeEmail, toRequestUser } from "../auth/auth.service
 import { PrismaService } from "../../shared/prisma.service";
 import { AuditService } from "./audit.service";
 import { parseBody } from "../../shared/zod";
+import { RealtimeGateway } from "../realtime/realtime.gateway";
 
 const clientUserSelect = {
   id: true,
@@ -12,6 +13,7 @@ const clientUserSelect = {
   displayName: true,
   role: true,
   isActive: true,
+  archivedAt: true,
   createdAt: true,
   updatedAt: true
 } satisfies Prisma.UserSelect;
@@ -21,7 +23,8 @@ export class AdminClientsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly authService: AuthService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly realtime: RealtimeGateway
   ) {}
 
   async list(search?: string) {
@@ -122,6 +125,9 @@ export class AdminClientsService {
       userData.displayName = input.displayName.trim();
     }
     if (input.isActive !== undefined) {
+      if (existing.user.archivedAt) {
+        throw new ConflictException("Restore the archived user account from Users before changing its active state.");
+      }
       userData.isActive = input.isActive;
     }
     if (input.temporaryPassword !== undefined) {
@@ -155,7 +161,15 @@ export class AdminClientsService {
       });
 
       if (input.isActive !== undefined && input.isActive !== existing.user.isActive) {
-        await this.audit.record(actorId, input.isActive ? "user.activated" : "user.deactivated", {
+        if (!input.isActive) await this.revokeSessions(existing.userId);
+        await this.audit.record(actorId, input.isActive ? "user.activated" : "user.suspended", {
+          targetUserId: existing.userId
+        });
+      }
+
+      if (input.temporaryPassword !== undefined) {
+        await this.revokeSessions(existing.userId);
+        await this.audit.record(actorId, "user.password_reset", {
           targetUserId: existing.userId
         });
       }
@@ -164,6 +178,12 @@ export class AdminClientsService {
     } catch (error) {
       handleUniqueEmail(error);
     }
+  }
+
+  private async revokeSessions(userId: string) {
+    const count = await this.authService.revokeUserSessions(userId);
+    this.realtime.disconnectUser(userId);
+    return count;
   }
 }
 
@@ -179,6 +199,7 @@ function toClientResponse(client: {
     displayName: string;
     role: UserRole;
     isActive: boolean;
+    archivedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
   };

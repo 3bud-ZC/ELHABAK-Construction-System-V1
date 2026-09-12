@@ -78,7 +78,7 @@ export class ChatService {
     });
 
     await this.audit.record(
-      user.id,
+      user,
       input.type === "TEXT" ? "chat.message_sent" : "chat.voice_sent",
       { messageId: created.id },
       projectId

@@ -170,6 +170,7 @@ model User {
   role         UserRole
   passwordHash String?
   isActive     Boolean             @default(true)
+  archivedAt   DateTime?
   clientProfile ClientProfile?
   assignments  ProjectAssignment[]
   engineeredProjects Project[]     @relation("ProjectEngineer")
@@ -178,7 +179,8 @@ model User {
   uploadedDesignRevisions DesignRevision[]
   designEvents DesignEvent[]
   auditLogs     AuditLog[]
-  sessions      AuthSession[]
+  sessions      AuthSession[]       @relation("AuthSessionPrincipal")
+  impersonatedSessions AuthSession[] @relation("AuthSessionImpersonatedUser")
   financialProfilesUpdated ProjectFinancialProfile[] @relation("FinancialProfileUpdatedBy")
   costEstimatesCreated     CostEstimate[]             @relation("CostEstimateCreatedBy")
   boqItemsCreated          BOQItem[]                  @relation("BOQItemCreatedBy")
@@ -195,18 +197,22 @@ model User {
   updatedAt    DateTime            @updatedAt
 
   @@index([role])
+  @@index([isActive, archivedAt])
 }
 
 model AuthSession {
   id        String    @id @default(cuid())
   tokenHash String    @unique
   userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation("AuthSessionPrincipal", fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedUserId String?
+  impersonatedUser   User?     @relation("AuthSessionImpersonatedUser", fields: [impersonatedUserId], references: [id], onDelete: SetNull)
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime  @default(now())
 
   @@index([userId])
+  @@index([impersonatedUserId])
   @@index([expiresAt])
 }
 

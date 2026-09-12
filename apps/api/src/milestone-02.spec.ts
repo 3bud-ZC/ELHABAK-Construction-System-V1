@@ -196,6 +196,167 @@ describe("Milestone 02 auth, RBAC, users, clients", () => {
     await request(app.getHttpServer()).get("/admin/users").set("Cookie", adminCookie).expect(200);
   });
 
+  it("enforces lifecycle state, immediate session revocation, restore, and secure password reset", async () => {
+    const email = `lifecycle-${suffix}@test.elhabak.local`;
+    const created = await request(app.getHttpServer())
+      .post("/admin/users")
+      .set("Cookie", adminCookie)
+      .send({ email, displayName: "Lifecycle User", role: "WORKER", isActive: true, temporaryPassword: password })
+      .expect(201);
+
+    const login = await request(app.getHttpServer()).post("/auth/login").send({ email, password }).expect(200);
+    const userCookie = readCookie(login);
+
+    const suspended = await request(app.getHttpServer())
+      .post(`/admin/users/${created.body.id}/suspend`)
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(200);
+    expect(suspended.body.status).toBe("SUSPENDED");
+    expect(suspended.body.role).toBe("WORKER");
+    await request(app.getHttpServer()).get("/auth/me").set("Cookie", userCookie).expect(401);
+    await request(app.getHttpServer()).post("/auth/login").send({ email, password }).expect(401);
+
+    const activated = await request(app.getHttpServer())
+      .post(`/admin/users/${created.body.id}/activate`)
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(200);
+    expect(activated.body.status).toBe("ACTIVE");
+    expect(activated.body.role).toBe("WORKER");
+
+    const activeLogin = await request(app.getHttpServer()).post("/auth/login").send({ email, password }).expect(200);
+    const activeCookie = readCookie(activeLogin);
+    const newPassword = `${password}-Reset`;
+    await request(app.getHttpServer())
+      .post(`/admin/users/${created.body.id}/reset-password`)
+      .set("Cookie", adminCookie)
+      .send({ temporaryPassword: newPassword })
+      .expect(200);
+    await request(app.getHttpServer()).get("/auth/me").set("Cookie", activeCookie).expect(401);
+    await request(app.getHttpServer()).post("/auth/login").send({ email, password }).expect(401);
+    await request(app.getHttpServer()).post("/auth/login").send({ email, password: newPassword }).expect(200);
+
+    const archived = await request(app.getHttpServer())
+      .post(`/admin/users/${created.body.id}/archive`)
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(200);
+    expect(archived.body.status).toBe("ARCHIVED");
+    await request(app.getHttpServer()).post("/auth/login").send({ email, password: newPassword }).expect(401);
+
+    const restored = await request(app.getHttpServer())
+      .post(`/admin/users/${created.body.id}/restore`)
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(200);
+    expect(restored.body.status).toBe("ACTIVE");
+    expect(restored.body.role).toBe("WORKER");
+    await request(app.getHttpServer()).post("/auth/login").send({ email, password: newPassword }).expect(200);
+
+    const actions = await prisma.auditLog.findMany({
+      where: {
+        actor: { email: adminEmail },
+        action: { in: ["user.suspended", "user.activated", "user.password_reset", "user.archived", "user.restored"] }
+      },
+      select: { action: true }
+    });
+    expect(new Set(actions.map((entry) => entry.action))).toEqual(
+      new Set(["user.suspended", "user.activated", "user.password_reset", "user.archived", "user.restored"])
+    );
+  });
+
+  it("blocks hard deletion for linked history, preserves AuditLog, and deletes relation-free accounts", async () => {
+    const linkedEmail = `linked-client-${suffix}@test.elhabak.local`;
+    const linked = await request(app.getHttpServer())
+      .post("/admin/clients")
+      .set("Cookie", adminCookie)
+      .send({ email: linkedEmail, displayName: "Linked Client", isActive: true, temporaryPassword: password })
+      .expect(201);
+
+    const impact = await request(app.getHttpServer())
+      .get(`/admin/users/${linked.body.user.id}/deletion-impact`)
+      .set("Cookie", adminCookie)
+      .expect(200);
+    expect(impact.body.canPermanentlyDelete).toBe(false);
+    expect(impact.body.linkedRecords).toContainEqual({ relation: "clientProfile", count: 1 });
+    await request(app.getHttpServer())
+      .delete(`/admin/users/${linked.body.user.id}`)
+      .set("Cookie", adminCookie)
+      .expect(409);
+    expect(await prisma.user.findUnique({ where: { id: linked.body.user.id } })).not.toBeNull();
+
+    const archived = await request(app.getHttpServer())
+      .post(`/admin/users/${linked.body.user.id}/archive`)
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(200);
+    expect(archived.body.status).toBe("ARCHIVED");
+
+    const disposableEmail = `disposable-${suffix}@test.elhabak.local`;
+    const disposable = await request(app.getHttpServer())
+      .post("/admin/users")
+      .set("Cookie", adminCookie)
+      .send({ email: disposableEmail, displayName: "Disposable User", role: "WORKER", isActive: false, temporaryPassword: password })
+      .expect(201);
+    const disposableImpact = await request(app.getHttpServer())
+      .get(`/admin/users/${disposable.body.id}/deletion-impact`)
+      .set("Cookie", adminCookie)
+      .expect(200);
+    expect(disposableImpact.body.canPermanentlyDelete).toBe(true);
+    await request(app.getHttpServer()).delete(`/admin/users/${disposable.body.id}`).set("Cookie", adminCookie).expect(200);
+    expect(await prisma.user.findUnique({ where: { id: disposable.body.id } })).toBeNull();
+    expect(await prisma.auditLog.count({ where: { action: "user.deleted", actor: { email: adminEmail } } })).toBeGreaterThan(0);
+  });
+
+  it("keeps original Admin identity server-side during impersonation and prevents nesting", async () => {
+    const admin = await prisma.user.findUniqueOrThrow({ where: { email: adminEmail } });
+    const engineer = await prisma.user.findUniqueOrThrow({ where: { email: engineerEmail } });
+
+    await request(app.getHttpServer())
+      .post(`/admin/users/${inactiveEmail}/impersonate`)
+      .set("Cookie", engineerCookie)
+      .send({})
+      .expect(403);
+
+    const started = await request(app.getHttpServer())
+      .post(`/admin/users/${engineer.id}/impersonate`)
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(200);
+    expect(started.body.user.id).toBe(engineer.id);
+    expect(started.body.user.role).toBe("ENGINEER");
+    expect(started.body.user.impersonation.actorId).toBe(admin.id);
+
+    const effective = await request(app.getHttpServer()).get("/auth/me").set("Cookie", adminCookie).expect(200);
+    expect(effective.body.user.id).toBe(engineer.id);
+    expect(effective.body.user.impersonation.actorId).toBe(admin.id);
+    await request(app.getHttpServer()).get("/admin/users").set("Cookie", adminCookie).expect(403);
+    await request(app.getHttpServer())
+      .post(`/admin/users/${admin.id}/impersonate`)
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(403);
+
+    const exited = await request(app.getHttpServer())
+      .post("/auth/impersonation/exit")
+      .set("Cookie", adminCookie)
+      .send({})
+      .expect(200);
+    expect(exited.body.user.id).toBe(admin.id);
+    expect(exited.body.user.impersonation).toBeUndefined();
+    await request(app.getHttpServer()).get("/admin/users").set("Cookie", adminCookie).expect(200);
+
+    const audit = await prisma.auditLog.findMany({
+      where: { actorId: admin.id, action: { in: ["user.impersonation_started", "user.impersonation_ended"] } },
+      select: { action: true, metadata: true }
+    });
+    expect(new Set(audit.map((entry) => entry.action))).toEqual(
+      new Set(["user.impersonation_started", "user.impersonation_ended"])
+    );
+    expect(audit.every((entry) => (entry.metadata as { targetUserId?: string }).targetUserId === engineer.id)).toBe(true);
+  });
+
   it("allows admin to create and update users, rejects duplicate email, blocks non-admin", async () => {
     const email = `created-user-${suffix}@test.elhabak.local`;
     const created = await request(app.getHttpServer())

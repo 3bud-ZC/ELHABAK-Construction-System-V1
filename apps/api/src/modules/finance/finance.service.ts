@@ -116,7 +116,7 @@ export class FinanceService {
     });
 
     await this.audit.record(
-      user.id,
+      user,
       "finance.contract_value_set",
       { from: existing?.contractValueMinor ?? null, to: input.amount, note: input.note || null },
       projectId
@@ -223,7 +223,7 @@ export class FinanceService {
       include: estimateInclude
     });
 
-    await this.audit.record(user.id, "finance.estimate_created", { estimateId: estimate.id, version: 1 }, projectId);
+    await this.audit.record(user, "finance.estimate_created", { estimateId: estimate.id, version: 1 }, projectId);
     return toEstimateResponse(estimate);
   }
 
@@ -241,7 +241,7 @@ export class FinanceService {
       }
     });
 
-    await this.audit.record(user.id, "finance.estimate_updated", { estimateId }, projectId);
+    await this.audit.record(user, "finance.estimate_updated", { estimateId }, projectId);
     return this.getEstimate(user, projectId, estimateId);
   }
 
@@ -265,7 +265,7 @@ export class FinanceService {
     });
 
     await this.audit.record(
-      user.id,
+      user,
       "finance.estimate_versioned",
       { previousEstimateId: estimateId, newEstimateId: created.id, version: created.version },
       projectId
@@ -298,7 +298,7 @@ export class FinanceService {
       }
     });
 
-    await this.audit.record(user.id, "finance.estimate_item_added", { estimateId, itemId: item.id }, projectId);
+    await this.audit.record(user, "finance.estimate_item_added", { estimateId, itemId: item.id }, projectId);
     return this.getEstimate(user, projectId, estimateId);
   }
 
@@ -326,7 +326,7 @@ export class FinanceService {
       }
     });
 
-    await this.audit.record(user.id, "finance.estimate_item_updated", { estimateId, itemId }, projectId);
+    await this.audit.record(user, "finance.estimate_item_updated", { estimateId, itemId }, projectId);
     return this.getEstimate(user, projectId, estimateId);
   }
 
@@ -338,7 +338,7 @@ export class FinanceService {
     if (!item) throw new NotFoundException("Estimate item not found.");
 
     await this.prisma.costEstimateItem.delete({ where: { id: itemId } });
-    await this.audit.record(user.id, "finance.estimate_item_removed", { estimateId, itemId }, projectId);
+    await this.audit.record(user, "finance.estimate_item_removed", { estimateId, itemId }, projectId);
     return this.getEstimate(user, projectId, estimateId);
   }
 
@@ -406,7 +406,7 @@ export class FinanceService {
       include: boqItemInclude
     });
 
-    await this.audit.record(user.id, "finance.boq_item_created", { itemId: item.id, code: item.code }, projectId);
+    await this.audit.record(user, "finance.boq_item_created", { itemId: item.id, code: item.code }, projectId);
     return toBoqItemResponse(item);
   }
 
@@ -434,7 +434,7 @@ export class FinanceService {
       include: boqItemInclude
     });
 
-    await this.audit.record(user.id, "finance.boq_item_updated", { itemId }, projectId);
+    await this.audit.record(user, "finance.boq_item_updated", { itemId }, projectId);
     return toBoqItemResponse(item);
   }
 
@@ -442,7 +442,7 @@ export class FinanceService {
     await this.access.assertCanManage(user, projectId);
     await this.findBoqItem(projectId, itemId);
     await this.prisma.bOQItem.delete({ where: { id: itemId } });
-    await this.audit.record(user.id, "finance.boq_item_deleted", { itemId }, projectId);
+    await this.audit.record(user, "finance.boq_item_deleted", { itemId }, projectId);
     return { ok: true };
   }
 
@@ -521,7 +521,7 @@ export class FinanceService {
         return created;
       });
       persisted = true;
-      await this.audit.record(user.id, "finance.expense_recorded", { expenseId: expense.id, amount: input.amount }, projectId);
+      await this.audit.record(user, "finance.expense_recorded", { expenseId: expense.id, amount: input.amount }, projectId);
       return this.getExpense(user, projectId, expense.id);
     } finally {
       if (!persisted && stored) await this.storage.remove(stored.storagePath);
@@ -567,7 +567,7 @@ export class FinanceService {
         }
       });
       persisted = true;
-      await this.audit.record(user.id, "finance.expense_updated", { expenseId }, projectId);
+      await this.audit.record(user, "finance.expense_updated", { expenseId }, projectId);
       return this.getExpense(user, projectId, expenseId);
     } finally {
       if (!persisted && stored) await this.storage.remove(stored.storagePath);
@@ -581,7 +581,7 @@ export class FinanceService {
     const input = parseBody(voidRecordSchema, rawBody);
 
     await this.prisma.expense.update({ where: { id: expenseId }, data: { status: "VOID", voidReason: input.reason.trim() } });
-    await this.audit.record(user.id, "finance.expense_voided", { expenseId, reason: input.reason.trim() }, projectId);
+    await this.audit.record(user, "finance.expense_voided", { expenseId, reason: input.reason.trim() }, projectId);
     return this.getExpense(user, projectId, expenseId);
   }
 
@@ -674,7 +674,7 @@ export class FinanceService {
         return created;
       });
       persisted = true;
-      await this.audit.record(user.id, "finance.client_payment_recorded", { paymentId: payment.id, amount: input.amount }, projectId);
+      await this.audit.record(user, "finance.client_payment_recorded", { paymentId: payment.id, amount: input.amount }, projectId);
       return this.getClientPayment(user, projectId, payment.id);
     } finally {
       if (!persisted && stored) await this.storage.remove(stored.storagePath);
@@ -718,7 +718,7 @@ export class FinanceService {
         }
       });
       persisted = true;
-      await this.audit.record(user.id, "finance.client_payment_updated", { paymentId }, projectId);
+      await this.audit.record(user, "finance.client_payment_updated", { paymentId }, projectId);
       return this.getClientPayment(user, projectId, paymentId);
     } finally {
       if (!persisted && stored) await this.storage.remove(stored.storagePath);
@@ -732,7 +732,7 @@ export class FinanceService {
     const input = parseBody(voidRecordSchema, rawBody);
 
     await this.prisma.clientPayment.update({ where: { id: paymentId }, data: { status: "VOID", voidReason: input.reason.trim() } });
-    await this.audit.record(user.id, "finance.client_payment_voided", { paymentId, reason: input.reason.trim() }, projectId);
+    await this.audit.record(user, "finance.client_payment_voided", { paymentId, reason: input.reason.trim() }, projectId);
     return this.getClientPayment(user, projectId, paymentId);
   }
 
@@ -829,7 +829,7 @@ export class FinanceService {
         return created;
       });
       persisted = true;
-      await this.audit.record(user.id, "finance.contractor_payment_recorded", { paymentId: payment.id, amount: input.amount }, projectId);
+      await this.audit.record(user, "finance.contractor_payment_recorded", { paymentId: payment.id, amount: input.amount }, projectId);
       return this.getContractorPayment(user, projectId, payment.id);
     } finally {
       if (!persisted && stored) await this.storage.remove(stored.storagePath);
@@ -875,7 +875,7 @@ export class FinanceService {
         }
       });
       persisted = true;
-      await this.audit.record(user.id, "finance.contractor_payment_updated", { paymentId }, projectId);
+      await this.audit.record(user, "finance.contractor_payment_updated", { paymentId }, projectId);
       return this.getContractorPayment(user, projectId, paymentId);
     } finally {
       if (!persisted && stored) await this.storage.remove(stored.storagePath);
@@ -889,7 +889,7 @@ export class FinanceService {
     const input = parseBody(voidRecordSchema, rawBody);
 
     await this.prisma.contractorPayment.update({ where: { id: paymentId }, data: { status: "VOID", voidReason: input.reason.trim() } });
-    await this.audit.record(user.id, "finance.contractor_payment_voided", { paymentId, reason: input.reason.trim() }, projectId);
+    await this.audit.record(user, "finance.contractor_payment_voided", { paymentId, reason: input.reason.trim() }, projectId);
     return this.getContractorPayment(user, projectId, paymentId);
   }
 

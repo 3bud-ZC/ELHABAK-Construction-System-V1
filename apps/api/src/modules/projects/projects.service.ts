@@ -239,7 +239,7 @@ export class ProjectsService {
     });
 
     await this.audit.record(
-      user.id,
+      user,
       "project.progress_changed",
       { from: previousProgress, to: input.progress, note: input.note ?? null },
       projectId
@@ -279,7 +279,7 @@ export class ProjectsService {
     });
 
     await this.audit.record(
-      user.id,
+      user,
       "project.phase_changed",
       { from: previousPhase, to: input.phase, note: input.note ?? null },
       projectId
@@ -339,7 +339,7 @@ export class ProjectsService {
         data: { progress: progressImpact }
       });
       await this.audit.record(
-        user.id,
+        user,
         "project.progress_changed",
         { from: project.progress, to: progressImpact, siteUpdateId: update.id },
         projectId
@@ -347,7 +347,7 @@ export class ProjectsService {
     }
 
     await this.audit.record(
-      user.id,
+      user,
       "site_update.submitted",
       { projectId, type: input.type, mediaCount: files.length, isClientVisible: input.isClientVisible },
       projectId
@@ -585,4 +585,3 @@ function getSiteUpdateTypeLabel(type: string): string {
       return "Site Update";
   }
 }
-

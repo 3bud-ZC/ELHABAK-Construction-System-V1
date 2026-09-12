@@ -112,7 +112,7 @@ export class DesignsService {
         return design.id;
       });
       persisted = true;
-      await this.audit.record(user.id, "design.created", { designId, revision: 1 }, projectId);
+      await this.audit.record(user, "design.created", { designId, revision: 1 }, projectId);
       return this.get(user, projectId, designId);
     } finally {
       if (!persisted) await this.storage.remove(stored.storagePath);
@@ -132,7 +132,7 @@ export class DesignsService {
       this.prisma.designItem.update({ where: { id: designId }, data }),
       this.prisma.designEvent.create({ data: { designId, actorId: user.id, action: "DESIGN_UPDATED" } })
     ]);
-    await this.audit.record(user.id, "design.updated", { designId }, projectId);
+    await this.audit.record(user, "design.updated", { designId }, projectId);
     return this.get(user, projectId, designId);
   }
 
@@ -174,7 +174,7 @@ export class DesignsService {
         });
       });
       persisted = true;
-      await this.audit.record(user.id, "design.revision_uploaded", { designId, revision: nextRevision }, projectId);
+      await this.audit.record(user, "design.revision_uploaded", { designId, revision: nextRevision }, projectId);
       return this.get(user, projectId, designId);
     } catch (error) {
       if (isUniqueError(error)) throw new ConflictException("A new revision was uploaded concurrently. Retry the upload.");
@@ -197,7 +197,7 @@ export class DesignsService {
       this.prisma.designItem.update({ where: { id: designId }, data: { status: "IN_REVIEW" } }),
       this.prisma.designEvent.create({ data: { designId, revisionId, actorId: user.id, action: "SUBMITTED_FOR_REVIEW" } })
     ]);
-    await this.audit.record(user.id, "design.submitted_for_review", { designId, revision: revision.revisionNumber }, projectId);
+    await this.audit.record(user, "design.submitted_for_review", { designId, revision: revision.revisionNumber }, projectId);
 
     const { clientUserId } = await this.notifications.getProjectParticipants(projectId);
     if (clientUserId) {
@@ -231,7 +231,7 @@ export class DesignsService {
         data: { designId, revisionId, actorId: user.id, action, comment: emptyToNull(input.comment) }
       })
     ]);
-    await this.audit.record(user.id, status === "APPROVED" ? "design.client_approved" : "design.client_rejected", { designId, revision: revision.revisionNumber }, projectId);
+    await this.audit.record(user, status === "APPROVED" ? "design.client_approved" : "design.client_rejected", { designId, revision: revision.revisionNumber }, projectId);
 
     const { adminIds, engineerId } = await this.notifications.getProjectParticipants(projectId);
     await this.notifications.notify([...adminIds, ...(engineerId ? [engineerId] : [])], {
@@ -265,7 +265,7 @@ export class DesignsService {
       }),
       this.prisma.designItem.update({ where: { id: designId }, data: { updatedAt: new Date() } })
     ]);
-    await this.audit.record(user.id, "design.comment_added", { designId }, projectId);
+    await this.audit.record(user, "design.comment_added", { designId }, projectId);
     return this.get(user, projectId, designId);
   }
 

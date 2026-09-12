@@ -119,6 +119,10 @@ export const updateUserSchema = z
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
 
+export const resetUserPasswordSchema = z.object({
+  temporaryPassword: z.string().min(10).max(128)
+});
+
 export const createClientSchema = z.object({
   email: emailSchema,
   displayName: nonEmptyStringSchema,
@@ -469,4 +473,3 @@ export type UpdateDesignInput = z.infer<typeof updateDesignSchema>;
 export type CreateDesignRevisionInput = z.infer<typeof createDesignRevisionSchema>;
 export type DesignDecisionInput = z.infer<typeof designDecisionSchema>;
 export type DesignCommentInput = z.infer<typeof designCommentSchema>;
-

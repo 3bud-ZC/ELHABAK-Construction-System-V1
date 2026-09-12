@@ -7,6 +7,10 @@ export type RequestUser = {
   displayName: string;
   role: UserRole;
   isActive: boolean;
+  impersonation?: {
+    actorId: string;
+    actorDisplayName: string;
+  };
 };
 
 export type AuthenticatedRequest = Request & {

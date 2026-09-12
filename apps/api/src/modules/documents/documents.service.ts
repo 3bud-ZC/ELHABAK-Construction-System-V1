@@ -109,7 +109,7 @@ export class DocumentsService {
         })
       ]);
       persisted = true;
-      await this.audit.record(user.id, "documents.created", { documentId, reference: input.reference.trim() }, projectId);
+      await this.audit.record(user, "documents.created", { documentId, reference: input.reference.trim() }, projectId);
 
       if (input.isClientVisible) {
         await this.notifyClientDocumentShared(projectId, documentId, input.title.trim(), user);
@@ -132,7 +132,7 @@ export class DocumentsService {
     if (input.category !== undefined) data.category = input.category;
 
     await this.prisma.projectDocument.update({ where: { id: documentId }, data });
-    await this.audit.record(user.id, "documents.metadata_updated", { documentId }, projectId);
+    await this.audit.record(user, "documents.metadata_updated", { documentId }, projectId);
     return this.get(user, projectId, documentId);
   }
 
@@ -166,7 +166,7 @@ export class DocumentsService {
         this.prisma.projectDocument.update({ where: { id: documentId }, data: { currentVersionNumber: nextVersion } })
       ]);
       persisted = true;
-      await this.audit.record(user.id, "documents.version_uploaded", { documentId, version: nextVersion }, projectId);
+      await this.audit.record(user, "documents.version_uploaded", { documentId, version: nextVersion }, projectId);
       return this.get(user, projectId, documentId);
     } catch (error) {
       if (isUniqueError(error)) throw new ConflictException("A new version was uploaded concurrently. Retry the upload.");
@@ -184,7 +184,7 @@ export class DocumentsService {
     if (input.isClientVisible !== document.isClientVisible) {
       await this.prisma.projectDocument.update({ where: { id: documentId }, data: { isClientVisible: input.isClientVisible } });
       await this.audit.record(
-        user.id,
+        user,
         "documents.client_visibility_changed",
         { documentId, from: document.isClientVisible, to: input.isClientVisible },
         projectId
@@ -203,7 +203,7 @@ export class DocumentsService {
     if (document.status === "ARCHIVED") throw new ConflictException("This document is already archived.");
 
     await this.prisma.projectDocument.update({ where: { id: documentId }, data: { status: "ARCHIVED" } });
-    await this.audit.record(user.id, "documents.archived", { documentId }, projectId);
+    await this.audit.record(user, "documents.archived", { documentId }, projectId);
     return this.get(user, projectId, documentId);
   }
 
@@ -213,7 +213,7 @@ export class DocumentsService {
     if (document.status === "ACTIVE") throw new ConflictException("This document is already active.");
 
     await this.prisma.projectDocument.update({ where: { id: documentId }, data: { status: "ACTIVE" } });
-    await this.audit.record(user.id, "documents.restored", { documentId }, projectId);
+    await this.audit.record(user, "documents.restored", { documentId }, projectId);
     return this.get(user, projectId, documentId);
   }
 

@@ -35,6 +35,12 @@ export type UserRecord = {
   displayName: string;
   role: UserRole;
   isActive: boolean;
+  status?: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
+  archivedAt?: string | null;
+  impersonation?: {
+    actorId: string;
+    actorDisplayName: string;
+  };
   createdAt: string;
   updatedAt: string;
 };

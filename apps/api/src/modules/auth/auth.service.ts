@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { parseApiEnv } from "@elhabak/config";
 import type { UserRole } from "@elhabak/database";
 import { PrismaService } from "../../shared/prisma.service";
@@ -47,7 +47,7 @@ export class AuthService {
     const passwordHash = user?.passwordHash ?? this.dummyPasswordHash;
     const passwordOk = await compare(password, passwordHash);
 
-    if (!user || !user.isActive || !user.passwordHash || !passwordOk) {
+    if (!user || !user.isActive || user.archivedAt || !user.passwordHash || !passwordOk) {
       throw new UnauthorizedException("Invalid email or password.");
     }
 
@@ -73,14 +73,124 @@ export class AuthService {
 
     const session = await this.prisma.authSession.findUnique({
       where: { tokenHash: this.hashSessionToken(token) },
-      include: { user: true }
+      include: { user: true, impersonatedUser: true }
     });
 
-    if (!session || session.revokedAt || session.expiresAt <= new Date() || !session.user.isActive) {
+    if (
+      !session ||
+      session.revokedAt ||
+      session.expiresAt <= new Date() ||
+      !session.user.isActive ||
+      session.user.archivedAt ||
+      (session.impersonatedUser && (!session.impersonatedUser.isActive || session.impersonatedUser.archivedAt))
+    ) {
       throw new UnauthorizedException("Authentication required.");
     }
 
-    return { sessionId: session.id, user: toRequestUser(session.user) };
+    const effectiveUser = session.impersonatedUser ?? session.user;
+    return {
+      sessionId: session.id,
+      user: toRequestUser(
+        effectiveUser,
+        session.impersonatedUser
+          ? { actorId: session.user.id, actorDisplayName: session.user.displayName }
+          : undefined
+      )
+    };
+  }
+
+  async startImpersonation(sessionId: string | undefined, targetUserId: string): Promise<RequestUser> {
+    if (!sessionId) throw new UnauthorizedException("Authentication required.");
+
+    const session = await this.prisma.authSession.findUnique({
+      where: { id: sessionId },
+      include: { user: true, impersonatedUser: true }
+    });
+
+    if (!session || session.revokedAt || session.expiresAt <= new Date()) {
+      throw new UnauthorizedException("Authentication required.");
+    }
+    if (session.user.role !== "ADMIN" || !session.user.isActive || session.user.archivedAt) {
+      throw new ForbiddenException("Only an active Admin can impersonate a user.");
+    }
+    if (session.impersonatedUserId) {
+      throw new ConflictException("Nested impersonation is not allowed.");
+    }
+    if (session.userId === targetUserId) {
+      throw new ConflictException("You are already signed in as this Admin.");
+    }
+
+    const target = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!target) throw new NotFoundException("User not found.");
+    if (!target.isActive || target.archivedAt) {
+      throw new ConflictException("Only an active, non-archived user can be impersonated.");
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.authSession.update({
+        where: { id: session.id },
+        data: { impersonatedUserId: target.id }
+      }),
+      this.prisma.auditLog.create({
+        data: {
+          actorId: session.user.id,
+          action: "user.impersonation_started",
+          metadata: { targetUserId: target.id, effectiveUserId: target.id }
+        }
+      })
+    ]);
+
+    return toRequestUser(target, {
+      actorId: session.user.id,
+      actorDisplayName: session.user.displayName
+    });
+  }
+
+  async exitImpersonation(sessionId: string | undefined): Promise<RequestUser> {
+    if (!sessionId) throw new UnauthorizedException("Authentication required.");
+
+    const session = await this.prisma.authSession.findUnique({
+      where: { id: sessionId },
+      include: { user: true }
+    });
+
+    if (!session || session.revokedAt || session.expiresAt <= new Date()) {
+      throw new UnauthorizedException("Authentication required.");
+    }
+    if (!session.impersonatedUserId) {
+      throw new ConflictException("This session is not impersonating a user.");
+    }
+    if (session.user.role !== "ADMIN" || !session.user.isActive || session.user.archivedAt) {
+      throw new ForbiddenException("Original Admin account is unavailable.");
+    }
+
+    const targetUserId = session.impersonatedUserId;
+    await this.prisma.$transaction([
+      this.prisma.authSession.update({
+        where: { id: session.id },
+        data: { impersonatedUserId: null }
+      }),
+      this.prisma.auditLog.create({
+        data: {
+          actorId: session.user.id,
+          action: "user.impersonation_ended",
+          metadata: { targetUserId, effectiveUserId: targetUserId }
+        }
+      })
+    ]);
+
+    return toRequestUser(session.user);
+  }
+
+  async revokeUserSessions(userId: string): Promise<number> {
+    const result = await this.prisma.authSession.updateMany({
+      where: {
+        revokedAt: null,
+        OR: [{ userId }, { impersonatedUserId: userId }]
+      },
+      data: { revokedAt: new Date() }
+    });
+    return result.count;
   }
 
   async logout(sessionId: string | undefined): Promise<void> {
@@ -111,12 +221,16 @@ type PersistedUser = {
   isActive: boolean;
 };
 
-export function toRequestUser(user: PersistedUser): RequestUser {
+export function toRequestUser(
+  user: PersistedUser,
+  impersonation?: RequestUser["impersonation"]
+): RequestUser {
   return {
     id: user.id,
     email: user.email,
     displayName: user.displayName,
     role: user.role,
-    isActive: user.isActive
+    isActive: user.isActive,
+    ...(impersonation ? { impersonation } : {})
   };
 }

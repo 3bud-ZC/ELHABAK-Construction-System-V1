@@ -102,8 +102,17 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
     this.server?.to(userRoom(userId)).emit(event, payload);
   }
 
+  disconnectUser(userId: string) {
+    this.server?.in(userRoom(userId)).disconnectSockets(true);
+  }
+
   /** Mirrors ProjectAccessService's read rule, kept self-contained here to avoid a module dependency cycle with ProjectsModule/NotificationsModule. Accountant never gets project chat access. */
   private async canAccessProjectChat(user: RequestUser, projectId: string): Promise<boolean> {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: { isActive: true, archivedAt: true }
+    });
+    if (!currentUser?.isActive || currentUser.archivedAt) return false;
     if (user.role === "ACCOUNTANT") return false;
     if (user.role === "ADMIN") {
       const project = await this.prisma.project.findUnique({ where: { id: projectId }, select: { id: true } });

@@ -5,9 +5,10 @@ import { AdminClientsService } from "./admin-clients.service";
 import { AdminUsersController } from "./admin-users.controller";
 import { AdminUsersService } from "./admin-users.service";
 import { AuditService } from "./audit.service";
+import { RealtimeModule } from "../realtime/realtime.module";
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, RealtimeModule],
   controllers: [AdminUsersController, AdminClientsController],
   providers: [AdminUsersService, AdminClientsService, AuditService]
 })

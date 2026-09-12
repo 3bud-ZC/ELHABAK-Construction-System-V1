@@ -145,6 +145,24 @@
 Milestone 09 - 80% -> 90% Reports, PDF Export, Search, Bilingual Completion & Full QA.
 
 ## Run Log
+### 2026-09-12 - Admin User Lifecycle, Impersonation & Hardening Pass
+- **Scope**: full Admin user management lifecycle hardening pass and server-owned impersonation system. Overall completion strictly preserved at **80% / 100%**; Milestone 08 remains complete; Milestone 09 remains **NOT STARTED**.
+- **User Lifecycle Architecture**: added `archivedAt` timestamp to `User` and `impersonatedUserId` to `AuthSession`. Accounts exist in three canonical states: `ACTIVE` (`isActive: true, archivedAt: null`), `SUSPENDED` (`isActive: false, archivedAt: null`), and `ARCHIVED` (`archivedAt != null`). `archivedAt` takes precedence; accounts with historical data cannot be suspended into active or reactivated without explicit restore.
+- **Primary Admin Protection**: `mohamed.elhabak@elhabak.local` is explicitly guarded in backend services (`assertPrimaryAdminUnchanged`) against deactivation, role changes, password resets, and deletions.
+- **Session Revocation & Realtime Disconnect**: on account suspension, archival, or password reset, all active `AuthSession` records (both direct sessions and active impersonations) are revoked immediately (`revokedAt: new Date()`), and `RealtimeGateway.disconnectUser(userId)` terminates Socket.IO connections and room subscriptions in realtime.
+- **Server-Owned Impersonation**: Admin impersonation is maintained within the Admin's existing HTTP-only session cookie via `AuthSession.impersonatedUserId` (no insecure client-side tokens). Nested impersonation is strictly rejected. Target role RBAC is enforced on every request. Exiting impersonation restores the exact original Admin session.
+- **Audit Logging Integrity**: audit events record the real Admin's ID as `actorId` while attaching `effectiveUserId` and `impersonated: true` metadata, ensuring non-repudiation.
+- **Users Management UI**: upgraded `apps/web/src/app/app/admin/users/users-client.tsx` with summary metrics (Total, Active, Suspended, Archived), search, role and status filter chips, action menus with modal dialogs (Activate, Suspend, Restore, Reset Password, Deletion Impact Preflight with linked records warning), and persistent bilingual (Arabic RTL / English LTR) impersonation banner in `AppShell` with direct "Return to Admin" button.
+- **Quality Gates & Test Verification**:
+  - Prisma schema validation (`pnpm db:validate`): PASS
+  - Prisma client generation (`pnpm db:generate`): PASS
+  - Database migration runner (`pnpm --filter @elhabak/database db:migrate:apply`): PASS (0 pending migrations, migration `20260912120000_user_lifecycle_impersonation` applied)
+  - Codebase linting (`pnpm lint`): PASS (0 errors)
+  - TypeScript typecheck (`pnpm typecheck`): PASS across all 8 workspace packages
+  - Production build (`pnpm build`): PASS across web application (23 Next.js routes) and NestJS API
+  - Focused lifecycle suite (`src/milestone-02.spec.ts`): 9/9 tests PASS cleanly, covering all 14 lifecycle, security, session revocation, and impersonation requirements. Full test suite captured documented Neon pooled-connection flakiness on sequential runs while isolated executions verify individual spec behavior.
+- **Production State**: Eng. Mohamed Elhabak remains the sole active Admin account (`mohamed.elhabak@elhabak.local`). All canonical demo accounts remain in their designated review state.
+
 ### 2026-09-11 - Final Client Review Access Configuration
 - Scope: a final access-lockdown pass so the live client-review deployment has exactly one usable production login. Overall completion strictly preserved at **80% / 100%**; Milestone 09 not started. The owner-approved temporary password was applied through the existing bcrypt/environment-backed mechanism only - it is not recorded anywhere in this file, in source, or in any log, per the security rules in `PROJECT_CONTEXT.md`.
 - **Sole active production login**: re-ran the existing idempotent seed (`packages/database/scripts/seed.ts`) against production to rotate Eng. Mohamed Elhabak's (`mohamed.elhabak@elhabak.local`) password hash through the same `DEMO_ADMIN_PASSWORD`-env-backed bcrypt path used since Milestone 01/02, then deactivated (`isActive: false`, not deleted) every other user row - the four local demo-role accounts (`demo.engineer`/`demo.accountant`/`demo.worker`/`demo.client@elhabak.local`) and one genuine client test signup (`3bdullhrgb@gmail.com`) found in production. All 5 rows and their historical relations (client profile, project assignments, chat/audit history) were left fully intact - only the `isActive` flag changed. Verified directly against the live database: exactly 1 active user (`mohamed.elhabak@elhabak.local`, `ADMIN`) out of 6 total.

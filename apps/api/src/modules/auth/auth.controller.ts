@@ -42,6 +42,13 @@ export class AuthController {
     return { user };
   }
 
+  @UseGuards(AuthGuard)
+  @Post("impersonation/exit")
+  @HttpCode(200)
+  async exitImpersonation(@Req() request: AuthenticatedRequest): Promise<AuthResponse> {
+    return { user: await this.authService.exitImpersonation(request.sessionId) };
+  }
+
   private sessionCookie(token: string): string {
     const options = this.authService.cookieOptions;
 
