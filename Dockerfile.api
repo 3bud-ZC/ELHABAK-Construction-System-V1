@@ -7,7 +7,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openssl ca-certificates && \
+    apt-get install -y --no-install-recommends openssl ca-certificates chromium && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g pnpm@11.7.0
 
@@ -62,6 +62,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV STORAGE_ROOT=/app/storage
 ENV PORT=4000
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Create persistent storage volume directory
 RUN mkdir -p /app/storage
@@ -71,6 +72,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api ./apps/api
+COPY assets/brand/logo-primary-horizontal.png ./assets/brand/logo-primary-horizontal.png
 
 EXPOSE 4000
 

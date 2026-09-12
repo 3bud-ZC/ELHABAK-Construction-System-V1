@@ -12,6 +12,7 @@ import { DocumentsModule } from "./documents/documents.module";
 import { RealtimeModule } from "./realtime/realtime.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { ChatModule } from "./chat/chat.module";
+import { ReportsModule } from "./reports/reports.module";
 
 @Module({
   imports: [
@@ -28,7 +29,8 @@ import { ChatModule } from "./chat/chat.module";
     DesignsModule,
     FinanceModule,
     DocumentsModule,
-    ChatModule
+    ChatModule,
+    ReportsModule
   ],
   controllers: [HealthController]
 })

@@ -1,7 +1,8 @@
 "use client";
 
 export type UserRole = "ADMIN" | "ENGINEER" | "ACCOUNTANT" | "WORKER" | "CLIENT";
-export type ProjectCategory = "DESIGN" | "CONSTRUCTION" | "FINISHING" | "GENERAL_CONTRACTING" | "FURNITURE" | "MIXED";
+export type ProjectCategory =
+  "DESIGN" | "CONSTRUCTION" | "FINISHING" | "GENERAL_CONTRACTING" | "FURNITURE" | "MIXED";
 export type ProjectPhase =
   | "SITE_INSPECTION"
   | "DESIGN"
@@ -104,9 +105,7 @@ export type TimelineEventRecord = {
   metadata?: Record<string, unknown> | null;
 };
 
-
 export type SiteMediaRecord = {
-
   id: string;
   mediaType: "IMAGE" | "VIDEO";
   originalFilename: string;
@@ -183,19 +182,17 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   const response = await fetch(`${apiBaseUrl}${path}`, requestInit);
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => undefined)) as { message?: unknown } | undefined;
-    const message = Array.isArray(body?.message)
-      ? "Validation failed."
-      : typeof body?.message === "string"
-        ? body.message
-        : "Request failed.";
-    throw new ApiError(message, response.status);
+    throw new ApiError(localizedRequestError(response.status), response.status);
   }
 
   return (await response.json()) as T;
 }
 
-export function uploadRequest<T>(path: string, body: FormData, onProgress: (value: number) => void): Promise<T> {
+export function uploadRequest<T>(
+  path: string,
+  body: FormData,
+  onProgress: (value: number) => void
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("POST", `${apiBaseUrl}${path}`);
@@ -210,12 +207,21 @@ export function uploadRequest<T>(path: string, body: FormData, onProgress: (valu
         resolve(payload as T);
         return;
       }
-      const message = typeof payload?.message === "string" ? payload.message : "Request failed.";
-      reject(new ApiError(message, request.status));
+      reject(new ApiError(localizedRequestError(request.status), request.status));
     });
-    request.addEventListener("error", () => reject(new ApiError("Network request failed.", 0)));
+    request.addEventListener("error", () => reject(new ApiError(localizedRequestError(0), 0)));
     request.send(body);
   });
+}
+
+function localizedRequestError(status: number) {
+  const ar = typeof document !== "undefined" && document.documentElement.lang === "ar";
+  if (status === 401) return ar ? "انتهت جلسة الدخول. سجّل الدخول مرة أخرى." : "Your session has expired. Sign in again.";
+  if (status === 403) return ar ? "لا تملك صلاحية تنفيذ هذا الإجراء." : "You are not authorized to perform this action.";
+  if (status === 404) return ar ? "تعذر العثور على السجل المطلوب." : "The requested record could not be found.";
+  if (status === 409) return ar ? "تعذر إكمال الإجراء بسبب تعارض في البيانات." : "The action could not be completed because of a data conflict.";
+  if (status >= 400 && status < 500) return ar ? "تحقق من البيانات المدخلة وحاول مرة أخرى." : "Check the submitted information and try again.";
+  return ar ? "تعذر الاتصال بالخادم. حاول مرة أخرى." : "The server could not be reached. Try again.";
 }
 
 function safeJson(value: string): { message?: unknown } {
@@ -231,12 +237,18 @@ export function mediaUrl(projectId: string, mediaId: string) {
   return `${apiBaseUrl}/projects/${projectId}/media/${mediaId}`;
 }
 
-export function designFileUrl(projectId: string, designId: string, revisionId: string, download = false) {
+export function designFileUrl(
+  projectId: string,
+  designId: string,
+  revisionId: string,
+  download = false
+) {
   return `${apiBaseUrl}/projects/${projectId}/designs/${designId}/revisions/${revisionId}/file${download ? "?download=1" : ""}`;
 }
 
 export type BoqUnit = "M" | "M2" | "M3" | "ITEM" | "LOT";
-export type ExpenseCategory = "MATERIAL" | "LABOR" | "TRANSPORT" | "EQUIPMENT" | "SUBCONTRACTOR" | "OTHER";
+export type ExpenseCategory =
+  "MATERIAL" | "LABOR" | "TRANSPORT" | "EQUIPMENT" | "SUBCONTRACTOR" | "OTHER";
 export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "CHECK" | "OTHER";
 export type FinancialRecordStatus = "ACTIVE" | "VOID";
 
@@ -404,7 +416,14 @@ export function financeAttachmentUrl(
 }
 
 export const BOQ_UNITS: BoqUnit[] = ["M", "M2", "M3", "ITEM", "LOT"];
-export const EXPENSE_CATEGORIES: ExpenseCategory[] = ["MATERIAL", "LABOR", "TRANSPORT", "EQUIPMENT", "SUBCONTRACTOR", "OTHER"];
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  "MATERIAL",
+  "LABOR",
+  "TRANSPORT",
+  "EQUIPMENT",
+  "SUBCONTRACTOR",
+  "OTHER"
+];
 export const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "BANK_TRANSFER", "CHECK", "OTHER"];
 
 export function boqUnitLabel(unit: BoqUnit, locale: "ar" | "en") {
@@ -441,7 +460,13 @@ export function paymentMethodLabel(method: PaymentMethod, locale: "ar" | "en") {
 }
 
 export function financialStatusLabel(status: FinancialRecordStatus, locale: "ar" | "en") {
-  return status === "VOID" ? (locale === "ar" ? "ملغي" : "Void") : locale === "ar" ? "فعّال" : "Active";
+  return status === "VOID"
+    ? locale === "ar"
+      ? "ملغي"
+      : "Void"
+    : locale === "ar"
+      ? "فعّال"
+      : "Active";
 }
 
 export function financialStatusTone(status: FinancialRecordStatus): BadgeTone {
@@ -467,7 +492,10 @@ export function financeActionLabel(action: string, locale: "ar" | "en"): string 
     "finance.contract_value_set": { ar: "تحديد/تعديل القيمة التعاقدية", en: "Contract value set" },
     "finance.estimate_created": { ar: "إنشاء مقايسة تقريبية", en: "Estimate created" },
     "finance.estimate_updated": { ar: "تحديث بيانات المقايسة", en: "Estimate updated" },
-    "finance.estimate_versioned": { ar: "إصدار نسخة جديدة من المقايسة", en: "New estimate version started" },
+    "finance.estimate_versioned": {
+      ar: "إصدار نسخة جديدة من المقايسة",
+      en: "New estimate version started"
+    },
     "finance.estimate_item_added": { ar: "إضافة بند للمقايسة", en: "Estimate item added" },
     "finance.estimate_item_updated": { ar: "تعديل بند في المقايسة", en: "Estimate item updated" },
     "finance.estimate_item_removed": { ar: "حذف بند من المقايسة", en: "Estimate item removed" },
@@ -477,17 +505,27 @@ export function financeActionLabel(action: string, locale: "ar" | "en"): string 
     "finance.expense_recorded": { ar: "تسجيل مصروف داخلي", en: "Expense recorded" },
     "finance.expense_updated": { ar: "تعديل مصروف داخلي", en: "Expense updated" },
     "finance.expense_voided": { ar: "إلغاء مصروف داخلي", en: "Expense voided" },
-    "finance.client_payment_recorded": { ar: "تسجيل دفعة من العميل", en: "Client payment recorded" },
+    "finance.client_payment_recorded": {
+      ar: "تسجيل دفعة من العميل",
+      en: "Client payment recorded"
+    },
     "finance.client_payment_updated": { ar: "تعديل دفعة عميل", en: "Client payment updated" },
     "finance.client_payment_voided": { ar: "إلغاء دفعة عميل", en: "Client payment voided" },
-    "finance.contractor_payment_recorded": { ar: "تسجيل دفعة لمقاول", en: "Contractor payment recorded" },
-    "finance.contractor_payment_updated": { ar: "تعديل دفعة مقاول", en: "Contractor payment updated" },
+    "finance.contractor_payment_recorded": {
+      ar: "تسجيل دفعة لمقاول",
+      en: "Contractor payment recorded"
+    },
+    "finance.contractor_payment_updated": {
+      ar: "تعديل دفعة مقاول",
+      en: "Contractor payment updated"
+    },
     "finance.contractor_payment_voided": { ar: "إلغاء دفعة مقاول", en: "Contractor payment voided" }
   };
   return labels[action]?.[locale] ?? action;
 }
 
-export type DocumentCategory = "CONTRACT" | "PERMIT" | "REPORT" | "CORRESPONDENCE" | "HANDOVER" | "OTHER";
+export type DocumentCategory =
+  "CONTRACT" | "PERMIT" | "REPORT" | "CORRESPONDENCE" | "HANDOVER" | "OTHER";
 export type DocumentRecordStatus = "ACTIVE" | "ARCHIVED";
 
 export type DocumentVersionRecord = {
@@ -521,11 +559,23 @@ export type ProjectDocumentRecord = {
   updatedAt: string;
 };
 
-export function documentFileUrl(projectId: string, documentId: string, versionId: string, download = false) {
+export function documentFileUrl(
+  projectId: string,
+  documentId: string,
+  versionId: string,
+  download = false
+) {
   return `${apiBaseUrl}/projects/${projectId}/documents/${documentId}/versions/${versionId}/file${download ? "?download=1" : ""}`;
 }
 
-export const DOCUMENT_CATEGORIES: DocumentCategory[] = ["CONTRACT", "PERMIT", "REPORT", "CORRESPONDENCE", "HANDOVER", "OTHER"];
+export const DOCUMENT_CATEGORIES: DocumentCategory[] = [
+  "CONTRACT",
+  "PERMIT",
+  "REPORT",
+  "CORRESPONDENCE",
+  "HANDOVER",
+  "OTHER"
+];
 export const DOCUMENT_STATUSES: DocumentRecordStatus[] = ["ACTIVE", "ARCHIVED"];
 
 export function documentCategoryLabel(category: DocumentCategory, locale: "ar" | "en") {
@@ -541,7 +591,13 @@ export function documentCategoryLabel(category: DocumentCategory, locale: "ar" |
 }
 
 export function documentStatusLabel(status: DocumentRecordStatus, locale: "ar" | "en") {
-  return status === "ARCHIVED" ? (locale === "ar" ? "مؤرشف" : "Archived") : locale === "ar" ? "فعّال" : "Active";
+  return status === "ARCHIVED"
+    ? locale === "ar"
+      ? "مؤرشف"
+      : "Archived"
+    : locale === "ar"
+      ? "فعّال"
+      : "Active";
 }
 
 export function documentStatusTone(status: DocumentRecordStatus): BadgeTone {
@@ -561,7 +617,13 @@ export function documentFormatCode(mime: string, filename: string): string {
   const lower = filename.toLowerCase();
   if (mime.includes("pdf") || lower.endsWith(".pdf")) return "PDF";
   if (mime.includes("png") || lower.endsWith(".png")) return "PNG";
-  if (mime.includes("jpeg") || mime.includes("jpg") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "JPG";
+  if (
+    mime.includes("jpeg") ||
+    mime.includes("jpg") ||
+    lower.endsWith(".jpg") ||
+    lower.endsWith(".jpeg")
+  )
+    return "JPG";
   if (mime.includes("wordprocessingml") || lower.endsWith(".docx")) return "DOCX";
   if (mime.includes("spreadsheetml") || lower.endsWith(".xlsx")) return "XLSX";
   return "FILE";
@@ -570,9 +632,15 @@ export function documentFormatCode(mime: string, filename: string): string {
 export function documentActionLabel(action: string, locale: "ar" | "en"): string {
   const labels: Record<string, { ar: string; en: string }> = {
     "documents.created": { ar: "تم تسجيل مستند جديد", en: "Document registered" },
-    "documents.metadata_updated": { ar: "تم تحديث بيانات المستند", en: "Document metadata updated" },
+    "documents.metadata_updated": {
+      ar: "تم تحديث بيانات المستند",
+      en: "Document metadata updated"
+    },
     "documents.version_uploaded": { ar: "تم رفع نسخة جديدة", en: "New version uploaded" },
-    "documents.client_visibility_changed": { ar: "تم تغيير مشاركة المستند مع العميل", en: "Client visibility changed" },
+    "documents.client_visibility_changed": {
+      ar: "تم تغيير مشاركة المستند مع العميل",
+      en: "Client visibility changed"
+    },
     "documents.archived": { ar: "تمت أرشفة المستند", en: "Document archived" },
     "documents.restored": { ar: "تمت استعادة المستند", en: "Document restored" }
   };
@@ -767,7 +835,9 @@ export function designStatusLabel(status: DesignStatus, locale: "ar" | "en") {
 }
 
 export function designStatusTone(status: DesignStatus): BadgeTone {
-  return { DRAFT: "neutral", IN_REVIEW: "info", APPROVED: "success", REJECTED: "danger" }[status] as BadgeTone;
+  return { DRAFT: "neutral", IN_REVIEW: "info", APPROVED: "success", REJECTED: "danger" }[
+    status
+  ] as BadgeTone;
 }
 
 export function disciplineLabel(discipline: DesignDiscipline, locale: "ar" | "en") {
@@ -840,11 +910,108 @@ export function siteUpdateTypeTone(type: string): BadgeTone {
   return tones[type] ?? "neutral";
 }
 
+export type ReportProjectIdentity = {
+  id: string;
+  code: string | null;
+  name: string;
+  category: ProjectCategory;
+  phase: ProjectPhase;
+  status: ProjectStatus;
+  progress: number;
+  location: string | null;
+  startDate: string | null;
+  targetDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  client: { id: string; phone: string | null; user: { id: string; displayName: string } } | null;
+  engineer: { id: string; displayName: string } | null;
+};
 
+export type ProjectReport = {
+  scope: "PROJECT" | "FINANCE";
+  viewerRole: UserRole;
+  project: ReportProjectIdentity;
+  siteOperations: null | {
+    progress: number;
+    currentPhase: ProjectPhase;
+    updates: Array<{
+      id: string;
+      type: SiteUpdateType;
+      phase: ProjectPhase | null;
+      progress: number | null;
+      note: string | null;
+      mediaCount: number;
+      author: { displayName: string; role: UserRole };
+      createdAt: string;
+    }>;
+  };
+  designs: null | Array<{
+    id: string;
+    title: string;
+    discipline: DesignDiscipline;
+    status: DesignStatus;
+    currentRevisionNumber: number;
+    updatedAt: string;
+  }>;
+  finance:
+  | null
+  | (FinanceSummary & { scope: "CLIENT_SAFE" | "FULL_KPI" })
+  | {
+    scope: "BOQ";
+    currency: string;
+    boqTotal: string;
+    items: Array<
+      Pick<
+        BoqItemRecord,
+        | "id"
+        | "code"
+        | "section"
+        | "description"
+        | "unit"
+        | "quantity"
+        | "unitRate"
+        | "lineTotal"
+      >
+    >;
+  };
+  documents: null | Array<
+    Pick<
+      ProjectDocumentRecord,
+      | "id"
+      | "reference"
+      | "title"
+      | "category"
+      | "status"
+      | "isClientVisible"
+      | "currentVersionNumber"
+      | "updatedAt"
+    >
+  >;
+  communication: null | { messageCount: number; lastMessageAt: string | null };
+  activity: null | Array<{
+    id: string;
+    action: string;
+    actorName: string | null;
+    createdAt: string;
+  }>;
+};
+
+export type SearchResult = {
+  id: string;
+  type: "PROJECT" | "CLIENT" | "USER" | "DESIGN" | "DOCUMENT";
+  title: string;
+  context: string | null;
+  href: string;
+};
+
+export function reportPdfUrl(projectId: string, locale: "ar" | "en") {
+  return `${apiBaseUrl}/reports/projects/${projectId}/pdf?lang=${locale}`;
+}
 
 export function formatFileSize(bytes: number, locale: "ar" | "en") {
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 1 }).format(bytes / 1024)} KB`;
+  if (bytes < 1024 * 1024)
+    return `${new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 1 }).format(bytes / 1024)} KB`;
   return `${new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MB`;
 }
 
@@ -884,7 +1051,10 @@ export function actionLabel(action: string, locale: "ar" | "en"): string {
     "design.created": { ar: "تم إنشاء تصميم جديد", en: "New design created" },
     "design.updated": { ar: "تم تحديث بيانات تصميم", en: "Design details updated" },
     "design.revision_uploaded": { ar: "تم رفع مراجعة تصميم", en: "Design revision uploaded" },
-    "design.submitted_for_review": { ar: "تم إرسال تصميم للمراجعة", en: "Design submitted for review" },
+    "design.submitted_for_review": {
+      ar: "تم إرسال تصميم للمراجعة",
+      en: "Design submitted for review"
+    },
     "design.client_approved": { ar: "اعتمد العميل تصميماً", en: "Client approved a design" },
     "design.client_rejected": { ar: "رفض العميل تصميماً", en: "Client rejected a design" },
     "design.comment_added": { ar: "تمت إضافة تعليق على تصميم", en: "Design comment added" },

@@ -1,10 +1,10 @@
 # ELHABAK Construction System V1 - STATUS
 
 ## Overall Completion
-**80% / 100%**
+**90% / 100%**
 
 ## Current Milestone
-**Milestone 08 COMPLETE: 70-80% - Project Communication & Realtime Collaboration**
+**Milestone 09 COMPLETE: 80-90% - Reports, PDF Export, Search, Bilingual Completion & Full QA**
 
 ## MVP 1 ACCEPTANCE STATUS
 **READY FOR CLIENT REVIEW**
@@ -15,7 +15,7 @@
 - Branding assets: received
 - Repository: initialized and tracking GitHub `main`
 - Hard deadline: 30 September 2026
-- Coding implementation: Milestone 08 complete
+- Coding implementation: Milestone 09 complete
 
 ## Verified Completed
 - User roles defined: `ADMIN`, `ENGINEER`, `ACCOUNTANT`, `WORKER`, `CLIENT`
@@ -123,9 +123,20 @@
 - Full automated test suite passes: 7 files, 48 tests (`milestone-02.spec.ts` through `milestone-08.spec.ts`)
 - Live browser QA performed end-to-end: Client sent a text message, Engineer received the live realtime update in an already-open chat tab with no reload, Engineer replied and Admin's notification badge updated live; Client tested the voice-record permission-denied path (this environment's Browser pane has no microphone hardware and blocks mic access, confirmed by the pane itself - the record/preview/send code path is instead verified by the automated voice-note tests) and received the correct translated "microphone permission denied" message, never a raw browser error; Accountant was confirmed denied both by direct navigation (a translated-shell "access denied" state, no raw stack trace) and by the workspace tab bar omitting Chat entirely; the notification bell, notification dropdown, click-to-navigate, and `/app/notifications` page (All/Unread filters, mark-all-read) were all verified live; Arabic RTL and English LTR were verified for the chat page, composer, voice bubble, notification bell/dropdown, and notifications page; responsive verification at 375px confirmed zero horizontal overflow after the two fixes above, in both RTL and LTR
 - QA cleanup: removed every disposable chat message and notification created during this session's live QA (verified via a direct database check before deletion), reset every demo participant's chat read-state back to caught-up, confirmed zero orphaned voice-note files under `storage/projects/*/chat/`, and confirmed the canonical seed state (4 chat messages, 0 notifications) exactly matches a fresh `pnpm db:seed` run
+- Reports Center implemented with role-scoped project selection/search and consolidated persisted project identity, Site Operations, Design, role-safe Finance, Documents, communication metadata, and activity history; truthful empty states are used throughout
+- Reporting authorization implemented server-side: Admin full project reports, Accountant finance-only company reports, assigned Engineer reports with BOQ-only finance, owning Client reports with client-visible updates/documents and client-safe finance, and Worker report denial; direct report IDs enforce the same access checks
+- Branded Arabic and English PDF export implemented with server-side Chromium, embedded Almarai fonts and ELHABAK logo, RTL/LTR print layouts, structured tables, page numbering, and no local-Windows or external-font dependency; Linux Docker image verified with Chromium/font/logo present
+- Global Search implemented across role-authorized Projects, Admin-only Clients/Users, Designs, and Documents with server-side project/visibility filters, typed results, context, links, loading and empty states; restricted records remain absent rather than merely hidden
+- Bilingual/accessibility cleanup completed for Reports/Search, language-switch query preservation, Western-digit mixed-direction dates, global Arabic letter-spacing protection, and shared status-aware Arabic/English API errors so raw backend exceptions are no longer rendered across existing modules
+- Full responsive QA passed at 1440, 1280, 1024, 768, 430, and 390 widths in Arabic RTL and English LTR across 13 high-priority routes (156 route checks plus 12 Chat checks), with zero page overflow, direction, PDF-action, or composer visibility failures
+- Cross-role UI/API acceptance passed for Admin, Engineer, Accountant, Worker, and Client; temporary account states were restored exactly, Milestone 09 fixtures were removed, and all QA sessions were logged out or explicitly revoked
+- Real PDF verification passed in compiled production-mode code using `DEMO-MVP1`: valid distinct Arabic (216,974 bytes) and English (200,169 bytes) PDF buffers, embedded brand/font resources, and a Client aggregate with no internal finance/document leakage; no disposable files were written
+- Automated Milestone 09 suite added (`apps/api/src/milestone-09.spec.ts`, 8 tests); full regression suite passes 8 files / 60 tests, including report auth matrix, Client isolation, Engineer assignment restriction, search RBAC, cross-project IDOR, bilingual PDF requests, endpoint authorization, and invalid IDs
+- Milestone 09 quality gate passes: `db:validate`, `db:generate`, migration replay (0 pending), lint, typecheck, production build (26 web routes plus API), full tests, `git diff --check`, security/artifact audit, and the Railway-compatible API Docker image build
+- Full QA found and fixed one genuine pre-existing Chat regression without changing its approved behavior: date/time formatter hooks were below loading early returns, causing a React hook-order crash after data loaded; hooks now execute unconditionally and Chat passed the full responsive retest
 
 ## Current Blockers
-- None blocking Milestone 08 acceptance.
+- None blocking Milestone 09 acceptance.
 
 ## Known Issues / Follow-Up Notes
 - `pnpm db:migrate:deploy` hit a blank Prisma schema-engine failure against the Neon migration connection in Milestone 02; unchanged in Milestone 03. No `db push` was used. Repository migration SQL is applied with the workspace migration runner (`pnpm --filter @elhabak/database db:migrate:apply`), and replay reports zero pending migrations.
@@ -142,9 +153,16 @@
 - Do not fabricate missing content.
 
 ## Next Execution Target
-Milestone 09 - 80% -> 90% Reports, PDF Export, Search, Bilingual Completion & Full QA.
+Milestone 10 - 90% -> 100% Production hardening, final acceptance, handover & delivery.
 
 ## Run Log
+### 2026-09-12 - Milestone 09 Reports, PDF Export, Search, Bilingual Completion & Full QA
+- **Scope**: completed only the approved 80-90% milestone: professional role-aware project reporting, bilingual PDF export, permission-filtered global search, bilingual/direction cleanup, cross-role acceptance, responsive QA, and full regression/security verification. Milestones 01-08 were preserved and Milestone 10 work was not started.
+- **Reports/Search**: added a dedicated NestJS Reports module. Reports aggregate existing persisted project/module records only and branch at query/serialization time by role. Search uses PostgreSQL/Prisma `contains` filters combined with project ownership/assignment and document visibility predicates; no external search service or fabricated data was introduced.
+- **PDF**: pinned `puppeteer-core@25.9.0` and `@fontsource/almarai@5.3.0`; the API Docker image installs Debian Chromium and copies the approved horizontal logo. HTML is fully escaped and rendered with embedded fonts/logo, print-safe A4 sections, native Arabic shaping, RTL/LTR direction, and page-number footer. The renderer closes with application shutdown.
+- **QA**: real compiled PDF generation passed for Arabic and English; role/UI/API and all requested responsive widths passed; one pre-existing Chat hook-order crash was reproduced, root-caused, minimally fixed, and retested. Test fixtures, temporary account state, and QA sessions were fully cleaned.
+- **Verification**: `pnpm db:validate`, `pnpm db:generate`, `pnpm --filter @elhabak/database db:migrate:apply` (0 pending), `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test` (8 files / 60 tests), `git diff --check`, security/artifact audit, and Linux API image build all pass.
+
 ### 2026-09-12 - Admin User Lifecycle, Impersonation & Hardening Pass
 - **Scope**: full Admin user management lifecycle hardening pass and server-owned impersonation system. Overall completion strictly preserved at **80% / 100%**; Milestone 08 remains complete; Milestone 09 remains **NOT STARTED**.
 - **User Lifecycle Architecture**: added `archivedAt` timestamp to `User` and `impersonatedUserId` to `AuthSession`. Accounts exist in three canonical states: `ACTIVE` (`isActive: true, archivedAt: null`), `SUSPENDED` (`isActive: false, archivedAt: null`), and `ARCHIVED` (`archivedAt != null`). `archivedAt` takes precedence; accounts with historical data cannot be suspended into active or reactivated without explicit restore.

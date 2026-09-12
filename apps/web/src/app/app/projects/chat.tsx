@@ -60,45 +60,45 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
     () =>
       ar
         ? {
-            loading: "جاري تحميل الدردشة...",
-            empty: "لا توجد رسائل بعد",
-            emptyHint: "ابدأ المحادثة الخاصة بهذا المشروع.",
-            placeholder: "اكتب رسالة...",
-            send: "إرسال",
-            loadOlder: "تحميل رسائل أقدم",
-            newMessages: "رسائل جديدة",
-            recordStart: "تسجيل رسالة صوتية",
-            recordStop: "إيقاف التسجيل",
-            discard: "حذف",
-            sendVoice: "إرسال الرسالة الصوتية",
-            micDenied: "تم رفض إذن الميكروفون. يرجى السماح بالوصول من إعدادات المتصفح.",
-            micUnsupported: "التسجيل الصوتي غير مدعوم في هذا المتصفح.",
-            recordFailed: "تعذر بدء التسجيل. حاول مرة أخرى.",
-            uploadFailed: "تعذر إرسال الرسالة. حاول مرة أخرى.",
-            emptyMessage: "لا يمكن إرسال رسالة فارغة.",
-            tooLong: `الحد الأقصى ${MAX_MESSAGE_LENGTH} حرفاً.`,
-            you: "أنت"
-          }
+          loading: "جاري تحميل الدردشة...",
+          empty: "لا توجد رسائل بعد",
+          emptyHint: "ابدأ المحادثة الخاصة بهذا المشروع.",
+          placeholder: "اكتب رسالة...",
+          send: "إرسال",
+          loadOlder: "تحميل رسائل أقدم",
+          newMessages: "رسائل جديدة",
+          recordStart: "تسجيل رسالة صوتية",
+          recordStop: "إيقاف التسجيل",
+          discard: "حذف",
+          sendVoice: "إرسال الرسالة الصوتية",
+          micDenied: "تم رفض إذن الميكروفون. يرجى السماح بالوصول من إعدادات المتصفح.",
+          micUnsupported: "التسجيل الصوتي غير مدعوم في هذا المتصفح.",
+          recordFailed: "تعذر بدء التسجيل. حاول مرة أخرى.",
+          uploadFailed: "تعذر إرسال الرسالة. حاول مرة أخرى.",
+          emptyMessage: "لا يمكن إرسال رسالة فارغة.",
+          tooLong: `الحد الأقصى ${MAX_MESSAGE_LENGTH} حرفاً.`,
+          you: "أنت"
+        }
         : {
-            loading: "Loading chat...",
-            empty: "No messages yet",
-            emptyHint: "Start the conversation for this project.",
-            placeholder: "Type a message...",
-            send: "Send",
-            loadOlder: "Load older messages",
-            newMessages: "New messages",
-            recordStart: "Record a voice note",
-            recordStop: "Stop recording",
-            discard: "Discard",
-            sendVoice: "Send voice note",
-            micDenied: "Microphone permission was denied. Allow access in your browser settings.",
-            micUnsupported: "Voice recording is not supported in this browser.",
-            recordFailed: "Could not start recording. Please try again.",
-            uploadFailed: "Could not send the message. Please try again.",
-            emptyMessage: "An empty message cannot be sent.",
-            tooLong: `Maximum ${MAX_MESSAGE_LENGTH} characters.`,
-            you: "You"
-          },
+          loading: "Loading chat...",
+          empty: "No messages yet",
+          emptyHint: "Start the conversation for this project.",
+          placeholder: "Type a message...",
+          send: "Send",
+          loadOlder: "Load older messages",
+          newMessages: "New messages",
+          recordStart: "Record a voice note",
+          recordStop: "Stop recording",
+          discard: "Discard",
+          sendVoice: "Send voice note",
+          micDenied: "Microphone permission was denied. Allow access in your browser settings.",
+          micUnsupported: "Voice recording is not supported in this browser.",
+          recordFailed: "Could not start recording. Please try again.",
+          uploadFailed: "Could not send the message. Please try again.",
+          emptyMessage: "An empty message cannot be sent.",
+          tooLong: `Maximum ${MAX_MESSAGE_LENGTH} characters.`,
+          you: "You"
+        },
     [ar]
   );
 
@@ -334,6 +334,15 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
     };
   }, []);
 
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { day: "numeric", month: "long", year: "numeric" }),
+    [ar]
+  );
+  const timeFormatter = useMemo(
+    () => new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { hour: "numeric", minute: "2-digit" }),
+    [ar]
+  );
+
   if (loading) {
     return (
       <section className="app-page">
@@ -349,9 +358,6 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
       </section>
     );
   }
-
-  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { day: "numeric", month: "long", year: "numeric" }), [ar]);
-  const timeFormatter = useMemo(() => new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit" }), [ar]);
 
   return (
     <section className="app-page project-workspace-page chat-page">
