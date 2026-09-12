@@ -17,6 +17,10 @@ export function Lifecycle({ phase, locale }: LifecycleProps) {
 
   return (
     <div className="lifecycle-pipeline">
+      <div className="lifecycle-pipeline__summary" aria-hidden="true">
+        <span>{ar ? "مسار التسليم الهندسي" : "Engineering delivery sequence"}</span>
+        <strong dir="ltr"><bdi>{String(currentIndex + 1).padStart(2, "0")}</bdi>/06</strong>
+      </div>
       <div className="lifecycle-pipeline__track" aria-hidden="true" />
       <div className="lifecycle">
         {LIFECYCLE_PHASES.map((step, index) => {

@@ -17,11 +17,31 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const alternate = locale === "ar" ? "en" : "ar";
   const t = dictionary[locale].login;
   const dir = textDirections[locale];
+  const brand = locale === "ar"
+    ? {
+      title: "نبني اليوم مستقبلاً أفضل",
+      lead: "نظام داخلي لإدارة المشاريع الهندسية بوضوح وتحكم.",
+      steps: ["تصميم", "تنفيذ", "تسليم"],
+      secure: "وصول موثوق",
+      team: "للفريق المعتمد"
+    }
+    : {
+      title: "Build Today. Control Tomorrow.",
+      lead: "Internal project-control workspace for ELHABAK engineering operations.",
+      steps: ["Design", "Build", "Deliver"],
+      secure: "Trusted access",
+      team: "Approved team only"
+    };
 
   return (
     <main className="login-shell" lang={locale} dir={dir}>
       <section className="login-brand">
         <div className="login-brand__grid" aria-hidden="true" />
+        <div className="login-brand__drawing" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
         <div className="login-brand__content">
           <Image
             src="/brand/logo-horizontal.png"
@@ -31,12 +51,20 @@ export default async function LoginPage({ searchParams }: PageProps) {
             priority
           />
           <div className="login-brand__copy">
-            <h1>{t.title}</h1>
-            <p>{t.subtitle}</p>
+            <h1>{brand.title}</h1>
+            <p>{brand.lead}</p>
+          </div>
+          <div className="login-brand__sequence" aria-label={brand.steps.join(" / ")}>
+            {brand.steps.map((step, index) => (
+              <span key={step}>
+                <bdi>{String(index + 1).padStart(2, "0")}</bdi>
+                {step}
+              </span>
+            ))}
           </div>
           <div className="login-brand__meta">
-            <span>ELHABAK CONSTRUCTION</span>
-            <span>الحباك للاستشارات الهندسية</span>
+            <span>{brand.secure}</span>
+            <span>{brand.team}</span>
           </div>
         </div>
         <span className="login-brand__corner login-brand__corner--tl" aria-hidden="true" />

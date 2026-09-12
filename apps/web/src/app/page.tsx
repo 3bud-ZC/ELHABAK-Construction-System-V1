@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CheckCircle2, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Mail, MapPin, Phone } from "lucide-react";
 import { Button, Card, Section } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../i18n/translations";
 
@@ -50,6 +50,9 @@ export default async function HomePage({ searchParams }: PageProps) {
       <section className="hero">
         <div className="hero__bg" aria-hidden="true" />
         <div className="container hero-inner">
+          <aside className="hero-side-note" aria-hidden="true">
+            <span>{locale === "ar" ? "نبني أفكارك لواقع أجمل" : "ENGINEERING A BETTER TOMORROW"}</span>
+          </aside>
           <div className="hero-copy">
             <span className="hero-eyebrow">
               <span className="hero-eyebrow__bar" aria-hidden="true" />
@@ -59,15 +62,21 @@ export default async function HomePage({ searchParams }: PageProps) {
             <p>{t.home.heroSubtitle}</p>
             <div className="hero-actions">
               <Button href="#contact" variant="accent">
-                {t.home.primaryCta}
+                {t.home.primaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
               </Button>
               <Button href="#services" variant="ghost">
-                {t.home.secondaryCta}
+                {t.home.secondaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
               </Button>
             </div>
           </div>
           <div className="hero-visual" aria-label={t.home.heroPanelTitle}>
             <div className="hero-visual__frame">
+              <div className="hero-visual__construction" aria-hidden="true">
+                <span className="hero-visual__tower" />
+                <span className="hero-visual__slab hero-visual__slab--one" />
+                <span className="hero-visual__slab hero-visual__slab--two" />
+                <span className="hero-visual__slab hero-visual__slab--three" />
+              </div>
               <div className="brand-monogram">
                 <Image
                   src="/brand/logo-vertical.png"
@@ -85,12 +94,11 @@ export default async function HomePage({ searchParams }: PageProps) {
             </div>
           </div>
         </div>
-        <div className="hero-stats" aria-hidden="true">
+        <div className="hero-stats hero-sequence" aria-hidden="true">
           <div className="container hero-stats__inner">
-            <span><strong>06</strong><small>{locale === "ar" ? "مراحل هندسية" : "ENGINEERING PHASES"}</small></span>
-            <span><strong>05</strong><small>{locale === "ar" ? "أدوار وظيفية" : "ROLE TIERS"}</small></span>
-            <span><strong>RTL</strong><small>{locale === "ar" ? "عربي / إنجليزي" : "ARABIC / ENGLISH"}</small></span>
-            <span><strong>PDF</strong><small>{locale === "ar" ? "تقارير مهنية" : "PROFESSIONAL REPORTS"}</small></span>
+            <span><strong>DESIGN</strong><small>{locale === "ar" ? "دراسة وتصميم" : "Study and design"}</small></span>
+            <span><strong>BUILD</strong><small>{locale === "ar" ? "تنفيذ ومتابعة" : "Execution control"}</small></span>
+            <span><strong>DELIVER</strong><small>{locale === "ar" ? "تسليم موثق" : "Documented handover"}</small></span>
           </div>
         </div>
       </section>

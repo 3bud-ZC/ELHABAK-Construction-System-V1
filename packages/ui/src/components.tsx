@@ -103,6 +103,7 @@ export function MetricCard({ label, value, hint, icon, tone = "navy" }: MetricCa
         <strong className="metric-card__value">{value}</strong>
         {hint && <span className="metric-card__hint">{hint}</span>}
       </div>
+      <span className="metric-card__rule" aria-hidden="true" />
     </div>
   );
 }

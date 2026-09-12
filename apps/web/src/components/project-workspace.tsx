@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Badge, ProgressBar } from "@elhabak/ui";
-import { Activity, ChevronDown, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Activity, Building2, CalendarRange, ChevronDown, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
   phaseLabel,
@@ -55,7 +55,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       chat: "الدردشة",
       status: "الحالة",
       unset: "غير محدد",
-      moreDetails: "تفاصيل إضافية"
+      moreDetails: "تفاصيل إضافية",
+      workspaceCode: "مساحة المشروع"
     }
     : {
       phase: "Current phase",
@@ -72,7 +73,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       edit: "Edit Project",
       status: "Status",
       unset: "Not set",
-      moreDetails: "More details"
+      moreDetails: "More details",
+      workspaceCode: "Workspace"
     };
 
   function href(path: string) {
@@ -99,10 +101,15 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
 
   return (
     <div className="project-workspace-container">
-      <header className="project-command-header">
+      <header className="project-command-header project-command-header--v4">
+        <div className="project-command-header__visual" aria-hidden="true">
+          <span className="project-command-header__crane" />
+          <span className="project-command-header__frame project-command-header__frame--one" />
+          <span className="project-command-header__frame project-command-header__frame--two" />
+        </div>
         <div className="project-command-header__topbar">
           <div className="project-command-header__ref-group">
-            <span className="project-command-header__sys-tag">ELHABAK // WS-01</span>
+            <span className="project-command-header__sys-tag">ELHABAK // {labels.workspaceCode}</span>
             <bdi className="project-command-header__code mono">{project.code ?? "—"}</bdi>
           </div>
           <div className="project-command-header__badges">
@@ -121,7 +128,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
             <span className="project-command-header__label">{ar ? "مشروع" : "PROJECT"}</span>
             <h1>{project.name}</h1>
             <div className="project-command-header__phase-chip">
-              <ClipboardList size={14} />
+              <CalendarRange size={14} />
               <small>{labels.phase}:</small>
               <strong>{phaseLabel(project.phase, locale)}</strong>
             </div>
@@ -139,7 +146,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
           <span><UsersRound size={14} /><small>{labels.client}</small><strong>{project.client?.user.displayName ?? labels.unset}</strong></span>
           <span><UserRound size={14} /><small>{labels.engineer}</small><strong>{project.engineer?.displayName ?? labels.unset}</strong></span>
           <span><MapPin size={14} /><small>{labels.location}</small><strong>{project.location ?? labels.unset}</strong></span>
-          <span><Activity size={14} /><small>{labels.status}</small><strong>{statusLabel(project.status, locale)}</strong></span>
+          <span><Building2 size={14} /><small>{labels.status}</small><strong>{statusLabel(project.status, locale)}</strong></span>
         </div>
 
         <details className="project-command-header__details">
