@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhabak/ui";
-import { CheckCircle2, UserRoundCog, UsersRound } from "lucide-react";
+import { CheckCircle2, Phone, UserRoundCog, UserX, UsersRound } from "lucide-react";
 import { accountStatusTone, apiRequest, type ClientRecord } from "../../../../lib/api";
 
 type Mode = "list" | "create" | "edit";
@@ -50,7 +50,9 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           status: "الحالة",
           loadingLabel: "جاري تحميل العملاء...",
           total: "إجمالي العملاء",
-          activeCount: "حسابات نشطة"
+          activeCount: "حسابات نشطة",
+          inactiveCount: "حسابات غير نشطة",
+          contactReady: "بيانات اتصال مكتملة"
         }
         : {
           title: "Clients",
@@ -75,12 +77,15 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           status: "Status",
           loadingLabel: "Loading clients...",
           total: "Total clients",
-          activeCount: "Active accounts"
+          activeCount: "Active accounts",
+          inactiveCount: "Inactive accounts",
+          contactReady: "Contact details ready"
         },
     [locale]
   );
 
   const activeCount = useMemo(() => clients.filter((item) => item.user.isActive).length, [clients]);
+  const contactReadyCount = useMemo(() => clients.filter((item) => Boolean(item.phone)).length, [clients]);
 
   useEffect(() => {
     if (mode === "create") {
@@ -147,6 +152,8 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           <div className="metric-grid">
             <MetricCard icon={<UsersRound size={18} />} tone="navy" label={labels.total} value={clients.length} />
             <MetricCard icon={<CheckCircle2 size={18} />} tone="success" label={labels.activeCount} value={activeCount} />
+            <MetricCard icon={<UserX size={18} />} tone="orange" label={labels.inactiveCount} value={clients.length - activeCount} />
+            <MetricCard icon={<Phone size={18} />} tone="info" label={labels.contactReady} value={contactReadyCount} />
           </div>
         )}
         <div className="table-toolbar">

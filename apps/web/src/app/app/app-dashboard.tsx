@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
-import { Briefcase, Camera, FolderKanban, Users2 } from "lucide-react";
+import { Badge, EmptyState, LoadingState, MetricCard, ProgressBar } from "@elhabak/ui";
+import { Briefcase, CalendarDays, Camera, FileText, FolderKanban, Plus, Users2, WalletCards } from "lucide-react";
 import {
   actionLabel,
   apiRequest,
@@ -104,15 +104,21 @@ export function AppDashboard() {
 
   return (
     <section className="app-page dashboard-page">
-      <PageHeader
-        title={labels.title}
-        description={user.role === "ADMIN" ? labels.adminLead : labels.portalLead}
-        actions={
-          <Link className="ui-button ui-button--primary" href={href(user.role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}>
-            {labels.openProjects}
-          </Link>
-        }
-      />
+      <header className="dashboard-command-intro">
+        <div className="dashboard-command-intro__copy">
+          <span className="section-kicker">{locale === "ar" ? "مركز قيادة العمليات" : "OPERATIONS COMMAND CENTER"}</span>
+          <p>{locale === "ar" ? "مرحباً مجدداً" : "Welcome back"}</p>
+          <h1>{user.displayName}</h1>
+          <span>{user.role === "ADMIN" ? labels.adminLead : labels.portalLead}</span>
+        </div>
+        <div className="dashboard-command-intro__meta">
+          <CalendarDays size={20} />
+          <div>
+            <strong>{new Date().toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", { weekday: "long", day: "numeric", month: "long" })}</strong>
+            <span>{locale === "ar" ? "آخر قراءة من النظام" : "Live system overview"}</span>
+          </div>
+        </div>
+      </header>
 
       {loading && <LoadingState label={labels.loadingLabel} />}
       {error && <div className="form-error">{error}</div>}
@@ -175,25 +181,42 @@ export function AppDashboard() {
               )}
             </div>
 
-            {dashboard.recentUpdates.length > 0 && (
-              <aside className="dashboard-body__aside">
+            <aside className="dashboard-body__aside">
+              <section className="dashboard-quick-panel">
                 <div className="section-title">
-                  <h2>{labels.updates}</h2>
+                  <h2>{locale === "ar" ? "إجراءات سريعة" : "Quick actions"}</h2>
                 </div>
+                <div className="dashboard-quick-grid">
+                  {user.role === "ADMIN" && <Link href={href("/app/admin/projects/new")}><Plus size={19} /><strong>{locale === "ar" ? "مشروع جديد" : "New project"}</strong></Link>}
+                  <Link href={href("/app/reports")}><FileText size={19} /><strong>{locale === "ar" ? "مركز التقارير" : "Reports center"}</strong></Link>
+                  {(user.role === "ADMIN" || user.role === "ACCOUNTANT") && <Link href={href("/app/finance")}><WalletCards size={19} /><strong>{locale === "ar" ? "الشؤون المالية" : "Project finance"}</strong></Link>}
+                  {user.role === "ADMIN" && <Link href={href("/app/admin/users")}><Users2 size={19} /><strong>{locale === "ar" ? "إدارة الفريق" : "Manage team"}</strong></Link>}
+                </div>
+              </section>
+              <section className="dashboard-phase-panel">
+                <div className="section-title">
+                  <h2>{locale === "ar" ? "توزيع مراحل التنفيذ" : "Delivery phase distribution"}</h2>
+                </div>
+                <div className="dashboard-phase-list">
+                  {(["SITE_INSPECTION", "DESIGN", "PRELIMINARY_ESTIMATION", "EXECUTION", "INITIAL_HANDOVER", "FINAL_HANDOVER"] as const).map((phase) => {
+                    const count = dashboard.projects.filter((project) => project.phase === phase).length;
+                    return <div key={phase}><span>{phaseLabel(phase, locale)}</span><i><b style={{ width: `${dashboard.projects.length ? Math.max(4, count / dashboard.projects.length * 100) : 0}%` }} /></i><strong>{count}</strong></div>;
+                  })}
+                </div>
+              </section>
+              {dashboard.recentUpdates.length > 0 && <section className="dashboard-updates-panel">
+                <div className="section-title"><h2>{labels.updates}</h2></div>
                 <div className="dashboard-updates">
-                  {dashboard.recentUpdates.slice(0, 6).map((update) => (
+                  {dashboard.recentUpdates.slice(0, 3).map((update) => (
                     <div className="dashboard-update-card" key={update.id}>
-                      <div className="dashboard-update-card__head">
-                        <strong>{update.projectName}</strong>
-                        {update.mediaCount > 0 && <Badge tone="orange">{update.mediaCount}</Badge>}
-                      </div>
+                      <div className="dashboard-update-card__head"><strong>{update.projectName}</strong>{update.mediaCount > 0 && <Badge tone="orange">{update.mediaCount}</Badge>}</div>
                       {update.note && <p>{update.note}</p>}
                       <time>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")}</time>
                     </div>
                   ))}
                 </div>
-              </aside>
-            )}
+              </section>}
+            </aside>
           </div>
         </>
       )}

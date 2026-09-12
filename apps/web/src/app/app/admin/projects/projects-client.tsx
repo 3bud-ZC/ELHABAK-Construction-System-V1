@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
-import { BriefcaseBusiness, FolderKanban, TrendingUp } from "lucide-react";
+import { BriefcaseBusiness, Clock3, FolderKanban, TrendingUp } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
@@ -46,7 +46,8 @@ export function ProjectsClient() {
           loadingLabel: "جاري تحميل المشاريع...",
           total: "إجمالي المشاريع",
           activeCount: "نشطة حالياً",
-          avgProgress: "متوسط التقدم"
+          avgProgress: "متوسط التقدم",
+          overdue: "تجاوزت الموعد"
         }
         : {
           title: "Projects",
@@ -65,7 +66,8 @@ export function ProjectsClient() {
           loadingLabel: "Loading projects...",
           total: "Total projects",
           activeCount: "Currently active",
-          avgProgress: "Average progress"
+          avgProgress: "Average progress",
+          overdue: "Past target date"
         },
     [locale]
   );
@@ -73,6 +75,10 @@ export function ProjectsClient() {
   const activeCount = useMemo(() => projects.filter((project) => project.status === "ACTIVE").length, [projects]);
   const avgProgress = useMemo(
     () => (projects.length ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / projects.length) : 0),
+    [projects]
+  );
+  const overdueCount = useMemo(
+    () => projects.filter((project) => project.targetDate && new Date(project.targetDate) < new Date() && !["COMPLETED", "CANCELLED"].includes(project.status)).length,
     [projects]
   );
 
@@ -122,6 +128,7 @@ export function ProjectsClient() {
           <MetricCard icon={<FolderKanban size={18} />} tone="navy" label={labels.total} value={projects.length} />
           <MetricCard icon={<BriefcaseBusiness size={18} />} tone="orange" label={labels.activeCount} value={activeCount} />
           <MetricCard icon={<TrendingUp size={18} />} tone="success" label={labels.avgProgress} value={`${avgProgress}%`} />
+          <MetricCard icon={<Clock3 size={18} />} tone="orange" label={labels.overdue} value={overdueCount} />
         </div>
       )}
 
