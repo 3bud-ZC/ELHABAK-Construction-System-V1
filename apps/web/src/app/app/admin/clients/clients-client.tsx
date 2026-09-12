@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
-import { UserRoundCog } from "lucide-react";
+import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhabak/ui";
+import { CheckCircle2, UserRoundCog, UsersRound } from "lucide-react";
 import { accountStatusTone, apiRequest, type ClientRecord } from "../../../../lib/api";
 
 type Mode = "list" | "create" | "edit";
@@ -28,55 +28,55 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
     () =>
       locale === "ar"
         ? {
-            title: "العملاء",
-            lead: "إدارة حسابات العملاء وربطها بمشاريعهم.",
-            create: "إنشاء عميل",
-            edit: "تفاصيل العميل",
-            back: "العودة للعملاء",
-            search: "بحث بالاسم أو البريد الإلكتروني",
-            empty: "لا يوجد عملاء مطابقون",
-            emptyHint: "جرّب بحثاً مختلفاً أو أنشئ عميلاً جديداً.",
-            name: "اسم العميل",
-            email: "البريد الإلكتروني",
-            phone: "الهاتف",
-            notes: "ملاحظات",
-            active: "الحساب نشط",
-            statusActive: "نشط",
-            statusInactive: "غير نشط",
-            password: "كلمة مرور مؤقتة",
-            passwordHint: "اتركه فارغاً للإبقاء على كلمة المرور الحالية.",
-            save: "حفظ",
-            saved: "تم الحفظ.",
-            status: "الحالة",
-            loadingLabel: "جاري تحميل العملاء...",
-            total: "إجمالي العملاء",
-            activeCount: "حسابات نشطة"
-          }
+          title: "العملاء",
+          lead: "إدارة حسابات العملاء وربطها بمشاريعهم.",
+          create: "إنشاء عميل",
+          edit: "تفاصيل العميل",
+          back: "العودة للعملاء",
+          search: "بحث بالاسم أو البريد الإلكتروني",
+          empty: "لا يوجد عملاء مطابقون",
+          emptyHint: "جرّب بحثاً مختلفاً أو أنشئ عميلاً جديداً.",
+          name: "اسم العميل",
+          email: "البريد الإلكتروني",
+          phone: "الهاتف",
+          notes: "ملاحظات",
+          active: "الحساب نشط",
+          statusActive: "نشط",
+          statusInactive: "غير نشط",
+          password: "كلمة مرور مؤقتة",
+          passwordHint: "اتركه فارغاً للإبقاء على كلمة المرور الحالية.",
+          save: "حفظ",
+          saved: "تم الحفظ.",
+          status: "الحالة",
+          loadingLabel: "جاري تحميل العملاء...",
+          total: "إجمالي العملاء",
+          activeCount: "حسابات نشطة"
+        }
         : {
-            title: "Clients",
-            lead: "Manage client accounts and their linked projects.",
-            create: "Create client",
-            edit: "Client details",
-            back: "Back to clients",
-            search: "Search by name or email",
-            empty: "No matching clients",
-            emptyHint: "Try a different search or create a new client.",
-            name: "Client name",
-            email: "Email",
-            phone: "Phone",
-            notes: "Notes",
-            active: "Account active",
-            statusActive: "Active",
-            statusInactive: "Inactive",
-            password: "Temporary password",
-            passwordHint: "Leave blank to keep the current password.",
-            save: "Save",
-            saved: "Saved.",
-            status: "Status",
-            loadingLabel: "Loading clients...",
-            total: "Total clients",
-            activeCount: "Active accounts"
-          },
+          title: "Clients",
+          lead: "Manage client accounts and their linked projects.",
+          create: "Create client",
+          edit: "Client details",
+          back: "Back to clients",
+          search: "Search by name or email",
+          empty: "No matching clients",
+          emptyHint: "Try a different search or create a new client.",
+          name: "Client name",
+          email: "Email",
+          phone: "Phone",
+          notes: "Notes",
+          active: "Account active",
+          statusActive: "Active",
+          statusInactive: "Inactive",
+          password: "Temporary password",
+          passwordHint: "Leave blank to keep the current password.",
+          save: "Save",
+          saved: "Saved.",
+          status: "Status",
+          loadingLabel: "Loading clients...",
+          total: "Total clients",
+          activeCount: "Active accounts"
+        },
     [locale]
   );
 
@@ -91,8 +91,8 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
     const request =
       mode === "list"
         ? apiRequest<ClientRecord[]>(`/admin/clients${search ? `?search=${encodeURIComponent(search)}` : ""}`).then(
-            setClients
-          )
+          setClients
+        )
         : apiRequest<ClientRecord>(`/admin/clients/${id}`).then(setRecord);
 
     request.catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
@@ -144,16 +144,9 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           }
         />
         {!loading && (
-          <div className="design-kpi-strip design-kpi-strip--compact">
-            <span>
-              <small>{labels.total}</small>
-              <strong>{clients.length}</strong>
-            </span>
-            <span>
-              <small>{labels.activeCount}</small>
-              <strong>{activeCount}</strong>
-            </span>
-            <p>{labels.lead}</p>
+          <div className="metric-grid">
+            <MetricCard icon={<UsersRound size={18} />} tone="navy" label={labels.total} value={clients.length} />
+            <MetricCard icon={<CheckCircle2 size={18} />} tone="success" label={labels.activeCount} value={activeCount} />
           </div>
         )}
         <div className="table-toolbar">
@@ -165,7 +158,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           <EmptyState icon={<UserRoundCog size={20} />} title={labels.empty} description={labels.emptyHint} />
         ) : null}
         {!loading && clients.length > 0 ? (
-          <div className="data-table">
+          <div className="data-table data-table--clients">
             <div className="data-table-head client-row">
               <span>{labels.name}</span>
               <span>{labels.email}</span>
@@ -174,16 +167,16 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
             </div>
             {clients.map((client) => (
               <Link className="data-row client-row" href={`/app/admin/clients/${client.id}`} key={client.id}>
-                <div>
+                <div data-label={labels.name}>
                   <strong>{client.user.displayName}</strong>
                 </div>
-                <div>
+                <div data-label={labels.email}>
                   <span>{client.user.email}</span>
                 </div>
-                <div>
+                <div data-label={labels.phone}>
                   <span className="mono">{client.phone ?? "-"}</span>
                 </div>
-                <div>
+                <div data-label={labels.status}>
                   <Badge tone={accountStatusTone(client.user.isActive)}>
                     {client.user.isActive ? labels.statusActive : labels.statusInactive}
                   </Badge>

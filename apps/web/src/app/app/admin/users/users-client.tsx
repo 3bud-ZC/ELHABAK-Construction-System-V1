@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhabak/ui";
 import {
   Archive,
+  CheckCircle2,
   KeyRound,
   LogIn,
   MoreHorizontal,
@@ -13,6 +14,7 @@ import {
   PowerOff,
   RotateCcw,
   Trash2,
+  UserX,
   UsersRound,
   X
 } from "lucide-react";
@@ -175,17 +177,24 @@ export function UsersClient({ mode, id }: UsersClientProps) {
         <PageHeader title={labels.title} description={labels.lead} actions={<Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>} />
 
         {!loading ? (
-          <div className="users-summary" aria-label={labels.accountSummary}>
-            <SummaryMetric label={labels.total} value={users.length} />
-            <SummaryMetric label={labels.activeCount} value={activeCount} tone="active" />
-            <SummaryMetric label={labels.suspendedCount} value={suspendedCount} tone="suspended" />
-            <SummaryMetric label={labels.archivedCount} value={archivedCount} tone="archived" />
-            <div className="users-role-distribution">
-              <small>{labels.roleDistribution}</small>
-              <div>{roles.map((role) => <span key={role}>{roleLabel(role, locale)} <strong>{users.filter((user) => user.role === role).length}</strong></span>)}</div>
-            </div>
+          <div className="users-kpi-strip">
+            <MetricCard icon={<UsersRound size={18} />} tone="navy" label={labels.total} value={users.length} />
+            <MetricCard icon={<CheckCircle2 size={18} />} tone="success" label={labels.activeCount} value={activeCount} />
+            <MetricCard icon={<UserX size={18} />} tone="orange" label={labels.suspendedCount} value={suspendedCount} />
+            <MetricCard icon={<Archive size={18} />} tone="neutral" label={labels.archivedCount} value={archivedCount} />
           </div>
         ) : null}
+
+        <div className="users-role-strip">
+          <small>{labels.roleDistribution}</small>
+          <div className="users-role-strip__chips">
+            {roles.map((role) => (
+              <span key={role} className="users-role-chip">
+                {roleLabel(role, locale)} <strong>{users.filter((user) => user.role === role).length}</strong>
+              </span>
+            ))}
+          </div>
+        </div>
 
         <div className="table-toolbar users-toolbar">
           <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} aria-label={labels.search} />
@@ -250,10 +259,6 @@ export function UsersClient({ mode, id }: UsersClientProps) {
       </form>
     </section>
   );
-}
-
-function SummaryMetric({ label, value, tone }: { label: string; value: number; tone?: string }) {
-  return <span className={tone ? `users-summary__metric users-summary__metric--${tone}` : "users-summary__metric"}><small>{label}</small><strong>{value}</strong></span>;
 }
 
 function StatusBadge({ status, labels }: { status: AccountStatus; labels: ReturnType<typeof copy> }) {

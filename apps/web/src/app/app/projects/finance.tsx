@@ -190,22 +190,22 @@ function SummaryPanel({
 
   const labels = ar
     ? {
-        title: "الملخص المالي للمشروع", lead: "أرقام حقيقية محسوبة من السجلات المالية المسجلة فعلياً.",
-        setContract: "تحديد القيمة التعاقدية", contractValue: "القيمة التعاقدية", boqTotal: "إجمالي جدول الكميات",
-        estimateTotal: "إجمالي المقايسة الحالية", clientPayments: "دفعات العميل المستلمة", outstanding: "الرصيد المتبقي على العميل",
-        overpaidNote: "تنبيه: العميل دفع أكثر من القيمة التعاقدية.", expenses: "إجمالي المصروفات الداخلية",
-        contractorPayments: "دفعات المقاولين", committed: "إجمالي التكلفة الفعلية (مصروفات + مقاولين)", notSet: "غير محدد بعد"
-      }
+      title: "الملخص المالي للمشروع", lead: "أرقام حقيقية محسوبة من السجلات المالية المسجلة فعلياً.",
+      setContract: "تحديد القيمة التعاقدية", contractValue: "القيمة التعاقدية", boqTotal: "إجمالي جدول الكميات",
+      estimateTotal: "إجمالي المقايسة الحالية", clientPayments: "دفعات العميل المستلمة", outstanding: "الرصيد المتبقي على العميل",
+      overpaidNote: "تنبيه: العميل دفع أكثر من القيمة التعاقدية.", expenses: "إجمالي المصروفات الداخلية",
+      contractorPayments: "دفعات المقاولين", committed: "إجمالي التكلفة الفعلية (مصروفات + مقاولين)", notSet: "غير محدد بعد"
+    }
     : {
-        title: "Project Financial Summary", lead: "Real figures calculated from actually persisted financial records.",
-        setContract: "Set Contract Value", contractValue: "Contract Value", boqTotal: "BOQ Total",
-        estimateTotal: "Current Estimate Total", clientPayments: "Client Payments Received", outstanding: "Client Outstanding Balance",
-        overpaidNote: "Warning: the client has paid more than the agreed contract value.", expenses: "Internal Expenses Total",
-        contractorPayments: "Contractor Payments", committed: "Committed Actual Cost (expenses + contractors)", notSet: "Not set yet"
-      };
+      title: "Project Financial Summary", lead: "Real figures calculated from actually persisted financial records.",
+      setContract: "Set Contract Value", contractValue: "Contract Value", boqTotal: "BOQ Total",
+      estimateTotal: "Current Estimate Total", clientPayments: "Client Payments Received", outstanding: "Client Outstanding Balance",
+      overpaidNote: "Warning: the client has paid more than the agreed contract value.", expenses: "Internal Expenses Total",
+      contractorPayments: "Contractor Payments", committed: "Committed Actual Cost (expenses + contractors)", notSet: "Not set yet"
+    };
 
   return (
-    <section>
+    <section className="finance-summary-panel">
       <div className="finance-panel-heading">
         <div>
           <span className="section-kicker">{ar ? "مراقبة التكلفة" : "COST CONTROL"}</span>
@@ -328,19 +328,19 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
 
   const labels = ar
     ? {
-        title: "المقايسة التقريبية", lead: "مستند العمل الحالي لتقدير التكلفة الأولية للمشروع.",
-        create: "إنشاء مقايسة", newVersion: "إصدار نسخة جديدة", addItem: "إضافة بند", empty: "لا توجد مقايسة مسجلة",
-        emptyHint: "ابدأ بإنشاء أول مقايسة تقريبية لهذا المشروع.", description: "الوصف", unit: "الوحدة", quantity: "الكمية",
-        unitRate: "سعر الوحدة", total: "الإجمالي", actions: "الإجراء", version: "نسخة", finalized: "نسخة سابقة (نهائية)",
-        current: "النسخة الحالية", loading: "جاري تحميل المقايسة...", removeConfirm: "هل تريد حذف هذا البند؟", noItems: "لا توجد بنود في هذه المقايسة بعد."
-      }
+      title: "المقايسة التقريبية", lead: "مستند العمل الحالي لتقدير التكلفة الأولية للمشروع.",
+      create: "إنشاء مقايسة", newVersion: "إصدار نسخة جديدة", addItem: "إضافة بند", empty: "لا توجد مقايسة مسجلة",
+      emptyHint: "ابدأ بإنشاء أول مقايسة تقريبية لهذا المشروع.", description: "الوصف", unit: "الوحدة", quantity: "الكمية",
+      unitRate: "سعر الوحدة", total: "الإجمالي", actions: "الإجراء", version: "نسخة", finalized: "نسخة سابقة (نهائية)",
+      current: "النسخة الحالية", loading: "جاري تحميل المقايسة...", removeConfirm: "هل تريد حذف هذا البند؟", noItems: "لا توجد بنود في هذه المقايسة بعد."
+    }
     : {
-        title: "Preliminary Estimation", lead: "The current working document for the project's preliminary cost estimate.",
-        create: "Create Estimate", newVersion: "New Version", addItem: "Add Item", empty: "No estimate recorded",
-        emptyHint: "Start by creating the first preliminary estimate for this project.", description: "Description", unit: "Unit", quantity: "Quantity",
-        unitRate: "Unit Rate", total: "Total", actions: "Action", version: "version", finalized: "Previous version (finalized)",
-        current: "Current version", loading: "Loading estimate...", removeConfirm: "Remove this item?", noItems: "No items in this estimate yet."
-      };
+      title: "Preliminary Estimation", lead: "The current working document for the project's preliminary cost estimate.",
+      create: "Create Estimate", newVersion: "New Version", addItem: "Add Item", empty: "No estimate recorded",
+      emptyHint: "Start by creating the first preliminary estimate for this project.", description: "Description", unit: "Unit", quantity: "Quantity",
+      unitRate: "Unit Rate", total: "Total", actions: "Action", version: "version", finalized: "Previous version (finalized)",
+      current: "Current version", loading: "Loading estimate...", removeConfirm: "Remove this item?", noItems: "No items in this estimate yet."
+    };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -598,13 +598,13 @@ function LineItemDialog({
 
   const labels = ar
     ? {
-        title: item ? "تعديل بند" : "إضافة بند", code: "الكود", section: "القسم / التصنيف", description: "الوصف",
-        unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة", note: "ملاحظة (اختياري)", save: "حفظ", close: "إغلاق"
-      }
+      title: item ? "تعديل بند" : "إضافة بند", code: "الكود", section: "القسم / التصنيف", description: "الوصف",
+      unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة", note: "ملاحظة (اختياري)", save: "حفظ", close: "إغلاق"
+    }
     : {
-        title: item ? "Edit item" : "Add item", code: "Code", section: "Section / category", description: "Description",
-        unit: "Unit", quantity: "Quantity", unitRate: "Unit rate", note: "Note (optional)", save: "Save", close: "Close"
-      };
+      title: item ? "Edit item" : "Add item", code: "Code", section: "Section / category", description: "Description",
+      unit: "Unit", quantity: "Quantity", unitRate: "Unit rate", note: "Note (optional)", save: "Save", close: "Close"
+    };
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -684,17 +684,17 @@ function BoqPanel({
 
   const labels = ar
     ? {
-        title: "جدول الكميات (BOQ)", lead: "سجل هندسي كثيف لبنود الكميات والأسعار والإجماليات المعتمدة.",
-        addItem: "إضافة بند", code: "الكود", description: "الوصف", unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة",
-        total: "الإجمالي", actions: "الإجراء", empty: "لا توجد بنود في جدول الكميات", emptyHint: "ابدأ بإضافة أول بند.",
-        overall: "الإجمالي الكلي", loading: "جاري تحميل جدول الكميات...", removeConfirm: "هل تريد حذف هذا البند؟", section: "القسم"
-      }
+      title: "جدول الكميات (BOQ)", lead: "سجل هندسي كثيف لبنود الكميات والأسعار والإجماليات المعتمدة.",
+      addItem: "إضافة بند", code: "الكود", description: "الوصف", unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة",
+      total: "الإجمالي", actions: "الإجراء", empty: "لا توجد بنود في جدول الكميات", emptyHint: "ابدأ بإضافة أول بند.",
+      overall: "الإجمالي الكلي", loading: "جاري تحميل جدول الكميات...", removeConfirm: "هل تريد حذف هذا البند؟", section: "القسم"
+    }
     : {
-        title: "Bill of Quantities (BOQ)", lead: "Dense engineering register of quantities, rates, and approved totals.",
-        addItem: "Add Item", code: "Code", description: "Description", unit: "Unit", quantity: "Quantity", unitRate: "Unit Rate",
-        total: "Total", actions: "Action", empty: "No BOQ items registered", emptyHint: "Start by adding the first item.",
-        overall: "Overall Total", loading: "Loading BOQ...", removeConfirm: "Remove this item?", section: "Section"
-      };
+      title: "Bill of Quantities (BOQ)", lead: "Dense engineering register of quantities, rates, and approved totals.",
+      addItem: "Add Item", code: "Code", description: "Description", unit: "Unit", quantity: "Quantity", unitRate: "Unit Rate",
+      total: "Total", actions: "Action", empty: "No BOQ items registered", emptyHint: "Start by adding the first item.",
+      overall: "Overall Total", loading: "Loading BOQ...", removeConfirm: "Remove this item?", section: "Section"
+    };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -825,17 +825,17 @@ function ExpensesPanel({
 
   const labels = ar
     ? {
-        title: "المصروفات الداخلية", lead: "سجل داخلي للمصروفات - لا يظهر للعميل مطلقاً.", add: "تسجيل مصروف",
-        allCategories: "كل الفئات", date: "التاريخ", category: "الفئة", description: "الوصف", vendor: "المورد", amount: "القيمة",
-        status: "الحالة", actions: "الإجراء", empty: "لا توجد مصروفات مسجلة", emptyHint: "سجل أول مصروف لهذا المشروع.",
-        loading: "جاري تحميل المصروفات...", void: "إلغاء", receipt: "إيصال"
-      }
+      title: "المصروفات الداخلية", lead: "سجل داخلي للمصروفات - لا يظهر للعميل مطلقاً.", add: "تسجيل مصروف",
+      allCategories: "كل الفئات", date: "التاريخ", category: "الفئة", description: "الوصف", vendor: "المورد", amount: "القيمة",
+      status: "الحالة", actions: "الإجراء", empty: "لا توجد مصروفات مسجلة", emptyHint: "سجل أول مصروف لهذا المشروع.",
+      loading: "جاري تحميل المصروفات...", void: "إلغاء", receipt: "إيصال"
+    }
     : {
-        title: "Internal Expenses", lead: "Internal expense ledger - never shown to the Client.", add: "Record Expense",
-        allCategories: "All Categories", date: "Date", category: "Category", description: "Description", vendor: "Vendor", amount: "Amount",
-        status: "Status", actions: "Action", empty: "No expenses recorded", emptyHint: "Record the first expense for this project.",
-        loading: "Loading expenses...", void: "Void", receipt: "Receipt"
-      };
+      title: "Internal Expenses", lead: "Internal expense ledger - never shown to the Client.", add: "Record Expense",
+      allCategories: "All Categories", date: "Date", category: "Category", description: "Description", vendor: "Vendor", amount: "Amount",
+      status: "Status", actions: "Action", empty: "No expenses recorded", emptyHint: "Record the first expense for this project.",
+      loading: "Loading expenses...", void: "Void", receipt: "Receipt"
+    };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -968,13 +968,13 @@ function ExpenseDialog({ projectId, locale, onClose, onCreated }: { projectId: s
 
   const labels = ar
     ? {
-        title: "تسجيل مصروف", category: "الفئة", description: "الوصف", amount: "القيمة (ج.م)", date: "التاريخ", vendor: "المورد (اختياري)",
-        reference: "المرجع (اختياري)", note: "ملاحظة (اختياري)", receipt: "إيصال / مرفق (اختياري)", save: "حفظ", close: "إغلاق", uploading: "جاري الرفع"
-      }
+      title: "تسجيل مصروف", category: "الفئة", description: "الوصف", amount: "القيمة (ج.م)", date: "التاريخ", vendor: "المورد (اختياري)",
+      reference: "المرجع (اختياري)", note: "ملاحظة (اختياري)", receipt: "إيصال / مرفق (اختياري)", save: "حفظ", close: "إغلاق", uploading: "جاري الرفع"
+    }
     : {
-        title: "Record Expense", category: "Category", description: "Description", amount: "Amount (EGP)", date: "Date", vendor: "Vendor (optional)",
-        reference: "Reference (optional)", note: "Note (optional)", receipt: "Receipt / attachment (optional)", save: "Save", close: "Close", uploading: "Uploading"
-      };
+      title: "Record Expense", category: "Category", description: "Description", amount: "Amount (EGP)", date: "Date", vendor: "Vendor (optional)",
+      reference: "Reference (optional)", note: "Note (optional)", receipt: "Receipt / attachment (optional)", save: "Save", close: "Close", uploading: "Uploading"
+    };
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -1106,17 +1106,17 @@ function ClientPaymentsPanel({
 
   const labels = ar
     ? {
-        title: readOnly ? "سجل دفعاتي" : "دفعات العميل", lead: readOnly ? "سجل الدفعات والإيصالات المستلمة لهذا المشروع." : "سجل الدفعات الواردة من العميل مع الإيصالات.",
-        add: "تسجيل دفعة", date: "التاريخ", method: "طريقة الدفع", reference: "المرجع", amount: "القيمة", status: "الحالة",
-        actions: "الإجراء", empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة من العميل.", loading: "جاري تحميل الدفعات...",
-        void: "إلغاء", receipt: "الإيصال"
-      }
+      title: readOnly ? "سجل دفعاتي" : "دفعات العميل", lead: readOnly ? "سجل الدفعات والإيصالات المستلمة لهذا المشروع." : "سجل الدفعات الواردة من العميل مع الإيصالات.",
+      add: "تسجيل دفعة", date: "التاريخ", method: "طريقة الدفع", reference: "المرجع", amount: "القيمة", status: "الحالة",
+      actions: "الإجراء", empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة من العميل.", loading: "جاري تحميل الدفعات...",
+      void: "إلغاء", receipt: "الإيصال"
+    }
     : {
-        title: readOnly ? "My Payment History" : "Client Payments", lead: readOnly ? "Payment and receipt history for this project." : "Incoming client payment ledger with receipts.",
-        add: "Record Payment", date: "Date", method: "Method", reference: "Reference", amount: "Amount", status: "Status",
-        actions: "Action", empty: "No payments recorded", emptyHint: "Record the first client payment.", loading: "Loading payments...",
-        void: "Void", receipt: "Receipt"
-      };
+      title: readOnly ? "My Payment History" : "Client Payments", lead: readOnly ? "Payment and receipt history for this project." : "Incoming client payment ledger with receipts.",
+      add: "Record Payment", date: "Date", method: "Method", reference: "Reference", amount: "Amount", status: "Status",
+      actions: "Action", empty: "No payments recorded", emptyHint: "Record the first client payment.", loading: "Loading payments...",
+      void: "Void", receipt: "Receipt"
+    };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1234,10 +1234,14 @@ function ClientPaymentDialog({ projectId, locale, onClose, onCreated }: { projec
   const inputRef = useRef<HTMLInputElement>(null);
 
   const labels = ar
-    ? { title: "تسجيل دفعة عميل", amount: "القيمة (ج.م)", date: "تاريخ الدفع", method: "طريقة الدفع", reference: "رقم الإيصال / المرجع",
-        description: "ملاحظة (اختياري)", receipt: "الإيصال (اختياري)", save: "حفظ", close: "إغلاق", uploading: "جاري الرفع" }
-    : { title: "Record Client Payment", amount: "Amount (EGP)", date: "Payment date", method: "Payment method", reference: "Receipt / reference number",
-        description: "Note (optional)", receipt: "Receipt (optional)", save: "Save", close: "Close", uploading: "Uploading" };
+    ? {
+      title: "تسجيل دفعة عميل", amount: "القيمة (ج.م)", date: "تاريخ الدفع", method: "طريقة الدفع", reference: "رقم الإيصال / المرجع",
+      description: "ملاحظة (اختياري)", receipt: "الإيصال (اختياري)", save: "حفظ", close: "إغلاق", uploading: "جاري الرفع"
+    }
+    : {
+      title: "Record Client Payment", amount: "Amount (EGP)", date: "Payment date", method: "Payment method", reference: "Receipt / reference number",
+      description: "Note (optional)", receipt: "Receipt (optional)", save: "Save", close: "Close", uploading: "Uploading"
+    };
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -1322,15 +1326,15 @@ function ContractorPaymentsPanel({
 
   const labels = ar
     ? {
-        title: "دفعات المقاولين", lead: "سجل داخلي لدفعات المقاولين والمقاولين الفرعيين - لا يظهر للعميل.", add: "تسجيل دفعة",
-        date: "التاريخ", payee: "المستفيد", method: "طريقة الدفع", amount: "القيمة", status: "الحالة", actions: "الإجراء",
-        empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة لمقاول.", loading: "جاري تحميل الدفعات...", void: "إلغاء", receipt: "الإيصال"
-      }
+      title: "دفعات المقاولين", lead: "سجل داخلي لدفعات المقاولين والمقاولين الفرعيين - لا يظهر للعميل.", add: "تسجيل دفعة",
+      date: "التاريخ", payee: "المستفيد", method: "طريقة الدفع", amount: "القيمة", status: "الحالة", actions: "الإجراء",
+      empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة لمقاول.", loading: "جاري تحميل الدفعات...", void: "إلغاء", receipt: "الإيصال"
+    }
     : {
-        title: "Contractor Payments", lead: "Internal outgoing ledger for contractors/subcontractors - never shown to the Client.", add: "Record Payment",
-        date: "Date", payee: "Payee", method: "Method", amount: "Amount", status: "Status", actions: "Action",
-        empty: "No payments recorded", emptyHint: "Record the first contractor payment.", loading: "Loading payments...", void: "Void", receipt: "Receipt"
-      };
+      title: "Contractor Payments", lead: "Internal outgoing ledger for contractors/subcontractors - never shown to the Client.", add: "Record Payment",
+      date: "Date", payee: "Payee", method: "Method", amount: "Amount", status: "Status", actions: "Action",
+      empty: "No payments recorded", emptyHint: "Record the first contractor payment.", loading: "Loading payments...", void: "Void", receipt: "Receipt"
+    };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1448,12 +1452,16 @@ function ContractorPaymentDialog({ projectId, locale, onClose, onCreated }: { pr
   const inputRef = useRef<HTMLInputElement>(null);
 
   const labels = ar
-    ? { title: "تسجيل دفعة لمقاول", payee: "اسم المقاول / المستفيد", amount: "القيمة (ج.م)", date: "تاريخ الدفع", method: "طريقة الدفع",
-        category: "الفئة (اختياري)", none: "بدون تصنيف", reference: "المرجع (اختياري)", description: "ملاحظة (اختياري)",
-        receipt: "الإيصال (اختياري)", save: "حفظ", close: "إغلاق", uploading: "جاري الرفع" }
-    : { title: "Record Contractor Payment", payee: "Contractor / payee name", amount: "Amount (EGP)", date: "Payment date", method: "Payment method",
-        category: "Category (optional)", none: "Uncategorized", reference: "Reference (optional)", description: "Note (optional)",
-        receipt: "Receipt (optional)", save: "Save", close: "Close", uploading: "Uploading" };
+    ? {
+      title: "تسجيل دفعة لمقاول", payee: "اسم المقاول / المستفيد", amount: "القيمة (ج.م)", date: "تاريخ الدفع", method: "طريقة الدفع",
+      category: "الفئة (اختياري)", none: "بدون تصنيف", reference: "المرجع (اختياري)", description: "ملاحظة (اختياري)",
+      receipt: "الإيصال (اختياري)", save: "حفظ", close: "إغلاق", uploading: "جاري الرفع"
+    }
+    : {
+      title: "Record Contractor Payment", payee: "Contractor / payee name", amount: "Amount (EGP)", date: "Payment date", method: "Payment method",
+      category: "Category (optional)", none: "Uncategorized", reference: "Reference (optional)", description: "Note (optional)",
+      receipt: "Receipt (optional)", save: "Save", close: "Close", uploading: "Uploading"
+    };
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -1602,13 +1610,13 @@ function ClientFinancePanel({ projectId, locale }: { projectId: string; locale: 
 
   const labels = ar
     ? {
-        title: "الملخص المالي", lead: "نظرة موجزة وآمنة على الحالة المالية لمشروعك.", agreed: "القيمة المتفق عليها",
-        paid: "المدفوع حتى الآن", outstanding: "الرصيد المتبقي", notSet: "لم يتم تحديدها بعد", overpaidNote: "تم دفع كامل القيمة المتفق عليها وأكثر."
-      }
+      title: "الملخص المالي", lead: "نظرة موجزة وآمنة على الحالة المالية لمشروعك.", agreed: "القيمة المتفق عليها",
+      paid: "المدفوع حتى الآن", outstanding: "الرصيد المتبقي", notSet: "لم يتم تحديدها بعد", overpaidNote: "تم دفع كامل القيمة المتفق عليها وأكثر."
+    }
     : {
-        title: "Financial Summary", lead: "A clear, safe overview of your project's financial status.", agreed: "Agreed Amount",
-        paid: "Paid So Far", outstanding: "Outstanding Balance", notSet: "Not set yet", overpaidNote: "The full agreed amount has been paid and exceeded."
-      };
+      title: "Financial Summary", lead: "A clear, safe overview of your project's financial status.", agreed: "Agreed Amount",
+      paid: "Paid So Far", outstanding: "Outstanding Balance", notSet: "Not set yet", overpaidNote: "The full agreed amount has been paid and exceeded."
+    };
 
   useEffect(() => {
     let alive = true;

@@ -42,38 +42,38 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
   const ar = locale === "ar";
   const labels = ar
     ? {
-        phase: "المرحلة الحالية",
-        progress: "التقدم الكلي",
-        location: "الموقع",
-        client: "العميل",
-        engineer: "المهندس المسؤول",
-        overview: "نظرة عامة",
-        design: "التصميمات",
-        site: "نشاط الموقع",
-        finance: "الشؤون المالية",
-        documents: "المستندات",
-        chat: "الدردشة",
-        status: "الحالة",
-        unset: "غير محدد",
-        moreDetails: "تفاصيل إضافية"
-      }
+      phase: "المرحلة الحالية",
+      progress: "التقدم الكلي",
+      location: "الموقع",
+      client: "العميل",
+      engineer: "المهندس المسؤول",
+      overview: "نظرة عامة",
+      design: "التصميمات",
+      site: "نشاط الموقع",
+      finance: "الشؤون المالية",
+      documents: "المستندات",
+      chat: "الدردشة",
+      status: "الحالة",
+      unset: "غير محدد",
+      moreDetails: "تفاصيل إضافية"
+    }
     : {
-        phase: "Current phase",
-        progress: "Overall progress",
-        location: "Location",
-        client: "Client",
-        engineer: "Responsible engineer",
-        overview: "Overview",
-        design: "Design Hub",
-        site: "Site Activity",
-        finance: "Finance",
-        documents: "Documents",
-        chat: "Chat",
-        edit: "Edit Project",
-        status: "Status",
-        unset: "Not set",
-        moreDetails: "More details"
-      };
+      phase: "Current phase",
+      progress: "Overall progress",
+      location: "Location",
+      client: "Client",
+      engineer: "Responsible engineer",
+      overview: "Overview",
+      design: "Design Hub",
+      site: "Site Activity",
+      finance: "Finance",
+      documents: "Documents",
+      chat: "Chat",
+      edit: "Edit Project",
+      status: "Status",
+      unset: "Not set",
+      moreDetails: "More details"
+    };
 
   function href(path: string) {
     return ar ? path : `${path}?lang=en`;
@@ -118,6 +118,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
 
         <div className="project-command-header__main">
           <div className="project-command-header__identity">
+            <span className="project-command-header__label">{ar ? "مشروع" : "PROJECT"}</span>
             <h1>{project.name}</h1>
             <div className="project-command-header__phase-chip">
               <ClipboardList size={14} />
@@ -134,20 +135,18 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
           </div>
         </div>
 
-        {/* A <details> element: collapsed by default so Client/Engineer/Location/Status (already
-            shown as a badge above) don't force the whole desktop command header onto a 390px
-            screen; the 701px+ CSS tier forces it open and hides the toggle so desktop is unaffected. */}
+        <div className="project-command-header__facts">
+          <span><UsersRound size={14} /><small>{labels.client}</small><strong>{project.client?.user.displayName ?? labels.unset}</strong></span>
+          <span><UserRound size={14} /><small>{labels.engineer}</small><strong>{project.engineer?.displayName ?? labels.unset}</strong></span>
+          <span><MapPin size={14} /><small>{labels.location}</small><strong>{project.location ?? labels.unset}</strong></span>
+          <span><Activity size={14} /><small>{labels.status}</small><strong>{statusLabel(project.status, locale)}</strong></span>
+        </div>
+
         <details className="project-command-header__details">
           <summary className="project-command-header__details-toggle">
             {labels.moreDetails}
             <ChevronDown size={14} aria-hidden="true" />
           </summary>
-          <div className="project-command-header__facts">
-            <span><UsersRound size={14} /><small>{labels.client}</small><strong>{project.client?.user.displayName ?? labels.unset}</strong></span>
-            <span><UserRound size={14} /><small>{labels.engineer}</small><strong>{project.engineer?.displayName ?? labels.unset}</strong></span>
-            <span><MapPin size={14} /><small>{labels.location}</small><strong>{project.location ?? labels.unset}</strong></span>
-            <span><Activity size={14} /><small>{labels.status}</small><strong>{statusLabel(project.status, locale)}</strong></span>
-          </div>
         </details>
       </header>
 

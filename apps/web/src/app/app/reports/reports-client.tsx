@@ -1,10 +1,10 @@
 "use client";
 
-import { FileText, Search } from "lucide-react";
+import { FileText, FolderKanban, Search } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader, ProgressBar } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
 import {
   apiRequest,
   phaseLabel,
@@ -25,25 +25,25 @@ export function ReportsClient() {
     () =>
       ar
         ? {
-            title: "مركز التقارير",
-            lead: "تقارير هندسية موحدة مبنية على بيانات المشاريع المسجلة وصلاحيات حسابك.",
-            search: "ابحث باسم المشروع أو الكود أو العميل أو الموقع",
-            empty: "لا توجد مشاريع مطابقة",
-            hint: "عدّل عبارة البحث أو تحقق من المشاريع المتاحة لحسابك.",
-            loading: "جاري تحميل المشاريع...",
-            open: "فتح التقرير",
-            failed: "تعذر تحميل مركز التقارير. حاول مرة أخرى."
-          }
+          title: "مركز التقارير",
+          lead: "تقارير هندسية موحدة مبنية على بيانات المشاريع المسجلة وصلاحيات حسابك.",
+          search: "ابحث باسم المشروع أو الكود أو العميل أو الموقع",
+          empty: "لا توجد مشاريع مطابقة",
+          hint: "عدّل عبارة البحث أو تحقق من المشاريع المتاحة لحسابك.",
+          loading: "جاري تحميل المشاريع...",
+          open: "فتح التقرير",
+          failed: "تعذر تحميل مركز التقارير. حاول مرة أخرى."
+        }
         : {
-            title: "Reports Center",
-            lead: "Consolidated engineering reports built from persisted project data and your account permissions.",
-            search: "Search project, code, client, or location",
-            empty: "No matching projects",
-            hint: "Adjust the search or check the projects available to your account.",
-            loading: "Loading projects...",
-            open: "Open report",
-            failed: "Reports Center could not be loaded. Try again."
-          },
+          title: "Reports Center",
+          lead: "Consolidated engineering reports built from persisted project data and your account permissions.",
+          search: "Search project, code, client, or location",
+          empty: "No matching projects",
+          hint: "Adjust the search or check the projects available to your account.",
+          loading: "Loading projects...",
+          open: "Open report",
+          failed: "Reports Center could not be loaded. Try again."
+        },
     [ar]
   );
 
@@ -76,6 +76,13 @@ export function ReportsClient() {
   return (
     <section className="app-page reports-center">
       <PageHeader title={labels.title} description={labels.lead} />
+
+      {!loading && (
+        <div className="metric-grid">
+          <MetricCard icon={<FolderKanban size={18} />} tone="navy" label={ar ? "مشاريع قابلة للتقرير" : "Reportable projects"} value={projects.length} />
+        </div>
+      )}
+
       <label className="global-search-field reports-search-field">
         <Search size={18} aria-hidden="true" />
         <input

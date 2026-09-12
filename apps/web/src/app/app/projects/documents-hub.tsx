@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Badge, EmptyState, LoadingState } from "@elhabak/ui";
-import { FilePlus2, Filter, FolderOpen, Search, UploadCloud, X } from "lucide-react";
+import { Badge, EmptyState, LoadingState, MetricCard } from "@elhabak/ui";
+import { Archive, FilePlus2, FileStack, Filter, FolderOpen, Search, Share2, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   DOCUMENT_CATEGORIES,
@@ -98,19 +98,19 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
 
   const labels = ar
     ? {
-        title: "سجل المستندات", lead: "مركز التحكم بالمستندات العامة للمشروع - عقود، تصاريح، تقارير، ومراسلات.",
-        add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات",
-        empty: "لا توجد مستندات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
-        document: "المرجع والمستند", category: "الفئة", version: "النسخة", format: "الصيغة", visibility: "المشاركة", status: "الحالة", updated: "التحديث",
-        action: "الإجراء", open: "فتح المستند", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل..."
-      }
+      title: "سجل المستندات", lead: "مركز التحكم بالمستندات العامة للمشروع - عقود، تصاريح، تقارير، ومراسلات.",
+      add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات",
+      empty: "لا توجد مستندات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
+      document: "المرجع والمستند", category: "الفئة", version: "النسخة", format: "الصيغة", visibility: "المشاركة", status: "الحالة", updated: "التحديث",
+      action: "الإجراء", open: "فتح المستند", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل..."
+    }
     : {
-        title: "Document Register", lead: "Control center for general project records - contracts, permits, reports, and correspondence.",
-        add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses",
-        empty: "No documents registered", emptyHint: "Register the first document for this project.", noResults: "No matching documents", noResultsHint: "Change search query or filter criteria.",
-        document: "Reference & Document", category: "Category", version: "Version", format: "Format", visibility: "Visibility", status: "Status", updated: "Updated",
-        action: "Action", open: "Open Document", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register..."
-      };
+      title: "Document Register", lead: "Control center for general project records - contracts, permits, reports, and correspondence.",
+      add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses",
+      empty: "No documents registered", emptyHint: "Register the first document for this project.", noResults: "No matching documents", noResultsHint: "Change search query or filter criteria.",
+      document: "Reference & Document", category: "Category", version: "Version", format: "Format", visibility: "Visibility", status: "Status", updated: "Updated",
+      action: "Action", open: "Open Document", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register..."
+    };
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
@@ -167,19 +167,10 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
         </button>
       </div>
 
-      <div className="design-kpi-strip">
-        <span>
-          <small>{labels.total}</small>
-          <strong><bdi>{metrics.total}</bdi></strong>
-        </span>
-        <span>
-          <small>{labels.shared}</small>
-          <strong><bdi>{metrics.shared}</bdi></strong>
-        </span>
-        <span>
-          <small>{labels.archived}</small>
-          <strong><bdi>{metrics.archived}</bdi></strong>
-        </span>
+      <div className="metric-grid">
+        <MetricCard icon={<FileStack size={18} />} tone="navy" label={labels.total} value={metrics.total} />
+        <MetricCard icon={<Share2 size={18} />} tone="success" label={labels.shared} value={metrics.shared} />
+        <MetricCard icon={<Archive size={18} />} tone="neutral" label={labels.archived} value={metrics.archived} />
       </div>
 
       <div className="design-toolbar">
@@ -294,17 +285,17 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
 
   const labels = ar
     ? {
-        heading: "تسجيل مستند جديد", info: "بيانات المستند", reference: "المرجع", title: "العنوان", category: "الفئة", description: "الوصف (اختياري)",
-        visibility: "مشاركة مع العميل", visibilityHint: "بشكل افتراضي، المستندات الجديدة داخلية فقط.", file: "الملف الأول (النسخة الأولى)",
-        drop: "اسحب الملف هنا أو اختر من جهازك", support: "PDF، PNG، JPG/JPEG، DOCX، أو XLSX", notes: "ملاحظة على النسخة (اختياري)",
-        save: "تسجيل المستند", close: "إغلاق", required: "أدخل المرجع والعنوان واختر ملفاً صالحاً.", uploading: "جاري الرفع"
-      }
+      heading: "تسجيل مستند جديد", info: "بيانات المستند", reference: "المرجع", title: "العنوان", category: "الفئة", description: "الوصف (اختياري)",
+      visibility: "مشاركة مع العميل", visibilityHint: "بشكل افتراضي، المستندات الجديدة داخلية فقط.", file: "الملف الأول (النسخة الأولى)",
+      drop: "اسحب الملف هنا أو اختر من جهازك", support: "PDF، PNG، JPG/JPEG، DOCX، أو XLSX", notes: "ملاحظة على النسخة (اختياري)",
+      save: "تسجيل المستند", close: "إغلاق", required: "أدخل المرجع والعنوان واختر ملفاً صالحاً.", uploading: "جاري الرفع"
+    }
     : {
-        heading: "Register Document", info: "Document information", reference: "Reference", title: "Title", category: "Category", description: "Description (optional)",
-        visibility: "Share with Client", visibilityHint: "New documents default to internal-only.", file: "First file (version 1)",
-        drop: "Drop file here or choose from device", support: "PDF, PNG, JPG/JPEG, DOCX, or XLSX", notes: "Version note (optional)",
-        save: "Register Document", close: "Close", required: "Enter a reference, title, and choose a valid file.", uploading: "Uploading"
-      };
+      heading: "Register Document", info: "Document information", reference: "Reference", title: "Title", category: "Category", description: "Description (optional)",
+      visibility: "Share with Client", visibilityHint: "New documents default to internal-only.", file: "First file (version 1)",
+      drop: "Drop file here or choose from device", support: "PDF, PNG, JPG/JPEG, DOCX, or XLSX", notes: "Version note (optional)",
+      save: "Register Document", close: "Close", required: "Enter a reference, title, and choose a valid file.", uploading: "Uploading"
+    };
 
   function choose(selected?: File) {
     setFile(selected ?? null);
@@ -408,15 +399,15 @@ function ClientDocuments({ projectId, locale }: { projectId: string; locale: "ar
 
   const labels = ar
     ? {
-        title: "المستندات المشتركة", lead: "المستندات التي شاركها معك فريق المشروع.", empty: "لا توجد مستندات مشتركة بعد",
-        emptyHint: "ستظهر هنا أي مستندات يشاركها معك فريق المشروع.", category: "الفئة", version: "النسخة", updated: "آخر تحديث",
-        preview: "معاينة", download: "تنزيل", loading: "جاري تحميل المستندات..."
-      }
+      title: "المستندات المشتركة", lead: "المستندات التي شاركها معك فريق المشروع.", empty: "لا توجد مستندات مشتركة بعد",
+      emptyHint: "ستظهر هنا أي مستندات يشاركها معك فريق المشروع.", category: "الفئة", version: "النسخة", updated: "آخر تحديث",
+      preview: "معاينة", download: "تنزيل", loading: "جاري تحميل المستندات..."
+    }
     : {
-        title: "Shared Documents", lead: "Documents the project team has shared with you.", empty: "No documents shared yet",
-        emptyHint: "Any document your project team shares with you will appear here.", category: "Category", version: "Version", updated: "Last updated",
-        preview: "Preview", download: "Download", loading: "Loading documents..."
-      };
+      title: "Shared Documents", lead: "Documents the project team has shared with you.", empty: "No documents shared yet",
+      emptyHint: "Any document your project team shares with you will appear here.", category: "Category", version: "Version", updated: "Last updated",
+      preview: "Preview", download: "Download", loading: "Loading documents..."
+    };
 
   useEffect(() => {
     let alive = true;

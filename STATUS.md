@@ -156,6 +156,26 @@
 **V1 COMPLETE — Ready for client handover.**
 
 ## Run Log
+### 2026-09-12 - ELHABAK Product Experience V3.1 — Reference Fidelity & Component-Level Redesign
+- **Scope**: post-V3 visual refinement pass. Component-level JSX restructuring across 13 frontend files to close the gap between actual product screens and the 14 supplied reference designs. No backend, schema, RBAC, auth, finance, reports, or impersonation logic modified. Functional completion remains 100% / 100%.
+- **Reference inspection**: visually inspected all 14 reference images via ASCII-brightness grid analysis (12x8 + 32-row fine grid) to understand actual page compositions, layout structures, information density, and visual hierarchy — not just color palettes. Mapped each reference to the closest product surface (public website, login, dashboard, projects, project workspace, users, clients, finance, reports, documents, site operations, chat, search, mobile).
+- **Public website**: restructured hero JSX with architectural background layer (`hero__bg` with radial orange glow + blueprint grid), framed visual panel (`hero-visual__frame` with backdrop blur), eyebrow bar, panel tag, and a 4-column stats strip (`hero-stats` with monospaced values). Restructured services into editorial bento grid (`services-bento` with `service-card--feature` spanning 2x2). Added process step connectors with orange dashed track.
+- **Login**: restructured JSX with brand grid background, content wrapper, brand meta footer, orange corner accents (TL/BR), and login card heading with secure-system tag.
+- **Dashboard**: restructured JSX into operations command center with `dashboard-kpi-strip` (4-column MetricCards), `dashboard-body` (2-column main+aside layout), and `dashboard-updates` aside panel for recent site updates.
+- **Project workspace header**: added project label tag, restructured facts as a direct element (not only inside details), kept collapsible details for mobile.
+- **Project overview**: restructured JSX with `overview-lifecycle-section` making the lifecycle a major visual element with compact section title.
+- **Projects register**: restructured KPI strip to use `MetricCard` components (total/active/avgProgress), added `data-label` attributes for mobile card pattern, restructured progress cell with monospaced percentage.
+- **Users console**: restructured KPI strip to use `MetricCard` components (total/active/suspended/archived with proper icons), added `users-role-strip` with role distribution chips, removed inline `SummaryMetric` helper.
+- **Clients**: restructured KPI strip to use `MetricCard` components, added `data-label` attributes for mobile card pattern.
+- **Finance**: restructured summary panel into `finance-summary-panel` with proper section wrapper.
+- **Reports**: added `MetricCard` KPI strip for reportable projects count.
+- **Documents**: restructured KPI strip to use `MetricCard` components (total/shared/archived with proper icons).
+- **Chat**: added `chat-context-bar` with project name, code, and channel tag for engineering context.
+- **CSS additions**: appended 545 lines of component-level styles to `globals.css` for all new structures, with responsive breakpoints (1180/768/480px) and RTL safeguards (letter-spacing normal for Arabic, directional adjustments for connectors/corners).
+- **Functional regression result**: zero functional changes. No backend, schema, migration, route, RBAC, auth, finance, reports, or impersonation logic modified.
+- **Quality gate**: `pnpm lint` PASS (0 errors), `pnpm typecheck` PASS (all 8 workspace packages), `pnpm build` PASS (26 web routes + API), `pnpm test` PASS (8 files, 60 tests), `git diff --check` PASS.
+- **Visual QA**: verified all 9 key routes return 200 at dev server; confirmed all new component classes (`hero__bg`, `hero-stats`, `services-bento`, `login-brand__grid`, `dashboard-kpi-strip`, `users-kpi-strip`, `chat-context-bar`, `finance-summary-panel`, `overview-lifecycle-section`, `project-command-header__label`) are live in compiled CSS; confirmed 21 responsive media queries and 10 RTL rules intact.
+
 ### 2026-09-12 - ELHABAK Product Experience V3 — Engineering Design System Transformation
 - **Scope**: post-V1 visual/product-experience transformation only. No functional milestone, no backend changes, no schema changes, no role/RBAC/auth/route changes. The application remains 100% functionally complete and production-ready. All existing business logic, APIs, authorization, data models, and production behavior preserved.
 - **Reference analysis**: extracted and programmatically analyzed 14 AI-generated reference screens from `123.zip` (dominant color palette: deep navy `#0c1736`-`#16274a`, light blue-gray backgrounds `#e1eaf8`/`#eaf1fa`, medium grays `#d4d7e1`/`#c2c6d1`, muted blue-gray text `#6d798d`/`#717a92`). Used as visual direction only — no fabricated data copied.

@@ -48,9 +48,13 @@ export default async function HomePage({ searchParams }: PageProps) {
       </header>
 
       <section className="hero">
+        <div className="hero__bg" aria-hidden="true" />
         <div className="container hero-inner">
           <div className="hero-copy">
-            <span className="hero-eyebrow">ELHABAK CONSTRUCTION</span>
+            <span className="hero-eyebrow">
+              <span className="hero-eyebrow__bar" aria-hidden="true" />
+              ELHABAK CONSTRUCTION
+            </span>
             <h1>{t.home.heroTitle}</h1>
             <p>{t.home.heroSubtitle}</p>
             <div className="hero-actions">
@@ -63,19 +67,30 @@ export default async function HomePage({ searchParams }: PageProps) {
             </div>
           </div>
           <div className="hero-visual" aria-label={t.home.heroPanelTitle}>
-            <div className="brand-monogram">
-              <Image
-                src="/brand/logo-vertical.png"
-                alt=""
-                width={300}
-                height={217}
-                priority
-              />
+            <div className="hero-visual__frame">
+              <div className="brand-monogram">
+                <Image
+                  src="/brand/logo-vertical.png"
+                  alt=""
+                  width={300}
+                  height={217}
+                  priority
+                />
+              </div>
+              <div className="hero-panel">
+                <span className="hero-panel__tag">{locale === "ar" ? "نظام إدارة المشاريع" : "PROJECT MANAGEMENT SYSTEM"}</span>
+                <h2>{t.home.heroPanelTitle}</h2>
+                <p>{t.home.heroPanelText}</p>
+              </div>
             </div>
-            <div className="hero-panel">
-              <h2>{t.home.heroPanelTitle}</h2>
-              <p>{t.home.heroPanelText}</p>
-            </div>
+          </div>
+        </div>
+        <div className="hero-stats" aria-hidden="true">
+          <div className="container hero-stats__inner">
+            <span><strong>06</strong><small>{locale === "ar" ? "مراحل هندسية" : "ENGINEERING PHASES"}</small></span>
+            <span><strong>05</strong><small>{locale === "ar" ? "أدوار وظيفية" : "ROLE TIERS"}</small></span>
+            <span><strong>RTL</strong><small>{locale === "ar" ? "عربي / إنجليزي" : "ARABIC / ENGLISH"}</small></span>
+            <span><strong>PDF</strong><small>{locale === "ar" ? "تقارير مهنية" : "PROFESSIONAL REPORTS"}</small></span>
           </div>
         </div>
       </section>
@@ -105,12 +120,15 @@ export default async function HomePage({ searchParams }: PageProps) {
         title={t.home.servicesTitle}
         lead={t.home.servicesLead}
       >
-        <div className="services-grid">
+        <div className="services-grid services-bento">
           {t.services.map(([title, body], index) => (
-            <Card className="service-card" key={title}>
+            <Card className={`service-card ${index === 0 ? "service-card--feature" : ""}`} key={title}>
               <span className="service-card__index">{String(index + 1).padStart(2, "0")}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
+              <div className="service-card__body">
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
+              <span className="service-card__corner" aria-hidden="true" />
             </Card>
           ))}
         </div>
@@ -127,9 +145,10 @@ export default async function HomePage({ searchParams }: PageProps) {
           <div className="process-pipeline__track" aria-hidden="true" />
           <div className="process-grid">
             {t.process.map(([title, body], index) => (
-              <div className="process-step" key={title}>
+              <div className={`process-step ${index === 0 ? "process-step--start" : ""} ${index === t.process.length - 1 ? "process-step--end" : ""}`} key={title}>
                 <div className="process-step__indicator" aria-hidden="true">
                   <span className="process-step__node" />
+                  <span className="process-step__connector" aria-hidden="true" />
                 </div>
                 <div className="process-step__body">
                   <div className="process-step__meta">

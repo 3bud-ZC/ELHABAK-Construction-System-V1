@@ -365,6 +365,13 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
       {error && <div className="form-error">{error}</div>}
 
       <div className="chat-shell">
+        <div className="chat-context-bar">
+          <div className="chat-context-bar__info">
+            <strong>{project.name}</strong>
+            <span className="chat-context-bar__code mono">{project.code ?? "—"}</span>
+          </div>
+          <span className="chat-context-bar__tag">{ar ? "قناة اتصال المشروع" : "PROJECT COMMUNICATION CHANNEL"}</span>
+        </div>
         <div className="chat-message-list" ref={listRef} onScroll={handleScroll}>
           {nextCursor && (
             <button type="button" className="chat-load-older" onClick={() => void loadOlder()} disabled={loadingOlder}>

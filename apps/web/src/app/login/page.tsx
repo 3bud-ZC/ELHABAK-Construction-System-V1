@@ -21,15 +21,26 @@ export default async function LoginPage({ searchParams }: PageProps) {
   return (
     <main className="login-shell" lang={locale} dir={dir}>
       <section className="login-brand">
-        <Image
-          src="/brand/logo-horizontal.png"
-          alt="ELHABAK Construction"
-          width={300}
-          height={125}
-          priority
-        />
-        <h1>{t.title}</h1>
-        <p>{t.subtitle}</p>
+        <div className="login-brand__grid" aria-hidden="true" />
+        <div className="login-brand__content">
+          <Image
+            src="/brand/logo-horizontal.png"
+            alt="ELHABAK Construction"
+            width={300}
+            height={125}
+            priority
+          />
+          <div className="login-brand__copy">
+            <h1>{t.title}</h1>
+            <p>{t.subtitle}</p>
+          </div>
+          <div className="login-brand__meta">
+            <span>ELHABAK CONSTRUCTION</span>
+            <span>الحباك للاستشارات الهندسية</span>
+          </div>
+        </div>
+        <span className="login-brand__corner login-brand__corner--tl" aria-hidden="true" />
+        <span className="login-brand__corner login-brand__corner--br" aria-hidden="true" />
       </section>
       <section className="login-panel">
         <div className="login-card">
@@ -41,8 +52,11 @@ export default async function LoginPage({ searchParams }: PageProps) {
               {t.language}
             </a>
           </div>
-          <h2>{t.title}</h2>
-          <p>{t.subtitle}</p>
+          <div className="login-card__heading">
+            <span className="login-card__tag">{locale === "ar" ? "نظام آمن" : "SECURE SYSTEM"}</span>
+            <h2>{t.title}</h2>
+            <p>{t.subtitle}</p>
+          </div>
           <LoginForm
             locale={locale}
             labels={{

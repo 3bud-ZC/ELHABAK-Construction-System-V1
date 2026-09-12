@@ -83,8 +83,14 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
 
         {view === "overview" && <div className="project-overview-v2">
 
-          <Lifecycle phase={project.phase} locale={locale} />
-          <div className="workspace-grid">
+          <div className="overview-lifecycle-section">
+            <div className="section-title section-title--compact">
+              <h2>{locale === "ar" ? "مسار المشروع" : "Project Lifecycle"}</h2>
+            </div>
+            <Lifecycle phase={project.phase} locale={locale} />
+          </div>
+
+          <div className="workspace-grid workspace-grid--overview">
             <section className="workspace-panel">
               <div className="workspace-panel__title"><Info size={17} /><h2>{labels.summary}</h2></div>
               <dl className="detail-list">

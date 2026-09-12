@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader, ProgressBar } from "@elhabak/ui";
-import { FolderKanban } from "lucide-react";
+import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
+import { BriefcaseBusiness, FolderKanban, TrendingUp } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
@@ -30,43 +30,43 @@ export function ProjectsClient() {
     () =>
       locale === "ar"
         ? {
-            title: "المشاريع",
-            lead: "متابعة وإدارة جميع المشاريع الجارية والمرحلة والفريق المسؤول.",
-            create: "إنشاء مشروع",
-            search: "بحث بالاسم أو الكود أو العميل",
-            allStatuses: "كل الحالات",
-            empty: "لا توجد مشاريع مطابقة",
-            emptyHint: "جرّب تعديل البحث أو أنشئ مشروعاً جديداً.",
-            name: "المشروع",
-            client: "العميل",
-            engineer: "المهندس",
-            phase: "المرحلة",
-            progress: "التقدم",
-            open: "فتح",
-            loadingLabel: "جاري تحميل المشاريع...",
-            total: "إجمالي المشاريع",
-            activeCount: "نشطة حالياً",
-            avgProgress: "متوسط التقدم"
-          }
+          title: "المشاريع",
+          lead: "متابعة وإدارة جميع المشاريع الجارية والمرحلة والفريق المسؤول.",
+          create: "إنشاء مشروع",
+          search: "بحث بالاسم أو الكود أو العميل",
+          allStatuses: "كل الحالات",
+          empty: "لا توجد مشاريع مطابقة",
+          emptyHint: "جرّب تعديل البحث أو أنشئ مشروعاً جديداً.",
+          name: "المشروع",
+          client: "العميل",
+          engineer: "المهندس",
+          phase: "المرحلة",
+          progress: "التقدم",
+          open: "فتح",
+          loadingLabel: "جاري تحميل المشاريع...",
+          total: "إجمالي المشاريع",
+          activeCount: "نشطة حالياً",
+          avgProgress: "متوسط التقدم"
+        }
         : {
-            title: "Projects",
-            lead: "Track and manage every active project, its phase, and responsible team.",
-            create: "Create Project",
-            search: "Search by name, code, or client",
-            allStatuses: "All statuses",
-            empty: "No matching projects",
-            emptyHint: "Try a different search or create a new project.",
-            name: "Project",
-            client: "Client",
-            engineer: "Engineer",
-            phase: "Phase",
-            progress: "Progress",
-            open: "Open",
-            loadingLabel: "Loading projects...",
-            total: "Total projects",
-            activeCount: "Currently active",
-            avgProgress: "Average progress"
-          },
+          title: "Projects",
+          lead: "Track and manage every active project, its phase, and responsible team.",
+          create: "Create Project",
+          search: "Search by name, code, or client",
+          allStatuses: "All statuses",
+          empty: "No matching projects",
+          emptyHint: "Try a different search or create a new project.",
+          name: "Project",
+          client: "Client",
+          engineer: "Engineer",
+          phase: "Phase",
+          progress: "Progress",
+          open: "Open",
+          loadingLabel: "Loading projects...",
+          total: "Total projects",
+          activeCount: "Currently active",
+          avgProgress: "Average progress"
+        },
     [locale]
   );
 
@@ -118,20 +118,10 @@ export function ProjectsClient() {
       />
 
       {!loading && (
-        <div className="design-kpi-strip">
-          <span>
-            <small>{labels.total}</small>
-            <strong>{projects.length}</strong>
-          </span>
-          <span>
-            <small>{labels.activeCount}</small>
-            <strong>{activeCount}</strong>
-          </span>
-          <span>
-            <small>{labels.avgProgress}</small>
-            <strong>{avgProgress}%</strong>
-          </span>
-          <p>{labels.lead}</p>
+        <div className="metric-grid">
+          <MetricCard icon={<FolderKanban size={18} />} tone="navy" label={labels.total} value={projects.length} />
+          <MetricCard icon={<BriefcaseBusiness size={18} />} tone="orange" label={labels.activeCount} value={activeCount} />
+          <MetricCard icon={<TrendingUp size={18} />} tone="success" label={labels.avgProgress} value={`${avgProgress}%`} />
         </div>
       )}
 
@@ -154,7 +144,7 @@ export function ProjectsClient() {
       )}
 
       {!loading && projects.length > 0 && (
-        <div className="data-table">
+        <div className="data-table data-table--projects">
           <div className="data-table-head project-row">
             <span>{labels.name}</span>
             <span>{labels.client}</span>
@@ -165,26 +155,26 @@ export function ProjectsClient() {
           </div>
           {projects.map((project) => (
             <article className="data-row project-row" key={project.id}>
-              <div>
+              <div data-label={labels.name}>
                 <strong>{project.name}</strong>
                 <span className="project-code-tag mono"><bdi>{project.code}</bdi></span>
               </div>
-              <div>
+              <div data-label={labels.client}>
                 <strong>{project.client?.user.displayName ?? "-"}</strong>
                 <span>{categoryLabel(project.category, locale)}</span>
               </div>
-              <div>
+              <div data-label={labels.engineer}>
                 <strong>{project.engineer?.displayName ?? "-"}</strong>
               </div>
-              <div>
+              <div data-label={labels.phase}>
                 <Badge tone="navy">{phaseLabel(project.phase, locale)}</Badge>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <ProgressBar value={project.progress} style={{ flex: "1 1 auto" }} />
-                <strong style={{ color: "var(--navy)", fontSize: "0.8rem", flex: "0 0 auto" }}>{project.progress}%</strong>
+              <div data-label={labels.progress} className="project-row__progress-cell">
+                <ProgressBar value={project.progress} />
+                <strong className="mono">{project.progress}%</strong>
               </div>
-              <span className="data-row-action">
-                <Badge tone={statusTone(project.status)} style={{ marginInlineEnd: "0.5rem" }}>
+              <span className="data-row-action" data-label={labels.open}>
+                <Badge tone={statusTone(project.status)}>
                   {statusLabel(project.status, locale)}
                 </Badge>
                 <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}`)}>
