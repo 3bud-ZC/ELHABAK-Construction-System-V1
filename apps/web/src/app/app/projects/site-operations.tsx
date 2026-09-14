@@ -50,6 +50,14 @@ type SiteOperationsProps = {
   projectId: string;
 };
 
+function updateTypeIcon(type: SiteUpdateType) {
+  if (type === "PROGRESS") return <TrendingUp size={15} />;
+  if (type === "INSPECTION") return <ClipboardCheck size={15} />;
+  if (type === "ISSUE") return <AlertTriangle size={15} />;
+  if (type === "MATERIAL") return <Package size={15} />;
+  return <Camera size={15} />;
+}
+
 export function SiteOperations({ projectId }: SiteOperationsProps) {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
@@ -151,6 +159,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           phaseUpdatedTo: "تم تغيير المرحلة إلى:",
           progressUpdatedTo: "تم تحديث الإنجاز إلى:",
           clientNotice: "أنت تشاهد السجل الميداني المصرح لعملاء المشروع.",
+          latestActivity: "آخر نشاط ميداني",
+          noLatest: "لا يوجد نشاط بعد",
           filesSelected: "ملفات محددة:"
         }
       : {
@@ -203,6 +213,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           phaseUpdatedTo: "Phase changed to:",
           progressUpdatedTo: "Progress updated to:",
           clientNotice: "You are viewing approved site activity for your project.",
+          latestActivity: "Latest field activity",
+          noLatest: "No activity yet",
           filesSelected: "Selected files:"
         };
   }, [ar]);
@@ -264,6 +276,10 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
   const isWorker = user.role === "WORKER";
   const isClient = user.role === "CLIENT";
+  const latestEvent = timelineEvents[0];
+  const latestEventTime = latestEvent
+    ? new Date(latestEvent.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" })
+    : labels.noLatest;
 
   // Gallery items flattened
   const allGalleryMedia = useMemo(() => {
@@ -454,6 +470,18 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
       {/* Workspace Header Bar */}
       <ProjectWorkspace project={project} locale={locale} role={user.role} active="site" />
 
+      <div className="site-ops-command-strip">
+        <div>
+          <span className="section-kicker">{ar ? "موقع / سجل العمليات" : "FIELD / OPERATIONS LOG"}</span>
+          <h1>{labels.title}</h1>
+          <p>{labels.lead}</p>
+        </div>
+        <div className="site-ops-command-strip__latest">
+          <span>{labels.latestActivity}</span>
+          <strong className="mono"><bdi>{latestEventTime}</bdi></strong>
+        </div>
+      </div>
+
       {/* Notifications */}
       {error && <div className="form-error" role="alert">{error}</div>}
       {success && <div className="form-success" role="status">{success}</div>}
@@ -593,7 +621,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                     className={`worker-pill ${workerType === t ? "active" : ""}`}
                     onClick={() => setWorkerType(t)}
                   >
-                    {siteUpdateTypeLabel(t, locale)}
+                    <span className="worker-pill__icon">{updateTypeIcon(t)}</span>
+                    <span>{siteUpdateTypeLabel(t, locale)}</span>
                   </button>
                 ))}
               </div>
@@ -623,7 +652,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 <input
                   ref={workerFileInputRef}
                   type="file"
-                  accept="image/*,video/mp4,video/webm"
+                  accept="image/*,video/*"
                   capture="environment"
                   multiple
                   required
@@ -778,7 +807,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                           </div>
                         </div>
                         <time className="site-timeline-time mono">
-                          <bdi>{new Date(event.timestamp).toLocaleString(ar ? "ar-EG" : "en-US", {
+                          <bdi>{new Date(event.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", {
                             dateStyle: "medium",
                             timeStyle: "short"
                           })}</bdi>
@@ -915,7 +944,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                       <div className="gallery-sub-meta">
                         <span>{item.event.actor?.displayName ?? "—"}</span>
                         <time className="mono">
-                          {new Date(item.event.timestamp).toLocaleDateString(ar ? "ar-EG" : "en-US")}
+                          {new Date(item.event.timestamp).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}
                         </time>
                       </div>
                     </div>
@@ -1004,7 +1033,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                   <input
                     ref={reportFileInputRef}
                     type="file"
-                    accept="image/*,video/mp4,video/webm"
+                    accept="image/*,video/*"
                     multiple
                     required
                     onChange={(e) => setReportFiles(Array.from(e.target.files ?? []))}
@@ -1260,7 +1289,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 <div className="caption-sub">
                   <span>{labels.by} {lightboxImages[lightboxIndex].event.actor?.displayName ?? "—"}</span>
                   <time className="mono">
-                    {new Date(lightboxImages[lightboxIndex].event.timestamp).toLocaleString(ar ? "ar-EG" : "en-US")}
+                    {new Date(lightboxImages[lightboxIndex].event.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US")}
                   </time>
                 </div>
               </div>
