@@ -41,7 +41,11 @@ export function AppShell({ children }: AppShellProps) {
     () =>
       locale === "ar"
         ? {
-          productTag: "نظام إدارة المشاريع",
+          productTag: "نظام تشغيل المشاريع",
+          navPrimary: "التشغيل",
+          navManagement: "الإدارة",
+          navSystem: "النظام",
+          account: "الحساب",
           dashboard: "لوحة التحكم",
           users: "المستخدمون",
           clients: "العملاء",
@@ -68,7 +72,11 @@ export function AppShell({ children }: AppShellProps) {
           returning: "جاري العودة..."
         }
         : {
-          productTag: "Project Management System",
+          productTag: "Project Operations System",
+          navPrimary: "Operations",
+          navManagement: "Management",
+          navSystem: "System",
+          account: "Account",
           dashboard: "Dashboard",
           users: "Users",
           clients: "Clients",
@@ -240,25 +248,31 @@ export function AppShell({ children }: AppShellProps) {
           >
             <X size={20} />
           </button>
-          <Link className="app-logo" href={href("/app")}>
-            <Image
-              src="/brand/logo-horizontal.png"
-              alt="ELHABAK Construction"
-              width={180}
-              height={75}
-              priority
-            />
-          </Link>
-          <span className="app-product-tag">{labels.productTag}</span>
-          <nav className="app-nav" aria-label="Application navigation">
-            <Link
-              className={isActive("/app") && pathname === "/app" ? "active" : ""}
-              href={href("/app")}
-            >
-              <LayoutGrid size={17} /> {labels.dashboard}
+          <div className="app-brand-block">
+            <Link className="app-logo" href={href("/app")}>
+              <Image
+                src="/brand/logo-horizontal.png"
+                alt="ELHABAK Construction"
+                width={180}
+                height={75}
+                priority
+              />
             </Link>
-            {user.role === "ADMIN" && (
-              <>
+            <div className="app-brand-meta">
+              <span className="app-brand-code mono">ELHABAK / OPS</span>
+              <span className="app-product-tag">{labels.productTag}</span>
+            </div>
+          </div>
+          <nav className="app-nav" aria-label={locale === "ar" ? "التنقل داخل النظام" : "Application navigation"}>
+            <div className="app-nav-group">
+              <span className="app-nav-label">{labels.navPrimary}</span>
+              <Link
+                className={isActive("/app") && pathname === "/app" ? "active" : ""}
+                href={href("/app")}
+              >
+                <LayoutGrid size={17} /> {labels.dashboard}
+              </Link>
+              {user.role === "ADMIN" && (
                 <Link
                   className={
                     isActive("/app/admin/projects") || isActive("/app/projects") ? "active" : ""
@@ -267,56 +281,61 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <BriefcaseBusiness size={17} /> {labels.projects}
                 </Link>
+              )}
+              {user.role !== "ADMIN" && user.role !== "ACCOUNTANT" && (
                 <Link
-                  className={isActive("/app/admin/clients") ? "active" : ""}
-                  href={href("/app/admin/clients")}
+                  className={isActive("/app/projects") ? "active" : ""}
+                  href={href("/app/projects")}
                 >
-                  <UserRoundCog size={17} /> {labels.clients}
+                  {user.role === "WORKER" ? <Camera size={17} /> : <BriefcaseBusiness size={17} />} {" "}
+                  {user.role === "WORKER" ? labels.worker : labels.projects}
                 </Link>
+              )}
+            </div>
+            {(user.role === "ADMIN" || user.role === "ACCOUNTANT" || user.role !== "WORKER") && (
+              <div className="app-nav-group">
+                <span className="app-nav-label">{labels.navManagement}</span>
+                {user.role === "ADMIN" && (
+                  <>
+                    <Link
+                      className={isActive("/app/admin/clients") ? "active" : ""}
+                      href={href("/app/admin/clients")}
+                    >
+                      <UserRoundCog size={17} /> {labels.clients}
+                    </Link>
+                    <Link
+                      className={isActive("/app/admin/users") ? "active" : ""}
+                      href={href("/app/admin/users")}
+                    >
+                      <Users size={17} /> {labels.users}
+                    </Link>
+                  </>
+                )}
+                {(user.role === "ADMIN" || user.role === "ACCOUNTANT") && (
+                  <Link
+                    className={isActive("/app/finance") ? "active" : ""}
+                    href={href("/app/finance")}
+                  >
+                    <Wallet size={17} /> {labels.finance}
+                  </Link>
+                )}
                 <Link
-                  className={isActive("/app/admin/users") ? "active" : ""}
-                  href={href("/app/admin/users")}
+                  className={isActive("/app/reports") ? "active" : ""}
+                  href={href("/app/reports")}
                 >
-                  <Users size={17} /> {labels.users}
+                  <FileText size={17} /> {labels.reports}
                 </Link>
-                <Link
-                  className={isActive("/app/finance") ? "active" : ""}
-                  href={href("/app/finance")}
-                >
-                  <Wallet size={17} /> {labels.finance}
-                </Link>
-              </>
+              </div>
             )}
-            {user.role === "ACCOUNTANT" && (
-              <Link
-                className={isActive("/app/finance") ? "active" : ""}
-                href={href("/app/finance")}
-              >
-                <Wallet size={17} /> {labels.finance}
+            <div className="app-nav-group">
+              <span className="app-nav-label">{labels.navSystem}</span>
+              <Link className={isActive("/app/search") ? "active" : ""} href={href("/app/search")}>
+                <Search size={17} /> {labels.search}
               </Link>
-            )}
-            {user.role !== "ADMIN" && user.role !== "ACCOUNTANT" && (
-              <Link
-                className={isActive("/app/projects") ? "active" : ""}
-                href={href("/app/projects")}
-              >
-                {user.role === "WORKER" ? <Camera size={17} /> : <BriefcaseBusiness size={17} />}{" "}
-                {user.role === "WORKER" ? labels.worker : labels.projects}
-              </Link>
-            )}
-            {user.role !== "WORKER" && (
-              <Link
-                className={isActive("/app/reports") ? "active" : ""}
-                href={href("/app/reports")}
-              >
-                <FileText size={17} /> {labels.reports}
-              </Link>
-            )}
-            <Link className={isActive("/app/search") ? "active" : ""} href={href("/app/search")}>
-              <Search size={17} /> {labels.search}
-            </Link>
+            </div>
           </nav>
           <div className="app-sidebar-footer">
+            <span className="app-nav-label app-account-label">{labels.account}</span>
             <div className="app-user-card">
               <span className="app-user-avatar">{initials}</span>
               <span className="app-user-meta">
@@ -324,6 +343,9 @@ export function AppShell({ children }: AppShellProps) {
                 <span>{roleLabel(user.role, locale)}</span>
               </span>
             </div>
+            <button className="app-sidebar-logout" type="button" onClick={() => void logout()}>
+              <LogOut size={15} /> {labels.logout}
+            </button>
           </div>
         </aside>
         <section className="app-main">
@@ -368,13 +390,6 @@ export function AppShell({ children }: AppShellProps) {
               <Link className="lang-link" href={languageHref()}>
                 {alternate === "ar" ? "العربية" : "English"}
               </Link>
-              <button
-                className="ui-button ui-button--secondary ui-button--sm"
-                type="button"
-                onClick={() => void logout()}
-              >
-                <LogOut size={16} /> {labels.logout}
-              </button>
             </div>
           </header>
           {user.impersonation ? (

@@ -92,11 +92,12 @@ export type MetricCardProps = {
   hint?: ReactNode;
   icon?: ReactNode;
   tone?: BadgeTone;
+  className?: string;
 };
 
-export function MetricCard({ label, value, hint, icon, tone = "navy" }: MetricCardProps) {
+export function MetricCard({ label, value, hint, icon, tone = "navy", className = "" }: MetricCardProps) {
   return (
-    <div className="metric-card">
+    <div className={`metric-card metric-card--${tone} ${className}`.trim()}>
       {icon && <span className={`metric-card__icon metric-card__icon--${tone}`}>{icon}</span>}
       <div className="metric-card__body">
         <span className="metric-card__label">{label}</span>
