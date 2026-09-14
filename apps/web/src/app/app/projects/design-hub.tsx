@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, EmptyState, LoadingState } from "@elhabak/ui";
-import { FilePlus2, Filter, Search, UploadCloud, X } from "lucide-react";
+import { FilePlus2, Filter, RotateCcw, Search, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   DESIGN_DISCIPLINES,
@@ -60,14 +60,14 @@ export function DesignHub({ projectId }: { projectId: string }) {
   const ar = locale === "ar";
   const labels = useMemo(() => ar ? {
     title: "سجل المخططات والتصميمات", lead: "مركز مراقبة المستندات الهندسية ومراجعات الرسومات واعتمادات العميل.",
-    upload: "إضافة تصميم جديد", search: "بحث بالكود أو العنوان أو اسم الملف...", allStatuses: "كل الحالات", allDisciplines: "كل التخصصات الهندسية",
+    upload: "إضافة تصميم جديد", search: "بحث بالكود أو العنوان أو اسم الملف...", allStatuses: "كل الحالات", allDisciplines: "كل التخصصات الهندسية", clear: "مسح المرشحات", results: "نتائج",
     empty: "لا توجد تصميمات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند تصميم لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
     design: "كود ومسمى المخطط", discipline: "التخصص", revision: "المراجعة", status: "حالة الاعتماد", updated: "تاريخ التحديث", owner: "المسؤول", action: "الإجراء", open: "فتح المخطط",
     formatSize: "الملف والحجم", authorDate: "الرافع والتاريخ",
     pending: "بانتظار الاعتماد", inReview: "قيد الفحص والمراجعة", pendingHint: "مستندات جاهزة للمعاينة وتسجيل القرار.", total: "إجمالي المخططات", approved: "معتمد نهائياً", loading: "جاري تحميل سجل المخططات..."
   } : {
     title: "Drawing & Design Register", lead: "Engineering document control center for drawings, technical revisions, and client sign-offs.",
-    upload: "Add New Design", search: "Search by code, title, or filename...", allStatuses: "All Statuses", allDisciplines: "All Disciplines",
+    upload: "Add New Design", search: "Search by code, title, or filename...", allStatuses: "All Statuses", allDisciplines: "All Disciplines", clear: "Clear filters", results: "results",
     empty: "No designs registered", emptyHint: "Register the first design document for this project.", noResults: "No matching designs", noResultsHint: "Change search query or filter criteria.",
     design: "DWG Code & Title", discipline: "Discipline", revision: "Rev", status: "Approval State", updated: "Updated", owner: "Author", action: "Action", open: "Open DWG",
     formatSize: "Format & Size", authorDate: "Author & Date",
@@ -120,13 +120,16 @@ export function DesignHub({ projectId }: { projectId: string }) {
   return <section className="app-page project-workspace-page">
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />
 
-    <div className="design-hub-heading">
+    <div className="design-hub-heading technical-register-header">
       <div>
-        <span className="section-kicker">{ar ? "مراقبة المستندات الهندسية" : "ENGINEERING DOCUMENT CONTROL"}</span>
+        <span className="section-kicker">{ar ? "سجل / مستندات هندسية" : "REGISTER / ENGINEERING SUBMITTALS"}</span>
         <h2>{labels.title}</h2>
         <p>{labels.lead}</p>
       </div>
-      {canManage && <button className="ui-button ui-button--accent" type="button" onClick={() => setShowUpload(true)}><FilePlus2 size={16} />{labels.upload}</button>}
+      <div className="technical-register-header__action">
+        <span className="technical-register-header__count mono"><bdi>{designs.length}</bdi> {labels.results}</span>
+        {canManage && <button className="ui-button ui-button--accent" type="button" onClick={() => setShowUpload(true)}><FilePlus2 size={16} />{labels.upload}</button>}
+      </div>
     </div>
 
     <div className="design-kpi-strip">
@@ -136,17 +139,19 @@ export function DesignHub({ projectId }: { projectId: string }) {
       {user.role === "CLIENT" && metrics.pending > 0 && <p>{labels.pendingHint}</p>}
     </div>
 
-    <div className="design-toolbar">
+    <div className="design-toolbar technical-register-toolbar">
       <label className="design-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>
       <label className="design-filter"><Filter size={14} /><select value={status} onChange={(event) => setStatus(event.target.value as DesignStatus | "")}><option value="">{labels.allStatuses}</option>{DESIGN_STATUSES.map((item) => <option key={item} value={item}>{designStatusLabel(item, locale)}</option>)}</select></label>
       <label className="design-filter"><select value={discipline} onChange={(event) => setDiscipline(event.target.value as DesignDiscipline | "")}><option value="">{labels.allDisciplines}</option>{DESIGN_DISCIPLINES.map((item) => <option key={item} value={item}>{disciplineLabel(item, locale)}</option>)}</select></label>
+      {filtered && <button className="technical-register-toolbar__clear" type="button" onClick={() => { setQuery(""); setStatus(""); setDiscipline(""); }}><RotateCcw size={13} /> {labels.clear}</button>}
+      <span className="technical-register-toolbar__result mono"><bdi>{designs.length}</bdi> {labels.results}</span>
     </div>
 
     {error && <div className="form-error">{error}</div>}
     {success && <div className="form-success">{success}</div>}
     {loading && <DesignRegisterSkeleton />}
     {!loading && designs.length === 0 && <EmptyState icon={<FilePlus2 size={21} />} title={filtered ? labels.noResults : labels.empty} description={filtered ? labels.noResultsHint : labels.emptyHint} action={!filtered && canManage ? <button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowUpload(true)}>{labels.upload}</button> : undefined} />}
-    {!loading && designs.length > 0 && <div className="design-register">
+    {!loading && designs.length > 0 && <div className="design-register technical-register">
       <div className="design-register__head">
         <span>{labels.design}</span>
         <span>{labels.discipline}</span>
@@ -156,15 +161,15 @@ export function DesignHub({ projectId }: { projectId: string }) {
         <span>{labels.authorDate}</span>
         <span>{labels.action}</span>
       </div>
-      {designs.map((design, idx) => {
+      {designs.map((design) => {
         const shortDiscipline = disciplineShortCode(design.discipline);
         const format = fileFormatCode(design.currentRevision.mimeType, design.currentRevision.originalFilename);
-        const docCode = `${shortDiscipline}-${String(idx + 1).padStart(3, "0")}`;
+        const designId = design.id.slice(0, 8).toUpperCase();
         return (
-          <article className="design-register__row" key={design.id}>
+          <article className="design-register__row technical-register__row" key={design.id}>
             <div className="design-register__identity">
               <div className="design-register__code-row">
-                <span className="doc-code mono"><bdi>{docCode}</bdi></span>
+                <span className="doc-code mono"><bdi>{designId}</bdi></span>
                 <strong>{design.title}</strong>
               </div>
               <span className="design-register__filename mono"><bdi>{design.currentRevision.originalFilename}</bdi></span>
@@ -175,8 +180,9 @@ export function DesignHub({ projectId }: { projectId: string }) {
                 <span>{disciplineLabel(design.discipline, locale)}</span>
               </span>
             </div>
-            <div className="design-register__cell" data-label={labels.revision}>
+            <div className="design-register__cell design-register__revision-cell" data-label={labels.revision}>
               <bdi className="revision-badge mono">{design.currentRevision.revisionCode}</bdi>
+              {design.revisions.length > 1 && <small className="revision-count mono"><bdi>{design.revisions.length}</bdi> REV</small>}
             </div>
             <div className="design-register__cell" data-label={labels.formatSize}>
               <div className="format-size-group">
@@ -189,7 +195,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
             </div>
             <div className="design-register__cell design-register__meta-cell" data-label={labels.authorDate}>
               <strong>{design.currentRevision.uploader.displayName}</strong>
-              <time className="mono"><bdi>{new Date(design.updatedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}</bdi></time>
+              <time className="mono"><bdi>{new Date(design.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi></time>
             </div>
             <div className="design-register__action-cell">
               <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${projectId}/design/${design.id}`)}>

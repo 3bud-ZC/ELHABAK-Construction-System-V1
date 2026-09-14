@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard } from "@elhabak/ui";
-import { Archive, FilePlus2, FileStack, Filter, FolderOpen, Search, Share2, UploadCloud, X } from "lucide-react";
+import { Archive, FilePlus2, FileStack, Filter, FolderOpen, RotateCcw, Search, Share2, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   DOCUMENT_CATEGORIES,
@@ -99,14 +99,14 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
   const labels = ar
     ? {
       title: "سجل المستندات", lead: "مركز التحكم بالمستندات العامة للمشروع - عقود، تصاريح، تقارير، ومراسلات.",
-      add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات",
+      add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات", clear: "مسح المرشحات", results: "نتائج",
       empty: "لا توجد مستندات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
       document: "المرجع والمستند", category: "الفئة", version: "النسخة", format: "الصيغة", visibility: "المشاركة", status: "الحالة", updated: "التحديث",
       action: "الإجراء", open: "فتح المستند", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل..."
     }
     : {
       title: "Document Register", lead: "Control center for general project records - contracts, permits, reports, and correspondence.",
-      add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses",
+      add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses", clear: "Clear filters", results: "results",
       empty: "No documents registered", emptyHint: "Register the first document for this project.", noResults: "No matching documents", noResultsHint: "Change search query or filter criteria.",
       document: "Reference & Document", category: "Category", version: "Version", format: "Format", visibility: "Visibility", status: "Status", updated: "Updated",
       action: "Action", open: "Open Document", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register..."
@@ -155,25 +155,28 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
 
   return (
     <>
-      <div className="design-hub-heading">
+      <div className="design-hub-heading technical-register-header">
         <div>
-          <span className="section-kicker">{ar ? "مراقبة المستندات" : "DOCUMENT CONTROL"}</span>
+          <span className="section-kicker">{ar ? "سجل / مراقبة المستندات" : "REGISTER / DOCUMENT CONTROL"}</span>
           <h2>{labels.title}</h2>
           <p>{labels.lead}</p>
         </div>
-        <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
-          <FilePlus2 size={16} />
-          {labels.add}
-        </button>
+        <div className="technical-register-header__action">
+          <span className="technical-register-header__count mono"><bdi>{documents.length}</bdi> {labels.results}</span>
+          <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
+            <FilePlus2 size={16} />
+            {labels.add}
+          </button>
+        </div>
       </div>
 
-      <div className="metric-grid">
+      <div className="metric-grid technical-kpi-strip">
         <MetricCard icon={<FileStack size={18} />} tone="navy" label={labels.total} value={metrics.total} />
         <MetricCard icon={<Share2 size={18} />} tone="success" label={labels.shared} value={metrics.shared} />
         <MetricCard icon={<Archive size={18} />} tone="neutral" label={labels.archived} value={metrics.archived} />
       </div>
 
-      <div className="design-toolbar">
+      <div className="design-toolbar technical-register-toolbar">
         <label className="design-search">
           <Search size={15} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
@@ -195,6 +198,8 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
             ))}
           </select>
         </label>
+        {filtered && <button className="technical-register-toolbar__clear" type="button" onClick={() => { setQuery(""); setCategory(""); setStatus(""); }}><RotateCcw size={13} /> {labels.clear}</button>}
+        <span className="technical-register-toolbar__result mono"><bdi>{documents.length}</bdi> {labels.results}</span>
       </div>
 
       {error && <div className="form-error">{error}</div>}
@@ -209,7 +214,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
         />
       )}
       {!loading && documents.length > 0 && (
-        <div className="finance-register" style={{ "--finance-cols": "minmax(220px,2fr) 120px 80px 70px 130px 90px minmax(120px,1fr) 90px" } as React.CSSProperties}>
+        <div className="finance-register technical-document-register" style={{ "--finance-cols": "minmax(220px,2fr) 120px 80px 70px 130px 90px minmax(120px,1fr) 90px" } as React.CSSProperties}>
           <div className="finance-register__head">
             <span>{labels.document}</span>
             <span>{labels.category}</span>
@@ -240,7 +245,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
                   <Badge tone={documentStatusTone(document.status)}>{documentStatusLabel(document.status, locale)}</Badge>
                 </span>
                 <span className="finance-register__cell finance-register__cell--muted" data-label={labels.updated}>
-                  <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}</bdi>
+                  <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi>
                 </span>
                 <div className="finance-register__actions">
                   <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${projectId}/documents/${document.id}`)}>
@@ -440,7 +445,7 @@ function ClientDocuments({ projectId, locale }: { projectId: string; locale: "ar
       {error && <div className="form-error">{error}</div>}
       {documents.length === 0 && <EmptyState icon={<FolderOpen size={20} />} title={labels.empty} description={labels.emptyHint} />}
       {documents.length > 0 && (
-        <div className="finance-register" style={{ "--finance-cols": "minmax(200px,2fr) 140px 90px 120px 160px" } as React.CSSProperties}>
+        <div className="finance-register technical-document-register" style={{ "--finance-cols": "minmax(200px,2fr) 140px 90px 120px 160px" } as React.CSSProperties}>
           <div className="finance-register__head">
             <span>{ar ? "المستند" : "Document"}</span>
             <span>{labels.category}</span>
@@ -459,7 +464,7 @@ function ClientDocuments({ projectId, locale }: { projectId: string; locale: "ar
                 <bdi className="revision-badge mono">{document.currentVersion?.versionCode ?? "—"}</bdi>
               </span>
               <span className="finance-register__cell finance-register__cell--muted" data-label={labels.updated}>
-                <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG" : "en-US")}</bdi>
+                <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi>
               </span>
               <div className="finance-register__actions">
                 <Link className="ui-button ui-button--secondary ui-button--sm" href={ar ? `/app/projects/${projectId}/documents/${document.id}` : `/app/projects/${projectId}/documents/${document.id}?lang=en`}>

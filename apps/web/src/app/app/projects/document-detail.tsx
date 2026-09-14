@@ -126,12 +126,12 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
 
   const selected = document.versions.find((version) => version.id === selectedVersionId) ?? document.currentVersion;
   const canManage = user.role === "ADMIN" || user.role === "ENGINEER";
-  const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG" : "en-US", { dateStyle: "medium", timeStyle: "short" });
+  const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
 
   return (
     <section className="app-page project-workspace-page">
       <ProjectWorkspace project={project} locale={locale} role={user.role} active="documents" />
-      <div className="design-detail-heading">
+      <div className="design-detail-heading technical-record-heading technical-document-heading">
         <div className="design-detail-identity">
           <span className="section-kicker">
             {ar ? "مراقبة المستندات" : "DOCUMENT CONTROL"} // <bdi className="mono">{document.reference}</bdi>
@@ -179,10 +179,10 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
         </div>
       )}
 
-      <div className="design-detail-layout">
-        <main className="design-preview-column">
+      <div className="design-detail-layout technical-record-layout">
+        <main className="design-preview-column technical-preview-column">
           {selected && (
-            <section className="workspace-panel design-file-panel">
+            <section className="workspace-panel design-file-panel technical-file-panel">
               <div className="workspace-panel__title">
                 <div className="workspace-panel__title-left">
                   <FileText size={16} />
@@ -216,7 +216,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
               </div>
               {canManage && selected.checksumSha256 && (
                 <p className="field-hint mono" style={{ wordBreak: "break-all" }}>
-                  {labels.checksum}: <bdi>{selected.checksumSha256}</bdi>
+                  {labels.checksum}: <bdi title={selected.checksumSha256}>{selected.checksumSha256.slice(0, 12)}…{selected.checksumSha256.slice(-8)}</bdi>
                 </p>
               )}
             </section>
@@ -250,7 +250,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
           )}
         </main>
 
-        <aside className="design-detail-sidebar">
+        <aside className="design-detail-sidebar technical-control-sidebar">
           <section className="workspace-panel">
             <div className="workspace-panel__title">
               <FileText size={16} />

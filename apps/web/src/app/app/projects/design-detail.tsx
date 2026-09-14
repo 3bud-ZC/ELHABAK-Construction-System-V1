@@ -88,7 +88,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
   const selected = design.revisions.find((revision) => revision.id === selectedRevisionId) ?? design.currentRevision;
   const canManage = user.role === "ADMIN" || user.role === "ENGINEER";
   const canDecide = user.role === "CLIENT" && design.currentRevision.status === "IN_REVIEW" && selected.id === design.currentRevision.id;
-  const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG" : "en-US", { dateStyle: "medium", timeStyle: "short" });
+  const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
 
   async function addComment(event: FormEvent) {
     event.preventDefault();
@@ -99,7 +99,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
 
   return <section className="app-page project-workspace-page">
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />
-    <div className="design-detail-heading">
+    <div className="design-detail-heading technical-record-heading">
       <div className="design-detail-identity">
         <span className="section-kicker">{ar ? "مراقبة المستندات الهندسية" : "ENGINEERING DOCUMENT CONTROL"} // <bdi className="mono">{selected.revisionCode}</bdi></span>
         <h2>{design.title}</h2>
@@ -124,9 +124,9 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     {error && <div className="form-error">{error}</div>}
     {success && <div className="form-success">{success}</div>}
 
-    <div className="design-detail-layout">
-      <main className="design-preview-column">
-        <section className="workspace-panel design-file-panel">
+    <div className="design-detail-layout technical-record-layout">
+      <main className="design-preview-column technical-preview-column">
+        <section className="workspace-panel design-file-panel technical-file-panel">
           <div className="workspace-panel__title">
             <div className="workspace-panel__title-left">
               <FileText size={16} />
@@ -214,7 +214,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
         </section>
       </main>
 
-      <aside className="design-detail-sidebar">
+      <aside className="design-detail-sidebar technical-control-sidebar">
         <section className="workspace-panel">
           <div className="workspace-panel__title">
             <FileText size={16} />
