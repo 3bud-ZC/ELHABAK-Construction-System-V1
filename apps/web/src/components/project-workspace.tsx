@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Badge, ProgressBar } from "@elhabak/ui";
-import { Activity, Building2, CalendarRange, ChevronDown, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Activity, Building2, CalendarDays, CalendarRange, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
+  LIFECYCLE_PHASES,
   phaseLabel,
   statusLabel,
   statusTone,
@@ -27,6 +28,9 @@ export type ProjectHeaderRecord = {
   status: ProjectStatus;
   progress: number;
   location: string | null;
+  startDate?: string | null;
+  targetDate?: string | null;
+  workers?: UserRecord[];
   client: { id: string; user: UserRecord } | null;
   engineer: UserRecord | null;
 };
@@ -43,7 +47,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
   const labels = ar
     ? {
       phase: "المرحلة الحالية",
-      progress: "التقدم الكلي",
+      progress: "الإنجاز الكلي",
       location: "الموقع",
       client: "العميل",
       engineer: "المهندس المسؤول",
@@ -53,10 +57,16 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       finance: "الشؤون المالية",
       documents: "المستندات",
       chat: "الدردشة",
+      edit: "تعديل المشروع",
       status: "الحالة",
+      schedule: "الجدول الزمني",
+      team: "الفريق الميداني",
       unset: "غير محدد",
-      moreDetails: "تفاصيل إضافية",
-      workspaceCode: "مساحة المشروع"
+      modules: "وحدات المشروع",
+      control: "مركز التحكم بالمشروع",
+      project: "مشروع",
+      start: "البدء",
+      target: "التسليم المستهدف"
     }
     : {
       phase: "Current phase",
@@ -70,18 +80,30 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       finance: "Finance",
       documents: "Documents",
       chat: "Chat",
-      edit: "Edit Project",
+      edit: "Edit project",
       status: "Status",
+      schedule: "Schedule",
+      team: "Field team",
       unset: "Not set",
-      moreDetails: "More details",
-      workspaceCode: "Workspace"
+      modules: "Project modules",
+      control: "Project control center",
+      project: "PROJECT",
+      start: "Start",
+      target: "Target delivery"
     };
 
   function href(path: string) {
-    return ar ? path : `${path}?lang=en`;
+    return ar ? path : `${path}${path.includes("?") ? "&" : "?"}lang=en`;
+  }
+
+  function formatDate(value: string | null | undefined) {
+    if (!value) return labels.unset;
+    return new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
   }
 
   const base = `/app/projects/${project.id}`;
+  const currentPhaseIndex = LIFECYCLE_PHASES.indexOf(project.phase);
+  const team = project.workers?.length ? project.workers.map((worker) => worker.displayName).join(ar ? "، " : ", ") : labels.unset;
   const sections: Array<{ id: WorkspaceSection; label: string; href: string; icon: typeof ClipboardList }> = [
     ...(role === "ACCOUNTANT" ? [] : [{ id: "overview" as const, label: labels.overview, href: base, icon: ClipboardList }]),
     ...(role === "ADMIN" || role === "ENGINEER" || role === "CLIENT"
@@ -101,15 +123,10 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
 
   return (
     <div className="project-workspace-container">
-      <header className="project-command-header project-command-header--v4">
-        <div className="project-command-header__visual" aria-hidden="true">
-          <span className="project-command-header__crane" />
-          <span className="project-command-header__frame project-command-header__frame--one" />
-          <span className="project-command-header__frame project-command-header__frame--two" />
-        </div>
+      <header className="project-command-header project-command-header--v5">
         <div className="project-command-header__topbar">
           <div className="project-command-header__ref-group">
-            <span className="project-command-header__sys-tag">ELHABAK // {labels.workspaceCode}</span>
+            <span className="project-command-header__sys-tag">ELHABAK // {labels.control}</span>
             <bdi className="project-command-header__code mono">{project.code ?? "—"}</bdi>
           </div>
           <div className="project-command-header__badges">
@@ -125,12 +142,12 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
 
         <div className="project-command-header__main">
           <div className="project-command-header__identity">
-            <span className="project-command-header__label">{ar ? "مشروع" : "PROJECT"}</span>
+            <span className="project-command-header__label">{labels.project} / {labels.control}</span>
             <h1>{project.name}</h1>
             <div className="project-command-header__phase-chip">
+              <span className="project-command-header__phase-index mono"><bdi>{String(currentPhaseIndex + 1).padStart(2, "0")}</bdi>/06</span>
               <CalendarRange size={14} />
-              <small>{labels.phase}:</small>
-              <strong>{phaseLabel(project.phase, locale)}</strong>
+              <div><small>{labels.phase}</small><strong>{phaseLabel(project.phase, locale)}</strong></div>
             </div>
           </div>
           <div className="project-command-header__progress">
@@ -138,26 +155,13 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
               <span>{labels.progress}</span>
               <strong><bdi>{project.progress}%</bdi></strong>
             </div>
-            <ProgressBar value={project.progress} />
+            <ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} />
           </div>
         </div>
-
-        <div className="project-command-header__facts">
-          <span><UsersRound size={14} /><small>{labels.client}</small><strong>{project.client?.user.displayName ?? labels.unset}</strong></span>
-          <span><UserRound size={14} /><small>{labels.engineer}</small><strong>{project.engineer?.displayName ?? labels.unset}</strong></span>
-          <span><MapPin size={14} /><small>{labels.location}</small><strong>{project.location ?? labels.unset}</strong></span>
-          <span><Building2 size={14} /><small>{labels.status}</small><strong>{statusLabel(project.status, locale)}</strong></span>
-        </div>
-
-        <details className="project-command-header__details">
-          <summary className="project-command-header__details-toggle">
-            {labels.moreDetails}
-            <ChevronDown size={14} aria-hidden="true" />
-          </summary>
-        </details>
       </header>
 
       <div className="project-workspace-bar">
+        <span className="project-workspace-bar__label">{labels.modules}</span>
         <nav className="project-workspace-nav" aria-label={ar ? "أقسام مساحة العمل" : "Workspace sections"}>
           {sections.map((section) => {
             const Icon = section.icon;
@@ -168,6 +172,14 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
             );
           })}
         </nav>
+      </div>
+
+      <div className="project-command-facts">
+        <span><UsersRound size={15} /><small>{labels.client}</small><strong><bdi>{project.client?.user.displayName ?? labels.unset}</bdi></strong></span>
+        <span><UserRound size={15} /><small>{labels.engineer}</small><strong><bdi>{project.engineer?.displayName ?? labels.unset}</bdi></strong></span>
+        <span><MapPin size={15} /><small>{labels.location}</small><strong><bdi>{project.location ?? labels.unset}</bdi></strong></span>
+        <span><CalendarDays size={15} /><small>{labels.schedule}</small><strong><bdi>{formatDate(project.startDate)} — {formatDate(project.targetDate)}</bdi></strong></span>
+        <span><Building2 size={15} /><small>{labels.team}</small><strong><bdi>{team}</bdi></strong></span>
       </div>
     </div>
   );

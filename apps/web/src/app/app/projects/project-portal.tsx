@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
-import { Calendar, FolderKanban, Info, UsersRound } from "lucide-react";
+import { Activity, Calendar, Clock3, FolderKanban, Info, MapPin, UsersRound } from "lucide-react";
 
 import {
   apiRequest,
@@ -12,6 +12,8 @@ import {
   phaseLabel,
   statusLabel,
   statusTone,
+  siteUpdateTypeLabel,
+  siteUpdateTypeTone,
   type ProjectRecord
 } from "../../../lib/api";
 import { useCurrentUser } from "../../../lib/user-context";
@@ -30,24 +32,14 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-
-
   const labels = useMemo(() => locale === "ar" ? {
     title: "مشاريعي", workerTitle: "تحديثات الموقع", lead: "المشاريع المصرح لك بالوصول إليها.", workerLead: "اختر مشروعاً لرفع تحديث ميداني جديد.",
-    empty: "لا توجد مشاريع مخصصة لك", emptyHint: "سيظهر هنا أي مشروع يتم تعيينك عليه.", summary: "ملخص المشروع", dates: "الجدول الزمني",
-    team: "فريق المشروع", notes: "ملاحظات المشروع", noNotes: "لا توجد ملاحظات مسجلة.", updates: "سجل نشاط الموقع",
-    updatesLead: "تحديثات ميدانية موثقة زمنياً من فريق التنفيذ.", noUpdates: "لا توجد تحديثات موقع بعد", noUpdatesHintWorker: "ارفع أول تحديث ميداني لهذا المشروع.",
-    noUpdatesHintClient: "ستظهر هنا تحديثات فريق العمل أولاً بأول.", note: "ملاحظة قصيرة (اختياري)", files: "صور أو فيديو", submit: "إرسال التحديث",
-    uploaded: "تم إرسال تحديث الموقع بنجاح.", noDates: "غير محدد", loadingLabel: "جاري تحميل مساحة المشروع...", start: "تاريخ البدء",
-    target: "التسليم المستهدف", category: "فئة المشروع", phase: "مرحلة العمل", workers: "الفريق الميداني", none: "غير معين"
+    empty: "لا توجد مشاريع مخصصة لك", emptyHint: "سيظهر هنا أي مشروع يتم تعيينك عليه.", brief: "ملخص تنفيذي", briefLead: "هوية المشروع وملاحظات التشغيل الحالية.", dates: "الجدول الزمني", team: "فريق التسليم", updates: "آخر نشاط ميداني", updatesLead: "أحدث الملاحظات الموثقة من فريق التنفيذ.",
+    noNotes: "لا توجد ملاحظات مسجلة.", noUpdates: "لا توجد تحديثات موقع بعد", noUpdatesHintWorker: "ارفع أول تحديث ميداني لهذا المشروع.", noUpdatesHintClient: "ستظهر هنا تحديثات فريق العمل أولاً بأول.", note: "ملاحظة", files: "مرفقات", loadingLabel: "جاري تحميل مساحة المشروع...", start: "تاريخ البدء", target: "التسليم المستهدف", category: "فئة المشروع", phase: "مرحلة العمل", workers: "الفريق الميداني", none: "غير معين", lifecycle: "مسار المشروع", lifecycleLead: "المراحل الستة للتسليم الهندسي.", current: "الحالة الحالية"
   } : {
     title: "My Projects", workerTitle: "Site Updates", lead: "Projects you are authorized to access.", workerLead: "Choose a project to upload a new field update.",
-    empty: "No assigned projects", emptyHint: "Any project you are assigned to will appear here.", summary: "Project summary", dates: "Schedule",
-    team: "Project team", notes: "Project notes", noNotes: "No project notes recorded.", updates: "Site activity register",
-    updatesLead: "Timestamped field updates from the delivery team.", noUpdates: "No site updates yet", noUpdatesHintWorker: "Upload the first field update for this project.",
-    noUpdatesHintClient: "Updates from the field team will appear here as they happen.", note: "Short note (optional)", files: "Photos or video", submit: "Submit update",
-    uploaded: "Site update submitted successfully.", noDates: "Not set", loadingLabel: "Loading project workspace...", start: "Start date",
-    target: "Target delivery", category: "Project category", phase: "Work phase", workers: "Field team", none: "Unassigned"
+    empty: "No assigned projects", emptyHint: "Any project you are assigned to will appear here.", brief: "Executive project brief", briefLead: "Project identity and current operating notes.", dates: "Schedule", team: "Delivery team", updates: "Latest field activity", updatesLead: "Recent timestamped notes from the delivery team.",
+    noNotes: "No project notes recorded.", noUpdates: "No site updates yet", noUpdatesHintWorker: "Upload the first field update for this project.", noUpdatesHintClient: "Updates from the field team will appear here as they happen.", note: "Note", files: "attachments", loadingLabel: "Loading project workspace...", start: "Start date", target: "Target delivery", category: "Project category", phase: "Work phase", workers: "Field team", none: "Unassigned", lifecycle: "Project delivery path", lifecycleLead: "The six canonical engineering delivery stages.", current: "Current state"
   }, [locale]);
 
   useEffect(() => {
@@ -64,62 +56,77 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
   }, [projectId]);
 
   function href(path: string) { return locale === "ar" ? path : `${path}?lang=en`; }
-
+  function formatDate(value: string | null) {
+    if (!value) return locale === "ar" ? "غير محدد" : "Not set";
+    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium" }).format(new Date(value));
+  }
 
   if (loading) return <section className="app-page"><LoadingState label={labels.loadingLabel} /></section>;
 
   const isWorker = user.role === "WORKER";
-  const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", { dateStyle: "medium" });
 
   if (project) {
-    if (view === "site") {
-      return <SiteOperations projectId={project.id} />;
-    }
+    if (view === "site") return <SiteOperations projectId={project.id} />;
 
     return (
       <section className={`app-page project-workspace-page ${isWorker ? "worker-shell" : ""}`}>
         <ProjectWorkspace project={project} locale={locale} role={user.role} active="overview" />
         {error && <div className="form-error">{error}</div>}
 
-        {view === "overview" && <div className="project-overview-v2">
-
-          <div className="overview-lifecycle-section">
-            <div className="section-title section-title--compact">
-              <h2>{locale === "ar" ? "مسار المشروع" : "Project Lifecycle"}</h2>
+        <div className="project-overview-v2">
+          <section className="overview-lifecycle-section">
+            <div className="overview-section-heading">
+              <div><span className="section-kicker">PROJECT / DELIVERY PATH</span><h2>{labels.lifecycle}</h2><p>{labels.lifecycleLead}</p></div>
+              <Badge tone="orange">{labels.current}: {phaseLabel(project.phase, locale)}</Badge>
             </div>
             <Lifecycle phase={project.phase} locale={locale} />
-          </div>
+          </section>
 
           <div className="workspace-grid workspace-grid--overview">
-            <section className="workspace-panel">
-              <div className="workspace-panel__title"><Info size={17} /><h2>{labels.summary}</h2></div>
+            <section className="workspace-panel workspace-panel--brief">
+              <div className="workspace-panel__title"><Info size={17} /><div><h2>{labels.brief}</h2><p>{labels.briefLead}</p></div></div>
               <dl className="detail-list">
                 <div><dt>{labels.category}</dt><dd>{categoryLabel(project.category, locale)}</dd></div>
                 <div><dt>{labels.phase}</dt><dd><Badge tone="navy">{phaseLabel(project.phase, locale)}</Badge></dd></div>
-                <div><dt>{labels.notes}</dt><dd>{project.notes ?? labels.noNotes}</dd></div>
+                <div><dt>{labels.note}</dt><dd>{project.notes ?? labels.noNotes}</dd></div>
               </dl>
             </section>
             <section className="workspace-panel">
-              <div className="workspace-panel__title"><Calendar size={17} /><h2>{labels.dates}</h2></div>
+              <div className="workspace-panel__title"><Calendar size={17} /><div><h2>{labels.dates}</h2><p>{labels.lifecycleLead}</p></div></div>
               <dl className="detail-list">
-                <div><dt>{labels.start}</dt><dd><bdi>{project.startDate ? dateFormatter.format(new Date(project.startDate)) : labels.noDates}</bdi></dd></div>
-                <div><dt>{labels.target}</dt><dd><bdi>{project.targetDate ? dateFormatter.format(new Date(project.targetDate)) : labels.noDates}</bdi></dd></div>
+                <div><dt>{labels.start}</dt><dd><bdi>{formatDate(project.startDate)}</bdi></dd></div>
+                <div><dt>{labels.target}</dt><dd><bdi>{formatDate(project.targetDate)}</bdi></dd></div>
               </dl>
             </section>
-            <section className="workspace-panel workspace-panel--wide">
-              <div className="workspace-panel__title"><UsersRound size={17} /><h2>{labels.team}</h2></div>
-              <div className="team-strip">
-                <span><small>{locale === "ar" ? "المهندس المسؤول" : "Responsible engineer"}</small><strong>{project.engineer?.displayName ?? labels.none}</strong></span>
-                <span><small>{labels.workers}</small><strong>{project.workers.map((worker) => worker.displayName).join(locale === "ar" ? "، " : ", ") || labels.none}</strong></span>
+            <section className="workspace-panel workspace-panel--activity">
+              <div className="workspace-panel__title"><Activity size={17} /><div><h2>{labels.updates}</h2><p>{labels.updatesLead}</p></div></div>
+              {project.siteUpdates.length === 0 ? (
+                <EmptyState title={labels.noUpdates} description={isWorker ? labels.noUpdatesHintWorker : labels.noUpdatesHintClient} className="project-overview-empty" />
+              ) : (
+                <div className="project-overview-activity-list">
+                  {project.siteUpdates.slice(0, 3).map((update) => (
+                    <article className="project-overview-activity" key={update.id}>
+                      <span className="project-overview-activity__marker"><Clock3 size={13} /></span>
+                      <div><strong>{siteUpdateTypeLabel(update.type, locale)}</strong><p>{update.note ?? labels.noNotes}</p><small><bdi>{update.author.displayName}</bdi> · <bdi>{formatDate(update.createdAt)}</bdi></small></div>
+                      <Badge tone={siteUpdateTypeTone(update.type)}>{update.media.length} {labels.files}</Badge>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+            <section className="workspace-panel workspace-panel--wide project-overview-team">
+              <div className="workspace-panel__title"><UsersRound size={17} /><div><h2>{labels.team}</h2><p>{labels.workers}</p></div></div>
+              <div className="project-overview-team__grid">
+                <span><small>{locale === "ar" ? "المهندس المسؤول" : "Responsible engineer"}</small><strong><bdi>{project.engineer?.displayName ?? labels.none}</bdi></strong></span>
+                <span><small>{labels.workers}</small><strong><bdi>{project.workers.map((worker) => worker.displayName).join(locale === "ar" ? "، " : ", ") || labels.none}</bdi></strong></span>
+                <span><small><MapPin size={13} /> {locale === "ar" ? "الموقع" : "Location"}</small><strong><bdi>{project.location ?? labels.none}</bdi></strong></span>
               </div>
             </section>
           </div>
-        </div>}
+        </div>
       </section>
     );
   }
-
-
 
   return <section className="app-page">
     <PageHeader title={isWorker ? labels.workerTitle : labels.title} description={isWorker ? labels.workerLead : labels.lead} />

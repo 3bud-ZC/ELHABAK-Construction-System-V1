@@ -10,37 +10,36 @@ type LifecycleProps = {
 export function Lifecycle({ phase, locale }: LifecycleProps) {
   const currentIndex = LIFECYCLE_PHASES.indexOf(phase);
   const ar = locale === "ar";
-
   const statusLabels = ar
-    ? { done: "مكتمل", current: "المرحلة الحالية", upcoming: "قادمة" }
-    : { done: "Completed", current: "Active Phase", upcoming: "Pending" };
+    ? { done: "مكتمل", current: "المرحلة الحالية", upcoming: "قادمة", title: "مسار التسليم الهندسي" }
+    : { done: "Completed", current: "Current phase", upcoming: "Upcoming", title: "Engineering delivery sequence" };
 
   return (
-    <div className="lifecycle-pipeline">
-      <div className="lifecycle-pipeline__summary" aria-hidden="true">
-        <span>{ar ? "مسار التسليم الهندسي" : "Engineering delivery sequence"}</span>
-        <strong dir="ltr"><bdi>{String(currentIndex + 1).padStart(2, "0")}</bdi>/06</strong>
+    <section className="lifecycle-control" aria-label={statusLabels.title}>
+      <div className="lifecycle-pipeline__summary">
+        <div><span>{statusLabels.title}</span><strong>{phaseLabel(phase, locale)}</strong></div>
+        <bdi className="mono"><span>{String(currentIndex + 1).padStart(2, "0")}</span>/06</bdi>
       </div>
       <div className="lifecycle-pipeline__track" aria-hidden="true" />
-      <div className="lifecycle">
+      <ol className="lifecycle">
         {LIFECYCLE_PHASES.map((step, index) => {
           const state = index < currentIndex ? "done" : index === currentIndex ? "current" : "upcoming";
           return (
-            <div className={`lifecycle-step lifecycle-step--${state}`} key={step}>
+            <li className={`lifecycle-step lifecycle-step--${state}`} key={step} aria-current={state === "current" ? "step" : undefined}>
               <div className="lifecycle-step__indicator" aria-hidden="true">
-                <span className="lifecycle-step__node" />
+                <span className="lifecycle-step__node"><bdi>{String(index + 1).padStart(2, "0")}</bdi></span>
               </div>
               <div className="lifecycle-step__body">
                 <div className="lifecycle-step__meta">
-                  <span className="lifecycle-step__index">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="lifecycle-step__index"><bdi>{String(index + 1).padStart(2, "0")}</bdi></span>
                   <span className="lifecycle-step__state-tag">{statusLabels[state]}</span>
                 </div>
-                <span className="lifecycle-step__label">{phaseLabel(step, locale)}</span>
+                <strong className="lifecycle-step__label">{phaseLabel(step, locale)}</strong>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ol>
+    </section>
   );
 }

@@ -4,18 +4,22 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
-import { BriefcaseBusiness, Clock3, FolderKanban, TrendingUp } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Clock3, Filter, FolderKanban, MapPin, RotateCcw, TrendingUp } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
   phaseLabel,
   statusLabel,
   statusTone,
+  LIFECYCLE_PHASES,
+  type ProjectCategory,
+  type ProjectPhase,
   type ProjectRecord,
   type ProjectStatus
 } from "../../../../lib/api";
 
 const statuses: ProjectStatus[] = ["PLANNED", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"];
+const categories: ProjectCategory[] = ["DESIGN", "CONSTRUCTION", "FINISHING", "GENERAL_CONTRACTING", "FURNITURE", "MIXED"];
 
 export function ProjectsClient() {
   const searchParams = useSearchParams();
@@ -23,6 +27,10 @@ export function ProjectsClient() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ProjectStatus | "">("");
+  const [phase, setPhase] = useState<ProjectPhase | "">("");
+  const [category, setCategory] = useState<ProjectCategory | "">("");
+  const [clientId, setClientId] = useState("");
+  const [engineerId, setEngineerId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -30,56 +38,70 @@ export function ProjectsClient() {
     () =>
       locale === "ar"
         ? {
-          title: "المشاريع",
-          lead: "متابعة وإدارة جميع المشاريع الجارية والمرحلة والفريق المسؤول.",
+          eyebrow: "المحفظة / سجل التحكم",
+          title: "سجل المشاريع",
+          lead: "مرجع تشغيلي موحد للمشاريع والحالة والمرحلة والفريق المسؤول.",
           create: "إنشاء مشروع",
           search: "بحث بالاسم أو الكود أو العميل",
           allStatuses: "كل الحالات",
+          allPhases: "كل المراحل",
+          allCategories: "كل الفئات",
+          allClients: "كل العملاء",
+          allEngineers: "كل المهندسين",
+          clear: "مسح الفلاتر",
+          result: "نتيجة",
+          results: "نتائج",
           empty: "لا توجد مشاريع مطابقة",
-          emptyHint: "جرّب تعديل البحث أو أنشئ مشروعاً جديداً.",
+          emptyHint: "جرّب تعديل معايير البحث أو أعد ضبط الفلاتر.",
           name: "المشروع",
           client: "العميل",
-          engineer: "المهندس",
-          phase: "المرحلة",
-          progress: "التقدم",
-          open: "فتح",
-          loadingLabel: "جاري تحميل المشاريع...",
+          engineer: "المهندس المسؤول",
+          location: "الموقع",
+          phase: "المرحلة الحالية",
+          status: "الحالة",
+          progress: "الإنجاز",
+          schedule: "التسليم المستهدف",
+          open: "فتح المشروع",
+          loadingLabel: "جاري تحميل سجل المشاريع...",
           total: "إجمالي المشاريع",
-          activeCount: "نشطة حالياً",
-          avgProgress: "متوسط التقدم",
-          overdue: "تجاوزت الموعد"
+          activeCount: "مشاريع نشطة",
+          avgProgress: "متوسط الإنجاز",
+          overdue: "تجاوزت الموعد",
+          noDate: "غير محدد"
         }
         : {
-          title: "Projects",
-          lead: "Track and manage every active project, its phase, and responsible team.",
-          create: "Create Project",
+          eyebrow: "PORTFOLIO / CONTROL REGISTER",
+          title: "Project Register",
+          lead: "A unified operational reference for projects, state, phase, and responsible teams.",
+          create: "Create project",
           search: "Search by name, code, or client",
           allStatuses: "All statuses",
+          allPhases: "All phases",
+          allCategories: "All categories",
+          allClients: "All clients",
+          allEngineers: "All engineers",
+          clear: "Clear filters",
+          result: "result",
+          results: "results",
           empty: "No matching projects",
-          emptyHint: "Try a different search or create a new project.",
+          emptyHint: "Adjust the search criteria or reset the filters.",
           name: "Project",
           client: "Client",
-          engineer: "Engineer",
-          phase: "Phase",
+          engineer: "Responsible engineer",
+          location: "Location",
+          phase: "Current phase",
+          status: "Status",
           progress: "Progress",
-          open: "Open",
-          loadingLabel: "Loading projects...",
+          schedule: "Target delivery",
+          open: "Open project",
+          loadingLabel: "Loading project register...",
           total: "Total projects",
-          activeCount: "Currently active",
+          activeCount: "Active projects",
           avgProgress: "Average progress",
-          overdue: "Past target date"
+          overdue: "Past target date",
+          noDate: "Not set"
         },
     [locale]
-  );
-
-  const activeCount = useMemo(() => projects.filter((project) => project.status === "ACTIVE").length, [projects]);
-  const avgProgress = useMemo(
-    () => (projects.length ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / projects.length) : 0),
-    [projects]
-  );
-  const overdueCount = useMemo(
-    () => projects.filter((project) => project.targetDate && new Date(project.targetDate) < new Date() && !["COMPLETED", "CANCELLED"].includes(project.status)).length,
-    [projects]
   );
 
   useEffect(() => {
@@ -108,12 +130,59 @@ export function ProjectsClient() {
   }, [query, status]);
 
   function href(path: string) {
-    return locale === "ar" ? path : `${path}?lang=en`;
+    return locale === "ar" ? path : `${path}${path.includes("?") ? "&" : "?"}lang=en`;
+  }
+
+  function formatDate(value: string | null) {
+    if (!value) return labels.noDate;
+    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    }).format(new Date(value));
+  }
+
+  const clientOptions = useMemo(
+    () => Array.from(new Map(projects.filter((project) => project.client).map((project) => [project.client!.id, project.client!.user.displayName])).entries()),
+    [projects]
+  );
+  const engineerOptions = useMemo(
+    () => Array.from(new Map(projects.filter((project) => project.engineer).map((project) => [project.engineer!.id, project.engineer!.displayName])).entries()),
+    [projects]
+  );
+  const visibleProjects = useMemo(
+    () => projects.filter((project) =>
+      (!phase || project.phase === phase) &&
+      (!category || project.category === category) &&
+      (!clientId || project.client?.id === clientId) &&
+      (!engineerId || project.engineer?.id === engineerId)
+    ),
+    [category, clientId, engineerId, phase, projects]
+  );
+  const activeCount = useMemo(() => visibleProjects.filter((project) => project.status === "ACTIVE").length, [visibleProjects]);
+  const avgProgress = useMemo(
+    () => (visibleProjects.length ? Math.round(visibleProjects.reduce((sum, project) => sum + project.progress, 0) / visibleProjects.length) : 0),
+    [visibleProjects]
+  );
+  const overdueCount = useMemo(
+    () => visibleProjects.filter((project) => project.targetDate && new Date(project.targetDate) < new Date() && !["COMPLETED", "CANCELLED"].includes(project.status)).length,
+    [visibleProjects]
+  );
+  const hasFilters = Boolean(query || status || phase || category || clientId || engineerId);
+
+  function clearFilters() {
+    setQuery("");
+    setStatus("");
+    setPhase("");
+    setCategory("");
+    setClientId("");
+    setEngineerId("");
   }
 
   return (
-    <section className="app-page">
+    <section className="app-page projects-register-page">
       <PageHeader
+        eyebrow={<span className="page-header__eyebrow-code">{labels.eyebrow}</span>}
         title={labels.title}
         description={labels.lead}
         actions={
@@ -124,74 +193,85 @@ export function ProjectsClient() {
       />
 
       {!loading && (
-        <div className="metric-grid">
-          <MetricCard icon={<FolderKanban size={18} />} tone="navy" label={labels.total} value={projects.length} />
-          <MetricCard icon={<BriefcaseBusiness size={18} />} tone="orange" label={labels.activeCount} value={activeCount} />
-          <MetricCard icon={<TrendingUp size={18} />} tone="success" label={labels.avgProgress} value={`${avgProgress}%`} />
-          <MetricCard icon={<Clock3 size={18} />} tone="orange" label={labels.overdue} value={overdueCount} />
+        <div className="project-register-metrics metric-grid">
+          <MetricCard icon={<FolderKanban size={17} />} tone="navy" label={labels.total} value={<bdi>{visibleProjects.length}</bdi>} />
+          <MetricCard icon={<BriefcaseBusiness size={17} />} tone="orange" label={labels.activeCount} value={<bdi>{activeCount}</bdi>} />
+          <MetricCard icon={<TrendingUp size={17} />} tone="success" label={labels.avgProgress} value={<bdi>{avgProgress}%</bdi>} />
+          <MetricCard icon={<Clock3 size={17} />} tone="orange" label={labels.overdue} value={<bdi>{overdueCount}</bdi>} />
         </div>
       )}
 
-      <div className="table-toolbar">
-        <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
-        <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus | "")}>
-          <option value="">{labels.allStatuses}</option>
-          {statuses.map((item) => (
-            <option value={item} key={item}>
-              {statusLabel(item, locale)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {error && <div className="form-error">{error}</div>}
-      {loading && <LoadingState label={labels.loadingLabel} />}
-      {!loading && projects.length === 0 && (
-        <EmptyState icon={<FolderKanban size={20} />} title={labels.empty} description={labels.emptyHint} />
-      )}
-
-      {!loading && projects.length > 0 && (
-        <div className="data-table data-table--projects">
-          <div className="data-table-head project-row">
-            <span>{labels.name}</span>
-            <span>{labels.client}</span>
-            <span>{labels.engineer}</span>
-            <span>{labels.phase}</span>
-            <span>{labels.progress}</span>
-            <span />
+      <section className="project-register-surface">
+        <div className="project-register-toolbar">
+          <label className="project-register-search">
+            <span className="sr-only">{labels.search}</span>
+            <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
+          </label>
+          <div className="project-register-filters">
+            <span className="project-register-filter-label"><Filter size={14} /> {locale === "ar" ? "تصفية السجل" : "Filter register"}</span>
+            <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus | "")}>
+              <option value="">{labels.allStatuses}</option>
+              {statuses.map((item) => <option value={item} key={item}>{statusLabel(item, locale)}</option>)}
+            </select>
+            <select className="filter-select" value={phase} onChange={(event) => setPhase(event.target.value as ProjectPhase | "")}>
+              <option value="">{labels.allPhases}</option>
+              {LIFECYCLE_PHASES.map((item) => <option value={item} key={item}>{phaseLabel(item, locale)}</option>)}
+            </select>
+            <select className="filter-select" value={category} onChange={(event) => setCategory(event.target.value as ProjectCategory | "")}>
+              <option value="">{labels.allCategories}</option>
+              {categories.map((item) => <option value={item} key={item}>{categoryLabel(item, locale)}</option>)}
+            </select>
+            {clientOptions.length > 0 && <select className="filter-select" value={clientId} onChange={(event) => setClientId(event.target.value)}>
+              <option value="">{labels.allClients}</option>
+              {clientOptions.map(([id, name]) => <option value={id} key={id}>{name}</option>)}
+            </select>}
+            {engineerOptions.length > 0 && <select className="filter-select" value={engineerId} onChange={(event) => setEngineerId(event.target.value)}>
+              <option value="">{labels.allEngineers}</option>
+              {engineerOptions.map(([id, name]) => <option value={id} key={id}>{name}</option>)}
+            </select>}
           </div>
-          {projects.map((project) => (
-            <article className="data-row project-row" key={project.id}>
-              <div data-label={labels.name}>
-                <strong>{project.name}</strong>
-                <span className="project-code-tag mono"><bdi>{project.code}</bdi></span>
-              </div>
-              <div data-label={labels.client}>
-                <strong>{project.client?.user.displayName ?? "-"}</strong>
-                <span>{categoryLabel(project.category, locale)}</span>
-              </div>
-              <div data-label={labels.engineer}>
-                <strong>{project.engineer?.displayName ?? "-"}</strong>
-              </div>
-              <div data-label={labels.phase}>
-                <Badge tone="navy">{phaseLabel(project.phase, locale)}</Badge>
-              </div>
-              <div data-label={labels.progress} className="project-row__progress-cell">
-                <ProgressBar value={project.progress} />
-                <strong className="mono">{project.progress}%</strong>
-              </div>
-              <span className="data-row-action" data-label={labels.open}>
-                <Badge tone={statusTone(project.status)}>
-                  {statusLabel(project.status, locale)}
-                </Badge>
-                <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}`)}>
-                  {labels.open}
-                </Link>
-              </span>
-            </article>
-          ))}
+          <div className="project-register-toolbar__meta">
+            <span><bdi>{visibleProjects.length}</bdi> {visibleProjects.length === 1 ? labels.result : labels.results}</span>
+            {hasFilters && <button type="button" className="project-register-clear" onClick={clearFilters}><RotateCcw size={13} /> {labels.clear}</button>}
+          </div>
         </div>
-      )}
+
+        {error && <div className="form-error project-register-message">{error}</div>}
+        {loading && <LoadingState label={labels.loadingLabel} />}
+        {!loading && visibleProjects.length === 0 && (
+          <EmptyState icon={<FolderKanban size={20} />} title={labels.empty} description={labels.emptyHint} className="project-register-empty" />
+        )}
+
+        {!loading && visibleProjects.length > 0 && (
+          <div className="project-register">
+            <div className="project-register-head" aria-hidden="true">
+              <span>{labels.name}</span><span>{labels.client}</span><span>{labels.engineer}</span><span>{labels.location}</span><span>{labels.phase}</span><span>{labels.status}</span><span>{labels.progress}</span><span>{labels.schedule}</span><span />
+            </div>
+            {visibleProjects.map((project, index) => (
+              <article className="project-register-row" key={project.id}>
+                <div className="project-register-cell project-register-cell--identity" data-label={labels.name}>
+                  <span className="project-register-row__index mono">{String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <Link href={href(`/app/projects/${project.id}`)}><strong>{project.name}</strong></Link>
+                    <span className="project-code-tag mono"><bdi>{project.code ?? "—"}</bdi></span>
+                    <small>{categoryLabel(project.category, locale)}</small>
+                  </div>
+                </div>
+                <div className="project-register-cell" data-label={labels.client}><strong><bdi>{project.client?.user.displayName ?? "—"}</bdi></strong></div>
+                <div className="project-register-cell" data-label={labels.engineer}><strong><bdi>{project.engineer?.displayName ?? "—"}</bdi></strong></div>
+                <div className="project-register-cell project-register-cell--location" data-label={labels.location}><MapPin size={13} /><span>{project.location ?? "—"}</span></div>
+                <div className="project-register-cell" data-label={labels.phase}><Badge tone="navy">{phaseLabel(project.phase, locale)}</Badge></div>
+                <div className="project-register-cell" data-label={labels.status}><Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge></div>
+                <div className="project-register-cell project-register-cell--progress" data-label={labels.progress}>
+                  <div><strong className="mono"><bdi>{project.progress}%</bdi></strong><ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} /></div>
+                </div>
+                <div className="project-register-cell project-register-cell--date" data-label={labels.schedule}><CalendarDays size={13} /><bdi>{formatDate(project.targetDate)}</bdi></div>
+                <div className="project-register-cell project-register-cell--action" data-label={labels.open}><Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}`)}>{labels.open}</Link></div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 }

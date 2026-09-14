@@ -237,7 +237,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", { dateStyle: "medium" });
 
   return (
-    <section className="app-page">
+    <section className="app-page project-edit-page">
       <PageHeader
         title={mode === "create" ? labels.createTitle : (project?.name ?? (loading ? labels.loadingTitle : labels.createTitle))}
         description={mode === "create" ? labels.createLead : labels.editLead}
@@ -322,7 +322,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </>
           )}
 
-          <form className="form-panels" onSubmit={(event) => void submit(event)}>
+          <form className="form-panels project-form-panels" onSubmit={(event) => void submit(event)}>
             <div className="form-panel">
               <div className="form-panel__head">
                 <span className="form-panel__index">01</span>
@@ -451,7 +451,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </div>
 
             <div className="form-actions-bar">
-              <Link className="ui-button ui-button--secondary" href="/app/admin/projects">
+              <Link className="ui-button ui-button--secondary" href={locale === "ar" ? "/app/admin/projects" : "/app/admin/projects?lang=en"}>
                 {labels.back}
               </Link>
               <button className="ui-button ui-button--primary" type="submit" disabled={saving}>
