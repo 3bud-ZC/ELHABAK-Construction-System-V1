@@ -69,8 +69,8 @@ export function FinanceProjectsClient() {
   const averageProgress = projects.length ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / projects.length) : 0;
 
   return (
-    <section className="app-page">
-      <PageHeader title={labels.title} description={labels.lead} />
+    <section className="app-page finance-portfolio-page">
+      <PageHeader eyebrow={<span className="page-header__eyebrow-code">{ar ? "المحفظة / مراقبة التكلفة" : "PORTFOLIO / COST CONTROL"}</span>} title={labels.title} description={labels.lead} />
       {error && <div className="form-error">{error}</div>}
       {loading && <LoadingState label={labels.loading} />}
       {!loading && projects.length === 0 && (
@@ -87,7 +87,7 @@ export function FinanceProjectsClient() {
           <div><span className="section-kicker">{ar ? "محافظ التكلفة" : "COST PORTFOLIOS"}</span><h2>{ar ? "اختر مساحة العمل المالية" : "Select a financial workspace"}</h2></div>
           <span>{projects.length} {ar ? "مشروع" : "projects"}</span>
         </div>
-        <div className="finance-portfolio-grid">
+        <div className="finance-portfolio-grid finance-portfolio-register">
           {projects.map((project) => (
             <Link href={href(`/app/projects/${project.id}/finance`)} key={project.id}>
               <div className="finance-portfolio-card__head"><span className="mono">{project.code}</span><Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge></div>

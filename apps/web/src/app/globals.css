@@ -10947,6 +10947,371 @@ a.ui-button:focus-visible {
   }
 }
 
+.finance-portfolio-page {
+  gap: var(--space-4);
+}
+
+.finance-portfolio-page .finance-portfolio-kpis {
+  margin-bottom: 0;
+}
+
+.finance-portfolio-page .finance-portfolio-heading {
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+  padding-block: var(--space-3);
+}
+
+.finance-portfolio-page .finance-portfolio-heading h2 {
+  font-size: 1rem;
+}
+
+.finance-portfolio-page .finance-portfolio-grid.finance-portfolio-register {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.finance-portfolio-register>a {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.7fr) minmax(150px, 1fr) minmax(120px, 0.9fr) minmax(160px, 1.2fr) 150px;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 82px;
+  padding: 0.75rem var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--border-soft);
+  box-shadow: none;
+}
+
+.finance-portfolio-register>a:last-child {
+  border-bottom: 0;
+}
+
+.finance-portfolio-register>a::after {
+  width: 2px;
+}
+
+.finance-portfolio-register>a:hover {
+  background: #f8fafc;
+  box-shadow: inset 2px 0 var(--orange);
+}
+
+.finance-portfolio-register .finance-portfolio-card__head {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.finance-portfolio-register .finance-portfolio-card__head .ui-badge {
+  justify-self: start;
+  order: 2;
+}
+
+.finance-portfolio-register .finance-portfolio-card__head>span {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.finance-portfolio-register h3 {
+  grid-column: 1;
+  grid-row: 1;
+  overflow: hidden;
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-portfolio-register>a>span {
+  grid-column: 2;
+  grid-row: 1;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-portfolio-register .finance-portfolio-card__phase {
+  grid-column: 3;
+  grid-row: 1;
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.finance-portfolio-register .finance-portfolio-card__phase span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-portfolio-register .finance-portfolio-card__phase strong {
+  color: var(--navy);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.finance-portfolio-register>a>.progress-track {
+  grid-column: 4;
+  grid-row: 1;
+  height: 5px;
+}
+
+.finance-portfolio-register>a>b {
+  grid-column: 5;
+  grid-row: 1;
+  justify-self: end;
+  color: var(--navy);
+  font-size: 0.74rem;
+}
+
+.finance-workspace-page {
+  gap: var(--space-3);
+}
+
+.finance-command-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 54px;
+  padding: 0.65rem var(--space-4);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--orange);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.finance-command-strip>div {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.finance-command-strip>div strong {
+  overflow: hidden;
+  color: var(--navy);
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-command-strip>bdi {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.finance-module-tabs {
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 0.25rem;
+}
+
+.finance-module-tabs button {
+  min-height: 38px;
+  flex: 0 0 auto;
+  border-color: transparent;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.finance-module-tabs button.active {
+  background: var(--navy);
+  box-shadow: none;
+}
+
+.finance-summary-command .finance-panel-heading {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.finance-summary-command .finance-kpi-grid {
+  gap: var(--space-2);
+}
+
+.finance-summary-command .finance-summary-primary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.finance-summary-command .finance-summary-primary .metric-card {
+  min-height: 112px;
+}
+
+.finance-summary-command .finance-summary-primary .metric-card__value {
+  font-size: 1.35rem;
+}
+
+.finance-summary-command .finance-summary-secondary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.finance-summary-command .finance-summary-secondary .metric-card {
+  min-height: 86px;
+}
+
+.finance-summary-command .finance-summary-secondary .metric-card__value {
+  font-size: 1rem;
+}
+
+.finance-client-summary .finance-kpi-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.finance-client-summary .metric-card__value,
+.finance-summary-command .metric-card__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.finance-register {
+  border-radius: var(--radius-sm);
+}
+
+.finance-register__head {
+  min-height: 38px;
+}
+
+.finance-register__row {
+  min-height: 62px;
+}
+
+.finance-register__row:hover {
+  box-shadow: inset 2px 0 var(--orange);
+}
+
+.finance-register__cell--amount,
+.finance-register__identity .mono,
+.finance-register .revision-badge {
+  font-variant-numeric: tabular-nums;
+}
+
+.finance-void-row .finance-register__cell,
+.finance-void-row .finance-register__identity strong {
+  text-decoration: none;
+}
+
+.finance-void-row .finance-register__identity strong {
+  text-decoration: line-through;
+}
+
+.finance-void-row .ui-badge {
+  opacity: 1;
+}
+
+@media (max-width: 1180px) {
+  .finance-portfolio-register>a {
+    grid-template-columns: minmax(180px, 1.5fr) minmax(130px, 1fr) minmax(110px, 0.9fr) minmax(140px, 1.1fr) 125px;
+    gap: var(--space-3);
+  }
+
+  .finance-summary-command .finance-summary-secondary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .finance-portfolio-page {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .finance-portfolio-page .finance-portfolio-heading {
+    order: 1;
+  }
+
+  .finance-portfolio-page .finance-portfolio-register {
+    order: 2;
+  }
+
+  .finance-portfolio-page .finance-portfolio-kpis {
+    order: 3;
+  }
+
+  .finance-command-strip {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .finance-portfolio-page .finance-portfolio-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .finance-portfolio-page .finance-portfolio-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .finance-portfolio-register>a {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+    min-height: 0;
+    padding: var(--space-4);
+  }
+
+  .finance-portfolio-register>a h3,
+  .finance-portfolio-register>a>span,
+  .finance-portfolio-register .finance-portfolio-card__phase,
+  .finance-portfolio-register>a>.progress-track,
+  .finance-portfolio-register>a>b {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .finance-portfolio-register>a h3 {
+    order: 1;
+  }
+
+  .finance-portfolio-register>a>span {
+    order: 2;
+  }
+
+  .finance-portfolio-register .finance-portfolio-card__phase {
+    order: 3;
+  }
+
+  .finance-portfolio-register>a>.progress-track {
+    order: 4;
+  }
+
+  .finance-portfolio-register>a>b {
+    order: 5;
+    justify-self: start;
+  }
+
+  .finance-summary-command .finance-summary-primary,
+  .finance-summary-command .finance-summary-secondary,
+  .finance-client-summary .finance-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-summary-command .finance-summary-primary .metric-card {
+    min-height: 86px;
+  }
+
+  .finance-summary-command .finance-summary-secondary .metric-card {
+    min-height: 76px;
+  }
+
+  .finance-module-tabs {
+    margin-inline: -0.1rem;
+  }
+}
+
 [dir="rtl"] .login-brand__corner--tl {
   inset-inline-start: auto;
   inset-inline-end: var(--space-4);

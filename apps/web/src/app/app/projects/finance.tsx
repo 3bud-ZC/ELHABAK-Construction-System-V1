@@ -91,8 +91,12 @@ export function Finance({ projectId }: { projectId: string }) {
   }
 
   return (
-    <section className="app-page project-workspace-page">
+    <section className="app-page project-workspace-page finance-workspace-page">
       <ProjectWorkspace project={context} locale={locale} role={user.role} active="finance" />
+      <div className="finance-command-strip">
+        <div><span className="section-kicker">{locale === "ar" ? "المشروع / مراقبة التكلفة" : "PROJECT / COST CONTROL"}</span><strong>{context.name}</strong></div>
+        <bdi className="mono">{context.code ?? "—"}</bdi>
+      </div>
       {user.role === "ADMIN" || user.role === "ACCOUNTANT" ? (
         <AdminFinancePanels projectId={projectId} locale={locale} />
       ) : user.role === "ENGINEER" ? (
@@ -114,7 +118,7 @@ function money(amount: string | null | undefined, currency: string, locale: "ar"
 }
 
 function dateOnly(iso: string, locale: "ar" | "en") {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", { dateStyle: "medium" }).format(new Date(iso));
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium" }).format(new Date(iso));
 }
 
 function isOverpaid(outstanding: string | null) {
@@ -150,7 +154,7 @@ function AdminFinancePanels({ projectId, locale }: { projectId: string; locale: 
 
   return (
     <>
-      <nav className="finance-subtabs" aria-label={ar ? "أقسام الشؤون المالية" : "Finance sections"}>
+      <nav className="finance-subtabs finance-module-tabs" aria-label={ar ? "أقسام الشؤون المالية" : "Finance sections"}>
         {tabs.map((item) => {
           const Icon = item.icon;
           return (
@@ -205,7 +209,7 @@ function SummaryPanel({
     };
 
   return (
-    <section className="finance-summary-panel">
+    <section className="finance-summary-panel finance-summary-command">
       <div className="finance-panel-heading">
         <div>
           <span className="section-kicker">{ar ? "مراقبة التكلفة" : "COST CONTROL"}</span>
@@ -217,10 +221,8 @@ function SummaryPanel({
         </button>
       </div>
 
-      <div className="finance-kpi-grid">
+      <div className="finance-kpi-grid finance-summary-primary">
         <MetricCard tone="navy" icon={<Landmark size={18} />} label={labels.contractValue} value={summary?.contractValue ? money(summary.contractValue, currency, locale) : labels.notSet} />
-        <MetricCard tone="orange" icon={<ClipboardList size={18} />} label={labels.boqTotal} value={money(summary?.boqTotal, currency, locale)} />
-        <MetricCard tone="orange" icon={<FileText size={18} />} label={labels.estimateTotal} value={money(summary?.estimateTotal, currency, locale)} />
         <MetricCard tone="success" icon={<Banknote size={18} />} label={labels.clientPayments} value={money(summary?.clientPaymentsTotal, currency, locale)} />
         <MetricCard
           tone={overpaid ? "danger" : "navy"}
@@ -229,6 +231,10 @@ function SummaryPanel({
           value={summary?.outstandingBalance !== null && summary?.outstandingBalance !== undefined ? money(summary.outstandingBalance, currency, locale) : labels.notSet}
           hint={overpaid ? labels.overpaidNote : undefined}
         />
+      </div>
+      <div className="finance-kpi-grid finance-summary-secondary">
+        <MetricCard tone="orange" icon={<ClipboardList size={18} />} label={labels.boqTotal} value={money(summary?.boqTotal, currency, locale)} />
+        <MetricCard tone="orange" icon={<FileText size={18} />} label={labels.estimateTotal} value={money(summary?.estimateTotal, currency, locale)} />
         <MetricCard tone="danger" icon={<Receipt size={18} />} label={labels.expenses} value={money(summary?.expensesTotal, currency, locale)} />
         <MetricCard tone="danger" icon={<Landmark size={18} />} label={labels.contractorPayments} value={money(summary?.contractorPaymentsTotal, currency, locale)} />
         <MetricCard tone="navy" icon={<Wallet size={18} />} label={labels.committed} value={money(summary?.committedCostTotal, currency, locale)} />
@@ -1637,7 +1643,7 @@ function ClientFinancePanel({ projectId, locale }: { projectId: string; locale: 
 
   return (
     <>
-      <section>
+      <section className="finance-summary-command finance-client-summary">
         <div className="finance-panel-heading">
           <div>
             <span className="section-kicker">{ar ? "ملخصك المالي" : "YOUR FINANCIAL SUMMARY"}</span>
