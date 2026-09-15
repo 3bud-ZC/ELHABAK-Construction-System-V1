@@ -1,10 +1,10 @@
 "use client";
 
-import { FileText, FolderKanban, Search } from "lucide-react";
+import { FileText, Search } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, ProgressBar } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, ProgressBar } from "@elhabak/ui";
 import {
   apiRequest,
   phaseLabel,
@@ -79,25 +79,30 @@ export function ReportsClient() {
         <div>
           <span className="section-kicker">{ar ? "النظام / مركز التقارير" : "SYSTEM / REPORTS CENTER"}</span>
           <strong>{labels.title}</strong>
+          <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>
-        <span className="admin-command-strip__subtitle">{labels.lead}</span>
+        {!loading && (
+          <div className="admin-command-strip__meta">
+            <span>{ar ? "مشاريع قابلة للتقرير" : "Reportable projects"}</span>
+            <strong>{projects.length}</strong>
+          </div>
+        )}
       </div>
 
-      {!loading && (
-        <div className="metric-grid">
-          <MetricCard icon={<FolderKanban size={18} />} tone="navy" label={ar ? "مشاريع قابلة للتقرير" : "Reportable projects"} value={projects.length} />
-        </div>
-      )}
-
-      <label className="global-search-field reports-search-field">
-        <Search size={18} aria-hidden="true" />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={labels.search}
-          aria-label={labels.search}
-        />
-      </label>
+      <div className="reports-toolbar">
+        <label className="global-search-field reports-search-field">
+          <Search size={18} aria-hidden="true" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={labels.search}
+            aria-label={labels.search}
+          />
+        </label>
+        <span className="reports-toolbar__hint">
+          {ar ? "التقرير يجمع التقدم والتصاميم والمستندات والمالية" : "Reports compile progress, designs, documents, and finance"}
+        </span>
+      </div>
       {error && (
         <div className="form-error" role="alert">
           {error}
@@ -110,7 +115,7 @@ export function ReportsClient() {
       {!loading && projects.length > 0 && (
         <div className="report-project-grid">
           {projects.map((project) => (
-            <article className="report-project-card" key={project.id}>
+            <Link className="report-project-card" href={href(`/app/reports/${project.id}`)} key={project.id}>
               <div className="report-project-card__head">
                 <div>
                   <strong>{project.name}</strong>
@@ -127,16 +132,13 @@ export function ReportsClient() {
                 </strong>
               </div>
               <ProgressBar value={project.progress} />
-              <span className="report-project-card__client">
-                {project.client?.user.displayName ?? "—"}
-              </span>
-              <Link
-                className="ui-button ui-button--primary ui-button--sm"
-                href={href(`/app/reports/${project.id}`)}
-              >
-                {labels.open}
-              </Link>
-            </article>
+              <div className="report-project-card__foot">
+                <span className="report-project-card__client">
+                  {project.client?.user.displayName ?? "—"}
+                </span>
+                <span className="report-project-card__cta">{labels.open} {ar ? "←" : "→"}</span>
+              </div>
+            </Link>
           ))}
         </div>
       )}

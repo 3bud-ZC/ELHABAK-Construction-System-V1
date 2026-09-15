@@ -143,8 +143,8 @@ export function ReportClient() {
         <div>
           <span className="section-kicker">{ar ? "النظام / تقرير المشروع" : "SYSTEM / PROJECT REPORT"}</span>
           <strong>{`${labels.title}: ${p.name}`}</strong>
+          <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>
-        <span className="admin-command-strip__subtitle">{labels.lead}</span>
         <a className="ui-button ui-button--primary" href={reportPdfUrl(p.id, locale)}>
           <Download size={17} />
           {labels.export}
@@ -181,7 +181,7 @@ export function ReportClient() {
       </div>
 
       {report.siteOperations && (
-        <ReportSection title={labels.operations}>
+        <ReportSection title={labels.operations} index="01">
           <div className="report-summary-grid">
             <Summary
               label={labels.phase}
@@ -210,7 +210,7 @@ export function ReportClient() {
       )}
 
       {report.designs && (
-        <ReportSection title={labels.design}>
+        <ReportSection title={labels.design} index="02">
           {report.designs.length ? (
             <div className="report-table-wrap">
               <table className="report-table">
@@ -243,7 +243,7 @@ export function ReportClient() {
       )}
 
       {report.finance && (
-        <ReportSection title={labels.finance}>
+        <ReportSection title={labels.finance} index="03">
           {financeRows.length ? (
             <div className="report-summary-grid">
               {financeRows.map(([label, value]) => (
@@ -257,7 +257,7 @@ export function ReportClient() {
       )}
 
       {report.documents && (
-        <ReportSection title={labels.documents}>
+        <ReportSection title={labels.documents} index="04">
           {report.documents.length ? (
             <div className="report-table-wrap">
               <table className="report-table">
@@ -293,7 +293,7 @@ export function ReportClient() {
       )}
 
       {report.communication && (
-        <ReportSection title={labels.communication}>
+        <ReportSection title={labels.communication} index="05">
           <div className="report-summary-grid">
             <Summary
               label={labels.messages}
@@ -309,7 +309,7 @@ export function ReportClient() {
         </ReportSection>
       )}
       {report.activity && (
-        <ReportSection title={labels.activity}>
+        <ReportSection title={labels.activity} index="06">
           {report.activity.length ? (
             <div className="report-list">
               {report.activity.map((item) => (
@@ -330,11 +330,14 @@ export function ReportClient() {
   );
 }
 
-function ReportSection({ title, children }: { title: string; children: ReactNode }) {
+function ReportSection({ title, index, children }: { title: string; index: string; children: ReactNode }) {
   return (
     <section className="report-section">
-      <h2>{title}</h2>
-      {children}
+      <header className="report-section__head">
+        <span className="report-section__index mono">{index}</span>
+        <h2>{title}</h2>
+      </header>
+      <div className="report-section__body">{children}</div>
     </section>
   );
 }

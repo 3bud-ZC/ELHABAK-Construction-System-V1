@@ -102,8 +102,8 @@ export function NotificationsClient() {
         <div>
           <span className="section-kicker">{ar ? "النظام / صندوق الإشعارات" : "SYSTEM / NOTIFICATION INBOX"}</span>
           <strong>{labels.title}</strong>
+          <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>
-        <span className="admin-command-strip__subtitle">{labels.lead}</span>
       </div>
 
       <div className="notifications-toolbar">

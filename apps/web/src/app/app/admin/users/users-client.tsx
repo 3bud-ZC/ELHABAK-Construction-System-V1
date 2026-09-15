@@ -178,8 +178,8 @@ export function UsersClient({ mode, id }: UsersClientProps) {
           <div>
             <span className="section-kicker">{ar ? "النظام / الهوية والوصول" : "SYSTEM / IDENTITY & ACCESS"}</span>
             <strong>{labels.title}</strong>
+            <span className="admin-command-strip__subtitle">{labels.lead}</span>
           </div>
-          <span className="admin-command-strip__subtitle">{labels.lead}</span>
           <Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>
         </div>
 
@@ -203,46 +203,48 @@ export function UsersClient({ mode, id }: UsersClientProps) {
           </div>
         </div>
 
-        <div className="table-toolbar users-toolbar">
-          <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} aria-label={labels.search} />
-          <select className="filter-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as UserRole | "ALL")} aria-label={labels.filterRole}>
-            <option value="ALL">{labels.allRoles}</option>
-            {roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}
-          </select>
-          <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AccountStatus | "ALL")} aria-label={labels.filterStatus}>
-            <option value="ALL">{labels.allStatuses}</option>
-            <option value="ACTIVE">{labels.active}</option>
-            <option value="SUSPENDED">{labels.suspended}</option>
-            <option value="ARCHIVED">{labels.archived}</option>
-          </select>
-        </div>
-        {error ? <div className="form-error" role="alert">{error}</div> : null}
-        {success ? <div className="form-success" role="status">{success}</div> : null}
-        {loading || actionBusy && !pending ? <LoadingState label={labels.loadingLabel} /> : null}
-        {!loading && visibleUsers.length === 0 ? <EmptyState icon={<UsersRound size={20} />} title={labels.empty} description={labels.emptyHint} /> : null}
-        {!loading && visibleUsers.length > 0 ? (
-          <div className="data-table users-table admin-register">
-            <div className="data-table-head user-row">
-              <span>{labels.name}</span><span>{labels.email}</span><span>{labels.role}</span><span>{labels.status}</span><span>{labels.created}</span><span>{labels.actions}</span>
-            </div>
-            {visibleUsers.map((user) => (
-              <div className={`data-row user-row ${statusOf(user) === "ARCHIVED" ? "admin-row--archived" : statusOf(user) === "SUSPENDED" ? "admin-row--suspended" : ""}`} key={user.id}>
-                <div data-label={labels.name} className="admin-register__identity">
-                  <Link className="user-name-link" href={withLocale(`/app/admin/users/${user.id}`, ar)}><strong>{user.displayName}</strong></Link>
-                  <span className="admin-register__email mono">{user.email}</span>
-                </div>
-                <div data-label={labels.email}><span className="mono">{user.email}</span></div>
-                <div data-label={labels.role}><Badge tone="navy">{roleLabel(user.role, locale)}</Badge></div>
-                <div data-label={labels.status}><StatusBadge status={statusOf(user)} labels={labels} /></div>
-                <div data-label={labels.created}><span className="mono">{formatDate(user.createdAt, locale)}</span></div>
-                <div className="user-actions" data-label={labels.actions}>
-                  <button className="user-actions__trigger" type="button" aria-label={`${labels.actions}: ${user.displayName}`} aria-expanded={openMenu === user.id} onClick={(event) => { event.stopPropagation(); setOpenMenu(openMenu === user.id ? null : user.id); }}><MoreHorizontal size={19} /></button>
-                  {openMenu === user.id ? <ActionMenu user={user} currentUserId={currentUser.id} labels={labels} ar={ar} onAction={(kind) => void openAction(kind, user)} /> : null}
-                </div>
-              </div>
-            ))}
+        <div className="console-surface">
+          <div className="table-toolbar users-toolbar">
+            <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} aria-label={labels.search} />
+            <select className="filter-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as UserRole | "ALL")} aria-label={labels.filterRole}>
+              <option value="ALL">{labels.allRoles}</option>
+              {roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}
+            </select>
+            <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AccountStatus | "ALL")} aria-label={labels.filterStatus}>
+              <option value="ALL">{labels.allStatuses}</option>
+              <option value="ACTIVE">{labels.active}</option>
+              <option value="SUSPENDED">{labels.suspended}</option>
+              <option value="ARCHIVED">{labels.archived}</option>
+            </select>
+            {!loading && <span className="table-toolbar__count"><bdi>{visibleUsers.length}</bdi> {ar ? "مستخدم" : "users"}</span>}
           </div>
-        ) : null}
+          {error ? <div className="form-error" role="alert">{error}</div> : null}
+          {success ? <div className="form-success" role="status">{success}</div> : null}
+          {loading || actionBusy && !pending ? <LoadingState label={labels.loadingLabel} /> : null}
+          {!loading && visibleUsers.length === 0 ? <EmptyState icon={<UsersRound size={20} />} title={labels.empty} description={labels.emptyHint} /> : null}
+          {!loading && visibleUsers.length > 0 ? (
+            <div className="data-table users-table admin-register">
+              <div className="data-table-head user-row">
+                <span>{labels.name}</span><span>{labels.role}</span><span>{labels.status}</span><span>{labels.created}</span><span>{labels.actions}</span>
+              </div>
+              {visibleUsers.map((user) => (
+                <div className={`data-row user-row ${statusOf(user) === "ARCHIVED" ? "admin-row--archived" : statusOf(user) === "SUSPENDED" ? "admin-row--suspended" : ""}`} key={user.id}>
+                  <div data-label={labels.name} className="admin-register__identity">
+                    <Link className="user-name-link" href={withLocale(`/app/admin/users/${user.id}`, ar)}><strong>{user.displayName}</strong></Link>
+                    <span className="admin-register__email mono">{user.email}</span>
+                  </div>
+                  <div data-label={labels.role}><Badge tone="navy">{roleLabel(user.role, locale)}</Badge></div>
+                  <div data-label={labels.status}><StatusBadge status={statusOf(user)} labels={labels} /></div>
+                  <div data-label={labels.created}><span className="mono">{formatDate(user.createdAt, locale)}</span></div>
+                  <div className="user-actions" data-label={labels.actions}>
+                    <button className="user-actions__trigger" type="button" aria-label={`${labels.actions}: ${user.displayName}`} aria-expanded={openMenu === user.id} onClick={(event) => { event.stopPropagation(); setOpenMenu(openMenu === user.id ? null : user.id); }}><MoreHorizontal size={19} /></button>
+                    {openMenu === user.id ? <ActionMenu user={user} currentUserId={currentUser.id} labels={labels} ar={ar} onAction={(kind) => void openAction(kind, user)} /> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
         {pending ? <ActionDialog pending={pending} labels={labels} ar={ar} busy={actionBusy} confirmationText={confirmationText} temporaryPassword={temporaryPassword} onConfirmationText={setConfirmationText} onTemporaryPassword={setTemporaryPassword} onClose={() => setPending(null)} onConfirm={() => void confirmAction()} /> : null}
       </section>
     );

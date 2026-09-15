@@ -12,16 +12,8 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState } from "@elhabak/ui";
+import { EmptyState, LoadingState } from "@elhabak/ui";
 import { apiRequest, type SearchResult } from "../../../lib/api";
-
-const icons = {
-  PROJECT: BriefcaseBusiness,
-  CLIENT: UserRound,
-  USER: Users,
-  DESIGN: Palette,
-  DOCUMENT: FileText
-};
 
 export function SearchClient() {
   const searchParams = useSearchParams();
@@ -44,7 +36,9 @@ export function SearchClient() {
             hint: "جرّب عبارة بحث مختلفة.",
             loading: "جاري البحث...",
             failed: "تعذر تنفيذ البحث. حاول مرة أخرى.",
-            open: "فتح النتيجة"
+            open: "فتح النتيجة",
+          scopes: "نطاق البحث",
+          resultsFor: "نتيجة"
           }
         : {
             title: "Global Search",
@@ -55,7 +49,9 @@ export function SearchClient() {
             hint: "Try a different search term.",
             loading: "Searching...",
             failed: "Search could not be completed. Try again.",
-            open: "Open result"
+            open: "Open result",
+            scopes: "Search coverage",
+            resultsFor: "results"
           },
     [ar]
   );
@@ -99,25 +95,58 @@ export function SearchClient() {
     })[type];
   const href = (path: string) => (ar ? path : `${path}${path.includes("?") ? "&" : "?"}lang=en`);
 
+  const scopes: { type: SearchResult["type"]; icon: typeof BriefcaseBusiness }[] = [
+    { type: "PROJECT", icon: BriefcaseBusiness },
+    { type: "CLIENT", icon: UserRound },
+    { type: "USER", icon: Users },
+    { type: "DESIGN", icon: Palette },
+    { type: "DOCUMENT", icon: FileText }
+  ];
+
+  const grouped = scopes
+    .map((scope) => ({ ...scope, items: results.filter((result) => result.type === scope.type) }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <section className="app-page search-page">
       <div className="admin-command-strip">
         <div>
           <span className="section-kicker">{ar ? "النظام / البحث الشامل" : "SYSTEM / GLOBAL SEARCH"}</span>
           <strong>{labels.title}</strong>
+          <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>
-        <span className="admin-command-strip__subtitle">{labels.lead}</span>
+        {!loading && query.trim().length >= 2 && results.length > 0 && (
+          <div className="admin-command-strip__meta">
+            <span>{labels.resultsFor}</span>
+            <strong>{results.length}</strong>
+          </div>
+        )}
       </div>
-      <label className="global-search-field search-page-field">
-        <Search size={19} aria-hidden="true" />
-        <input
-          autoFocus
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={labels.placeholder}
-          aria-label={labels.placeholder}
-        />
-      </label>
+
+      <div className="search-console">
+        <label className="global-search-field search-page-field">
+          <Search size={19} aria-hidden="true" />
+          <input
+            autoFocus
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={labels.placeholder}
+            aria-label={labels.placeholder}
+          />
+        </label>
+        <div className="search-scope">
+          <span className="search-scope__label">{labels.scopes}</span>
+          <div className="search-scope__tiles">
+            {scopes.map((scope) => (
+              <span className="search-scope__tile" key={scope.type}>
+                <scope.icon size={14} aria-hidden="true" />
+                {typeLabel(scope.type)}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {error && (
         <div className="form-error" role="alert">
           {error}
@@ -125,40 +154,45 @@ export function SearchClient() {
       )}
       {loading && <LoadingState label={labels.loading} />}
       {!loading && query.trim().length < 2 && (
-        <EmptyState icon={<FileSearch size={20} />} title={labels.start} />
+        <EmptyState icon={<FileSearch size={20} />} title={labels.start} className="search-page-empty" />
       )}
       {!loading && query.trim().length >= 2 && !results.length && (
         <EmptyState
           icon={<FileSearch size={20} />}
           title={labels.empty}
           description={labels.hint}
+          className="search-page-empty"
         />
       )}
-      {!loading && results.length > 0 && (
-        <div className="search-results">
-          {results.map((result) => {
-            const Icon = icons[result.type];
-            return (
-              <Link
-                href={href(result.href)}
-                className="search-result"
-                key={`${result.type}-${result.id}`}
-                aria-label={`${labels.open}: ${result.title}`}
-              >
-                <span className="search-result__icon">
-                  <Icon size={19} />
-                </span>
-                <span className="search-result__body">
-                  <span>
-                    <Badge tone="neutral">{typeLabel(result.type)}</Badge>
-                    <strong>{result.title}</strong>
-                  </span>
-                  {result.context && <bdi>{result.context}</bdi>}
-                </span>
-                <span aria-hidden="true">←</span>
-              </Link>
-            );
-          })}
+      {!loading && grouped.length > 0 && (
+        <div className="search-groups">
+          {grouped.map((group) => (
+            <section className="search-group" key={group.type}>
+              <header className="search-group__head">
+                <group.icon size={15} aria-hidden="true" />
+                <h2>{typeLabel(group.type)}</h2>
+                <span className="mono">{String(group.items.length).padStart(2, "0")}</span>
+              </header>
+              <div className="search-results">
+                {group.items.map((result) => (
+                  <Link
+                    href={href(result.href)}
+                    className="search-result"
+                    key={`${result.type}-${result.id}`}
+                    aria-label={`${labels.open}: ${result.title}`}
+                  >
+                    <span className="search-result__body">
+                      <span>
+                        <strong>{result.title}</strong>
+                      </span>
+                      {result.context && <bdi>{result.context}</bdi>}
+                    </span>
+                    <span className="search-result__go" aria-hidden="true">{ar ? "←" : "→"}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       )}
     </section>

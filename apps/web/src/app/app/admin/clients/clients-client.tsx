@@ -143,8 +143,8 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           <div>
             <span className="section-kicker">{ar ? "الإدارة / حسابات العملاء" : "MANAGEMENT / CLIENT ACCOUNTS"}</span>
             <strong>{labels.title}</strong>
+            <span className="admin-command-strip__subtitle">{labels.lead}</span>
           </div>
-          <span className="admin-command-strip__subtitle">{labels.lead}</span>
           <Link className="ui-button ui-button--primary" href={ar ? "/app/admin/clients/new" : "/app/admin/clients/new?lang=en"}>
             {labels.create}
           </Link>
@@ -157,43 +157,42 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
             <MetricCard icon={<Phone size={18} />} tone="info" label={labels.contactReady} value={contactReadyCount} />
           </div>
         )}
-        <div className="table-toolbar">
-          <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
-        </div>
-        {error ? <div className="form-error">{error}</div> : null}
-        {loading ? <LoadingState label={labels.loadingLabel} /> : null}
-        {!loading && clients.length === 0 ? (
-          <EmptyState icon={<UserRoundCog size={20} />} title={labels.empty} description={labels.emptyHint} />
-        ) : null}
-        {!loading && clients.length > 0 ? (
-          <div className="data-table data-table--clients admin-register">
-            <div className="data-table-head client-row">
-              <span>{labels.name}</span>
-              <span>{labels.email}</span>
-              <span>{labels.phone}</span>
-              <span>{labels.status}</span>
-            </div>
-            {clients.map((client) => (
-              <Link className={`data-row client-row ${!client.user.isActive ? "admin-row--suspended" : ""}`} href={ar ? `/app/admin/clients/${client.id}` : `/app/admin/clients/${client.id}?lang=en`} key={client.id}>
-                <div data-label={labels.name} className="admin-register__identity">
-                  <strong>{client.user.displayName}</strong>
-                  <span className="admin-register__email mono">{client.user.email}</span>
-                </div>
-                <div data-label={labels.email}>
-                  <span className="mono">{client.user.email}</span>
-                </div>
-                <div data-label={labels.phone}>
-                  <span className="mono">{client.phone ?? "—"}</span>
-                </div>
-                <div data-label={labels.status}>
-                  <Badge tone={accountStatusTone(client.user.isActive)}>
-                    {client.user.isActive ? labels.statusActive : labels.statusInactive}
-                  </Badge>
-                </div>
-              </Link>
-            ))}
+        <div className="console-surface">
+          <div className="table-toolbar">
+            <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
+            {!loading && <span className="table-toolbar__count"><bdi>{clients.length}</bdi> {ar ? "عميل" : "clients"}</span>}
           </div>
-        ) : null}
+          {error ? <div className="form-error">{error}</div> : null}
+          {loading ? <LoadingState label={labels.loadingLabel} /> : null}
+          {!loading && clients.length === 0 ? (
+            <EmptyState icon={<UserRoundCog size={20} />} title={labels.empty} description={labels.emptyHint} />
+          ) : null}
+          {!loading && clients.length > 0 ? (
+            <div className="data-table data-table--clients admin-register">
+              <div className="data-table-head client-row">
+                <span>{labels.name}</span>
+                <span>{labels.phone}</span>
+                <span>{labels.status}</span>
+              </div>
+              {clients.map((client) => (
+                <Link className={`data-row client-row ${!client.user.isActive ? "admin-row--suspended" : ""}`} href={ar ? `/app/admin/clients/${client.id}` : `/app/admin/clients/${client.id}?lang=en`} key={client.id}>
+                  <div data-label={labels.name} className="admin-register__identity">
+                    <strong>{client.user.displayName}</strong>
+                    <span className="admin-register__email mono">{client.user.email}</span>
+                  </div>
+                  <div data-label={labels.phone}>
+                    <span className="mono">{client.phone ?? "—"}</span>
+                  </div>
+                  <div data-label={labels.status}>
+                    <Badge tone={accountStatusTone(client.user.isActive)}>
+                      {client.user.isActive ? labels.statusActive : labels.statusInactive}
+                    </Badge>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </section>
     );
   }

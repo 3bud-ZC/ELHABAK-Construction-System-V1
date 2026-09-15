@@ -62,6 +62,7 @@ export function ProjectsClient() {
           progress: "الإنجاز",
           schedule: "التسليم المستهدف",
           open: "فتح المشروع",
+          openShort: "فتح ←",
           loadingLabel: "جاري تحميل سجل المشاريع...",
           total: "إجمالي المشاريع",
           activeCount: "مشاريع نشطة",
@@ -94,6 +95,7 @@ export function ProjectsClient() {
           progress: "Progress",
           schedule: "Target delivery",
           open: "Open project",
+          openShort: "Open →",
           loadingLabel: "Loading project register...",
           total: "Total projects",
           activeCount: "Active projects",
@@ -266,7 +268,7 @@ export function ProjectsClient() {
                   <div><strong className="mono"><bdi>{project.progress}%</bdi></strong><ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} /></div>
                 </div>
                 <div className="project-register-cell project-register-cell--date" data-label={labels.schedule}><CalendarDays size={13} /><bdi>{formatDate(project.targetDate)}</bdi></div>
-                <div className="project-register-cell project-register-cell--action" data-label={labels.open}><Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}`)}>{labels.open}</Link></div>
+                <div className="project-register-cell project-register-cell--action" data-label={labels.open}><Link className="project-register-open" href={href(`/app/projects/${project.id}`)} aria-label={`${labels.open}: ${project.name}`}>{labels.openShort}</Link></div>
               </article>
             ))}
           </div>

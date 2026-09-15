@@ -113,7 +113,10 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             noTeam: "لا يوجد عمال معينون",
             dates: "التواريخ",
             noDates: "لم تحدد بعد",
-            filesUnit: "ملف"
+            filesUnit: "ملف",
+            record: "سجل المشروع",
+            recordHint: "مراجعة مباشرة للبيانات قبل الحفظ.",
+            unassigned: "غير محدد"
           }
         : {
             createTitle: "Create Project",
@@ -152,7 +155,10 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             noTeam: "No workers assigned",
             dates: "Dates",
             noDates: "Not set yet",
-            filesUnit: "file"
+            filesUnit: "file",
+            record: "Project record",
+            recordHint: "A live review of the record before saving.",
+            unassigned: "Unassigned"
           },
     [locale]
   );
@@ -323,6 +329,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
           )}
 
           <form className="form-panels project-form-panels" onSubmit={(event) => void submit(event)}>
+            <div className="project-form-main">
             <div className="form-panel">
               <div className="form-panel__head">
                 <span className="form-panel__index">01</span>
@@ -450,14 +457,50 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
               </div>
             </div>
 
-            <div className="form-actions-bar">
-              <Link className="ui-button ui-button--secondary" href={locale === "ar" ? "/app/admin/projects" : "/app/admin/projects?lang=en"}>
-                {labels.back}
-              </Link>
-              <button className="ui-button ui-button--primary" type="submit" disabled={saving}>
-                {saving ? (locale === "ar" ? "جاري الحفظ..." : "Saving...") : labels.save}
-              </button>
             </div>
+
+            <aside className="project-form-rail">
+              <div className="project-form-summary">
+                <span className="project-form-summary__kicker">{labels.record}</span>
+                <strong className="project-form-summary__name">{form.name || labels.name}</strong>
+                <span className="project-form-summary__code mono"><bdi>{form.code || "PRJ-XXXX"}</bdi></span>
+                <dl className="project-form-summary__facts">
+                  <div>
+                    <dt>{labels.client}</dt>
+                    <dd>{clients.find((client) => client.id === form.clientId)?.user.displayName ?? labels.unassigned}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.engineer}</dt>
+                    <dd>{engineers.find((engineer) => engineer.id === form.engineerId)?.displayName ?? labels.unassigned}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.category}</dt>
+                    <dd>{categoryLabel(form.category, locale)}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.phase}</dt>
+                    <dd>{phaseLabel(form.phase, locale)}</dd>
+                  </div>
+                  <div>
+                    <dt>{labels.status}</dt>
+                    <dd><Badge tone={statusTone(form.status)}>{statusLabel(form.status, locale)}</Badge></dd>
+                  </div>
+                </dl>
+                <div className="project-form-summary__progress">
+                  <div><span>{labels.progress}</span><strong className="mono"><bdi>{Math.max(0, Math.min(100, Number(form.progress) || 0))}%</bdi></strong></div>
+                  <div className="progress-track progress-track--orange"><span style={{ width: `${Math.max(0, Math.min(100, Number(form.progress) || 0))}%` }} /></div>
+                </div>
+                <p className="project-form-summary__hint">{labels.recordHint}</p>
+              </div>
+              <div className="form-actions-bar project-form-actions">
+                <Link className="ui-button ui-button--secondary" href={locale === "ar" ? "/app/admin/projects" : "/app/admin/projects?lang=en"}>
+                  {labels.back}
+                </Link>
+                <button className="ui-button ui-button--primary" type="submit" disabled={saving}>
+                  {saving ? (locale === "ar" ? "جاري الحفظ..." : "Saving...") : labels.save}
+                </button>
+              </div>
+            </aside>
           </form>
 
           {project && (
