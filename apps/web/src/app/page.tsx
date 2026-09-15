@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail, MapPin, Phone } from "lucide-react";
 import { Button, Card, Section } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../i18n/translations";
+import { HeroScene } from "./hero-scene";
 
 type PageProps = {
   searchParams?: Promise<{ lang?: string }>;
@@ -48,57 +49,76 @@ export default async function HomePage({ searchParams }: PageProps) {
       </header>
 
       <section className="hero">
-        <div className="hero__bg" aria-hidden="true" />
+        <div className="hero__scene" aria-hidden="true">
+          <HeroScene />
+        </div>
+
+        {/* technical annotations — kept outside the flipped scene so text never mirrors */}
+        <span className="hero-tag hero-tag--design" aria-hidden="true">
+          {locale === "ar" ? "مخطط التصميم" : "DESIGN LAYER"}
+        </span>
+        <span className="hero-tag hero-tag--axis" aria-hidden="true">AXIS A—A</span>
+        <span className="hero-tag hero-tag--ffl" aria-hidden="true">FFL ±0.00</span>
+
         <div className="container hero-inner">
-          <aside className="hero-side-note" aria-hidden="true">
-            <span>{locale === "ar" ? "نبني أفكارك لواقع أجمل" : "ENGINEERING A BETTER TOMORROW"}</span>
-          </aside>
           <div className="hero-copy">
             <span className="hero-eyebrow">
               <span className="hero-eyebrow__bar" aria-hidden="true" />
               ELHABAK CONSTRUCTION
             </span>
-            <h1>{t.home.heroTitle}</h1>
+            <h1>
+              {locale === "ar" ? (
+                <>
+                  <span>الحباك</span>
+                  <span>للاستشارات</span>
+                  <span>الهندسية</span>
+                </>
+              ) : (
+                <>
+                  <span>ELHABAK</span>
+                  <span>CONSTRUCTION</span>
+                </>
+              )}
+            </h1>
             <p>{t.home.heroSubtitle}</p>
             <div className="hero-actions">
-              <Button href="#contact" variant="accent">
+              <Button href="#contact" variant="accent" className="hero-cta">
                 {t.home.primaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
               </Button>
-              <Button href="#services" variant="ghost">
+              <Button href="#services" variant="ghost" className="hero-cta hero-cta--ghost">
                 {t.home.secondaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
               </Button>
             </div>
           </div>
-          <div className="hero-visual" aria-label={t.home.heroPanelTitle}>
-            <div className="hero-visual__frame">
-              <div className="hero-visual__construction" aria-hidden="true">
-                <span className="hero-visual__tower" />
-                <span className="hero-visual__slab hero-visual__slab--one" />
-                <span className="hero-visual__slab hero-visual__slab--two" />
-                <span className="hero-visual__slab hero-visual__slab--three" />
-              </div>
-              <div className="brand-monogram">
-                <Image
-                  src="/brand/logo-vertical.png"
-                  alt=""
-                  width={300}
-                  height={217}
-                  priority
-                />
-              </div>
-              <div className="hero-panel">
-                <span className="hero-panel__tag">{locale === "ar" ? "نظام إدارة المشاريع" : "PROJECT MANAGEMENT SYSTEM"}</span>
-                <h2>{t.home.heroPanelTitle}</h2>
-                <p>{t.home.heroPanelText}</p>
-              </div>
-            </div>
-          </div>
         </div>
-        <div className="hero-stats hero-sequence" aria-hidden="true">
-          <div className="container hero-stats__inner">
-            <span><strong>DESIGN</strong><small>{locale === "ar" ? "دراسة وتصميم" : "Study and design"}</small></span>
-            <span><strong>BUILD</strong><small>{locale === "ar" ? "تنفيذ ومتابعة" : "Execution control"}</small></span>
-            <span><strong>DELIVER</strong><small>{locale === "ar" ? "تسليم موثق" : "Documented handover"}</small></span>
+
+        <aside className="hero-scope">
+          <span className="hero-scope__tag">
+            {locale === "ar" ? "نطاق العمل" : "WORK SCOPE"}
+          </span>
+          <strong>{t.home.heroPanelTitle}</strong>
+          <p>{t.home.heroPanelText}</p>
+        </aside>
+
+        <div className="hero-marker" aria-hidden="true">
+          <span className="hero-marker__line" />
+          <span className="hero-marker__text">
+            {locale === "ar" ? "نبني أفكارك لواقع أجمل" : "ENGINEERING A BETTER TOMORROW"}
+          </span>
+          <span className="hero-marker__line" />
+        </div>
+
+        <div className="hero-rail" aria-hidden="true">
+          <div className="container hero-rail__inner">
+            <span>DESIGN</span>
+            <span>EXECUTION</span>
+            <span>FINISHING</span>
+            <span>CONTRACTING</span>
+            <span>FIT-OUT</span>
+            <i className="hero-rail__sep" />
+            <span className="hero-rail__end">
+              {locale === "ar" ? "من الرؤية إلى الواقع" : "FROM VISION TO REALITY"}
+            </span>
           </div>
         </div>
       </section>
