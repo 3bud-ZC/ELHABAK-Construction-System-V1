@@ -909,6 +909,7 @@ function ExpensesPanel({
               <div className="finance-register__identity" data-label={labels.description}>
                 <strong>{expense.description}</strong>
                 {expense.reference && <span className="finance-register__cell--muted">{expense.reference}</span>}
+                {expense.status === "VOID" && expense.voidReason && <span className="finance-void-reason">{ar ? "سبب الإلغاء" : "Void reason"}: {expense.voidReason}</span>}
               </div>
               <span className="finance-register__cell finance-register__cell--muted" data-label={labels.vendor}>{expense.vendor ?? "—"}</span>
               <span className="finance-register__cell finance-register__cell--amount" data-label={labels.amount}>{money(expense.amount, currency, locale)}</span>
@@ -1179,6 +1180,7 @@ function ClientPaymentsPanel({
               <div className="finance-register__identity" data-label={labels.reference}>
                 <strong>{payment.reference ?? "—"}</strong>
                 {payment.description && <span className="finance-register__cell--muted">{payment.description}</span>}
+                {payment.status === "VOID" && payment.voidReason && <span className="finance-void-reason">{ar ? "سبب الإلغاء" : "Void reason"}: {payment.voidReason}</span>}
               </div>
               <span className="finance-register__cell finance-register__cell--amount" data-label={labels.amount}>{money(payment.amount, currency, locale)}</span>
               <span className="finance-register__cell" data-label={labels.status}><Badge tone={financialStatusTone(payment.status)}>{financialStatusLabel(payment.status, locale)}</Badge></span>
@@ -1394,6 +1396,7 @@ function ContractorPaymentsPanel({
               <div className="finance-register__identity" data-label={labels.payee}>
                 <strong>{payment.payee}</strong>
                 {payment.category && <span className="finance-register__cell--muted">{expenseCategoryLabel(payment.category, locale)}</span>}
+                {payment.status === "VOID" && payment.voidReason && <span className="finance-void-reason">{ar ? "سبب الإلغاء" : "Void reason"}: {payment.voidReason}</span>}
               </div>
               <span className="finance-register__cell" data-label={labels.method}>{paymentMethodLabel(payment.method, locale)}</span>
               <span className="finance-register__cell finance-register__cell--amount" data-label={labels.amount}>{money(payment.amount, currency, locale)}</span>
