@@ -19,8 +19,9 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: "ELHABAK Construction System V1",
-  description: "Official ELHABAK Construction website and system entry."
+  title: "ELHABAK — الحباك للاستشارات الهندسية",
+  description:
+    "ELHABAK Construction — an engineering company in Sohag delivering design, construction, finishing, general contracting, and furnishing with organized follow-up."
 };
 
 export const viewport: Viewport = {
