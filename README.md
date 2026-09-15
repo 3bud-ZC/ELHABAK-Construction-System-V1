@@ -11,10 +11,10 @@ owner can control even off-site.
 
 ## Current Status
 
-**80% complete.** Milestone 08 (Project Communication & Realtime Collaboration) is
-complete. The Client Review deployment is live in production. See [STATUS.md](STATUS.md)
-for the full run log and [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for the canonical
-product specification.
+**V1 100% complete.** Milestone 10 (Production Hardening, Final Acceptance, Handover &
+Delivery) is complete. The product is **READY FOR CLIENT HANDOVER** and deployed to
+production on Railway. See [STATUS.md](STATUS.md) for the full run log and
+[PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for the canonical product specification.
 
 ## Core Modules
 
@@ -139,9 +139,9 @@ Both directions are verified at desktop, tablet, and mobile breakpoints.
 
 ## Project Status / Roadmap
 
-- **Current:** 80% complete, Milestone 08 done, MVP 1 ready for client review
-- **Next:** Milestone 09 (not started)
-- **Final:** Milestone 10
+- **V1:** 100% complete — Milestone 10 done, READY FOR CLIENT HANDOVER
+- **V5 Product Experience:** 100% complete — all visual/product-experience phases delivered
+- **Production:** Live on Railway (web + API + Neon PostgreSQL)
 
 ## License
 

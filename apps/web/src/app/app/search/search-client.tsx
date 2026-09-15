@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState } from "@elhabak/ui";
 import { apiRequest, type SearchResult } from "../../../lib/api";
 
 const icons = {
@@ -101,7 +101,13 @@ export function SearchClient() {
 
   return (
     <section className="app-page search-page">
-      <PageHeader title={labels.title} description={labels.lead} />
+      <div className="admin-command-strip">
+        <div>
+          <span className="section-kicker">{ar ? "النظام / البحث الشامل" : "SYSTEM / GLOBAL SEARCH"}</span>
+          <strong>{labels.title}</strong>
+        </div>
+        <span className="admin-command-strip__subtitle">{labels.lead}</span>
+      </div>
       <label className="global-search-field search-page-field">
         <Search size={19} aria-hidden="true" />
         <input

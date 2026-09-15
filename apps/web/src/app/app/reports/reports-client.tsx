@@ -4,7 +4,7 @@ import { FileText, FolderKanban, Search } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, MetricCard, ProgressBar } from "@elhabak/ui";
 import {
   apiRequest,
   phaseLabel,
@@ -75,7 +75,13 @@ export function ReportsClient() {
   const href = (path: string) => (ar ? path : `${path}?lang=en`);
   return (
     <section className="app-page reports-center">
-      <PageHeader title={labels.title} description={labels.lead} />
+      <div className="admin-command-strip">
+        <div>
+          <span className="section-kicker">{ar ? "النظام / مركز التقارير" : "SYSTEM / REPORTS CENTER"}</span>
+          <strong>{labels.title}</strong>
+        </div>
+        <span className="admin-command-strip__subtitle">{labels.lead}</span>
+      </div>
 
       {!loading && (
         <div className="metric-grid">

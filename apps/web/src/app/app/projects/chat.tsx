@@ -367,8 +367,9 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
       <div className="chat-shell">
         <div className="chat-context-bar">
           <div className="chat-context-bar__info">
+            <span className="section-kicker">{ar ? "المشروع / سجل التواصل" : "PROJECT / COMMUNICATION LOG"}</span>
             <strong>{project.name}</strong>
-            <span className="chat-context-bar__code mono">{project.code ?? "—"}</span>
+            <bdi className="chat-context-bar__code mono">{project.code ?? "—"}</bdi>
           </div>
           <span className="chat-context-bar__tag">{ar ? "قناة اتصال المشروع" : "PROJECT COMMUNICATION CHANNEL"}</span>
         </div>

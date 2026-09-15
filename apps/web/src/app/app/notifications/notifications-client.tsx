@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { EmptyState, LoadingState } from "@elhabak/ui";
 import { Bell, CheckCheck } from "lucide-react";
 import {
   apiRequest,
@@ -97,8 +97,14 @@ export function NotificationsClient() {
   const timeFormatter = new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { dateStyle: "medium", timeStyle: "short" });
 
   return (
-    <section className="app-page">
-      <PageHeader title={labels.title} description={labels.lead} />
+    <section className="app-page notifications-page">
+      <div className="admin-command-strip">
+        <div>
+          <span className="section-kicker">{ar ? "النظام / صندوق الإشعارات" : "SYSTEM / NOTIFICATION INBOX"}</span>
+          <strong>{labels.title}</strong>
+        </div>
+        <span className="admin-command-strip__subtitle">{labels.lead}</span>
+      </div>
 
       <div className="notifications-toolbar">
         <div className="notifications-filter">

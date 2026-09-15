@@ -138,16 +138,17 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
 
   if (mode === "list") {
     return (
-      <section className="app-page">
-        <PageHeader
-          title={labels.title}
-          description={labels.lead}
-          actions={
-            <Link className="ui-button ui-button--primary" href="/app/admin/clients/new">
-              {labels.create}
-            </Link>
-          }
-        />
+      <section className="app-page clients-console">
+        <div className="admin-command-strip">
+          <div>
+            <span className="section-kicker">{ar ? "الإدارة / حسابات العملاء" : "MANAGEMENT / CLIENT ACCOUNTS"}</span>
+            <strong>{labels.title}</strong>
+          </div>
+          <span className="admin-command-strip__subtitle">{labels.lead}</span>
+          <Link className="ui-button ui-button--primary" href={ar ? "/app/admin/clients/new" : "/app/admin/clients/new?lang=en"}>
+            {labels.create}
+          </Link>
+        </div>
         {!loading && (
           <div className="metric-grid">
             <MetricCard icon={<UsersRound size={18} />} tone="navy" label={labels.total} value={clients.length} />
@@ -165,7 +166,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           <EmptyState icon={<UserRoundCog size={20} />} title={labels.empty} description={labels.emptyHint} />
         ) : null}
         {!loading && clients.length > 0 ? (
-          <div className="data-table data-table--clients">
+          <div className="data-table data-table--clients admin-register">
             <div className="data-table-head client-row">
               <span>{labels.name}</span>
               <span>{labels.email}</span>
@@ -173,15 +174,16 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
               <span>{labels.status}</span>
             </div>
             {clients.map((client) => (
-              <Link className="data-row client-row" href={`/app/admin/clients/${client.id}`} key={client.id}>
-                <div data-label={labels.name}>
+              <Link className={`data-row client-row ${!client.user.isActive ? "admin-row--suspended" : ""}`} href={ar ? `/app/admin/clients/${client.id}` : `/app/admin/clients/${client.id}?lang=en`} key={client.id}>
+                <div data-label={labels.name} className="admin-register__identity">
                   <strong>{client.user.displayName}</strong>
+                  <span className="admin-register__email mono">{client.user.email}</span>
                 </div>
                 <div data-label={labels.email}>
-                  <span>{client.user.email}</span>
+                  <span className="mono">{client.user.email}</span>
                 </div>
                 <div data-label={labels.phone}>
-                  <span className="mono">{client.phone ?? "-"}</span>
+                  <span className="mono">{client.phone ?? "—"}</span>
                 </div>
                 <div data-label={labels.status}>
                   <Badge tone={accountStatusTone(client.user.isActive)}>
@@ -201,7 +203,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
       <PageHeader
         title={mode === "create" ? labels.create : labels.edit}
         actions={
-          <Link className="ui-button ui-button--secondary" href="/app/admin/clients">
+          <Link className="ui-button ui-button--secondary" href={ar ? "/app/admin/clients" : "/app/admin/clients?lang=en"}>
             {labels.back}
           </Link>
         }
@@ -257,7 +259,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         {success ? <p className="form-success">{success}</p> : null}
 
         <div className="form-actions-bar">
-          <Link className="ui-button ui-button--secondary" href="/app/admin/clients">
+          <Link className="ui-button ui-button--secondary" href={ar ? "/app/admin/clients" : "/app/admin/clients?lang=en"}>
             {labels.back}
           </Link>
           <button className="ui-button ui-button--primary" disabled={saving} type="submit">

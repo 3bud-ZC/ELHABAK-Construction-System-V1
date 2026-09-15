@@ -174,7 +174,14 @@ export function UsersClient({ mode, id }: UsersClientProps) {
   if (mode === "list") {
     return (
       <section className="app-page users-console">
-        <PageHeader title={labels.title} description={labels.lead} actions={<Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>} />
+        <div className="admin-command-strip">
+          <div>
+            <span className="section-kicker">{ar ? "النظام / الهوية والوصول" : "SYSTEM / IDENTITY & ACCESS"}</span>
+            <strong>{labels.title}</strong>
+          </div>
+          <span className="admin-command-strip__subtitle">{labels.lead}</span>
+          <Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>
+        </div>
 
         {!loading ? (
           <div className="users-kpi-strip">
@@ -214,17 +221,20 @@ export function UsersClient({ mode, id }: UsersClientProps) {
         {loading || actionBusy && !pending ? <LoadingState label={labels.loadingLabel} /> : null}
         {!loading && visibleUsers.length === 0 ? <EmptyState icon={<UsersRound size={20} />} title={labels.empty} description={labels.emptyHint} /> : null}
         {!loading && visibleUsers.length > 0 ? (
-          <div className="data-table users-table">
+          <div className="data-table users-table admin-register">
             <div className="data-table-head user-row">
               <span>{labels.name}</span><span>{labels.email}</span><span>{labels.role}</span><span>{labels.status}</span><span>{labels.created}</span><span>{labels.actions}</span>
             </div>
             {visibleUsers.map((user) => (
-              <div className="data-row user-row" key={user.id}>
-                <div data-label={labels.name}><Link className="user-name-link" href={withLocale(`/app/admin/users/${user.id}`, ar)}><strong>{user.displayName}</strong></Link></div>
-                <div data-label={labels.email}><span>{user.email}</span></div>
+              <div className={`data-row user-row ${statusOf(user) === "ARCHIVED" ? "admin-row--archived" : statusOf(user) === "SUSPENDED" ? "admin-row--suspended" : ""}`} key={user.id}>
+                <div data-label={labels.name} className="admin-register__identity">
+                  <Link className="user-name-link" href={withLocale(`/app/admin/users/${user.id}`, ar)}><strong>{user.displayName}</strong></Link>
+                  <span className="admin-register__email mono">{user.email}</span>
+                </div>
+                <div data-label={labels.email}><span className="mono">{user.email}</span></div>
                 <div data-label={labels.role}><Badge tone="navy">{roleLabel(user.role, locale)}</Badge></div>
                 <div data-label={labels.status}><StatusBadge status={statusOf(user)} labels={labels} /></div>
-                <div data-label={labels.created}><span>{formatDate(user.createdAt, locale)}</span></div>
+                <div data-label={labels.created}><span className="mono">{formatDate(user.createdAt, locale)}</span></div>
                 <div className="user-actions" data-label={labels.actions}>
                   <button className="user-actions__trigger" type="button" aria-label={`${labels.actions}: ${user.displayName}`} aria-expanded={openMenu === user.id} onClick={(event) => { event.stopPropagation(); setOpenMenu(openMenu === user.id ? null : user.id); }}><MoreHorizontal size={19} /></button>
                   {openMenu === user.id ? <ActionMenu user={user} currentUserId={currentUser.id} labels={labels} ar={ar} onAction={(kind) => void openAction(kind, user)} /> : null}

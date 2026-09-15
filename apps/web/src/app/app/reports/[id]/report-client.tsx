@@ -3,7 +3,7 @@
 import { Download, FileText } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader, ProgressBar } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, ProgressBar } from "@elhabak/ui";
 import {
   actionLabel,
   apiRequest,
@@ -139,16 +139,17 @@ export function ReportClient() {
 
   return (
     <section className="app-page project-report-page">
-      <PageHeader
-        title={`${labels.title}: ${p.name}`}
-        description={labels.lead}
-        actions={
-          <a className="ui-button ui-button--primary" href={reportPdfUrl(p.id, locale)}>
-            <Download size={17} />
-            {labels.export}
-          </a>
-        }
-      />
+      <div className="admin-command-strip">
+        <div>
+          <span className="section-kicker">{ar ? "النظام / تقرير المشروع" : "SYSTEM / PROJECT REPORT"}</span>
+          <strong>{`${labels.title}: ${p.name}`}</strong>
+        </div>
+        <span className="admin-command-strip__subtitle">{labels.lead}</span>
+        <a className="ui-button ui-button--primary" href={reportPdfUrl(p.id, locale)}>
+          <Download size={17} />
+          {labels.export}
+        </a>
+      </div>
       {error && (
         <div className="form-error" role="alert">
           {error}

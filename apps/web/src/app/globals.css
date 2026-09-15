@@ -5812,6 +5812,33 @@ a.ui-button:focus-visible {
     min-height: 44px;
   }
 
+  .data-table--clients .client-row {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-3) var(--space-4);
+    gap: 0.5rem;
+  }
+
+  .data-table--clients .data-row>div {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .data-table--clients .data-row>div::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .admin-command-strip {
+    padding: var(--space-3);
+  }
+
+  .admin-command-strip>div strong {
+    font-size: 1.1rem;
+  }
+
   .project-command-header__main,
   .design-hub-heading,
   .design-detail-heading {
@@ -8902,6 +8929,74 @@ a.ui-button:focus-visible {
   flex: 0 0 auto;
 }
 
+/* --- Admin command strip: V5 identity/access console header --- */
+
+.admin-command-strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  border-inline-start: 3px solid var(--navy);
+  margin-bottom: var(--space-4);
+}
+
+.admin-command-strip>div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-command-strip .section-kicker {
+  font-family: var(--font-mono, "Rubik", monospace);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #e87625);
+}
+
+.admin-command-strip>div strong {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.admin-command-strip__subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.4;
+  margin-bottom: var(--space-2);
+}
+
+.admin-command-strip>.ui-button {
+  align-self: flex-start;
+}
+
+/* --- Admin register: shared identity/access row treatment --- */
+
+.admin-register .admin-register__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-register .admin-register__email {
+  font-size: 0.72rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.admin-register .admin-row--archived {
+  opacity: 0.6;
+}
+
+.admin-register .admin-row--suspended {
+  background: rgba(232, 118, 37, 0.04);
+}
+
 /* --- Users console: professional admin console --- */
 
 .users-kpi-strip {
@@ -8970,8 +9065,23 @@ a.ui-button:focus-visible {
 
 .chat-context-bar__info {
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-context-bar__info .section-kicker {
+  font-family: var(--font-mono, "Rubik", monospace);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #e87625);
+}
+
+.chat-context-bar__info>strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
 }
 
 .chat-context-bar__code {
