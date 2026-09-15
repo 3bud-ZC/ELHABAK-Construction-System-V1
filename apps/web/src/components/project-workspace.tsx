@@ -122,7 +122,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
   ];
 
   return (
-    <div className="project-workspace-container">
+    <div className={`project-workspace-container${active === "overview" ? "" : " project-workspace-container--sub"}`}>
       <header className="project-command-header project-command-header--v5">
         <div className="project-command-header__topbar">
           <div className="project-command-header__ref-group">

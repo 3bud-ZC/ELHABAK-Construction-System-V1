@@ -94,7 +94,7 @@ export function NotificationsClient() {
     [ar]
   );
 
-  const timeFormatter = new Intl.DateTimeFormat(ar ? "ar-EG" : "en-US", { dateStyle: "medium", timeStyle: "short" });
+  const timeFormatter = new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
 
   return (
     <section className="app-page notifications-page">
@@ -118,6 +118,9 @@ export function NotificationsClient() {
         <button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={markAllRead}>
           <CheckCheck size={14} /> {labels.markAll}
         </button>
+        <Link className="notifications-back-link" href={href("/app")}>
+          {ar ? "العودة إلى لوحة التحكم" : "Back to dashboard"}
+        </Link>
       </div>
 
       {error && <div className="form-error">{error}</div>}
@@ -147,10 +150,6 @@ export function NotificationsClient() {
           ))}
         </div>
       )}
-
-      <Link className="lang-link" href={href("/app")}>
-        {ar ? "العودة إلى لوحة التحكم" : "Back to dashboard"}
-      </Link>
     </section>
   );
 }

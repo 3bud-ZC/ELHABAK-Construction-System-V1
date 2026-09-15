@@ -747,7 +747,7 @@ export function notificationTypeLabel(type: NotificationType, locale: "ar" | "en
 export function relativeTime(iso: string, locale: "ar" | "en") {
   const then = new Date(iso).getTime();
   const diffSeconds = Math.round((Date.now() - then) / 1000);
-  const rtf = new Intl.RelativeTimeFormat(locale === "ar" ? "ar" : "en", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en", { numeric: "auto" });
   const thresholds: Array<[number, Intl.RelativeTimeFormatUnit]> = [
     [60, "second"],
     [3600, "minute"],
@@ -1009,10 +1009,11 @@ export function reportPdfUrl(projectId: string, locale: "ar" | "en") {
 }
 
 export function formatFileSize(bytes: number, locale: "ar" | "en") {
+  const numberLocale = locale === "ar" ? "ar-EG-u-nu-latn" : "en-US";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024)
-    return `${new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 1 }).format(bytes / 1024)} KB`;
-  return `${new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MB`;
+    return `${new Intl.NumberFormat(numberLocale, { maximumFractionDigits: 1 }).format(bytes / 1024)} KB`;
+  return `${new Intl.NumberFormat(numberLocale, { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MB`;
 }
 
 export function accountStatusTone(isActive: boolean): BadgeTone {

@@ -5412,15 +5412,12 @@ h4 {
 
 .design-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 150px)) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: stretch;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--white);
   box-shadow: var(--shadow-xs);
-}
-
-.design-kpi-strip--compact {
-  grid-template-columns: repeat(2, minmax(0, 150px)) minmax(0, 1fr);
 }
 
 .design-kpi-strip>span {
@@ -5430,6 +5427,10 @@ h4 {
   gap: 0.15rem;
   padding: 0.6rem var(--space-4);
   border-inline-end: 1px solid var(--border);
+}
+
+.design-kpi-strip>span:last-of-type {
+  border-inline-end: 0;
 }
 
 .design-kpi-strip>span.attention {
@@ -5451,8 +5452,11 @@ h4 {
 }
 
 .design-kpi-strip p {
-  align-self: center;
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
   margin: 0;
+  border-top: 1px solid var(--border);
   padding: var(--space-3) var(--space-4);
   color: var(--muted);
   font-size: 0.76rem;
@@ -6792,34 +6796,57 @@ a.ui-button:focus-visible {
   }
 
   .users-table .user-row {
-    grid-template-columns: minmax(0, 1fr);
-    padding: var(--space-4);
-    gap: 0.65rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: var(--space-3) var(--space-4);
+    gap: 0.5rem 0.75rem;
   }
 
   .users-table .data-row>div {
-    display: grid;
-    grid-template-columns: 110px minmax(0, 1fr);
+    display: flex;
     align-items: center;
+    min-width: 0;
   }
 
+  /* Compact user card: identity leads, role+status sit side-by-side, join date stays
+     muted, actions get their own footer - no per-cell desktop labels repeated. */
   .users-table .data-row>div::before {
-    content: attr(data-label);
+    content: none;
+  }
+
+  .users-table .data-row>div:nth-child(1) {
+    grid-column: 1 / -1;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .users-table .data-row>div:nth-child(4) {
     color: var(--muted);
     font-size: 0.7rem;
-    font-weight: 700;
+  }
+
+  .users-table .data-row>div:nth-child(4) .mono {
+    font-size: 0.7rem;
   }
 
   .users-table .user-actions {
     display: flex !important;
+    grid-column: 1 / -1;
     justify-content: flex-end;
-    padding-top: 0.35rem;
-    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-soft);
   }
 
   .users-table .user-actions::before {
     margin-inline-end: auto;
     align-self: center;
+  }
+
+  /* Sub-page workspaces (design/site/finance/documents/chat) already carry the full dossier
+     in the command header + tab bar - on phones the five-cell facts strip consumed the whole
+     first viewport before the module content, so it collapses there. The Overview keeps it
+     because those facts are the overview's substance. */
+  .project-workspace-container--sub .project-command-facts {
+    display: none;
   }
 
   .user-actions__trigger {
@@ -6871,6 +6898,12 @@ a.ui-button:focus-visible {
     color: var(--muted);
     font-size: 0.7rem;
     font-weight: 700;
+  }
+
+  /* Badges stay intrinsic-width in the value column - grid children stretch by
+     default which produced full-width status pills on sparse rows. */
+  .data-table--clients .data-row .ui-badge {
+    justify-self: start;
   }
 
   .admin-command-strip {
@@ -6932,15 +6965,6 @@ a.ui-button:focus-visible {
 
   .design-detail-sidebar>section:last-child {
     grid-column: auto;
-  }
-
-  .design-kpi-strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .design-kpi-strip p {
-    grid-column: 1 / -1;
-    border-top: 1px solid var(--border);
   }
 
   .design-toolbar {
@@ -7011,10 +7035,6 @@ a.ui-button:focus-visible {
   .project-workspace-nav a {
     min-height: 42px;
     padding-inline: 0.65rem;
-  }
-
-  .design-kpi-strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .design-kpi-strip>span {
@@ -8225,18 +8245,29 @@ a.ui-button:focus-visible {
 
 .finance-history-list {
   display: grid;
-  gap: var(--space-2);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  box-shadow: var(--shadow-xs);
 }
 
 .finance-history-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--white);
-  padding: 0.6rem var(--space-4);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 0.55rem var(--space-4);
   font-size: 0.78rem;
+}
+
+.finance-history-row:last-child {
+  border-bottom: 0;
+}
+
+.finance-history-row:hover {
+  background: var(--surface-soft);
 }
 
 .finance-history-row strong {
@@ -8244,15 +8275,148 @@ a.ui-button:focus-visible {
   color: var(--navy);
 }
 
-.finance-history-row span {
+.finance-history-row__action small,
+.finance-history-row__actor small {
+  display: block;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.finance-history-row__actor strong {
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .finance-history-row time {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
   white-space: nowrap;
+}
+
+.finance-version-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--success);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  padding: 0.65rem var(--space-4);
+  box-shadow: var(--shadow-xs);
+}
+
+.finance-version-banner__id {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.finance-version-banner__id>div {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.finance-version-banner__id strong {
+  overflow: hidden;
+  color: var(--navy);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-version-banner__id small {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.finance-version-banner__total {
+  display: grid;
+  gap: 0.1rem;
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.finance-version-banner__total small {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.finance-version-banner__total strong {
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+
+.finance-version-chip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--surface-soft);
+  padding: 0.28rem 0.5rem;
+  color: var(--navy);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.finance-version-chip--locked {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.finance-version-ledger {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.finance-version-ledger .section-kicker {
+  margin-bottom: 0.1rem;
+}
+
+.finance-version-ledger__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.6fr) auto auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  padding: 0.5rem var(--space-4);
+  font-size: 0.76rem;
+}
+
+.finance-version-ledger__row strong {
+  overflow: hidden;
+  color: var(--muted);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-version-ledger__row>span.mono {
+  color: var(--navy);
+}
+
+.finance-version-ledger__row time {
+  color: var(--muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.finance-register__cell--total {
+  color: var(--navy);
+  font-weight: 800;
 }
 
 @media (max-width: 980px) {
@@ -8528,10 +8692,22 @@ a.ui-button:focus-visible {
 
 .notifications-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+
+.notifications-back-link {
+  margin-inline-start: auto;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.notifications-back-link:hover {
+  color: var(--orange);
 }
 
 .notifications-filter {
@@ -8585,6 +8761,7 @@ a.ui-button:focus-visible {
 
 .notifications-row--unread {
   border-color: var(--orange-soft);
+  border-inline-start: 3px solid var(--orange);
   background: var(--orange-wash);
 }
 
@@ -10217,7 +10394,7 @@ a.ui-button:focus-visible {
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  padding: var(--space-3) var(--space-4);
+  padding: 0.45rem var(--space-4);
   background: var(--surface-soft);
   border: 1px solid var(--border);
   border-bottom: none;
@@ -10226,11 +10403,14 @@ a.ui-button:focus-visible {
 
 .chat-context-bar__info {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.6rem;
 }
 
 .chat-context-bar__info .section-kicker {
+  flex: 0 0 auto;
+  margin-bottom: 0;
   font-family: var(--font-mono, "Rubik", monospace);
   font-size: 0.62rem;
   font-weight: 600;
@@ -10240,22 +10420,26 @@ a.ui-button:focus-visible {
 }
 
 .chat-context-bar__info>strong {
-  font-size: 1rem;
+  overflow: hidden;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--navy);
-}
-
-.chat-context-bar__code {
-  font-size: 0.74rem;
-  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-context-bar__tag {
+  flex: 0 0 auto;
   font-size: 0.66rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--orange);
   font-weight: 700;
+}
+
+.chat-context-bar__tag .mono {
+  letter-spacing: 0.04em;
+  color: var(--muted);
 }
 
 .chat-shell .chat-message-list {
@@ -10545,7 +10729,6 @@ a.ui-button:focus-visible {
   box-shadow: var(--shadow-md);
 }
 
-.finance-portfolio-card__head,
 .finance-portfolio-card__phase {
   display: flex;
   align-items: center;
@@ -10553,7 +10736,6 @@ a.ui-button:focus-visible {
   gap: var(--space-3);
 }
 
-.finance-portfolio-card__head>span,
 .finance-portfolio-grid>a>span,
 .finance-portfolio-card__phase span {
   color: var(--muted);
@@ -10974,36 +11156,6 @@ a.ui-button:focus-visible {
 .project-overview-activity small {
   color: var(--muted-soft);
   font-size: 0.66rem;
-}
-
-.project-overview-team__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.project-overview-team__grid span {
-  display: grid;
-  gap: 0.2rem;
-  min-width: 0;
-  border-inline-start: 2px solid var(--orange);
-  padding-inline-start: var(--space-3);
-}
-
-.project-overview-team__grid small {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--muted);
-  font-size: 0.68rem;
-}
-
-.project-overview-team__grid strong {
-  overflow: hidden;
-  color: var(--navy);
-  font-size: 0.78rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .lifecycle-control {
@@ -11485,8 +11637,7 @@ a.ui-button:focus-visible {
     grid-column: 1 / -1;
   }
 
-  .workspace-grid--overview,
-  .project-overview-team__grid {
+  .workspace-grid--overview {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -11683,6 +11834,12 @@ a.ui-button:focus-visible {
   display: flex;
   align-items: center;
   gap: 0.3rem;
+}
+
+/* KPI strips keep their natural card count - auto-fit removes dead columns on
+   narrow widths without needing per-breakpoint rules. */
+.metric-grid.technical-kpi-strip {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .technical-document-register {
@@ -12352,9 +12509,9 @@ a.ui-button:focus-visible {
 
 .finance-portfolio-register>a {
   display: grid;
-  grid-template-columns: minmax(220px, 1.7fr) minmax(150px, 1fr) minmax(120px, 0.9fr) minmax(160px, 1.2fr) 150px;
+  grid-template-columns: minmax(210px, 1.6fr) 110px minmax(140px, 1fr) minmax(120px, 0.9fr) minmax(150px, 1.1fr) 130px;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   min-height: 64px;
   padding: 0.55rem var(--space-4);
   border: 0;
@@ -12375,25 +12532,18 @@ a.ui-button:focus-visible {
   box-shadow: inset 2px 0 var(--orange);
 }
 
-.finance-portfolio-register .finance-portfolio-card__head {
+.finance-portfolio-register .finance-portfolio-card__identity {
   display: grid;
   min-width: 0;
-  gap: 0.2rem;
+  gap: 0.15rem;
 }
 
-.finance-portfolio-register .finance-portfolio-card__head .ui-badge {
-  justify-self: start;
-  order: 2;
-}
-
-.finance-portfolio-register .finance-portfolio-card__head>span {
+.finance-portfolio-register .finance-portfolio-card__identity>span {
   color: var(--muted);
   font-size: 0.68rem;
 }
 
-.finance-portfolio-register h3 {
-  grid-column: 1;
-  grid-row: 1;
+.finance-portfolio-register .finance-portfolio-card__identity h3 {
   overflow: hidden;
   margin: 0;
   color: var(--navy);
@@ -12402,9 +12552,11 @@ a.ui-button:focus-visible {
   white-space: nowrap;
 }
 
+.finance-portfolio-register>a>.ui-badge {
+  justify-self: start;
+}
+
 .finance-portfolio-register>a>span {
-  grid-column: 2;
-  grid-row: 1;
   overflow: hidden;
   color: var(--muted);
   font-size: 0.76rem;
@@ -12413,8 +12565,6 @@ a.ui-button:focus-visible {
 }
 
 .finance-portfolio-register .finance-portfolio-card__phase {
-  grid-column: 3;
-  grid-row: 1;
   display: grid;
   gap: 0.2rem;
   min-width: 0;
@@ -12480,7 +12630,8 @@ a.ui-button:focus-visible {
   white-space: nowrap;
 }
 
-.finance-command-strip>bdi {
+.finance-command-strip__code {
+  margin-inline-start: 0.45rem;
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 800;
@@ -12599,7 +12750,7 @@ a.ui-button:focus-visible {
 
 @media (max-width: 1180px) {
   .finance-portfolio-register>a {
-    grid-template-columns: minmax(180px, 1.5fr) minmax(130px, 1fr) minmax(110px, 0.9fr) minmax(140px, 1.1fr) 125px;
+    grid-template-columns: minmax(190px, 1.5fr) 100px minmax(120px, 0.9fr) minmax(110px, 0.85fr) minmax(130px, 1fr) 115px;
     gap: var(--space-3);
   }
 
@@ -12648,7 +12799,8 @@ a.ui-button:focus-visible {
     padding: var(--space-4);
   }
 
-  .finance-portfolio-register>a h3,
+  .finance-portfolio-register>a>.finance-portfolio-card__identity,
+  .finance-portfolio-register>a>.ui-badge,
   .finance-portfolio-register>a>span,
   .finance-portfolio-register .finance-portfolio-card__phase,
   .finance-portfolio-register>a>.progress-track,
@@ -12657,24 +12809,28 @@ a.ui-button:focus-visible {
     grid-row: auto;
   }
 
-  .finance-portfolio-register>a h3 {
+  .finance-portfolio-register>a>.finance-portfolio-card__identity {
     order: 1;
   }
 
-  .finance-portfolio-register>a>span {
+  .finance-portfolio-register>a>.ui-badge {
     order: 2;
   }
 
-  .finance-portfolio-register .finance-portfolio-card__phase {
+  .finance-portfolio-register>a>span {
     order: 3;
   }
 
-  .finance-portfolio-register>a>.progress-track {
+  .finance-portfolio-register .finance-portfolio-card__phase {
     order: 4;
   }
 
-  .finance-portfolio-register>a>b {
+  .finance-portfolio-register>a>.progress-track {
     order: 5;
+  }
+
+  .finance-portfolio-register>a>b {
+    order: 6;
     justify-self: start;
   }
 

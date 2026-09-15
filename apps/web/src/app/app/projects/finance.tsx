@@ -42,7 +42,9 @@ import {
   type FinanceHistoryEvent,
   type FinanceProjectContext,
   type FinanceSummary,
-  type PaymentMethod
+  type PaymentMethod,
+  roleLabel,
+  type UserRole
 } from "../../../lib/api";
 import { useCurrentUser } from "../../../lib/user-context";
 
@@ -94,8 +96,10 @@ export function Finance({ projectId }: { projectId: string }) {
     <section className="app-page project-workspace-page finance-workspace-page">
       <ProjectWorkspace project={context} locale={locale} role={user.role} active="finance" />
       <div className="finance-command-strip">
-        <div><span className="section-kicker">{locale === "ar" ? "المشروع / مراقبة التكلفة" : "PROJECT / COST CONTROL"}</span><strong>{context.name}</strong></div>
-        <bdi className="mono">{context.code ?? "—"}</bdi>
+        <div>
+          <span className="section-kicker">{locale === "ar" ? "المشروع / مراقبة التكلفة" : "PROJECT / COST CONTROL"}</span>
+          <strong>{context.name} <bdi className="mono finance-command-strip__code">{context.code ?? "—"}</bdi></strong>
+        </div>
       </div>
       {user.role === "ADMIN" || user.role === "ACCOUNTANT" ? (
         <AdminFinancePanels projectId={projectId} locale={locale} />
@@ -117,12 +121,39 @@ function money(amount: string | null | undefined, currency: string, locale: "ar"
   return formatMoney(amount, currency, locale);
 }
 
+/* Plain decimal figures inside BOQ/estimate line cells - the totals strip carries the
+   currency, so cells stay numeric but must still be grouped and Western-digit like the
+   rest of the register. */
+function num(value: string | null | undefined, minFractionDigits = 0) {
+  if (value === null || value === undefined || value.trim() === "") return "—";
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return value;
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: minFractionDigits,
+    maximumFractionDigits: 2
+  }).format(parsed);
+}
+
 function dateOnly(iso: string, locale: "ar" | "en") {
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium" }).format(new Date(iso));
 }
 
 function isOverpaid(outstanding: string | null) {
   return Boolean(outstanding && outstanding.trim().startsWith("-"));
+}
+
+/* Compact audit context for a history row - surfaces the amount, revision/version,
+   BOQ code or void reason the audit service writes into the event metadata. */
+function historyContext(event: FinanceHistoryEvent, locale: "ar" | "en") {
+  const meta = event.metadata ?? {};
+  const parts: string[] = [];
+  const amount = meta.amount;
+  if (typeof amount === "string" && amount.trim() !== "") parts.push(formatMoney(amount, "EGP", locale));
+  else if (typeof amount === "number") parts.push(formatMoney(String(amount), "EGP", locale));
+  if (typeof meta.version === "number") parts.push(`V${String(meta.version).padStart(2, "0")}`);
+  if (typeof meta.code === "string" && meta.code) parts.push(meta.code);
+  if (typeof meta.reason === "string" && meta.reason) parts.push(meta.reason);
+  return parts.length ? parts.join(" · ") : null;
 }
 
 /* ------------------------------------------------------------------ Admin/Accountant */
@@ -411,10 +442,19 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
 
       {current && (
         <>
-          <div className="finance-totals-strip">
-            <span><small>{ar ? "العنوان" : "Title"}</small><strong>{current.title}</strong></span>
-            <span><small>{ar ? "الإصدار" : "Version"}</small><strong>{labels.version} {current.version}</strong></span>
-            <span><small>{labels.total}</small><strong>{money(current.total, "EGP", locale)}</strong></span>
+          <div className="finance-version-banner">
+            <div className="finance-version-banner__id">
+              <span className="finance-version-chip mono"><bdi>V{String(current.version).padStart(2, "0")}</bdi></span>
+              <div>
+                <strong>{current.title}</strong>
+                <small>{labels.current} · {current.createdBy?.displayName ?? "—"} · <bdi>{dateOnly(current.updatedAt, locale)}</bdi></small>
+              </div>
+            </div>
+            <Badge tone="success">{labels.current}</Badge>
+            <div className="finance-version-banner__total">
+              <small>{labels.total}</small>
+              <strong className="mono"><bdi>{money(current.total, "EGP", locale)}</bdi></strong>
+            </div>
           </div>
 
           {current.items.length === 0 ? (
@@ -430,16 +470,17 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
           )}
 
           {history.length > 0 && (
-            <div style={{ marginTop: "1.2rem" }}>
+            <div className="finance-version-ledger">
               <span className="section-kicker">{ar ? "نسخ سابقة" : "PREVIOUS VERSIONS"}</span>
-              {history
-                .map((estimate) => (
-                  <div className="finance-totals-strip" key={estimate.id} style={{ marginTop: "0.5rem" }}>
-                    <span><small>{labels.version}</small><strong>{estimate.version}</strong></span>
-                    <span><small>{labels.total}</small><strong>{money(estimate.total, "EGP", locale)}</strong></span>
-                    <Badge tone="neutral">{labels.finalized}</Badge>
-                  </div>
-                ))}
+              {history.map((estimate) => (
+                <div className="finance-version-ledger__row" key={estimate.id}>
+                  <span className="finance-version-chip finance-version-chip--locked mono"><bdi>V{String(estimate.version).padStart(2, "0")}</bdi></span>
+                  <strong>{estimate.title}</strong>
+                  <span className="mono"><bdi>{money(estimate.total, "EGP", locale)}</bdi></span>
+                  <time><bdi>{dateOnly(estimate.updatedAt, locale)}</bdi></time>
+                  <Badge tone="neutral">{labels.finalized}</Badge>
+                </div>
+              ))}
             </div>
           )}
         </>
@@ -561,9 +602,9 @@ function LineItemRegister({
             {item.note && <span className="finance-register__cell--muted">{item.note}</span>}
           </div>
           <span className="finance-register__cell" data-label={labels.unit}>{boqUnitLabel(item.unit, locale)}</span>
-          <span className="finance-register__cell finance-register__cell--amount" data-label={labels.quantity}>{item.quantity}</span>
-          <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}>{item.unitRate}</span>
-          <span className="finance-register__cell finance-register__cell--amount" data-label={labels.total}>{item.lineTotal}</span>
+          <span className="finance-register__cell finance-register__cell--amount" data-label={labels.quantity}><bdi>{num(item.quantity)}</bdi></span>
+          <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}><bdi>{num(item.unitRate, 2)}</bdi></span>
+          <span className="finance-register__cell finance-register__cell--amount finance-register__cell--total" data-label={labels.total}><bdi>{num(item.lineTotal, 2)}</bdi></span>
           <div className="finance-register__actions">
             <button className="icon-button" type="button" onClick={() => onEdit(item)} aria-label="Edit"><Pencil size={15} /></button>
             <button className="icon-button" type="button" onClick={() => onRemove(item)} aria-label="Delete"><Trash2 size={15} /></button>
@@ -774,9 +815,9 @@ function BoqPanel({
                 </div>
                 <span className="finance-register__cell finance-register__cell--muted" data-label={labels.section}>{item.section ?? "—"}</span>
                 <span className="finance-register__cell" data-label={labels.unit}>{boqUnitLabel(item.unit, locale)}</span>
-                <span className="finance-register__cell finance-register__cell--amount" data-label={labels.quantity}>{item.quantity}</span>
-                <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}>{item.unitRate}</span>
-                <span className="finance-register__cell finance-register__cell--amount" data-label={labels.total}>{item.lineTotal}</span>
+                <span className="finance-register__cell finance-register__cell--amount" data-label={labels.quantity}><bdi>{num(item.quantity)}</bdi></span>
+                <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}><bdi>{num(item.unitRate, 2)}</bdi></span>
+                <span className="finance-register__cell finance-register__cell--amount finance-register__cell--total" data-label={labels.total}><bdi>{num(item.lineTotal, 2)}</bdi></span>
                 {!readOnly && (
                   <div className="finance-register__actions">
                     <button className="icon-button" type="button" onClick={() => setShowDialog({ item })} aria-label="Edit"><Pencil size={15} /></button>
@@ -1589,15 +1630,22 @@ function HistoryPanel({ projectId, locale }: { projectId: string; locale: "ar" |
       {events.length === 0 && <EmptyState icon={<HistoryIcon size={20} />} title={labels.empty} />}
       {events.length > 0 && (
         <div className="finance-history-list">
-          {events.map((event) => (
-            <div className="finance-history-row" key={event.id}>
-              <div>
-                <strong>{financeActionLabel(event.action, locale)}</strong>
-                <span>{event.actor?.displayName ?? (ar ? "النظام" : "System")}</span>
+          {events.map((event) => {
+            const context = historyContext(event, locale);
+            return (
+              <div className="finance-history-row" key={event.id}>
+                <div className="finance-history-row__action">
+                  <strong>{financeActionLabel(event.action, locale)}</strong>
+                  {context && <small>{context}</small>}
+                </div>
+                <div className="finance-history-row__actor">
+                  <strong>{event.actor?.displayName ?? (ar ? "النظام" : "System")}</strong>
+                  {event.actor && <small>{roleLabel(event.actor.role as UserRole, locale)}</small>}
+                </div>
+                <time><bdi>{new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.createdAt))}</bdi></time>
               </div>
-              <time>{dateOnly(event.createdAt, locale)}</time>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

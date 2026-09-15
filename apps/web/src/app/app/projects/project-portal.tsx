@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
-import { Activity, Calendar, Clock3, FolderKanban, Info, MapPin, UsersRound } from "lucide-react";
+import { Activity, Clock3, FolderKanban, Info } from "lucide-react";
 
 import {
   apiRequest,
@@ -76,8 +76,7 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
         <div className="project-overview-v2">
           <section className="overview-lifecycle-section">
             <div className="overview-section-heading">
-              <div><span className="section-kicker">PROJECT / DELIVERY PATH</span><h2>{labels.lifecycle}</h2><p>{labels.lifecycleLead}</p></div>
-              <Badge tone="orange">{labels.current}: {phaseLabel(project.phase, locale)}</Badge>
+              <div><span className="section-kicker">PROJECT / DELIVERY PATH</span><h2>{labels.lifecycle}</h2></div>
             </div>
             <Lifecycle phase={project.phase} locale={locale} />
           </section>
@@ -87,15 +86,7 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
               <div className="workspace-panel__title"><Info size={17} /><div><h2>{labels.brief}</h2><p>{labels.briefLead}</p></div></div>
               <dl className="detail-list">
                 <div><dt>{labels.category}</dt><dd>{categoryLabel(project.category, locale)}</dd></div>
-                <div><dt>{labels.phase}</dt><dd><Badge tone="navy">{phaseLabel(project.phase, locale)}</Badge></dd></div>
                 <div><dt>{labels.note}</dt><dd>{project.notes ?? labels.noNotes}</dd></div>
-              </dl>
-            </section>
-            <section className="workspace-panel">
-              <div className="workspace-panel__title"><Calendar size={17} /><div><h2>{labels.dates}</h2><p>{labels.lifecycleLead}</p></div></div>
-              <dl className="detail-list">
-                <div><dt>{labels.start}</dt><dd><bdi>{formatDate(project.startDate)}</bdi></dd></div>
-                <div><dt>{labels.target}</dt><dd><bdi>{formatDate(project.targetDate)}</bdi></dd></div>
               </dl>
             </section>
             <section className="workspace-panel workspace-panel--activity">
@@ -113,14 +104,6 @@ export function ProjectPortal({ projectId, view = "overview" }: PortalProps) {
                   ))}
                 </div>
               )}
-            </section>
-            <section className="workspace-panel workspace-panel--wide project-overview-team">
-              <div className="workspace-panel__title"><UsersRound size={17} /><div><h2>{labels.team}</h2><p>{labels.workers}</p></div></div>
-              <div className="project-overview-team__grid">
-                <span><small>{locale === "ar" ? "المهندس المسؤول" : "Responsible engineer"}</small><strong><bdi>{project.engineer?.displayName ?? labels.none}</bdi></strong></span>
-                <span><small>{labels.workers}</small><strong><bdi>{project.workers.map((worker) => worker.displayName).join(locale === "ar" ? "، " : ", ") || labels.none}</bdi></strong></span>
-                <span><small><MapPin size={13} /> {locale === "ar" ? "الموقع" : "Location"}</small><strong><bdi>{project.location ?? labels.none}</bdi></strong></span>
-              </div>
             </section>
           </div>
         </div>

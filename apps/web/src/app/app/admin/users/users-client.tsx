@@ -318,7 +318,7 @@ function statusOf(user: UserRecord): AccountStatus {
 
 function withLocale(path: string, ar: boolean) { return ar ? path : `${path}?lang=en`; }
 function formValue(data: FormData, key: string) { const value = data.get(key); return typeof value === "string" ? value : ""; }
-function formatDate(value: string, locale: string) { return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", { dateStyle: "medium" }).format(new Date(value)); }
+function formatDate(value: string, locale: string) { return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { dateStyle: "medium" }).format(new Date(value)); }
 
 function dialogIcon(kind: ActionKind) {
   if (kind === "reset") return <KeyRound size={22} />;

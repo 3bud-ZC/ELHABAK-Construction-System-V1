@@ -248,8 +248,8 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
                   <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi>
                 </span>
                 <div className="finance-register__actions">
-                  <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${projectId}/documents/${document.id}`)}>
-                    {labels.open}
+                  <Link className="project-register-open" href={href(`/app/projects/${projectId}/documents/${document.id}`)} aria-label={`${labels.open}: ${document.title}`}>
+                    {ar ? "فتح ←" : "Open →"}
                   </Link>
                 </div>
               </div>
@@ -467,8 +467,8 @@ function ClientDocuments({ projectId, locale }: { projectId: string; locale: "ar
                 <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi>
               </span>
               <div className="finance-register__actions">
-                <Link className="ui-button ui-button--secondary ui-button--sm" href={ar ? `/app/projects/${projectId}/documents/${document.id}` : `/app/projects/${projectId}/documents/${document.id}?lang=en`}>
-                  {labels.preview}
+                <Link className="project-register-open" href={ar ? `/app/projects/${projectId}/documents/${document.id}` : `/app/projects/${projectId}/documents/${document.id}?lang=en`} aria-label={`${labels.preview}: ${document.title}`}>
+                  {ar ? "فتح ←" : "Open →"}
                 </Link>
               </div>
             </div>

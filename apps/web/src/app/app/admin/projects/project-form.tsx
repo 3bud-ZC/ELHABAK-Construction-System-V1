@@ -240,7 +240,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
     }));
   }
 
-  const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", { dateStyle: "medium" });
+  const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium" });
 
   return (
     <section className="app-page project-edit-page">
@@ -519,7 +519,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                         <span>{roleLabel(update.author.role, locale)}</span>
                       </span>
                     </div>
-                    <time>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG" : "en-US")}</time>
+                    <time>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US")}</time>
                   </div>
                   <p>{update.note || "-"}</p>
                   <span>

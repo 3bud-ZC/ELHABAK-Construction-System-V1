@@ -90,8 +90,8 @@ export function FinanceProjectsClient() {
         <div className="finance-portfolio-grid finance-portfolio-register">
           {projects.map((project) => (
             <Link href={href(`/app/projects/${project.id}/finance`)} key={project.id}>
-              <div className="finance-portfolio-card__head"><span className="mono">{project.code}</span><Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge></div>
-              <h3>{project.name}</h3>
+              <div className="finance-portfolio-card__identity"><span className="mono"><bdi>{project.code}</bdi></span><h3>{project.name}</h3></div>
+              <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
               <span>{labels.client}: {project.client?.user.displayName ?? "—"}</span>
               <div className="finance-portfolio-card__phase"><span>{phaseLabel(project.phase, locale)}</span><strong>{project.progress}%</strong></div>
               <ProgressBar value={project.progress} />

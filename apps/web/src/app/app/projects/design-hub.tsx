@@ -198,8 +198,8 @@ export function DesignHub({ projectId }: { projectId: string }) {
               <time className="mono"><bdi>{new Date(design.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi></time>
             </div>
             <div className="design-register__action-cell">
-              <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${projectId}/design/${design.id}`)}>
-                {labels.open}
+              <Link className="project-register-open" href={href(`/app/projects/${projectId}/design/${design.id}`)} aria-label={`${labels.open}: ${design.title}`}>
+                {ar ? "فتح ←" : "Open →"}
               </Link>
             </div>
           </article>
