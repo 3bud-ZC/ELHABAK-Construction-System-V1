@@ -35,7 +35,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               priority
             />
           </a>
-          <nav className="header-nav" aria-label="Main navigation">
+          <nav className="header-nav" aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
             <a href="#about">{t.nav.about}</a>
             <a href="#services">{t.nav.services}</a>
             <a href="#process">{t.nav.process}</a>
@@ -47,7 +47,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <a className="lang-link" href={langHref(alternate)}>
               {t.nav.language}
             </a>
-            <Button href={langHref(locale, "/login")} variant="secondary" className="header-login">
+            <Button href={langHref(locale, "/login")} variant="primary" className="header-login">
               {t.nav.login}
             </Button>
           </div>
@@ -127,7 +127,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <Section
         id="about"
         className="about-section"
-        eyebrow={locale === "ar" ? "٠١ // عن الشركة" : "01 // ABOUT ELHABAK"}
+        eyebrow={locale === "ar" ? "01 // عن الشركة" : "01 // ABOUT ELHABAK"}
       >
         <div className="about-layout">
           <div className="about-copy">
@@ -160,7 +160,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <Section
         id="services"
         className="services-section"
-        eyebrow={locale === "ar" ? "٠٢ // نطاق الخدمات" : "02 // SCOPE OF SERVICES"}
+        eyebrow={locale === "ar" ? "02 // نطاق الخدمات" : "02 // SCOPE OF SERVICES"}
         title={t.home.servicesTitle}
         lead={t.home.servicesLead}
       >
@@ -173,9 +173,13 @@ export default async function HomePage({ searchParams }: PageProps) {
                   <ServiceIcon index={index} />
                 </span>
               </header>
+              {index === 0 && (
+                <span className="service-module__diagram" aria-hidden="true">
+                  <i /><i /><i /><i />
+                </span>
+              )}
               <h3>{title}</h3>
               <p>{body}</p>
-              <span className="service-module__mark" aria-hidden="true" />
             </article>
           ))}
         </div>
@@ -185,7 +189,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <section className="vision-section" id="vision" aria-labelledby="vision-title">
         <div className="container vision-head">
           <p className="ui-section__eyebrow">
-            {locale === "ar" ? "٠٣ // من الفكرة إلى البناء" : "03 // FROM IDEA TO BUILD"}
+            {locale === "ar" ? "03 // من الفكرة إلى البناء" : "03 // FROM IDEA TO BUILD"}
           </p>
           <h2 id="vision-title">{t.home.visionTitle}</h2>
           <p className="vision-lead">{t.home.visionLead}</p>
@@ -209,7 +213,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <Section
         id="process"
         className="process-section"
-        eyebrow={locale === "ar" ? "٠٤ // مسار التسليم" : "04 // DELIVERY SEQUENCE"}
+        eyebrow={locale === "ar" ? "04 // مسار التسليم" : "04 // DELIVERY SEQUENCE"}
         title={t.home.processTitle}
         lead={t.home.processLead}
       >
@@ -217,14 +221,13 @@ export default async function HomePage({ searchParams }: PageProps) {
           {t.process.map(([title, body], index) => (
             <li className="process-phase" key={title}>
               <div className="process-phase__rail" aria-hidden="true">
-                <span className="process-phase__tick" />
                 <span className="process-phase__node">
                   {String(index + 1).padStart(2, "0")}
                 </span>
               </div>
               <div className="process-phase__body">
                 <span className="process-phase__label" aria-hidden="true">
-                  PHASE {String(index + 1).padStart(2, "0")}
+                  {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
                 </span>
                 <h3>{title}</h3>
                 <p>{body}</p>
@@ -239,7 +242,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         <div className="container method-inner">
           <div className="method-head">
             <p className="ui-section__eyebrow">
-              {locale === "ar" ? "٠٥ // منهجية العمل" : "05 // WORKING METHOD"}
+              {locale === "ar" ? "05 // منهجية العمل" : "05 // WORKING METHOD"}
             </p>
             <h2 id="method-title">{t.home.whyTitle}</h2>
             <p className="method-lead">{t.home.whyLead}</p>
@@ -263,7 +266,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         <div className="container digital-inner">
           <div className="digital-copy">
             <p className="ui-section__eyebrow">
-              {locale === "ar" ? "٠٦ // التجربة الرقمية" : "06 // DIGITAL EXPERIENCE"}
+              {locale === "ar" ? "06 // التجربة الرقمية" : "06 // DIGITAL EXPERIENCE"}
             </p>
             <h2 id="digital-title">{t.home.digitalTitle}</h2>
             <p className="digital-lead">{t.home.digitalLead}</p>
@@ -283,6 +286,9 @@ export default async function HomePage({ searchParams }: PageProps) {
             </div>
           </div>
           <div className="digital-visual">
+            <span className="digital-visual__tag">
+              {locale === "ar" ? "نظام إدارة المشاريع" : "PROJECT CONTROL SYSTEM"}
+            </span>
             <figure className="digital-frame digital-frame--desktop">
               <span className="digital-frame__bar" aria-hidden="true">
                 <i /><i /><i />
@@ -316,7 +322,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       {/* ============ 07 // PRINCIPLES ============ */}
       <Section
         className="principles-section"
-        eyebrow={locale === "ar" ? "٠٧ // قواعد العمل" : "07 // WORKING PRINCIPLES"}
+        eyebrow={locale === "ar" ? "07 // قواعد العمل" : "07 // WORKING PRINCIPLES"}
         title={t.home.principlesTitle}
       >
         <ol className="principles-rail">
@@ -339,32 +345,36 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
         <div className="container">
           <div className="contact-inner">
-            <p className="ui-section__eyebrow">
-              {locale === "ar" ? "٠٨ // تواصل" : "08 // CONTACT"}
-            </p>
-            <h2 id="contact-title">{t.home.contactTitle}</h2>
-            <p className="contact-lead">{t.home.contactLead}</p>
-          <div className="contact-channels">
-            <a className="contact-channel" href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}>
-              <Phone aria-hidden="true" size={17} />
-              <span className="contact-channel__label">{locale === "ar" ? "الهاتف" : "PHONE"}</span>
-              <bdi>{t.contact.phone}</bdi>
-            </a>
-            <a className="contact-channel" href={`mailto:${t.contact.email}`}>
-              <Mail aria-hidden="true" size={17} />
-              <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
-              <bdi>{t.contact.email}</bdi>
-            </a>
-            <div className="contact-channel contact-channel--static">
-              <MapPin aria-hidden="true" size={17} />
-              <span className="contact-channel__label">{locale === "ar" ? "العنوان" : "ADDRESS"}</span>
-              <bdi>{t.contact.address}</bdi>
+            <div className="contact-copy">
+              <p className="ui-section__eyebrow">
+                {locale === "ar" ? "08 // تواصل" : "08 // CONTACT"}
+              </p>
+              <h2 id="contact-title">{t.home.contactTitle}</h2>
+              <p className="contact-lead">{t.home.contactLead}</p>
             </div>
-          </div>
-            <div className="contact-actions">
-              <Button href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`} variant="accent" className="hero-cta">
-                {t.home.primaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
-              </Button>
+            <div className="contact-conversion">
+              <div className="contact-channels">
+                <a className="contact-channel" href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}>
+                  <Phone aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">{locale === "ar" ? "الهاتف" : "PHONE"}</span>
+                  <bdi>{t.contact.phone}</bdi>
+                </a>
+                <a className="contact-channel" href={`mailto:${t.contact.email}`}>
+                  <Mail aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
+                  <bdi>{t.contact.email}</bdi>
+                </a>
+                <div className="contact-channel contact-channel--static">
+                  <MapPin aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">{locale === "ar" ? "العنوان" : "ADDRESS"}</span>
+                  <bdi>{t.contact.address}</bdi>
+                </div>
+              </div>
+              <div className="contact-actions">
+                <Button href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`} variant="accent" className="hero-cta">
+                  {t.home.primaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -376,7 +386,6 @@ export default async function HomePage({ searchParams }: PageProps) {
           <div className="footer-brand">
             <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={190} height={79} />
             <p>{t.home.footerTagline}</p>
-            <span className="footer-brand__axis" aria-hidden="true">ELHABAK — {locale === "ar" ? "سوهاج" : "SOHAG"}</span>
           </div>
           <nav className="footer-col" aria-label={t.home.footerNav}>
             <h3>{t.home.footerNav}</h3>
