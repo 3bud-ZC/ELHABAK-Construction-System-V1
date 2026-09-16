@@ -1066,6 +1066,19 @@ export function actionLabel(action: string, locale: "ar" | "en"): string {
     "user.role_changed": { ar: "تم تغيير دور المستخدم", en: "User role changed" },
     "user.activated": { ar: "تم تفعيل الحساب", en: "Account activated" },
     "user.deactivated": { ar: "تم إيقاف الحساب", en: "Account deactivated" },
+    "user.suspended": { ar: "تم إيقاف حساب مستخدم", en: "User suspended" },
+    "user.archived": { ar: "تمت أرشفة حساب مستخدم", en: "User archived" },
+    "user.restored": { ar: "تمت استعادة حساب مستخدم", en: "User restored" },
+    "user.deleted": { ar: "تم حذف مستخدم", en: "User deleted" },
+    "user.password_reset": { ar: "تمت إعادة تعيين كلمة مرور", en: "Password reset" },
+    "user.impersonation_started": {
+      ar: "بدأت جلسة استعراض بصلاحيات مستخدم",
+      en: "Impersonation session started"
+    },
+    "user.impersonation_ended": {
+      ar: "انتهت جلسة الاستعراض بصلاحيات",
+      en: "Impersonation session ended"
+    },
     "chat.message_sent": { ar: "رسالة دردشة جديدة", en: "New chat message" },
     "chat.voice_sent": { ar: "رسالة صوتية جديدة", en: "New voice note" }
   };
