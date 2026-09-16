@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, ProgressBar } from "@elhabak/ui";
 import {
-  actionLabel,
+  activityLabel,
   apiRequest,
   categoryLabel,
   designStatusLabel,
@@ -314,7 +314,7 @@ export function ReportClient() {
             <div className="report-list">
               {report.activity.map((item) => (
                 <article key={item.id}>
-                  <strong>{actionLabel(item.action, locale)}</strong>
+                  <strong>{activityLabel(item.action, locale)}</strong>
                   <span>
                     {item.actorName ?? "—"} · <bdi>{date(item.createdAt)}</bdi>
                   </span>

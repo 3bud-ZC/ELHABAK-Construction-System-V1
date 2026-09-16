@@ -2,6 +2,8 @@ import Image from "next/image";
 import { ArrowLeft, ArrowRight, Mail, MapPin, Phone } from "lucide-react";
 import { Button, Section } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../i18n/translations";
+import { PublicHero } from "./public-hero";
+import { PublicMotion } from "./public-motion";
 
 type PageProps = {
   searchParams?: Promise<{ lang?: string }>;
@@ -17,9 +19,29 @@ export default async function HomePage({ searchParams }: PageProps) {
   const t = dictionary[locale];
   const alternate = locale === "ar" ? "en" : "ar";
   const dir = textDirections[locale];
+  const arrow = dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />;
+
+  const heroStates = [
+    {
+      key: "design" as const,
+      image: "/marketing/hero-design.webp",
+      label: locale === "ar" ? "التصميم" : "DESIGN"
+    },
+    {
+      key: "execution" as const,
+      image: "/marketing/hero-execution.webp",
+      label: locale === "ar" ? "التنفيذ" : "EXECUTION"
+    },
+    {
+      key: "delivery" as const,
+      image: "/marketing/hero-delivery.webp",
+      label: locale === "ar" ? "التسليم" : "DELIVERY"
+    }
+  ];
 
   return (
     <main className="site-shell" lang={locale} dir={dir}>
+      <PublicMotion />
       <header className="site-header">
         <div className="container header-inner">
           <a className="brand-link" href={langHref(locale)} aria-label="ELHABAK Construction">
@@ -50,86 +72,50 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </header>
 
-      <section className="hero">
-        <div className="hero-media" aria-hidden="true">
-          <Image
-            src="/marketing/hero-architecture.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-          />
+      <PublicHero
+        states={heroStates}
+        railEnd={
+          locale === "ar"
+            ? "قرار هندسي واضح من أول مقابلة حتى التسليم"
+            : "Clear engineering decisions from first meeting to handover"
+        }
+        scopeIndex={locale === "ar" ? "نطاق متكامل" : "INTEGRATED SCOPE"}
+        scopeTitle={t.home.heroPanelTitle}
+        scopeText={t.home.heroPanelText}
+        alt={
+          locale === "ar"
+            ? "مشاهد متعاقبة: تصميم معماري حديث، موقع تنفيذ وقت الغروب، ومبنى مكتمل"
+            : "Rotating scenes: modern architectural design, construction site at sunset, and a completed building"
+        }
+      >
+        <div className="hero-eyebrow">
+          <span className="hero-eyebrow__index" dir="ltr" aria-hidden="true">ENGINEERING / DELIVERY</span>
+          <span className="hero-eyebrow__brand">ELHABAK CONSTRUCTION</span>
         </div>
-        <div className="container hero-layout">
-          <div className="hero-copy">
-            <div className="hero-eyebrow">
-              <span className="hero-eyebrow__index" dir="ltr" aria-hidden="true">ENGINEERING / DELIVERY</span>
-              <span className="hero-eyebrow__brand">ELHABAK CONSTRUCTION</span>
-            </div>
-            <h1>
-              {locale === "ar" ? (
-                <>
-                  <span className="hero-title__brand">الحباك</span>
-                  <span className="hero-title__line">للاستشارات</span>
-                  <span className="hero-title__line">الهندسية</span>
-                </>
-              ) : (
-                <>
-                  <span className="hero-title__brand">ELHABAK</span>
-                  <span className="hero-title__line hero-title__line--en">CONSTRUCTION</span>
-                </>
-              )}
-            </h1>
-            <p>{t.home.heroSubtitle}</p>
-            <div className="hero-actions">
-              <Button href="#contact" variant="accent" className="hero-cta">
-                {t.home.primaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
-              </Button>
-              <Button href="#services" variant="ghost" className="hero-cta hero-cta--ghost">
-                {t.home.secondaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
-              </Button>
-            </div>
-          </div>
-
-          <div className="hero-visual">
-            <div className="hero-visual__image">
-              <Image
-                src="/marketing/hero-architecture.jpg"
-                alt={locale === "ar"
-                  ? "مبنى حديث تحت التشطيب يعكس أعمال التصميم والتنفيذ في الحباك"
-                  : "Modern building under final construction representing ELHABAK design and delivery work"}
-                fill
-                priority
-                sizes="(max-width: 980px) 100vw, 58vw"
-              />
-            </div>
-            <aside className="hero-scope">
-              <div className="hero-scope__head">
-                <span>{locale === "ar" ? "نطاق متكامل" : "INTEGRATED SCOPE"}</span>
-                <bdi>01</bdi>
-              </div>
-              <div className="hero-scope__body">
-                <div>
-                  <strong>{t.home.heroPanelTitle}</strong>
-                  <p>{t.home.heroPanelText}</p>
-                </div>
-              </div>
-            </aside>
-          </div>
+        <h1>
+          {locale === "ar" ? (
+            <>
+              <span className="hero-title__brand">الحباك</span>
+              <span className="hero-title__line">للاستشارات</span>
+              <span className="hero-title__line">الهندسية</span>
+            </>
+          ) : (
+            <>
+              <span className="hero-title__brand">ELHABAK</span>
+              <span className="hero-title__line hero-title__line--en">CONSTRUCTION</span>
+            </>
+          )}
+        </h1>
+        <p>{t.home.heroSubtitle}</p>
+        <div className="hero-actions">
+          <Button href="#contact" variant="accent" className="hero-cta">
+            {t.home.primaryCta} {arrow}
+          </Button>
+          <Button href="#services" variant="ghost" className="hero-cta hero-cta--ghost">
+            {t.home.secondaryCta} {arrow}
+          </Button>
         </div>
-
-        <div className="hero-rail" aria-hidden="true">
-          <div className="container hero-rail__inner">
-            <span>{locale === "ar" ? "تصميم" : "DESIGN"}</span>
-            <span>{locale === "ar" ? "تنفيذ" : "BUILD"}</span>
-            <span>{locale === "ar" ? "تشطيب" : "FINISH"}</span>
-            <i className="hero-rail__sep" />
-            <span className="hero-rail__end">
-              {locale === "ar" ? "قرار هندسي واضح من أول مقابلة حتى التسليم" : "Clear engineering decisions from first meeting to handover"}
-            </span>
-          </div>
-        </div>
-      </section>
+      </PublicHero>
 
       {/* ============ 01 // ABOUT ============ */}
       <Section
@@ -138,7 +124,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         eyebrow={locale === "ar" ? "01 // عن الشركة" : "01 // ABOUT ELHABAK"}
       >
         <div className="about-layout">
-          <div className="about-copy">
+          <div className="about-copy" data-reveal="up">
             <h2 className="about-statement">{t.home.aboutTitle}</h2>
             <p className="about-lead">{t.home.aboutLead}</p>
             <ul className="about-principles" aria-label={locale === "ar" ? "مجالات العمل" : "Work domains"}>
@@ -153,21 +139,21 @@ export default async function HomePage({ searchParams }: PageProps) {
               ))}
             </ul>
           </div>
-          <figure className="about-figure" dir="ltr">
+          <figure className="about-figure" dir="ltr" data-reveal="mask">
             <Image
-              src="/marketing/hero-architecture.jpg"
+              src="/marketing/about-site.webp"
               alt=""
               fill
               sizes="(max-width: 980px) 100vw, 48vw"
             />
-            <div className="about-figure__panel">
+            <div className="about-figure__panel" dir={dir}>
               <span>{locale === "ar" ? "من الفكرة إلى الموقع" : "FROM IDEA TO SITE"}</span>
               <strong>{locale === "ar" ? "إدارة واحدة للتصميم والتنفيذ" : "One team for design and delivery"}</strong>
             </div>
             <figcaption className="sr-only">
               {locale === "ar"
-                ? "صورة معمارية تعكس تنفيذ مبنى حديث بمواد زجاج وخرسانة"
-                : "Architectural image showing a modern concrete and glass building under delivery"}
+                ? "هيكل إنشائي لمبنى تحت التنفيذ بإضاءة وقت الغروب"
+                : "Structural frame of a building under construction at golden hour"}
             </figcaption>
           </figure>
         </div>
@@ -182,16 +168,38 @@ export default async function HomePage({ searchParams }: PageProps) {
         lead={t.home.servicesLead}
       >
         <div className="services-layout">
-          {t.services.map(([title, body], index) => (
-            <article className={`service-module ${index === 0 ? "service-module--feature" : ""}`} key={title}>
-              <header className="service-module__head">
-                <span className="service-module__index">{String(index + 1).padStart(2, "0")}</span>
-                <span className="service-module__tag">{locale === "ar" ? "خدمة" : "SERVICE"}</span>
-              </header>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </article>
-          ))}
+          <article className="services-feature" data-reveal="mask">
+            <div className="services-feature__media" aria-hidden="true">
+              <Image
+                src="/marketing/services-feature.webp"
+                alt=""
+                fill
+                sizes="(max-width: 980px) 100vw, 42vw"
+              />
+            </div>
+            <header className="services-feature__head">
+              <span className="service-index" aria-hidden="true">01</span>
+              <span className="service-tag">{locale === "ar" ? "خدمة أساسية" : "CORE SERVICE"}</span>
+            </header>
+            <div className="services-feature__body">
+              <h3>{t.services[0][0]}</h3>
+              <p>{t.services[0][1]}</p>
+            </div>
+          </article>
+          <ol className="services-register" data-reveal-group>
+            {t.services.slice(1).map(([title, body], index) => (
+              <li className="services-register__row" key={title} data-reveal="up">
+                <span className="service-index" aria-hidden="true">
+                  {String(index + 2).padStart(2, "0")}
+                </span>
+                <div className="services-register__text">
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+                <i className="services-register__tick" aria-hidden="true" />
+              </li>
+            ))}
+          </ol>
         </div>
       </Section>
 
@@ -203,21 +211,22 @@ export default async function HomePage({ searchParams }: PageProps) {
         title={t.home.processTitle}
         lead={t.home.processLead}
       >
-        <ol className="process-rail">
+        <ol className="process-track" data-reveal-group>
           {t.process.map(([title, body], index) => (
-            <li className="process-phase" key={title}>
-              <div className="process-phase__rail" aria-hidden="true">
-                <span className="process-phase__node">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-              </div>
-              <div className="process-phase__body">
-                <span className="process-phase__label" aria-hidden="true">
-                  {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3>{title}</h3>
-                <p>{body}</p>
-              </div>
+            <li
+              className="process-stage"
+              key={title}
+              data-reveal="stage"
+              style={{ transitionDelay: `${index * 110}ms` }}
+            >
+              <span className="process-stage__node">
+                <bdi>{String(index + 1).padStart(2, "0")}</bdi>
+              </span>
+              <span className="process-stage__label" aria-hidden="true">
+                {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
+              </span>
+              <h3>{title}</h3>
+              <p>{body}</p>
             </li>
           ))}
         </ol>
@@ -226,16 +235,16 @@ export default async function HomePage({ searchParams }: PageProps) {
       {/* ============ 04 // METHOD ============ */}
       <section className="method-section" id="why" aria-labelledby="method-title">
         <div className="container method-inner">
-          <div className="method-head">
+          <div className="method-head" data-reveal="up">
             <p className="ui-section__eyebrow">
               {locale === "ar" ? "04 // منهجية العمل" : "04 // WORKING METHOD"}
             </p>
             <h2 id="method-title">{t.home.whyTitle}</h2>
             <p className="method-lead">{t.home.whyLead}</p>
           </div>
-          <div className="method-rows">
+          <div className="method-rows" data-reveal-group>
             {t.why.map(([title, body], index) => (
-              <div className="method-row" key={title}>
+              <div className="method-row" key={title} data-reveal="up">
                 <span className="method-row__num" aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
                 </span>
@@ -250,7 +259,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       {/* ============ 05 // DIGITAL EXPERIENCE ============ */}
       <section className="digital-section" id="platform" aria-labelledby="digital-title">
         <div className="container digital-inner">
-          <div className="digital-copy">
+          <div className="digital-copy" data-reveal="up">
             <p className="ui-section__eyebrow">
               {locale === "ar" ? "05 // التجربة الرقمية" : "05 // DIGITAL EXPERIENCE"}
             </p>
@@ -275,7 +284,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <span className="digital-visual__tag">
               {locale === "ar" ? "نظام إدارة المشاريع" : "PROJECT CONTROL SYSTEM"}
             </span>
-            <figure className="digital-frame digital-frame--desktop">
+            <figure className="digital-frame digital-frame--desktop" data-reveal="mask">
               <span className="digital-frame__bar" aria-hidden="true">
                 <i /><i /><i />
                 <b>{locale === "ar" ? "نظام الحباك — لوحة التحكم" : "ELHABAK System — Operations"}</b>
@@ -290,7 +299,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                 loading="lazy"
               />
             </figure>
-            <figure className="digital-frame digital-frame--mobile">
+            <figure className="digital-frame digital-frame--mobile" data-reveal="up">
               <Image
                 src="/marketing/platform-mobile.webp"
                 alt={locale === "ar"
@@ -311,9 +320,9 @@ export default async function HomePage({ searchParams }: PageProps) {
         eyebrow={locale === "ar" ? "06 // قواعد العمل" : "06 // WORKING PRINCIPLES"}
         title={t.home.principlesTitle}
       >
-        <ol className="principles-rail">
+        <ol className="principles-rail" data-reveal-group>
           {t.principles.map(([title, tag], index) => (
-            <li className="principles-item" key={tag}>
+            <li className="principles-item" key={tag} data-reveal="up">
               <span className="principles-item__num" aria-hidden="true">
                 {String(index + 1).padStart(2, "0")}
               </span>
@@ -324,79 +333,89 @@ export default async function HomePage({ searchParams }: PageProps) {
         </ol>
       </Section>
 
-      {/* ============ 07 // CONTACT ============ */}
-      <section className="contact-section" id="contact" aria-labelledby="contact-title">
-        <div className="container">
-          <div className="contact-inner">
-            <div className="contact-copy">
-              <p className="ui-section__eyebrow">
-                {locale === "ar" ? "07 // تواصل" : "07 // CONTACT"}
-              </p>
-              <h2 id="contact-title">{t.home.contactTitle}</h2>
-              <p className="contact-lead">{t.home.contactLead}</p>
-            </div>
-            <div className="contact-conversion">
-              <div className="contact-channels">
-                <a className="contact-channel" href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}>
-                  <Phone aria-hidden="true" size={17} />
-                  <span className="contact-channel__label">{locale === "ar" ? "الهاتف" : "PHONE"}</span>
-                  <bdi dir="ltr">{t.contact.phone}</bdi>
-                </a>
-                <div className="contact-channel contact-channel--static">
-                  <MapPin aria-hidden="true" size={17} />
-                  <span className="contact-channel__label">{locale === "ar" ? "العنوان" : "ADDRESS"}</span>
-                  <bdi>{t.contact.address}</bdi>
+      {/* ============ 07 // CONTACT + FOOTER ============ */}
+      <div className="closing">
+        <div className="closing__media" aria-hidden="true">
+          <Image
+            src="/marketing/contact-crane.webp"
+            alt=""
+            fill
+            loading="lazy"
+            sizes="100vw"
+          />
+        </div>
+        <section className="contact-section" id="contact" aria-labelledby="contact-title">
+          <div className="container">
+            <div className="contact-inner">
+              <div className="contact-copy" data-reveal="up">
+                <p className="ui-section__eyebrow">
+                  {locale === "ar" ? "07 // تواصل" : "07 // CONTACT"}
+                </p>
+                <h2 id="contact-title">{t.home.contactTitle}</h2>
+                <p className="contact-lead">{t.home.contactLead}</p>
+              </div>
+              <div className="contact-conversion" data-reveal="up">
+                <div className="contact-channels">
+                  <a className="contact-channel" href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}>
+                    <Phone aria-hidden="true" size={17} />
+                    <span className="contact-channel__label">{locale === "ar" ? "الهاتف" : "PHONE"}</span>
+                    <bdi dir="ltr">{t.contact.phone}</bdi>
+                  </a>
+                  <div className="contact-channel contact-channel--static">
+                    <MapPin aria-hidden="true" size={17} />
+                    <span className="contact-channel__label">{locale === "ar" ? "العنوان" : "ADDRESS"}</span>
+                    <bdi>{t.contact.address}</bdi>
+                  </div>
+                  <a className="contact-channel contact-channel--wide" href={`mailto:${t.contact.email}`}>
+                    <Mail aria-hidden="true" size={17} />
+                    <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
+                    <bdi dir="ltr">{t.contact.email}</bdi>
+                  </a>
                 </div>
-                <a className="contact-channel contact-channel--wide" href={`mailto:${t.contact.email}`}>
-                  <Mail aria-hidden="true" size={17} />
-                  <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
-                  <bdi dir="ltr">{t.contact.email}</bdi>
-                </a>
-              </div>
-              <div className="contact-actions">
-                <Button href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`} variant="accent" className="hero-cta">
-                  {t.home.primaryCta} {dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
-                </Button>
+                <div className="contact-actions">
+                  <Button href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`} variant="accent" className="hero-cta">
+                    {t.home.primaryCta} {arrow}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ============ FOOTER ============ */}
-      <footer className="site-footer">
-        <div className="container footer-grid">
-          <div className="footer-brand">
-            <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={190} height={79} />
-            <p>{t.home.footerTagline}</p>
+        <footer className="site-footer">
+          <div className="container footer-grid">
+            <div className="footer-brand">
+              <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={190} height={79} />
+              <p>{t.home.footerTagline}</p>
+            </div>
+            <nav className="footer-col" aria-label={t.home.footerNav}>
+              <h3>{t.home.footerNav}</h3>
+              <a href="#about">{t.nav.about}</a>
+              <a href="#services">{t.nav.services}</a>
+              <a href="#process">{t.nav.process}</a>
+              <a href="#why">{t.nav.why}</a>
+              <a href="#contact">{t.nav.contact}</a>
+            </nav>
+            <div className="footer-col">
+              <h3>{t.home.footerServices}</h3>
+              {t.services.map(([title]) => (
+                <a href="#services" key={title}>{title}</a>
+              ))}
+            </div>
+            <div className="footer-col">
+              <h3>{t.home.footerContact}</h3>
+              <a href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}><bdi dir="ltr">{t.contact.phone}</bdi></a>
+              <a href={`mailto:${t.contact.email}`}>{t.contact.email}</a>
+              <span className="footer-col__text">{t.contact.address}</span>
+              <a className="footer-col__login" href={langHref(locale, "/login")}>{t.nav.login}</a>
+            </div>
           </div>
-          <nav className="footer-col" aria-label={t.home.footerNav}>
-            <h3>{t.home.footerNav}</h3>
-            <a href="#about">{t.nav.about}</a>
-            <a href="#services">{t.nav.services}</a>
-            <a href="#process">{t.nav.process}</a>
-            <a href="#why">{t.nav.why}</a>
-            <a href="#contact">{t.nav.contact}</a>
-          </nav>
-          <div className="footer-col">
-            <h3>{t.home.footerServices}</h3>
-            {t.services.map(([title]) => (
-              <a href="#services" key={title}>{title}</a>
-            ))}
+          <div className="container footer-base">
+            <span>© {new Date().getFullYear()} ELHABAK CONSTRUCTION — {t.home.footerRights}</span>
+            <span className="footer-base__mark" aria-hidden="true">الحباك / ELHABAK</span>
           </div>
-          <div className="footer-col">
-            <h3>{t.home.footerContact}</h3>
-            <a href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}><bdi>{t.contact.phone}</bdi></a>
-            <a href={`mailto:${t.contact.email}`}>{t.contact.email}</a>
-            <span className="footer-col__text">{t.contact.address}</span>
-            <a className="footer-col__login" href={langHref(locale, "/login")}>{t.nav.login}</a>
-          </div>
-        </div>
-        <div className="container footer-base">
-          <span>© {new Date().getFullYear()} ELHABAK CONSTRUCTION — {t.home.footerRights}</span>
-          <span className="footer-base__mark" aria-hidden="true">الحباك / ELHABAK</span>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </main>
   );
 }

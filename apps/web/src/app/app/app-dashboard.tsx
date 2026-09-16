@@ -16,7 +16,7 @@ import {
   WalletCards
 } from "lucide-react";
 import {
-  actionLabel,
+  activityLabel,
   apiRequest,
   categoryLabel,
   LIFECYCLE_PHASES,
@@ -335,7 +335,7 @@ export function AppDashboard() {
                       <div className="dashboard-activity-row" key={activity.id}>
                         <span className="dashboard-activity-row__marker" aria-hidden="true"><i /></span>
                         <div className="dashboard-activity-row__body">
-                          <strong>{actionLabel(activity.action, locale)}</strong>
+                          <strong>{activityLabel(activity.action, locale)}</strong>
                           <span><bdi>{activity.actorName ?? "—"}</bdi>{activity.projectName ? <> <em>·</em> <bdi>{activity.projectName}</bdi></> : null}</span>
                         </div>
                         <time className="mono"><bdi>{formatTimestamp(activity.createdAt)}</bdi></time>

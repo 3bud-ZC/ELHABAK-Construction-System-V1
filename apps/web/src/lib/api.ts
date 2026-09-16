@@ -1071,3 +1071,9 @@ export function actionLabel(action: string, locale: "ar" | "en"): string {
   };
   return labels[action]?.[locale] ?? action;
 }
+
+export function activityLabel(action: string, locale: "ar" | "en"): string {
+  if (action.startsWith("finance.")) return financeActionLabel(action, locale);
+  if (action.startsWith("documents.")) return documentActionLabel(action, locale);
+  return actionLabel(action, locale);
+}
