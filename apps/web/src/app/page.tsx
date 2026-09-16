@@ -55,34 +55,23 @@ export default async function HomePage({ searchParams }: PageProps) {
       </header>
 
       <section className="hero">
-        <div className="hero__scene" aria-hidden="true">
-          <HeroScene />
-        </div>
-
-        {/* technical annotations — kept outside the flipped scene so text never mirrors */}
-        <span className="hero-tag hero-tag--design" aria-hidden="true">
-          {locale === "ar" ? "مخطط التصميم" : "DESIGN LAYER"}
-        </span>
-        <span className="hero-tag hero-tag--axis" aria-hidden="true">AXIS A—A</span>
-        <span className="hero-tag hero-tag--ffl" aria-hidden="true">FFL ±0.00</span>
-
-        <div className="container hero-inner">
+        <div className="container hero-layout">
           <div className="hero-copy">
-            <span className="hero-eyebrow">
-              <span className="hero-eyebrow__bar" aria-hidden="true" />
-              ELHABAK CONSTRUCTION
-            </span>
+            <div className="hero-eyebrow">
+              <span className="hero-eyebrow__index" dir="ltr" aria-hidden="true">01 / ENGINEERING</span>
+              <span className="hero-eyebrow__brand">ELHABAK CONSTRUCTION</span>
+            </div>
             <h1>
               {locale === "ar" ? (
                 <>
-                  <span>الحباك</span>
-                  <span>للاستشارات</span>
-                  <span>الهندسية</span>
+                  <span className="hero-title__brand">الحباك</span>
+                  <span className="hero-title__line">للاستشارات</span>
+                  <span className="hero-title__line">الهندسية</span>
                 </>
               ) : (
                 <>
-                  <span>ELHABAK</span>
-                  <span>CONSTRUCTION</span>
+                  <span className="hero-title__brand">ELHABAK</span>
+                  <span className="hero-title__line hero-title__line--en">CONSTRUCTION</span>
                 </>
               )}
             </h1>
@@ -96,31 +85,36 @@ export default async function HomePage({ searchParams }: PageProps) {
               </Button>
             </div>
           </div>
-        </div>
 
-        <aside className="hero-scope">
-          <span className="hero-scope__tag">
-            {locale === "ar" ? "نطاق العمل" : "WORK SCOPE"}
-          </span>
-          <strong>{t.home.heroPanelTitle}</strong>
-          <p>{t.home.heroPanelText}</p>
-        </aside>
-
-        <div className="hero-marker" aria-hidden="true">
-          <span className="hero-marker__line" />
-          <span className="hero-marker__text">
-            {locale === "ar" ? "نبني أفكارك لواقع أجمل" : "ENGINEERING A BETTER TOMORROW"}
-          </span>
-          <span className="hero-marker__line" />
+          <div className="hero-visual">
+            <div className="hero__scene" aria-hidden="true">
+              <HeroScene />
+            </div>
+            {/* plate caption kept outside the flipped scene so it never mirrors */}
+            <div className="hero-visual__datum" dir="ltr" aria-hidden="true">
+              <span>STRUCTURAL GRID</span>
+              <bdi>BUILT FORM / 01</bdi>
+            </div>
+            <aside className="hero-scope">
+              <div className="hero-scope__head">
+                <span>{locale === "ar" ? "نطاق العمل" : "WORK SCOPE"}</span>
+                <bdi>SCOPE / 01</bdi>
+              </div>
+              <div className="hero-scope__body">
+                <div>
+                  <strong>{t.home.heroPanelTitle}</strong>
+                  <p>{t.home.heroPanelText}</p>
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
 
         <div className="hero-rail" aria-hidden="true">
           <div className="container hero-rail__inner">
             <span>DESIGN</span>
-            <span>EXECUTION</span>
+            <span>CONSTRUCTION</span>
             <span>FINISHING</span>
-            <span>CONTRACTING</span>
-            <span>FIT-OUT</span>
             <i className="hero-rail__sep" />
             <span className="hero-rail__end">
               {locale === "ar" ? "من الرؤية إلى الواقع" : "FROM VISION TO REALITY"}
