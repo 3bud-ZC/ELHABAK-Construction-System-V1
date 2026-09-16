@@ -211,6 +211,10 @@ export default async function HomePage({ searchParams }: PageProps) {
         title={t.home.processTitle}
         lead={t.home.processLead}
       >
+        <div className="process-field" aria-hidden="true">
+          <span>{locale === "ar" ? "المعاينة" : "SITE INSPECTION"}</span>
+          <span>{locale === "ar" ? "التسليم النهائي" : "FINAL HANDOVER"}</span>
+        </div>
         <ol className="process-track" data-reveal-group>
           {t.process.map(([title, body], index) => (
             <li
@@ -225,8 +229,10 @@ export default async function HomePage({ searchParams }: PageProps) {
               <span className="process-stage__label" aria-hidden="true">
                 {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
               </span>
-              <h3>{title}</h3>
-              <p>{body}</p>
+              <div className="process-stage__content">
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
             </li>
           ))}
         </ol>
