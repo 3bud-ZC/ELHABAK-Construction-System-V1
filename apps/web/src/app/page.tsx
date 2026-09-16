@@ -2,9 +2,6 @@ import Image from "next/image";
 import { ArrowLeft, ArrowRight, Mail, MapPin, Phone } from "lucide-react";
 import { Button, Section } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../i18n/translations";
-import { HeroScene } from "./hero-scene";
-import { AboutVisual } from "./about-visual";
-import { ContactScene } from "./contact-scene";
 
 type PageProps = {
   searchParams?: Promise<{ lang?: string }>;
@@ -54,10 +51,19 @@ export default async function HomePage({ searchParams }: PageProps) {
       </header>
 
       <section className="hero">
+        <div className="hero-media" aria-hidden="true">
+          <Image
+            src="/marketing/hero-architecture.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+          />
+        </div>
         <div className="container hero-layout">
           <div className="hero-copy">
             <div className="hero-eyebrow">
-              <span className="hero-eyebrow__index" dir="ltr" aria-hidden="true">01 / ENGINEERING</span>
+              <span className="hero-eyebrow__index" dir="ltr" aria-hidden="true">ENGINEERING / DELIVERY</span>
               <span className="hero-eyebrow__brand">ELHABAK CONSTRUCTION</span>
             </div>
             <h1>
@@ -86,18 +92,21 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
 
           <div className="hero-visual">
-            <div className="hero__scene" aria-hidden="true">
-              <HeroScene />
-            </div>
-            {/* plate caption kept outside the flipped scene so it never mirrors */}
-            <div className="hero-visual__datum" dir="ltr" aria-hidden="true">
-              <span>STRUCTURAL GRID</span>
-              <bdi>BUILT FORM / 01</bdi>
+            <div className="hero-visual__image">
+              <Image
+                src="/marketing/hero-architecture.jpg"
+                alt={locale === "ar"
+                  ? "مبنى حديث تحت التشطيب يعكس أعمال التصميم والتنفيذ في الحباك"
+                  : "Modern building under final construction representing ELHABAK design and delivery work"}
+                fill
+                priority
+                sizes="(max-width: 980px) 100vw, 58vw"
+              />
             </div>
             <aside className="hero-scope">
               <div className="hero-scope__head">
-                <span>{locale === "ar" ? "نطاق العمل" : "WORK SCOPE"}</span>
-                <bdi>SCOPE / 01</bdi>
+                <span>{locale === "ar" ? "نطاق متكامل" : "INTEGRATED SCOPE"}</span>
+                <bdi>01</bdi>
               </div>
               <div className="hero-scope__body">
                 <div>
@@ -111,12 +120,12 @@ export default async function HomePage({ searchParams }: PageProps) {
 
         <div className="hero-rail" aria-hidden="true">
           <div className="container hero-rail__inner">
-            <span>DESIGN</span>
-            <span>CONSTRUCTION</span>
-            <span>FINISHING</span>
+            <span>{locale === "ar" ? "تصميم" : "DESIGN"}</span>
+            <span>{locale === "ar" ? "تنفيذ" : "BUILD"}</span>
+            <span>{locale === "ar" ? "تشطيب" : "FINISH"}</span>
             <i className="hero-rail__sep" />
             <span className="hero-rail__end">
-              {locale === "ar" ? "تصميم / تنفيذ / تسليم" : "DESIGN / BUILD / HANDOVER"}
+              {locale === "ar" ? "قرار هندسي واضح من أول مقابلة حتى التسليم" : "Clear engineering decisions from first meeting to handover"}
             </span>
           </div>
         </div>
@@ -145,11 +154,20 @@ export default async function HomePage({ searchParams }: PageProps) {
             </ul>
           </div>
           <figure className="about-figure" dir="ltr">
-            <AboutVisual />
+            <Image
+              src="/marketing/hero-architecture.jpg"
+              alt=""
+              fill
+              sizes="(max-width: 980px) 100vw, 48vw"
+            />
+            <div className="about-figure__panel">
+              <span>{locale === "ar" ? "من الفكرة إلى الموقع" : "FROM IDEA TO SITE"}</span>
+              <strong>{locale === "ar" ? "إدارة واحدة للتصميم والتنفيذ" : "One team for design and delivery"}</strong>
+            </div>
             <figcaption className="sr-only">
               {locale === "ar"
-                ? "رسم فني يوضح انتقال الفكرة من المخطط إلى الكتلة المعمارية"
-                : "Technical drawing showing an idea moving from plan to architectural massing"}
+                ? "صورة معمارية تعكس تنفيذ مبنى حديث بمواد زجاج وخرسانة"
+                : "Architectural image showing a modern concrete and glass building under delivery"}
             </figcaption>
           </figure>
         </div>
@@ -168,15 +186,8 @@ export default async function HomePage({ searchParams }: PageProps) {
             <article className={`service-module ${index === 0 ? "service-module--feature" : ""}`} key={title}>
               <header className="service-module__head">
                 <span className="service-module__index">{String(index + 1).padStart(2, "0")}</span>
-                <span className="service-module__icon" aria-hidden="true">
-                  <ServiceIcon index={index} />
-                </span>
+                <span className="service-module__tag">{locale === "ar" ? "خدمة" : "SERVICE"}</span>
               </header>
-              {index === 0 && (
-                <span className="service-module__diagram" aria-hidden="true">
-                  <i /><i /><i /><i />
-                </span>
-              )}
               <h3>{title}</h3>
               <p>{body}</p>
             </article>
@@ -315,9 +326,6 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       {/* ============ 07 // CONTACT ============ */}
       <section className="contact-section" id="contact" aria-labelledby="contact-title">
-        <div className="contact-scene" aria-hidden="true" dir="ltr">
-          <ContactScene />
-        </div>
         <div className="container">
           <div className="contact-inner">
             <div className="contact-copy">
@@ -332,18 +340,18 @@ export default async function HomePage({ searchParams }: PageProps) {
                 <a className="contact-channel" href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`}>
                   <Phone aria-hidden="true" size={17} />
                   <span className="contact-channel__label">{locale === "ar" ? "الهاتف" : "PHONE"}</span>
-                  <bdi>{t.contact.phone}</bdi>
-                </a>
-                <a className="contact-channel" href={`mailto:${t.contact.email}`}>
-                  <Mail aria-hidden="true" size={17} />
-                  <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
-                  <bdi>{t.contact.email}</bdi>
+                  <bdi dir="ltr">{t.contact.phone}</bdi>
                 </a>
                 <div className="contact-channel contact-channel--static">
                   <MapPin aria-hidden="true" size={17} />
                   <span className="contact-channel__label">{locale === "ar" ? "العنوان" : "ADDRESS"}</span>
                   <bdi>{t.contact.address}</bdi>
                 </div>
+                <a className="contact-channel contact-channel--wide" href={`mailto:${t.contact.email}`}>
+                  <Mail aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
+                  <bdi dir="ltr">{t.contact.email}</bdi>
+                </a>
               </div>
               <div className="contact-actions">
                 <Button href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`} variant="accent" className="hero-cta">
@@ -390,57 +398,5 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </footer>
     </main>
-  );
-}
-
-/** Thin technical line icons for the service modules — one drafting language. */
-function ServiceIcon({ index }: { index: number }) {
-  const common = {
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.4,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const
-  };
-  const paths = [
-    // Design — drafting compass over a plan square
-    <>
-      <rect x="3" y="3" width="18" height="18" strokeDasharray="3 2.4" />
-      <path d="M12 5 L8.5 15 M12 5 L15.5 15" />
-      <path d="M9.6 12.2 A4.4 4.4 0 0 1 14.4 12.2" />
-      <circle cx="12" cy="5" r="1.3" />
-    </>,
-    // Construction — structural frame with nodes
-    <>
-      <path d="M4 20 V8 h16 v12" />
-      <path d="M4 14 h16 M10 8 v12 M16 8 v12" />
-      <circle cx="10" cy="14" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="14" r="1.2" fill="currentColor" stroke="none" />
-    </>,
-    // Finishing — layered surfaces with roller
-    <>
-      <path d="M4 18 h16 M4 13.5 h10" />
-      <rect x="14" y="6" width="7" height="4.5" rx="0.6" />
-      <path d="M17.5 10.5 v2 a1.5 1.5 0 0 1 -1.5 1.5 h-4" />
-      <path d="M9 14 v4" />
-    </>,
-    // General contracting — crane lifting a beam
-    <>
-      <path d="M5 21 V5 M5 5 h13 M5 9.5 L13 5" />
-      <path d="M14 5 v4.5" />
-      <rect x="11" y="9.5" width="6" height="3.6" />
-      <path d="M5 21 h7" strokeDasharray="3 2.4" />
-    </>,
-    // Furniture — interior plan with chair outline
-    <>
-      <rect x="3.5" y="3.5" width="17" height="17" strokeDasharray="3 2.4" />
-      <path d="M8 16 v-5 a2.4 2.4 0 0 1 2.4 -2.4 h3.2 a2.4 2.4 0 0 1 2.4 2.4 v5" />
-      <path d="M8 13.4 h8 M8 16 v1.8 M16 16 v1.8" />
-    </>
-  ];
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" {...common}>
-      {paths[index % paths.length]}
-    </svg>
   );
 }
