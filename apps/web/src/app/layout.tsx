@@ -3,6 +3,7 @@ import { Almarai, Rubik } from "next/font/google";
 import { Suspense } from "react";
 import { DirectionSync } from "./direction-sync";
 import "./globals.css";
+import "./public-home.css";
 
 const almarai = Almarai({
   subsets: ["arabic"],

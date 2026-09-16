@@ -4,7 +4,6 @@ import { Button, Section } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../i18n/translations";
 import { HeroScene } from "./hero-scene";
 import { AboutVisual } from "./about-visual";
-import { VisionScene } from "./vision-scene";
 import { ContactScene } from "./contact-scene";
 
 type PageProps = {
@@ -117,7 +116,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <span>FINISHING</span>
             <i className="hero-rail__sep" />
             <span className="hero-rail__end">
-              {locale === "ar" ? "من الرؤية إلى الواقع" : "FROM VISION TO REALITY"}
+              {locale === "ar" ? "تصميم / تنفيذ / تسليم" : "DESIGN / BUILD / HANDOVER"}
             </span>
           </div>
         </div>
@@ -185,35 +184,11 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </Section>
 
-      {/* ============ 03 // FROM VISION TO REALITY ============ */}
-      <section className="vision-section" id="vision" aria-labelledby="vision-title">
-        <div className="container vision-head">
-          <p className="ui-section__eyebrow">
-            {locale === "ar" ? "03 // من الفكرة إلى البناء" : "03 // FROM IDEA TO BUILD"}
-          </p>
-          <h2 id="vision-title">{t.home.visionTitle}</h2>
-          <p className="vision-lead">{t.home.visionLead}</p>
-        </div>
-        <div className="vision-stage" aria-hidden="true" dir="ltr">
-          <VisionScene />
-        </div>
-        <div className="vision-stages" aria-hidden="true">
-          <div className="container vision-stages__inner">
-            {t.visionStages.map((stage, index) => (
-              <span className="vision-stages__item" key={stage}>
-                <i>{String(index + 1).padStart(2, "0")}</i>
-                {stage}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ 04 // DELIVERY PROCESS ============ */}
+      {/* ============ 03 // DELIVERY PROCESS ============ */}
       <Section
         id="process"
         className="process-section"
-        eyebrow={locale === "ar" ? "04 // مسار التسليم" : "04 // DELIVERY SEQUENCE"}
+        eyebrow={locale === "ar" ? "03 // مسار التسليم" : "03 // DELIVERY SEQUENCE"}
         title={t.home.processTitle}
         lead={t.home.processLead}
       >
@@ -237,12 +212,12 @@ export default async function HomePage({ searchParams }: PageProps) {
         </ol>
       </Section>
 
-      {/* ============ 05 // METHOD ============ */}
+      {/* ============ 04 // METHOD ============ */}
       <section className="method-section" id="why" aria-labelledby="method-title">
         <div className="container method-inner">
           <div className="method-head">
             <p className="ui-section__eyebrow">
-              {locale === "ar" ? "05 // منهجية العمل" : "05 // WORKING METHOD"}
+              {locale === "ar" ? "04 // منهجية العمل" : "04 // WORKING METHOD"}
             </p>
             <h2 id="method-title">{t.home.whyTitle}</h2>
             <p className="method-lead">{t.home.whyLead}</p>
@@ -261,12 +236,12 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* ============ 06 // DIGITAL EXPERIENCE ============ */}
+      {/* ============ 05 // DIGITAL EXPERIENCE ============ */}
       <section className="digital-section" id="platform" aria-labelledby="digital-title">
         <div className="container digital-inner">
           <div className="digital-copy">
             <p className="ui-section__eyebrow">
-              {locale === "ar" ? "06 // التجربة الرقمية" : "06 // DIGITAL EXPERIENCE"}
+              {locale === "ar" ? "05 // التجربة الرقمية" : "05 // DIGITAL EXPERIENCE"}
             </p>
             <h2 id="digital-title">{t.home.digitalTitle}</h2>
             <p className="digital-lead">{t.home.digitalLead}</p>
@@ -319,10 +294,10 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* ============ 07 // PRINCIPLES ============ */}
+      {/* ============ 06 // PRINCIPLES ============ */}
       <Section
         className="principles-section"
-        eyebrow={locale === "ar" ? "07 // قواعد العمل" : "07 // WORKING PRINCIPLES"}
+        eyebrow={locale === "ar" ? "06 // قواعد العمل" : "06 // WORKING PRINCIPLES"}
         title={t.home.principlesTitle}
       >
         <ol className="principles-rail">
@@ -338,7 +313,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         </ol>
       </Section>
 
-      {/* ============ 08 // CONTACT ============ */}
+      {/* ============ 07 // CONTACT ============ */}
       <section className="contact-section" id="contact" aria-labelledby="contact-title">
         <div className="contact-scene" aria-hidden="true" dir="ltr">
           <ContactScene />
@@ -347,7 +322,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           <div className="contact-inner">
             <div className="contact-copy">
               <p className="ui-section__eyebrow">
-                {locale === "ar" ? "08 // تواصل" : "08 // CONTACT"}
+                {locale === "ar" ? "07 // تواصل" : "07 // CONTACT"}
               </p>
               <h2 id="contact-title">{t.home.contactTitle}</h2>
               <p className="contact-lead">{t.home.contactLead}</p>

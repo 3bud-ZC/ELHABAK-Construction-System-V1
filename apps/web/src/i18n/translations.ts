@@ -24,23 +24,21 @@ export const dictionary = {
     home: {
       heroTitle: "الحباك للاستشارات الهندسية",
       heroSubtitle:
-        "منصة وهوية رقمية لشركة إنشاءات تجمع التصميم والتنفيذ والتشطيبات والمقاولات العامة والتأثيث ضمن تجربة مهنية واضحة.",
+        "استشارات هندسية وتنفيذ منظم للمشروعات السكنية والتجارية — من دراسة الموقع والمخططات إلى التشطيب والتسليم.",
       primaryCta: "ابدأ التواصل",
       secondaryCta: "استعرض الخدمات",
       heroPanelTitle: "نطاق أعمال واضح",
       heroPanelText:
-        "تصميم، إنشاء، تشطيب، مقاولات عامة، وتأثيث بمسار عمل منظم من المعاينة حتى التسليم.",
+        "تصميم، إنشاء، تشطيب، مقاولات عامة، وتأثيث بمسار هندسي واحد من المعاينة إلى التسليم.",
       aboutTitle: "شركة هندسية تجمع التصميم والتنفيذ تحت سقف واحد",
       aboutLead:
-        "الحباك للاستشارات الهندسية شركة مقرها سوهاج، تقدم التصميم والتنفيذ والتشطيبات والمقاولات العامة والتأثيث لعملاء يحتاجون متابعة منظمة وقرارات واضحة — من المعاينة الأولى حتى التسليم النهائي.",
+        "الحباك للاستشارات الهندسية شركة مقرها سوهاج، تقدم التصميم والتنفيذ والتشطيبات والمقاولات العامة والتأثيث لعملاء يحتاجون قرارات واضحة، متابعة منظمة، وتسليم موثق.",
       servicesTitle: "نطاق الخدمات",
-      servicesLead: "الأنشطة المعتمدة للشركة كما وردت في نطاق المشروع — من الفكرة المعمارية إلى الفرش النهائي.",
-      visionTitle: "من الرؤية إلى الواقع",
-      visionLead: "كل مشروع يبدأ فكرة على الورق، يمر بالتصميم والهندسة، ويُبنى تحت إشراف منظم.",
+      servicesLead: "خدمات مترابطة تغطي القرار الهندسي، التنفيذ، التشطيب، وإغلاق المشروع بدون تضخيم أو وعود غير موثقة.",
       processTitle: "مسار التسليم الهندسي",
-      processLead: "ست مراحل مرتبة تساعد العميل والفريق على فهم المشروع بدون تضخيم أو وعود غير موثقة.",
+      processLead: "ست مراحل واضحة تضبط نطاق العمل وتربط العميل والفريق من المعاينة حتى التسليم النهائي.",
       whyTitle: "منهجية قبل الوعود",
-      whyLead: "قيمة العمل عندنا مبنية على وضوح النطاق والمتابعة المهنية وحفظ القرارات والملفات — لا على شعارات.",
+      whyLead: "نعمل بنطاق واضح، متابعة موثقة، وقرارات محفوظة. هذا هو أساس المشروع الجيد.",
       digitalTitle: "مشروعك متابَع رقمياً",
       digitalLead:
         "تدير الحباك مشاريعها عبر نظام إدارة خاص يتيح للعملاء المصرح لهم الاطلاع على ما يخص مشروعهم بشكل منظم.",
@@ -63,7 +61,6 @@ export const dictionary = {
       ["تنفيذ", "EXECUTION"],
       ["إشراف", "SUPERVISION"]
     ],
-    visionStages: ["الفكرة", "التصميم", "الهندسة", "البناء"],
     digitalPoints: [
       "متابعة تقدم المشروع ومراحله المعتمدة",
       "مراجعة التصاميم والاعتمادات",
@@ -77,11 +74,11 @@ export const dictionary = {
       ["استمرارية من التصميم إلى التسليم", "DESIGN TO DELIVERY"]
     ],
     services: [
-      ["التصميم", "تصميم معماري وهندسي مناسب لطبيعة المشروع واحتياجات العميل."],
-      ["الإنشاء", "تنفيذ أعمال الإنشاء ضمن متابعة منظمة ومراحل واضحة."],
-      ["التشطيبات", "تشطيبات داخلية وخارجية مع ضبط التفاصيل والاعتمادات."],
-      ["المقاولات العامة", "إدارة وتنفيذ أعمال المقاولات العامة حسب نطاق المشروع."],
-      ["التأثيث والفرش", "تأثيث وفرش مرتبط باحتياجات المساحة والتصميم."]
+      ["التصميم", "مخططات معمارية وهندسية تضبط الفكرة قبل التنفيذ."],
+      ["الإنشاء", "تنفيذ إنشائي بمتابعة مراحل الموقع واعتمادات العمل."],
+      ["التشطيبات", "تشطيب داخلي وخارجي بتفاصيل واضحة ومراجعات منتظمة."],
+      ["المقاولات العامة", "تنسيق وتنفيذ نطاق المقاولات حسب متطلبات المشروع."],
+      ["التأثيث والفرش", "اختيارات فرش مرتبطة بالمساحة والتصميم والاستخدام."]
     ],
     process: [
       ["المعاينة", "فهم الموقع واحتياجات العميل ومطابقة الأبعاد قبل تثبيت نطاق العمل."],
@@ -92,10 +89,10 @@ export const dictionary = {
       ["التسليم النهائي", "الاعتماد النهائي للأعمال وإغلاق المشروع وتسليم المخرجات للعميل."]
     ],
     why: [
-      ["نطاق متكامل", "من التصميم حتى التأثيث — جميع مراحل المشروع تحت إدارة هندسية واحدة."],
-      ["تواصل مزدوج اللغة", "لغة عمل مهنية بالعربية والإنجليزية للعميل والفريق."],
-      ["نظام إدارة حقيقي", "منصة رقمية خاصة بالشركة لتنظيم المشاريع والملفات والتقارير."],
-      ["هوية مهنية موثقة", "هوية بصرية مبنية على أصول الشركة الأصلية، لا قوالب جاهزة."]
+      ["نطاق واحد", "التصميم والتنفيذ والتشطيب ضمن إدارة هندسية مترابطة."],
+      ["تواصل مهني", "لغة واضحة بالعربية والإنجليزية للعميل وفريق العمل."],
+      ["توثيق رقمي", "منصة الشركة تنظم المشاريع والملفات والتقارير."],
+      ["هوية موثقة", "عرض مهني مبني على أصول الشركة لا على قوالب جاهزة."]
     ],
     contact: companyContact,
     login: {
@@ -127,23 +124,21 @@ export const dictionary = {
     home: {
       heroTitle: "ELHABAK Construction",
       heroSubtitle:
-        "A professional construction and engineering presence for design, construction, finishing, general contracting, and furnishing work.",
+        "Engineering consultancy and organized project delivery for residential and commercial work — from site study and drawings to finishing and handover.",
       primaryCta: "Contact ELHABAK",
       secondaryCta: "View services",
       heroPanelTitle: "Clear work scope",
       heroPanelText:
-        "Design, construction, finishing, general contracting, and furnishing through an organized path from site inspection to handover.",
+        "Design, construction, finishing, general contracting, and furnishing through one engineered path from inspection to handover.",
       aboutTitle: "One engineering house for design and delivery",
       aboutLead:
-        "ELHABAK CONSTRUCTION is an engineering company based in Sohag delivering design, construction, finishing, general contracting, and furnishing for clients who need organized follow-up and clear decisions — from first site inspection to final handover.",
+        "ELHABAK CONSTRUCTION is an engineering company based in Sohag delivering design, construction, finishing, general contracting, and furnishing for clients who need clear decisions, organized follow-up, and documented handover.",
       servicesTitle: "Scope of services",
-      servicesLead: "The company's approved activities — from architectural concept to final furnishing.",
-      visionTitle: "From vision to reality",
-      visionLead: "Every project begins as an idea on paper, passes through design and engineering, and is built under organized supervision.",
+      servicesLead: "Connected services covering engineering decisions, execution, finishing, and project closeout without inflated claims.",
       processTitle: "Engineering delivery sequence",
-      processLead: "Six ordered stages that keep the client and the team aligned without inflated claims.",
+      processLead: "Six clear stages align scope, client decisions, and site execution from inspection to final handover.",
       whyTitle: "Method before promises",
-      whyLead: "Our value is grounded in clear scope, professional follow-up, and documented decisions — not slogans.",
+      whyLead: "Clear scope, documented follow-up, and preserved decisions. That is the operating base for good delivery.",
       digitalTitle: "Your project, tracked digitally",
       digitalLead:
         "ELHABAK manages its projects through a dedicated platform that lets authorized clients follow what concerns their project in an organized way.",
@@ -166,7 +161,6 @@ export const dictionary = {
       ["Execution", "تنفيذ"],
       ["Supervision", "إشراف"]
     ],
-    visionStages: ["CONCEPT", "DESIGN", "ENGINEERING", "BUILD"],
     digitalPoints: [
       "Project progress and approved phase tracking",
       "Design review and approvals",
@@ -180,11 +174,11 @@ export const dictionary = {
       ["Continuity from design to delivery", "DESIGN TO DELIVERY"]
     ],
     services: [
-      ["Design", "Architectural and engineering design shaped around project needs."],
-      ["Construction", "Construction execution with organized follow-up and clear phases."],
-      ["Finishing", "Interior and exterior finishing with attention to approvals and detail."],
-      ["General Contracting", "General contracting work managed according to the project scope."],
-      ["Furniture / Furnishing", "Furniture and furnishing aligned with the space and design direction."]
+      ["Design", "Architectural and engineering drawings that settle the idea before work starts."],
+      ["Construction", "Structural execution with site-stage follow-up and work approvals."],
+      ["Finishing", "Interior and exterior finishing with clear details and regular review."],
+      ["General Contracting", "Coordinated contracting work delivered according to the agreed scope."],
+      ["Furniture / Furnishing", "Furniture and furnishing choices aligned with space, design, and use."]
     ],
     process: [
       ["Site Inspection", "Field assessment and site verification before confirming the project scope."],
@@ -195,10 +189,10 @@ export const dictionary = {
       ["Final Handover", "Final sign-off, project closeout, and documentation handover to the client."]
     ],
     why: [
-      ["Integrated scope", "From design through furnishing — every project phase under one engineering roof."],
-      ["Bilingual workflow", "Professional working language in Arabic and English for client and team."],
-      ["A real management system", "The company's own digital platform for organizing projects, files, and reports."],
-      ["Documented identity", "A professional visual identity built on the company's original assets, not templates."]
+      ["One scope", "Design, execution, and finishing managed as connected engineering work."],
+      ["Professional communication", "Clear Arabic and English working language for client and team."],
+      ["Digital documentation", "The company platform organizes projects, files, and reports."],
+      ["Documented identity", "A professional presence built on company assets, not templates."]
     ],
     contact: companyContact,
     login: {
