@@ -25,8 +25,13 @@ export const dictionary = {
       heroTitle: "الحباك للاستشارات الهندسية",
       heroSubtitle:
         "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية واضحة، من أول معاينة حتى التسليم.",
-      primaryCta: "ابدأ التواصل",
+      primaryCta: "اطلب معاينة",
+      requestInspection: "طلب معاينة",
       secondaryCta: "استعرض الخدمات",
+      whatsappCta: "تواصل واتساب",
+      whatsappMessage: "مرحبًا، أرغب في الاستفسار عن خدمات الحباك وطلب معاينة لمشروع.",
+      mobilePlatform: "المنصة",
+      mobileFaq: "الأسئلة",
       heroPanelTitle: "نطاق واحد للمشروع",
       heroPanelText:
         "تصميم، إنشاء، تشطيب، مقاولات عامة، وتأثيث ضمن مسار عمل منظم.",
@@ -41,12 +46,14 @@ export const dictionary = {
       whyLead: "قيمة المشروع تبدأ من نطاق واضح، متابعة منظمة، وقرارات محفوظة في وقتها.",
       digitalTitle: "مشروعك متابَع رقمياً",
       digitalLead:
-        "تدير الحباك مشاريعها عبر نظام إدارة خاص يتيح للعملاء المصرح لهم الاطلاع على ما يخص مشروعهم بشكل منظم.",
+        "كل مشروع لدى الحباك له مسار متابعة رقمي يساعد العميل على رؤية التقدم والاعتمادات والمستندات في مكان منظم.",
       digitalNote: "الوصول للمنصة بحساب معتمد من الشركة.",
       digitalCta: "دخول النظام",
       principlesTitle: "قواعد العمل",
+      faqTitle: "أسئلة قبل بداية المشروع",
+      faqLead: "إجابات مختصرة على أهم ما يحتاج العميل معرفته قبل طلب المعاينة أو بدء التصميم والتنفيذ.",
       contactTitle: "ابدأ مشروعك بخطوة هندسية واضحة",
-      contactLead: "للاستفسار عن التصميم أو التنفيذ أو التشطيب، تواصل معنا عبر القنوات الرسمية.",
+      contactLead: "اطلب معاينة أو تواصل مباشرة لشرح نوع المشروع، موقعه، والخدمة المطلوبة من التصميم حتى التسليم.",
       footerText: "الحباك للاستشارات الهندسية",
       footerTagline: "شركة هندسية في سوهاج للتصميم والتنفيذ والتشطيب والمقاولات العامة والتأثيث.",
       footerNav: "أقسام الموقع",
@@ -66,6 +73,13 @@ export const dictionary = {
       "مراجعة التصاميم والاعتمادات",
       "الوصول إلى مستندات وملفات المشروع",
       "تحديثات الموقع والتواصل مع فريق العمل"
+    ],
+    faq: [
+      ["هل يمكن طلب معاينة قبل الاتفاق؟", "نعم، تبدأ أغلب المشروعات بخطوة معاينة وفهم للموقع والاحتياج قبل تثبيت النطاق."],
+      ["هل تقدمون التصميم والتنفيذ معًا؟", "نعم، يمكن إدارة التصميم والإنشاء والتشطيب والتأثيث ضمن نطاق واحد واضح."],
+      ["هل المتابعة الرقمية متاحة لكل عميل؟", "يتم توفير حساب معتمد للعملاء المصرح لهم لمتابعة ما يخص مشروعهم من مراحل وملفات."],
+      ["هل تعمل الشركة خارج سوهاج؟", "يتم تقييم موقع المشروع ونطاقه أولًا، ثم تحديد إمكانية التنفيذ أو الإشراف حسب طبيعة العمل."],
+      ["ما الذي أحتاجه عند التواصل؟", "يكفي إرسال نوع الخدمة المطلوبة، موقع المشروع، ومساحة أو وصف مبدئي للمكان إن توفر."]
     ],
     principles: [
       ["نطاق موثق قبل التنفيذ", "SCOPE FIRST"],
@@ -125,8 +139,13 @@ export const dictionary = {
       heroTitle: "ELHABAK Construction",
       heroSubtitle:
         "Design, construction, and finishing for residential and commercial projects with clear engineering management from first inspection to handover.",
-      primaryCta: "Contact ELHABAK",
+      primaryCta: "Request inspection",
+      requestInspection: "Inspection request",
       secondaryCta: "View services",
+      whatsappCta: "WhatsApp",
+      whatsappMessage: "Hello, I would like to ask about ELHABAK services and request a project inspection.",
+      mobilePlatform: "Platform",
+      mobileFaq: "FAQ",
       heroPanelTitle: "One project scope",
       heroPanelText:
         "Design, construction, finishing, general contracting, and furnishing through one organized path.",
@@ -141,12 +160,14 @@ export const dictionary = {
       whyLead: "A good project starts with clear scope, organized follow-up, and decisions captured at the right time.",
       digitalTitle: "Your project, tracked digitally",
       digitalLead:
-        "ELHABAK manages its projects through a dedicated platform that lets authorized clients follow what concerns their project in an organized way.",
+        "Every ELHABAK project can be followed through a digital control path for progress, approvals, documents, and project communication.",
       digitalNote: "Platform access requires a company-approved account.",
       digitalCta: "System login",
       principlesTitle: "Working principles",
+      faqTitle: "Questions before starting",
+      faqLead: "Short answers to what clients usually need before requesting an inspection or starting design and delivery.",
       contactTitle: "Start with a clear engineering step",
-      contactLead: "For design, construction, or finishing inquiries, contact us through the official channels.",
+      contactLead: "Request an inspection or contact the team with your project type, location, and required service from design to handover.",
       footerText: "ELHABAK Engineering Consultancy",
       footerTagline: "An engineering company in Sohag for design, construction, finishing, general contracting, and furnishing.",
       footerNav: "Site sections",
@@ -166,6 +187,13 @@ export const dictionary = {
       "Design review and approvals",
       "Access to project documents and files",
       "Site updates and direct team communication"
+    ],
+    faq: [
+      ["Can I request an inspection before agreement?", "Yes. Most projects start with a site inspection and scope discussion before confirming the work path."],
+      ["Can ELHABAK handle design and execution together?", "Yes. Design, construction, finishing, and furnishing can be managed as one clear scope."],
+      ["Is digital follow-up available to every client?", "Approved clients can receive platform access to follow their project stages, files, and updates."],
+      ["Does the company work outside Sohag?", "Project location and scope are reviewed first, then feasibility for execution or supervision is confirmed."],
+      ["What should I send when contacting the team?", "Send the required service, project location, and any available area or short description of the space."]
     ],
     principles: [
       ["Scope documented before execution", "SCOPE FIRST"],

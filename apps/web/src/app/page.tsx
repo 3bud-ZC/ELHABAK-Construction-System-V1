@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Mail, MapPin, Phone } from "lucide-react";
+import type { Metadata } from "next";
+import { ArrowLeft, ArrowRight, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Button, Section } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../i18n/translations";
 import { PublicHero } from "./public-hero";
@@ -13,6 +14,68 @@ function langHref(locale: "ar" | "en", path = "/") {
   return locale === "ar" ? path : `${path}?lang=en`;
 }
 
+function whatsappHref(phone: string, message: string) {
+  const digits = phone.replace(/[^\d]/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const locale = resolveLocale(params?.lang);
+
+  if (locale === "en") {
+    return {
+      title: "ELHABAK Construction | Design, Construction & Finishing in Sohag",
+      description:
+        "ELHABAK Construction delivers design, construction, finishing, general contracting, and furnishing in Sohag with organized digital project follow-up.",
+      alternates: {
+        canonical: "/?lang=en",
+        languages: {
+          ar: "/",
+          en: "/?lang=en"
+        }
+      },
+      openGraph: {
+        title: "ELHABAK Construction | Design, Construction & Finishing in Sohag",
+        description:
+          "Engineering delivery for residential and commercial projects with digital project tracking from inspection to handover.",
+        url: "/?lang=en",
+        locale: "en_US"
+      },
+      twitter: {
+        title: "ELHABAK Construction | Design, Construction & Finishing in Sohag",
+        description:
+          "Design, construction, finishing, general contracting, and furnishing with organized digital project follow-up."
+      }
+    };
+  }
+
+  return {
+    title: "ELHABAK — الحباك للاستشارات الهندسية في سوهاج",
+    description:
+      "الحباك للاستشارات الهندسية تقدم التصميم والتنفيذ والتشطيب والمقاولات العامة والتأثيث في سوهاج مع متابعة رقمية منظمة للمشروع.",
+    alternates: {
+      canonical: "/",
+      languages: {
+        ar: "/",
+        en: "/?lang=en"
+      }
+    },
+    openGraph: {
+      title: "ELHABAK — الحباك للاستشارات الهندسية في سوهاج",
+      description:
+        "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية واضحة ومتابعة رقمية من المعاينة حتى التسليم.",
+      url: "/",
+      locale: "ar_EG"
+    },
+    twitter: {
+      title: "ELHABAK — الحباك للاستشارات الهندسية في سوهاج",
+      description:
+        "تصميم وتنفيذ وتشطيب ومقاولات عامة وتأثيث مع متابعة رقمية منظمة للمشروع."
+    }
+  };
+}
+
 export default async function HomePage({ searchParams }: PageProps) {
   const params = await searchParams;
   const locale = resolveLocale(params?.lang);
@@ -20,6 +83,14 @@ export default async function HomePage({ searchParams }: PageProps) {
   const alternate = locale === "ar" ? "en" : "ar";
   const dir = textDirections[locale];
   const arrow = dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />;
+  const whatsapp = whatsappHref(t.contact.phone, t.home.whatsappMessage);
+  const mobileQuickNav = [
+    ["#services", t.nav.services],
+    ["#platform", t.home.mobilePlatform],
+    ["#process", t.nav.process],
+    ["#faq", t.home.mobileFaq],
+    ["#contact", t.nav.contact]
+  ] as const;
 
   const heroStates = [
     {
@@ -69,6 +140,11 @@ export default async function HomePage({ searchParams }: PageProps) {
               {t.nav.login}
             </Button>
           </div>
+          <nav className="mobile-quick-nav" aria-label={locale === "ar" ? "تنقل سريع" : "Quick navigation"}>
+            {mobileQuickNav.map(([href, label]) => (
+              <a href={href} key={href}>{label}</a>
+            ))}
+          </nav>
         </div>
       </header>
 
@@ -92,7 +168,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           <span className="hero-eyebrow__index" dir="ltr" aria-hidden="true">ENGINEERING / DELIVERY</span>
           <span className="hero-eyebrow__brand">ELHABAK CONSTRUCTION</span>
         </div>
-        <h1>
+        <h1 aria-label={t.home.heroTitle}>
           {locale === "ar" ? (
             <>
               <span className="hero-title__brand">الحباك</span>
@@ -110,6 +186,9 @@ export default async function HomePage({ searchParams }: PageProps) {
         <div className="hero-actions">
           <Button href="#contact" variant="accent" className="hero-cta">
             {t.home.primaryCta} {arrow}
+          </Button>
+          <Button href={whatsapp} target="_blank" rel="noreferrer" variant="primary" className="hero-cta hero-cta--whatsapp">
+            <MessageCircle size={16} /> {t.home.whatsappCta}
           </Button>
           <Button href="#services" variant="ghost" className="hero-cta hero-cta--ghost">
             {t.home.secondaryCta} {arrow}
@@ -159,115 +238,12 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </Section>
 
-      {/* ============ 02 // SERVICES ============ */}
-      <Section
-        id="services"
-        className="services-section"
-        eyebrow={locale === "ar" ? "02 // نطاق الخدمات" : "02 // SCOPE OF SERVICES"}
-        title={t.home.servicesTitle}
-        lead={t.home.servicesLead}
-      >
-        <div className="services-layout">
-          <article className="services-feature" data-reveal="mask">
-            <div className="services-feature__media" aria-hidden="true">
-              <Image
-                src="/marketing/services-feature.webp"
-                alt=""
-                fill
-                sizes="(max-width: 980px) 100vw, 42vw"
-              />
-            </div>
-            <header className="services-feature__head">
-              <span className="service-index" aria-hidden="true">01</span>
-              <span className="service-tag">{locale === "ar" ? "خدمة أساسية" : "CORE SERVICE"}</span>
-            </header>
-            <div className="services-feature__body">
-              <h3>{t.services[0][0]}</h3>
-              <p>{t.services[0][1]}</p>
-            </div>
-          </article>
-          <ol className="services-register" data-reveal-group>
-            {t.services.slice(1).map(([title, body], index) => (
-              <li className="services-register__row" key={title} data-reveal="up">
-                <span className="service-index" aria-hidden="true">
-                  {String(index + 2).padStart(2, "0")}
-                </span>
-                <div className="services-register__text">
-                  <h3>{title}</h3>
-                  <p>{body}</p>
-                </div>
-                <i className="services-register__tick" aria-hidden="true" />
-              </li>
-            ))}
-          </ol>
-        </div>
-      </Section>
-
-      {/* ============ 03 // DELIVERY PROCESS ============ */}
-      <Section
-        id="process"
-        className="process-section"
-        eyebrow={locale === "ar" ? "03 // مسار التسليم" : "03 // DELIVERY SEQUENCE"}
-        title={t.home.processTitle}
-        lead={t.home.processLead}
-      >
-        <div className="process-field" aria-hidden="true">
-          <span>{locale === "ar" ? "المعاينة" : "SITE INSPECTION"}</span>
-          <span>{locale === "ar" ? "التسليم النهائي" : "FINAL HANDOVER"}</span>
-        </div>
-        <ol className="process-track" data-reveal-group>
-          {t.process.map(([title, body], index) => (
-            <li
-              className="process-stage"
-              key={title}
-              data-reveal="stage"
-              style={{ transitionDelay: `${index * 110}ms` }}
-            >
-              <span className="process-stage__node">
-                <bdi>{String(index + 1).padStart(2, "0")}</bdi>
-              </span>
-              <span className="process-stage__label" aria-hidden="true">
-                {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
-              </span>
-              <div className="process-stage__content">
-                <h3>{title}</h3>
-                <p>{body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </Section>
-
-      {/* ============ 04 // METHOD ============ */}
-      <section className="method-section" id="why" aria-labelledby="method-title">
-        <div className="container method-inner">
-          <div className="method-head" data-reveal="up">
-            <p className="ui-section__eyebrow">
-              {locale === "ar" ? "04 // منهجية العمل" : "04 // WORKING METHOD"}
-            </p>
-            <h2 id="method-title">{t.home.whyTitle}</h2>
-            <p className="method-lead">{t.home.whyLead}</p>
-          </div>
-          <div className="method-rows" data-reveal-group>
-            {t.why.map(([title, body], index) => (
-              <div className="method-row" key={title} data-reveal="up">
-                <span className="method-row__num" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3>{title}</h3>
-                <p>{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ 05 // DIGITAL EXPERIENCE ============ */}
+      {/* ============ 02 // DIGITAL EXPERIENCE ============ */}
       <section className="digital-section" id="platform" aria-labelledby="digital-title">
         <div className="container digital-inner">
           <div className="digital-copy" data-reveal="up">
             <p className="ui-section__eyebrow">
-              {locale === "ar" ? "05 // التجربة الرقمية" : "05 // DIGITAL EXPERIENCE"}
+              {locale === "ar" ? "02 // التجربة الرقمية" : "02 // DIGITAL EXPERIENCE"}
             </p>
             <h2 id="digital-title">{t.home.digitalTitle}</h2>
             <p className="digital-lead">{t.home.digitalLead}</p>
@@ -320,6 +296,109 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
+      {/* ============ 03 // SERVICES ============ */}
+      <Section
+        id="services"
+        className="services-section"
+        eyebrow={locale === "ar" ? "03 // نطاق الخدمات" : "03 // SCOPE OF SERVICES"}
+        title={t.home.servicesTitle}
+        lead={t.home.servicesLead}
+      >
+        <div className="services-layout">
+          <article className="services-feature" data-reveal="mask">
+            <div className="services-feature__media" aria-hidden="true">
+              <Image
+                src="/marketing/services-feature.webp"
+                alt=""
+                fill
+                sizes="(max-width: 980px) 100vw, 42vw"
+              />
+            </div>
+            <header className="services-feature__head">
+              <span className="service-index" aria-hidden="true">01</span>
+              <span className="service-tag">{locale === "ar" ? "خدمة أساسية" : "CORE SERVICE"}</span>
+            </header>
+            <div className="services-feature__body">
+              <h3>{t.services[0][0]}</h3>
+              <p>{t.services[0][1]}</p>
+            </div>
+          </article>
+          <ol className="services-register" data-reveal-group>
+            {t.services.slice(1).map(([title, body], index) => (
+              <li className="services-register__row" key={title} data-reveal="up">
+                <span className="service-index" aria-hidden="true">
+                  {String(index + 2).padStart(2, "0")}
+                </span>
+                <div className="services-register__text">
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+                <i className="services-register__tick" aria-hidden="true" />
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Section>
+
+      {/* ============ 04 // DELIVERY PROCESS ============ */}
+      <Section
+        id="process"
+        className="process-section"
+        eyebrow={locale === "ar" ? "04 // مسار التسليم" : "04 // DELIVERY SEQUENCE"}
+        title={t.home.processTitle}
+        lead={t.home.processLead}
+      >
+        <div className="process-field" aria-hidden="true">
+          <span>{locale === "ar" ? "المعاينة" : "SITE INSPECTION"}</span>
+          <span>{locale === "ar" ? "التسليم النهائي" : "FINAL HANDOVER"}</span>
+        </div>
+        <ol className="process-track" data-reveal-group>
+          {t.process.map(([title, body], index) => (
+            <li
+              className="process-stage"
+              key={title}
+              data-reveal="stage"
+              style={{ transitionDelay: `${index * 110}ms` }}
+            >
+              <span className="process-stage__node">
+                <bdi>{String(index + 1).padStart(2, "0")}</bdi>
+              </span>
+              <span className="process-stage__label" aria-hidden="true">
+                {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
+              </span>
+              <div className="process-stage__content">
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Section>
+
+      {/* ============ 05 // METHOD ============ */}
+      <section className="method-section" id="why" aria-labelledby="method-title">
+        <div className="container method-inner">
+          <div className="method-head" data-reveal="up">
+            <p className="ui-section__eyebrow">
+              {locale === "ar" ? "05 // منهجية العمل" : "05 // WORKING METHOD"}
+            </p>
+            <h2 id="method-title">{t.home.whyTitle}</h2>
+            <p className="method-lead">{t.home.whyLead}</p>
+          </div>
+          <div className="method-rows" data-reveal-group>
+            {t.why.map(([title, body], index) => (
+              <div className="method-row" key={title} data-reveal="up">
+                <span className="method-row__num" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ============ 06 // PRINCIPLES ============ */}
       <Section
         className="principles-section"
@@ -339,7 +418,29 @@ export default async function HomePage({ searchParams }: PageProps) {
         </ol>
       </Section>
 
-      {/* ============ 07 // CONTACT + FOOTER ============ */}
+      {/* ============ 07 // FAQ ============ */}
+      <section className="faq-section" id="faq" aria-labelledby="faq-title">
+        <div className="container faq-inner">
+          <div className="faq-head" data-reveal="up">
+            <p className="ui-section__eyebrow">
+              {locale === "ar" ? "07 // الأسئلة الشائعة" : "07 // FAQ"}
+            </p>
+            <h2 id="faq-title">{t.home.faqTitle}</h2>
+            <p>{t.home.faqLead}</p>
+          </div>
+          <div className="faq-list" data-reveal-group>
+            {t.faq.map(([question, answer], index) => (
+              <article className="faq-item" data-reveal="up" key={question}>
+                <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                <h3>{question}</h3>
+                <p>{answer}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ 08 // CONTACT + FOOTER ============ */}
       <div className="closing">
         <div className="closing__media" aria-hidden="true">
           <Image
@@ -355,7 +456,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <div className="contact-inner">
               <div className="contact-copy" data-reveal="up">
                 <p className="ui-section__eyebrow">
-                  {locale === "ar" ? "07 // تواصل" : "07 // CONTACT"}
+                  {locale === "ar" ? "08 // تواصل" : "08 // CONTACT"}
                 </p>
                 <h2 id="contact-title">{t.home.contactTitle}</h2>
                 <p className="contact-lead">{t.home.contactLead}</p>
@@ -377,10 +478,18 @@ export default async function HomePage({ searchParams }: PageProps) {
                     <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
                     <bdi dir="ltr">{t.contact.email}</bdi>
                   </a>
+                  <a className="contact-channel contact-channel--wide contact-channel--whatsapp" href={whatsapp} target="_blank" rel="noreferrer">
+                    <MessageCircle aria-hidden="true" size={17} />
+                    <span className="contact-channel__label">WHATSAPP</span>
+                    <bdi>{t.home.whatsappCta}</bdi>
+                  </a>
                 </div>
                 <div className="contact-actions">
                   <Button href={`tel:${t.contact.phone.replace(/[^\d+]/g, "")}`} variant="accent" className="hero-cta">
                     {t.home.primaryCta} {arrow}
+                  </Button>
+                  <Button href={whatsapp} target="_blank" rel="noreferrer" variant="primary" className="hero-cta contact-whatsapp">
+                    <MessageCircle size={16} /> {t.home.whatsappCta}
                   </Button>
                 </div>
               </div>
