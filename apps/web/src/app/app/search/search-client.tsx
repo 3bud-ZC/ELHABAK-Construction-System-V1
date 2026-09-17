@@ -111,7 +111,7 @@ export function SearchClient() {
     <section className="app-page search-page">
       <div className="admin-command-strip">
         <div>
-          <span className="section-kicker">{ar ? "النظام / البحث الشامل" : "SYSTEM / GLOBAL SEARCH"}</span>
+          <span className="section-kicker">{ar ? "البحث الشامل في النظام" : "Global Search"}</span>
           <strong>{labels.title}</strong>
           <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>

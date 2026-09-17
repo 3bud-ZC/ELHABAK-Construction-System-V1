@@ -472,7 +472,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
       <div className="site-ops-command-strip">
         <div>
-          <span className="section-kicker">{ar ? "موقع / سجل العمليات" : "FIELD / OPERATIONS LOG"}</span>
+          <span className="section-kicker">{ar ? "سجل العمليات الميدانية" : "Field Operations Log"}</span>
           <h1>{labels.title}</h1>
           <p>{labels.lead}</p>
         </div>

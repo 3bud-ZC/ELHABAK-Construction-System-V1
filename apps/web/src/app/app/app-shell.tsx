@@ -259,7 +259,7 @@ export function AppShell({ children }: AppShellProps) {
               />
             </Link>
             <div className="app-brand-meta">
-              <span className="app-brand-code mono">ELHABAK / OPS</span>
+              <span className="app-brand-code mono">ELHABAK CONSTRUCTION</span>
               <span className="app-product-tag">{labels.productTag}</span>
             </div>
           </div>

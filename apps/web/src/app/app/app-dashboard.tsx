@@ -106,7 +106,12 @@ export function AppDashboard() {
           noNote: "بدون ملاحظة نصية",
           authorized: "مشاريع مصرح بها",
           category: "التصنيف",
-          review: "مراجعة"
+          review: "مراجعة",
+          portfolioEyebrow: "المشاريع الجارية",
+          activityEyebrow: "سجل النشاط الميداني",
+          quickEyebrow: "روابط سريعة",
+          phaseEyebrow: "مراحل التنفيذ",
+          updatesEyebrow: "تقارير الموقع"
         }
         : {
           title: "Dashboard",
@@ -154,7 +159,12 @@ export function AppDashboard() {
           noNote: "No written note",
           authorized: "Authorized projects",
           category: "Category",
-          review: "Review"
+          review: "Review",
+          portfolioEyebrow: "ACTIVE PORTFOLIO",
+          activityEyebrow: "FIELD ACTIVITY",
+          quickEyebrow: "QUICK ACCESS",
+          phaseEyebrow: "EXECUTION PHASES",
+          updatesEyebrow: "FIELD UPDATES"
         },
     [locale]
   );
@@ -209,7 +219,6 @@ export function AppDashboard() {
         <div className="dashboard-command-intro__copy">
           <div className="dashboard-command-intro__eyebrow">
             <span>{labels.eyebrow}</span>
-            <span className="mono">OPS / 01</span>
           </div>
           <span className="dashboard-command-intro__welcome">{labels.welcome}, <bdi>{user.displayName}</bdi></span>
           <h1>{labels.title}</h1>
@@ -264,7 +273,7 @@ export function AppDashboard() {
             <section className="dashboard-projects-panel">
               <header className="dashboard-section-heading">
                 <div>
-                  <span className="dashboard-section-heading__eyebrow">{isAdmin ? "PORTFOLIO / DELIVERY" : labels.authorized}</span>
+                  <span className="dashboard-section-heading__eyebrow">{isAdmin ? labels.portfolioEyebrow : labels.authorized}</span>
                   <h2>{labels.operations}</h2>
                   <p>{labels.operationsLead}</p>
                 </div>
@@ -322,7 +331,7 @@ export function AppDashboard() {
               <section className="dashboard-activity-panel">
                 <header className="dashboard-section-heading dashboard-section-heading--compact">
                   <div>
-                    <span className="dashboard-section-heading__eyebrow">ACTIVITY / LOG</span>
+                    <span className="dashboard-section-heading__eyebrow">{labels.activityEyebrow}</span>
                     <h2>{labels.activityTitle}</h2>
                     <p>{labels.activityLead}</p>
                   </div>
@@ -352,7 +361,7 @@ export function AppDashboard() {
               <section className="dashboard-quick-panel">
               <header className="dashboard-section-heading dashboard-section-heading--compact">
                 <div>
-                  <span className="dashboard-section-heading__eyebrow">SHORTCUTS</span>
+                  <span className="dashboard-section-heading__eyebrow">{labels.quickEyebrow}</span>
                   <h2>{labels.quickTitle}</h2>
                   <p>{labels.quickLead}</p>
                 </div>
@@ -370,7 +379,7 @@ export function AppDashboard() {
                 <section className="dashboard-phase-panel">
                   <header className="dashboard-section-heading dashboard-section-heading--compact">
                     <div>
-                      <span className="dashboard-section-heading__eyebrow">PIPELINE / PHASES</span>
+                      <span className="dashboard-section-heading__eyebrow">{labels.phaseEyebrow}</span>
                       <h2>{labels.phaseTitle}</h2>
                       <p>{labels.phaseLead}</p>
                     </div>
@@ -390,7 +399,7 @@ export function AppDashboard() {
                 <section className="dashboard-updates-panel">
                   <header className="dashboard-section-heading dashboard-section-heading--compact">
                     <div>
-                      <span className="dashboard-section-heading__eyebrow">FIELD / REPORTS</span>
+                      <span className="dashboard-section-heading__eyebrow">{labels.updatesEyebrow}</span>
                       <h2>{labels.updatesTitle}</h2>
                       <p>{labels.updatesLead}</p>
                     </div>

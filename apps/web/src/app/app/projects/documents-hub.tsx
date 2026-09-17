@@ -157,7 +157,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
     <>
       <div className="design-hub-heading technical-register-header">
         <div>
-          <span className="section-kicker">{ar ? "سجل / مراقبة المستندات" : "REGISTER / DOCUMENT CONTROL"}</span>
+          <span className="section-kicker">{ar ? "مركز المستندات والوثائق" : "Document Management"}</span>
           <h2>{labels.title}</h2>
           <p>{labels.lead}</p>
         </div>

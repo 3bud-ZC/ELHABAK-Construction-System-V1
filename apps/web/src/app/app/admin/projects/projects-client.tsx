@@ -38,7 +38,7 @@ export function ProjectsClient() {
     () =>
       locale === "ar"
         ? {
-          eyebrow: "المحفظة / سجل التحكم",
+          eyebrow: "إدارة ومتابعة المشاريع",
           title: "سجل المشاريع",
           lead: "مرجع تشغيلي موحد للمشاريع والحالة والمرحلة والفريق المسؤول.",
           create: "إنشاء مشروع",
@@ -71,7 +71,7 @@ export function ProjectsClient() {
           noDate: "غير محدد"
         }
         : {
-          eyebrow: "PORTFOLIO / CONTROL REGISTER",
+          eyebrow: "Project Portfolio Management",
           title: "Project Register",
           lead: "A unified operational reference for projects, state, phase, and responsible teams.",
           create: "Create project",

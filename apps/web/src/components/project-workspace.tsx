@@ -63,7 +63,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       team: "الفريق الميداني",
       unset: "غير محدد",
       modules: "وحدات المشروع",
-      control: "مركز التحكم بالمشروع",
+      control: "مساحة عمل المشروع",
       project: "مشروع",
       start: "البدء",
       target: "التسليم المستهدف"
@@ -85,9 +85,9 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       schedule: "Schedule",
       team: "Field team",
       unset: "Not set",
-      modules: "Project modules",
-      control: "Project control center",
-      project: "PROJECT",
+      modules: "Project Modules",
+      control: "Project Workspace",
+      project: "Project",
       start: "Start",
       target: "Target delivery"
     };
@@ -126,7 +126,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       <header className="project-command-header project-command-header--v5">
         <div className="project-command-header__topbar">
           <div className="project-command-header__ref-group">
-            <span className="project-command-header__sys-tag">ELHABAK // {labels.control}</span>
+            <span className="project-command-header__sys-tag">{labels.control}</span>
             <bdi className="project-command-header__code mono">{project.code ?? "—"}</bdi>
           </div>
           <div className="project-command-header__badges">
@@ -142,7 +142,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
 
         <div className="project-command-header__main">
           <div className="project-command-header__identity">
-            <span className="project-command-header__label">{labels.project} / {labels.control}</span>
+            <span className="project-command-header__label">{ar ? "بيانات المشروع التنفيذية" : "Project Execution"}</span>
             <h1>{project.name}</h1>
             <div className="project-command-header__phase-chip">
               <span className="project-command-header__phase-index mono"><bdi>{String(currentPhaseIndex + 1).padStart(2, "0")}</bdi>/06</span>

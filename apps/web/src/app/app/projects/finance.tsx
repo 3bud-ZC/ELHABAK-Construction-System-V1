@@ -97,7 +97,7 @@ export function Finance({ projectId }: { projectId: string }) {
       <ProjectWorkspace project={context} locale={locale} role={user.role} active="finance" />
       <div className="finance-command-strip">
         <div>
-          <span className="section-kicker">{locale === "ar" ? "المشروع / مراقبة التكلفة" : "PROJECT / COST CONTROL"}</span>
+          <span className="section-kicker">{locale === "ar" ? "المتابعة المالية للمشروع" : "Project Cost Control"}</span>
           <strong>{context.name} <bdi className="mono finance-command-strip__code">{context.code ?? "—"}</bdi></strong>
         </div>
       </div>

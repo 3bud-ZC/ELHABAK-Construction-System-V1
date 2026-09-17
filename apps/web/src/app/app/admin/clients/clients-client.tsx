@@ -141,7 +141,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
       <section className="app-page clients-console">
         <div className="admin-command-strip">
           <div>
-            <span className="section-kicker">{ar ? "الإدارة / حسابات العملاء" : "MANAGEMENT / CLIENT ACCOUNTS"}</span>
+            <span className="section-kicker">{ar ? "إدارة حسابات العملاء" : "Client Account Management"}</span>
             <strong>{labels.title}</strong>
             <span className="admin-command-strip__subtitle">{labels.lead}</span>
           </div>

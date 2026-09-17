@@ -747,3 +747,42 @@
 - E2E: **COMPLETE** — full API suite re-validates all 5 roles, RBAC matrix, IDOR, media auth, sessions, realtime room joins; local production-build smoke verified CSP+nonce on rendered HTML, JSON-LD, nonced scripts, sitemap, robots.
 - RTL/LTR + desktop/mobile QA: **COMPLETE** — `?lang=en` live returns `lang="en" dir="ltr"` with correct WhatsApp href; Arabic default preserved; layout unchanged except section order + hero CTA density (previously validated responsive system retained).
 - Remaining external owner actions: (1) custom domain for canonical/SEO base (`NEXT_PUBLIC_SITE_URL` ready); (2) Railway volume resize for `/app/storage` + external backup destination/schedule; (3) Neon PITR/backup confirmation; (4) external uptime/error monitoring account; (5) Railway staging service + Neon staging branch.
+
+### 2026-09-17 — Visual System, Brand Coherence & UI/UX Polish Pass
+- Scope: complete visual system consolidation, Arabic typography normalization, de-blueprint cleanup, interactive hero refinement, information architecture streamlining, and removal of pseudo-CAD/sci-fi cockpit labeling across public and internal surfaces before client presentation. Zero changes to backend architecture, database schema, Prisma migrations, API contracts, RBAC guards, session cookies, upload logic, or finance calculations.
+- Brand System & Tokens (`packages/ui/src/tokens.ts`, `apps/web/src/app/globals.css`, `apps/web/src/app/public-home.css`): consolidated canonical palette (Navy `#16234B`, Deep Navy `#0B132B`, Orange `#E87625`, Orange Hover `#D66518`, Orange Soft `#FAD7BD`, Canvas `#F4F6F9`, Surface `#FFFFFF`, Border `#D8DFEA`, Text `#0F172A`, Muted `#5F718D`, Success `#0D8A58`, Info `#1F69C9`, Danger `#DC2626`). Synchronized CSS custom properties with `@elhabak/ui` tokens.
+- Arabic Typography & RTL Protection: resolved faux-bold syntheses across the application by standardizing all Almarai font weights strictly to available font files: 400 (body/metadata), 700 (labels/subheads/buttons/badges), and 800 (headings/numbers); eliminated all invalid 900, 950, 600, 500 declarations. Increased Arabic heading line-height from 0.96 to 1.14+ to prevent glyph clipping of ascenders, descenders, and diacritics. Preserved strict zero-letter-spacing on Arabic text to protect cursive cursive shaper connectivity.
+- De-Blueprint Pass: eliminated fake blueprint grid background gradients (`--blueprint-grid: none`, `--blueprint-grid-light: none`), removed arbitrary technical grids from project command headers, overview headers, and digital experience frames. Stripped decorative corner brackets (`login-brand__corner`), fake CAD wireframe lines, and skewed decorative lines.
+- Login Experience Overhaul (`apps/web/src/app/login/page.tsx`): replaced fake blueprint grid and decorative brackets with an authentic high-resolution architectural visual (`/marketing/hero-execution.webp`) featuring a deep navy gradient overlay, paired with authoritative institutional messaging ("إدارة هندسية متكاملة للمشاريع", "بوابة العمليات المصرح بها").
+- Public Hero Enhancements (`apps/web/src/app/public-hero.tsx`): adjusted automated scene transition timing from 9500ms to 8000ms. Transformed scene rail indicators into accessible interactive button controls allowing users to switch between scenes with active progress indicators.
+- Information Architecture Streamlining (`apps/web/src/app/page.tsx`): merged redundant Working Principles into Section 03 ("منهجية العمل وقواعده" / "Working Method & Principles") as structured foundation cards (`.method-principles-bar`), eliminating standalone Section 06. Renumbered sections 01-07 consecutively. Decoupled Contact and Footer from `.closing` wrapper, replacing the dark stretched image overlay with a dedicated deep-navy Contact section and an authoritative `#060B16` institutional Footer.
+- De-Cockpit Pass across Internal Screens: removed pseudo-CAD micro-labels (`OPS / 01`, `PORTFOLIO / DELIVERY`, `ACTIVITY / LOG`, `PIPELINE / PHASES`, `FIELD / REPORTS`, `SHORTCUTS`) across `app-dashboard.tsx`, `app-shell.tsx`, `project-workspace.tsx`, `site-operations.tsx`, `documents-hub.tsx`, `design-hub.tsx`, `finance.tsx`, `chat.tsx`, `admin/projects`, `admin/users`, `admin/clients`, `search`, and `reports`. Replaced with professional, institutional terminology ("المشاريع الجارية", "سجل النشاط الميداني", "مراحل التنفيذ", "مساحة عمل المشروع", "سجل العمليات الميدانية", "المخططات والتصاميم الهندسية").
+- Verification & Test Results:
+  - `pnpm lint`: passed (code 0 across all workspace packages).
+  - `pnpm typecheck`: passed (code 0 across all 8 workspace projects).
+  - `pnpm test`: passed 100% (API Vitest: 9 test files, 69 tests passed; Web test runner: 17 tests passed).
+  - `pnpm build`: passed (code 0, all 26 web routes statically/dynamically generated with zero errors, API compiled successfully).
+- Overall Completion: **100% / 100%**. **READY FOR CLIENT PRESENTATION**.
+
+### 2026-09-18 — FINAL VISUAL ACCEPTANCE, RESPONSIVE QA & DEPLOYMENT VERIFICATION
+- Real Browser QA Matrix: Executed automated headless browser QA suite (`run-qa.cjs` via Google Chrome) evaluating 88 distinct screens across the required responsive viewport matrix:
+  - Desktop Ultra-Wide / Standard: 1440x900
+  - Desktop Compact: 1280x800
+  - Tablet Landscape / Small Desktop: 1024x768
+  - Tablet Portrait: 768x1024
+  - Modern Mobile Large: 430x932 (iPhone Pro Max)
+  - Modern Mobile Standard: 390x844 (iPhone 13/14/15)
+  - Legacy Mobile Small: 375x667 (iPhone SE)
+- Surfaces Inspected:
+  - Public Surfaces: Public Homepage (Arabic RTL & English LTR across all 7 viewports), Hero Interactive Rail Navigation (click, active step transition, 8000ms loop), Architecture/Methodology Section 01-07, Contact & Institutional Footer.
+  - Authentication: Login Page (Arabic & English across 1440, 768, 390), authoritative architectural hero image (`/marketing/hero-execution.webp`), navy gradient overlay, institutional typography.
+  - Internal Workspaces: Admin Dashboard, Projects Register, Project Workspace (Overview, Lifecycle tracker), Design Hub & Detail View, Site Activity & Upload Center, Finance Workspace & Portfolio View, Documents Hub & Detail View, Real-Time Chat & Voice Room, Notifications Center, Global Search, Reports Center & Detail, Users & Clients Admin Registers, New Project Creation.
+- Responsive Layout & Horizontal Overflow: **0px horizontal overflow across all 88 screens/viewports** (computed `scrollWidth <= viewportWidth`).
+- Typography Audit: Verified real Almarai weights rendered in DOM (`font-weight: 800` on headings with line-height >= 1.14 preventing Arabic diacritic clipping; `font-weight: 700` on labels, badges, buttons; `font-weight: 400` on body/metadata). Strictly zero faux-bold synthesis and zero broken cursive letter spacing.
+- Visual Coherence: Confirmed complete elimination of blueprint background grids, fake CAD lines, corner brackets, and sci-fi cockpit micro-labels across all authenticated screens.
+- Automated Test Suite:
+  - `pnpm lint`: passed (code 0).
+  - `pnpm typecheck`: passed (code 0 across all 8 projects).
+  - `pnpm test`: passed 100% (86 tests total: 69 API tests, 17 Web tests).
+  - `pnpm build`: passed (code 0, all 26 routes generated).
+- Final Acceptance Verdict: **READY FOR CLIENT PRESENTATION: YES**.

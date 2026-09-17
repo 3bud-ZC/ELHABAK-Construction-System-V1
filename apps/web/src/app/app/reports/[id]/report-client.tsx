@@ -141,7 +141,7 @@ export function ReportClient() {
     <section className="app-page project-report-page">
       <div className="admin-command-strip">
         <div>
-          <span className="section-kicker">{ar ? "النظام / تقرير المشروع" : "SYSTEM / PROJECT REPORT"}</span>
+          <span className="section-kicker">{ar ? "التقرير التنفيذي للمشروع" : "Project Executive Report"}</span>
           <strong>{`${labels.title}: ${p.name}`}</strong>
           <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>

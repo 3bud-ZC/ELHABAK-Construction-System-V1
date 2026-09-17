@@ -176,7 +176,7 @@ export function UsersClient({ mode, id }: UsersClientProps) {
       <section className="app-page users-console">
         <div className="admin-command-strip">
           <div>
-            <span className="section-kicker">{ar ? "النظام / الهوية والوصول" : "SYSTEM / IDENTITY & ACCESS"}</span>
+            <span className="section-kicker">{ar ? "إدارة المستخدمين والصلاحيات" : "User & Access Management"}</span>
             <strong>{labels.title}</strong>
             <span className="admin-command-strip__subtitle">{labels.lead}</span>
           </div>

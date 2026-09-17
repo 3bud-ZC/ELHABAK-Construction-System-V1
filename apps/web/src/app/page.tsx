@@ -220,7 +220,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         }
       >
         <div className="hero-eyebrow">
-          <span className="hero-eyebrow__index" dir="ltr" aria-hidden="true">ENGINEERING / DELIVERY</span>
+          <span className="hero-eyebrow__index" aria-hidden="true">{locale === "ar" ? "الهندسة والمقاولات" : "ENGINEERING & CONSTRUCTION"}</span>
           <span className="hero-eyebrow__brand">ELHABAK CONSTRUCTION</span>
         </div>
         <h1 aria-label={t.home.heroTitle}>
@@ -334,12 +334,12 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </Section>
 
-      {/* ============ 03 // METHOD ============ */}
+      {/* ============ 03 // METHOD & PRINCIPLES ============ */}
       <section className="method-section" id="why" aria-labelledby="method-title">
         <div className="container method-inner">
           <div className="method-head" data-reveal="up">
             <p className="ui-section__eyebrow">
-              {locale === "ar" ? "03 // منهجية العمل" : "03 // WORKING METHOD"}
+              {locale === "ar" ? "03 // منهجية العمل وقواعده" : "03 // WORKING METHOD & PRINCIPLES"}
             </p>
             <h2 id="method-title">{t.home.whyTitle}</h2>
             <p className="method-lead">{t.home.whyLead}</p>
@@ -354,6 +354,22 @@ export default async function HomePage({ searchParams }: PageProps) {
                 <p>{body}</p>
               </div>
             ))}
+          </div>
+          <div className="method-principles-bar" data-reveal="up">
+            <div className="method-principles-bar__head">
+              <span className="method-principles-bar__tag">{t.home.principlesTitle}</span>
+            </div>
+            <div className="method-principles-bar__grid">
+              {t.principles.map(([title, tag], index) => (
+                <div className="method-principles-card" key={tag}>
+                  <span className="method-principles-card__num" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <strong>{title}</strong>
+                  <span className="method-principles-card__tag" aria-hidden="true">{tag}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -460,31 +476,12 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* ============ 06 // PRINCIPLES ============ */}
-      <Section
-        className="principles-section"
-        eyebrow={locale === "ar" ? "06 // قواعد العمل" : "06 // WORKING PRINCIPLES"}
-        title={t.home.principlesTitle}
-      >
-        <ol className="principles-rail" data-reveal-group>
-          {t.principles.map(([title, tag], index) => (
-            <li className="principles-item" key={tag} data-reveal="up">
-              <span className="principles-item__num" aria-hidden="true">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <strong>{title}</strong>
-              <span className="principles-item__tag" aria-hidden="true">{tag}</span>
-            </li>
-          ))}
-        </ol>
-      </Section>
-
-      {/* ============ 07 // FAQ ============ */}
+      {/* ============ 06 // FAQ ============ */}
       <section className="faq-section" id="faq" aria-labelledby="faq-title">
         <div className="container faq-inner">
           <div className="faq-head" data-reveal="up">
             <p className="ui-section__eyebrow">
-              {locale === "ar" ? "07 // الأسئلة الشائعة" : "07 // FAQ"}
+              {locale === "ar" ? "06 // الأسئلة الشائعة" : "06 // FAQ"}
             </p>
             <h2 id="faq-title">{t.home.faqTitle}</h2>
             <p>{t.home.faqLead}</p>
@@ -501,98 +498,89 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* ============ 08 // CONTACT + FOOTER ============ */}
-      <div className="closing">
-        <div className="closing__media" aria-hidden="true">
-          <Image
-            src="/marketing/contact-crane.webp"
-            alt=""
-            fill
-            loading="lazy"
-            sizes="100vw"
-          />
+      {/* ============ 07 // CONTACT ============ */}
+      <section className="contact-section" id="contact" aria-labelledby="contact-title">
+        <div className="container">
+          <div className="contact-inner">
+            <div className="contact-copy" data-reveal="up">
+              <p className="ui-section__eyebrow">
+                {locale === "ar" ? "07 // تواصل معنا" : "07 // CONTACT"}
+              </p>
+              <h2 id="contact-title">{t.home.contactTitle}</h2>
+              <p className="contact-lead">{t.home.contactLead}</p>
+            </div>
+            <div className="contact-conversion" data-reveal="up">
+              <div className="contact-channels">
+                <a className="contact-channel" href={tel}>
+                  <Phone aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">{locale === "ar" ? "الهاتف" : "PHONE"}</span>
+                  <bdi dir="ltr">{t.contact.phone}</bdi>
+                </a>
+                <div className="contact-channel contact-channel--static">
+                  <MapPin aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">{locale === "ar" ? "العنوان" : "ADDRESS"}</span>
+                  <bdi>{t.contact.address}</bdi>
+                </div>
+                <a className="contact-channel contact-channel--wide" href={`mailto:${t.contact.email}`}>
+                  <Mail aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
+                  <bdi dir="ltr">{t.contact.email}</bdi>
+                </a>
+                <a className="contact-channel contact-channel--wide contact-channel--whatsapp" href={whatsapp} target="_blank" rel="noreferrer">
+                  <MessageCircle aria-hidden="true" size={17} />
+                  <span className="contact-channel__label">WHATSAPP</span>
+                  <bdi>{t.home.whatsappCta}</bdi>
+                </a>
+              </div>
+              <div className="contact-actions">
+                <Button href={tel} variant="accent" className="hero-cta">
+                  {t.home.primaryCta} {arrow}
+                </Button>
+                <Button href={whatsapp} target="_blank" rel="noreferrer" variant="primary" className="hero-cta contact-whatsapp">
+                  <MessageCircle size={16} /> {t.home.whatsappCta}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-        <section className="contact-section" id="contact" aria-labelledby="contact-title">
-          <div className="container">
-            <div className="contact-inner">
-              <div className="contact-copy" data-reveal="up">
-                <p className="ui-section__eyebrow">
-                  {locale === "ar" ? "08 // تواصل" : "08 // CONTACT"}
-                </p>
-                <h2 id="contact-title">{t.home.contactTitle}</h2>
-                <p className="contact-lead">{t.home.contactLead}</p>
-              </div>
-              <div className="contact-conversion" data-reveal="up">
-                <div className="contact-channels">
-                  <a className="contact-channel" href={tel}>
-                    <Phone aria-hidden="true" size={17} />
-                    <span className="contact-channel__label">{locale === "ar" ? "الهاتف" : "PHONE"}</span>
-                    <bdi dir="ltr">{t.contact.phone}</bdi>
-                  </a>
-                  <div className="contact-channel contact-channel--static">
-                    <MapPin aria-hidden="true" size={17} />
-                    <span className="contact-channel__label">{locale === "ar" ? "العنوان" : "ADDRESS"}</span>
-                    <bdi>{t.contact.address}</bdi>
-                  </div>
-                  <a className="contact-channel contact-channel--wide" href={`mailto:${t.contact.email}`}>
-                    <Mail aria-hidden="true" size={17} />
-                    <span className="contact-channel__label">{locale === "ar" ? "البريد" : "EMAIL"}</span>
-                    <bdi dir="ltr">{t.contact.email}</bdi>
-                  </a>
-                  <a className="contact-channel contact-channel--wide contact-channel--whatsapp" href={whatsapp} target="_blank" rel="noreferrer">
-                    <MessageCircle aria-hidden="true" size={17} />
-                    <span className="contact-channel__label">WHATSAPP</span>
-                    <bdi>{t.home.whatsappCta}</bdi>
-                  </a>
-                </div>
-                <div className="contact-actions">
-                  <Button href={tel} variant="accent" className="hero-cta">
-                    {t.home.primaryCta} {arrow}
-                  </Button>
-                  <Button href={whatsapp} target="_blank" rel="noreferrer" variant="primary" className="hero-cta contact-whatsapp">
-                    <MessageCircle size={16} /> {t.home.whatsappCta}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+      </section>
 
-        <footer className="site-footer">
-          <div className="container footer-grid">
-            <div className="footer-brand">
-              <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={190} height={79} />
-              <p>{t.home.footerTagline}</p>
-            </div>
-            <nav className="footer-col" aria-label={t.home.footerNav}>
-              <h3>{t.home.footerNav}</h3>
-              <a href="#about">{t.nav.about}</a>
-              <a href="#services">{t.nav.services}</a>
-              <a href="#why">{t.nav.why}</a>
-              <a href="#process">{t.nav.process}</a>
-              <a href="#platform">{t.nav.platform}</a>
-              <a href="#contact">{t.nav.contact}</a>
-            </nav>
-            <div className="footer-col">
-              <h3>{t.home.footerServices}</h3>
-              {t.services.map(([title]) => (
-                <a href="#services" key={title}>{title}</a>
-              ))}
-            </div>
-            <div className="footer-col">
-              <h3>{t.home.footerContact}</h3>
-              <a href={tel}><bdi dir="ltr">{t.contact.phone}</bdi></a>
-              <a href={`mailto:${t.contact.email}`}>{t.contact.email}</a>
-              <span className="footer-col__text">{t.contact.address}</span>
-              <a className="footer-col__login" href={langHref(locale, "/login")}>{t.nav.login}</a>
-            </div>
+      {/* ============ FOOTER ============ */}
+      <footer className="site-footer">
+        <div className="container footer-grid">
+          <div className="footer-brand">
+            <Image src="/brand/logo-horizontal.png" alt="ELHABAK Construction" width={190} height={79} />
+            <p>{t.home.footerTagline}</p>
           </div>
-          <div className="container footer-base">
-            <span>© {new Date().getFullYear()} ELHABAK CONSTRUCTION — {t.home.footerRights}</span>
-            <span className="footer-base__mark" aria-hidden="true">الحباك / ELHABAK</span>
+          <nav className="footer-col" aria-label={t.home.footerNav}>
+            <h3>{t.home.footerNav}</h3>
+            <a href="#about">{t.nav.about}</a>
+            <a href="#services">{t.nav.services}</a>
+            <a href="#why">{t.nav.why}</a>
+            <a href="#process">{t.nav.process}</a>
+            <a href="#platform">{t.nav.platform}</a>
+            <a href="#faq">{t.home.mobileFaq}</a>
+            <a href="#contact">{t.nav.contact}</a>
+          </nav>
+          <div className="footer-col">
+            <h3>{t.home.footerServices}</h3>
+            {t.services.map(([title]) => (
+              <a href="#services" key={title}>{title}</a>
+            ))}
           </div>
-        </footer>
-      </div>
+          <div className="footer-col">
+            <h3>{t.home.footerContact}</h3>
+            <a href={tel}><bdi dir="ltr">{t.contact.phone}</bdi></a>
+            <a href={`mailto:${t.contact.email}`}>{t.contact.email}</a>
+            <span className="footer-col__text">{t.contact.address}</span>
+            <a className="footer-col__login" href={langHref(locale, "/login")}>{t.nav.login}</a>
+          </div>
+        </div>
+        <div className="container footer-base">
+          <span>© {new Date().getFullYear()} ELHABAK CONSTRUCTION — {t.home.footerRights}</span>
+          <span className="footer-base__mark" aria-hidden="true">الحباك / ELHABAK</span>
+        </div>
+      </footer>
     </main>
   );
 }

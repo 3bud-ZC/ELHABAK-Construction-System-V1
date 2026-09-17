@@ -19,7 +19,7 @@ type PublicHeroProps = {
   alt: string;
 };
 
-const STATE_MS = 9500;
+const STATE_MS = 8000;
 
 export function PublicHero({
   states,
@@ -79,9 +79,13 @@ export function PublicHero({
       <div className="hero-rail">
         <div className="container hero-rail__inner">
           {states.map((state, index) => (
-            <span
+            <button
+              type="button"
               className={`hero-rail__state${index === active ? " is-active" : ""}`}
               key={state.key}
+              onClick={() => setActive(index)}
+              aria-label={state.label}
+              aria-pressed={index === active}
             >
               <bdi>{String(index + 1).padStart(2, "0")}</bdi>
               {state.label}
@@ -92,7 +96,7 @@ export function PublicHero({
                   style={{ animationDuration: `${STATE_MS}ms` }}
                 />
               )}
-            </span>
+            </button>
           ))}
           <i className="hero-rail__sep" />
           <span className="hero-rail__end">{railEnd}</span>

@@ -17,40 +17,46 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const alternate = locale === "ar" ? "en" : "ar";
   const t = dictionary[locale].login;
   const dir = textDirections[locale];
-  const brand = locale === "ar"
+    const brand = locale === "ar"
     ? {
-      title: "نبني اليوم مستقبلاً أفضل",
-      lead: "نظام داخلي لإدارة المشاريع الهندسية بوضوح وتحكم.",
-      steps: ["تصميم", "تنفيذ", "تسليم"],
-      secure: "وصول موثوق",
-      team: "للفريق المعتمد"
+      title: "إدارة هندسية متكاملة للمشاريع",
+      lead: "منظومة موحدة لضبط الجودة ومتابعة المعاينة والتصميم والتنفيذ حتى التسليم النهائي.",
+      steps: ["المعاينة والتصميم", "التنفيذ والمتابعة", "التسليم والاعتماد"],
+      secure: "بوابة العمليات المصرح بها",
+      team: "للفريق المعتمد والعملاء"
     }
     : {
-      title: "Build Today. Control Tomorrow.",
-      lead: "Internal project-control workspace for ELHABAK engineering operations.",
-      steps: ["Design", "Build", "Deliver"],
-      secure: "Trusted access",
-      team: "Approved team only"
+      title: "Integrated Engineering & Project Control",
+      lead: "A unified system coordinating quality, designs, site execution, and delivery to handover.",
+      steps: ["Design & Planning", "Site Execution", "Final Handover"],
+      secure: "Authorized Operations Gateway",
+      team: "Approved teams & clients"
     };
 
   return (
     <main className="login-shell" lang={locale} dir={dir}>
       <section className="login-brand">
-        <div className="login-brand__grid" aria-hidden="true" />
-        <div className="login-brand__drawing" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+        <div className="login-brand__media" aria-hidden="true">
+          <Image
+            src="/marketing/hero-execution.webp"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 980px) 100vw, 55vw"
+            className="login-brand__image"
+          />
+          <div className="login-brand__overlay" />
         </div>
         <div className="login-brand__content">
           <Image
             src="/brand/logo-horizontal.png"
             alt="ELHABAK Construction"
-            width={300}
-            height={125}
+            width={280}
+            height={116}
             priority
           />
           <div className="login-brand__copy">
+            <span className="login-brand__eyebrow">{brand.secure}</span>
             <h1>{brand.title}</h1>
             <p>{brand.lead}</p>
           </div>
@@ -63,12 +69,10 @@ export default async function LoginPage({ searchParams }: PageProps) {
             ))}
           </div>
           <div className="login-brand__meta">
-            <span>{brand.secure}</span>
             <span>{brand.team}</span>
+            <span>ELHABAK CONSTRUCTION SYSTEM</span>
           </div>
         </div>
-        <span className="login-brand__corner login-brand__corner--tl" aria-hidden="true" />
-        <span className="login-brand__corner login-brand__corner--br" aria-hidden="true" />
       </section>
       <section className="login-panel">
         <div className="login-card">

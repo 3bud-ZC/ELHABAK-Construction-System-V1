@@ -70,7 +70,7 @@ export function FinanceProjectsClient() {
 
   return (
     <section className="app-page finance-portfolio-page">
-      <PageHeader eyebrow={<span className="page-header__eyebrow-code">{ar ? "المحفظة / مراقبة التكلفة" : "PORTFOLIO / COST CONTROL"}</span>} title={labels.title} description={labels.lead} />
+      <PageHeader eyebrow={<span className="page-header__eyebrow-code">{ar ? "المتابعة المالية للمشاريع" : "Cost Control & Portfolio"}</span>} title={labels.title} description={labels.lead} />
       {error && <div className="form-error">{error}</div>}
       {loading && <LoadingState label={labels.loading} />}
       {!loading && projects.length === 0 && (

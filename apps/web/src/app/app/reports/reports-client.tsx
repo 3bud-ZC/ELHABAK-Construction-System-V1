@@ -77,7 +77,7 @@ export function ReportsClient() {
     <section className="app-page reports-center">
       <div className="admin-command-strip">
         <div>
-          <span className="section-kicker">{ar ? "النظام / مركز التقارير" : "SYSTEM / REPORTS CENTER"}</span>
+          <span className="section-kicker">{ar ? "مركز التقارير التنفيذية" : "Executive Reports Center"}</span>
           <strong>{labels.title}</strong>
           <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>

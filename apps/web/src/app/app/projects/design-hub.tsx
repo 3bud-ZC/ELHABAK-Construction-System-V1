@@ -122,7 +122,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
 
     <div className="design-hub-heading technical-register-header">
       <div>
-        <span className="section-kicker">{ar ? "سجل / مستندات هندسية" : "REGISTER / ENGINEERING SUBMITTALS"}</span>
+        <span className="section-kicker">{ar ? "المخططات والتصاميم الهندسية" : "Engineering Submittals & Drawings"}</span>
         <h2>{labels.title}</h2>
         <p>{labels.lead}</p>
       </div>
