@@ -5,6 +5,7 @@ import { loginSchema } from "@elhabak/validation";
 import { AuthService } from "./auth.service";
 import { AuthGuard } from "./auth.guard";
 import { CurrentUser } from "./current-user.decorator";
+import { LoginThrottleGuard } from "./login-throttle.guard";
 import type { AuthenticatedRequest, RequestUser } from "../../shared/http.types";
 import { parseBody } from "../../shared/zod";
 import type { AuthResponse } from "./auth.types";
@@ -13,6 +14,10 @@ import type { AuthResponse } from "./auth.types";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // Brute-force protection: AUTH_LOGIN_RATE_LIMIT attempts per 60s window per real client
+  // IP (default 8). Failed and successful attempts share the budget - a legitimate user
+  // stays far under the ceiling while credential stuffing is cut hard.
+  @UseGuards(LoginThrottleGuard)
   @Post("login")
   @HttpCode(200)
   async login(@Body() body: unknown, @Res({ passthrough: true }) response: Response): Promise<AuthResponse> {

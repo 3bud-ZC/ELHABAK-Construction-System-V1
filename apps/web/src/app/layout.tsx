@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Almarai, Rubik } from "next/font/google";
 import Script from "next/script";
+import { headers } from "next/headers";
 import { Suspense } from "react";
 import { DirectionSync } from "./direction-sync";
+import { siteUrl } from "../lib/site";
 import "./globals.css";
 import "./public-home.css";
 
@@ -21,7 +23,7 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://elhabak-web-production.up.railway.app"),
+  metadataBase: new URL(siteUrl),
   title: "ELHABAK — الحباك للاستشارات الهندسية",
   description:
     "الحباك للاستشارات الهندسية في سوهاج تقدم التصميم والتنفيذ والتشطيب والمقاولات العامة والتأثيث مع متابعة رقمية منظمة للمشروع.",
@@ -65,13 +67,17 @@ export const viewport: Viewport = {
   viewportFit: "cover"
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Reading the nonce that proxy.ts generated for this request makes every route render
+  // dynamically, which is exactly what the nonce-based Content-Security-Policy requires.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning className={`${almarai.variable} ${rubik.variable}`}>
       <body>
         <Script
           id="elhabak-lang-boot"
           strategy="beforeInteractive"
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(() => {
   try {

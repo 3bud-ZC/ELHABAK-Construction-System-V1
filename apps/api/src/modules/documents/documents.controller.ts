@@ -14,7 +14,7 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import type { Response } from "express";
-import { memoryStorage } from "multer";
+import { memoryUploadOptions } from "../../shared/upload";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { RequestUser } from "../../shared/http.types";
@@ -46,7 +46,7 @@ export class DocumentsController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor("file", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("file", memoryUploadOptions))
   create(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,
@@ -67,7 +67,7 @@ export class DocumentsController {
   }
 
   @Post(":documentId/versions")
-  @UseInterceptors(FileInterceptor("file", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("file", memoryUploadOptions))
   addVersion(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,

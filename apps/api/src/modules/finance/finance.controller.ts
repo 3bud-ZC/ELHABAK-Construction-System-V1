@@ -15,7 +15,7 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import type { Response } from "express";
-import { memoryStorage } from "multer";
+import { memoryUploadOptions } from "../../shared/upload";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { RequestUser } from "../../shared/http.types";
@@ -153,7 +153,7 @@ export class FinanceController {
   }
 
   @Post("expenses")
-  @UseInterceptors(FileInterceptor("attachment", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("attachment", memoryUploadOptions))
   createExpense(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,
@@ -164,7 +164,7 @@ export class FinanceController {
   }
 
   @Patch("expenses/:expenseId")
-  @UseInterceptors(FileInterceptor("attachment", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("attachment", memoryUploadOptions))
   updateExpense(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,
@@ -212,7 +212,7 @@ export class FinanceController {
   }
 
   @Post("client-payments")
-  @UseInterceptors(FileInterceptor("attachment", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("attachment", memoryUploadOptions))
   createClientPayment(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,
@@ -223,7 +223,7 @@ export class FinanceController {
   }
 
   @Patch("client-payments/:paymentId")
-  @UseInterceptors(FileInterceptor("attachment", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("attachment", memoryUploadOptions))
   updateClientPayment(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,
@@ -271,7 +271,7 @@ export class FinanceController {
   }
 
   @Post("contractor-payments")
-  @UseInterceptors(FileInterceptor("attachment", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("attachment", memoryUploadOptions))
   createContractorPayment(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,
@@ -282,7 +282,7 @@ export class FinanceController {
   }
 
   @Patch("contractor-payments/:paymentId")
-  @UseInterceptors(FileInterceptor("attachment", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("attachment", memoryUploadOptions))
   updateContractorPayment(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,

@@ -3,6 +3,8 @@ node_modules/
 dist/
 coverage/
 storage/
+storage-backups/
+backups/
 .codex-*-qa/
 .env
 .env.*

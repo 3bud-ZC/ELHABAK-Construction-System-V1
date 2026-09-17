@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Header, Param, Post, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import type { Request, Response } from "express";
-import { memoryStorage } from "multer";
+import { memoryUploadOptions } from "../../shared/upload";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { RequestUser } from "../../shared/http.types";
@@ -27,7 +27,7 @@ export class ChatController {
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor("file", { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor("file", memoryUploadOptions))
   create(
     @CurrentUser() user: RequestUser,
     @Param("projectId") projectId: string,

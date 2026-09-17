@@ -1,7 +1,10 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
 import { parseApiEnv } from "@elhabak/config";
 import { DatabaseModule } from "../shared/database.module";
+import { OriginGuard } from "../shared/origin.guard";
+import { RequestContextMiddleware } from "../shared/request-context.middleware";
 import { AdminModule } from "./admin/admin.module";
 import { AuthModule } from "./auth/auth.module";
 import { HealthController } from "./health.controller";
@@ -32,6 +35,15 @@ import { ReportsModule } from "./reports/reports.module";
     ChatModule,
     ReportsModule
   ],
-  controllers: [HealthController]
+  controllers: [HealthController],
+  providers: [
+    // Runs before any route-level guard, so a forged cross-site mutation is rejected
+    // without consuming auth checks or the login throttle budget.
+    { provide: APP_GUARD, useClass: OriginGuard }
+  ]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestContextMiddleware).forRoutes("*");
+  }
+}

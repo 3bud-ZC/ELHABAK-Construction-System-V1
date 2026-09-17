@@ -24,7 +24,7 @@ interface AppSocket extends Omit<Socket, "data"> {
  */
 @Injectable()
 @WebSocketGateway({
-  cors: { origin: env.WEB_ORIGIN, credentials: true }
+  cors: { origin: [env.WEB_ORIGIN, ...env.EXTRA_WEB_ORIGINS], credentials: true }
 })
 export class RealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
   private readonly logger = new Logger(RealtimeGateway.name);

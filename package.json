@@ -14,7 +14,7 @@
     "db:migrate:dev": "pnpm --filter @elhabak/database db:migrate:dev",
     "db:migrate:deploy": "pnpm --filter @elhabak/database db:migrate:deploy",
     "db:seed": "pnpm --filter @elhabak/database db:seed",
-    "test": "pnpm --filter @elhabak/api test"
+    "test": "pnpm --filter @elhabak/api test && pnpm --filter @elhabak/web test"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

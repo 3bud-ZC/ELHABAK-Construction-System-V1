@@ -15,7 +15,7 @@ import {
 } from "@nestjs/common";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import type { Response } from "express";
-import { memoryStorage } from "multer";
+import { memoryUploadOptions } from "../../shared/upload";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedRequest, RequestUser } from "../../shared/http.types";
@@ -68,7 +68,7 @@ export class ProjectsController {
   }
 
   @Post(":id/site-updates")
-  @UseInterceptors(FilesInterceptor("media", 8, { storage: memoryStorage() }))
+  @UseInterceptors(FilesInterceptor("media", 8, memoryUploadOptions))
   createSiteUpdate(
     @CurrentUser() user: RequestUser,
     @Param("id") id: string,

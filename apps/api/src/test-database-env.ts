@@ -12,3 +12,8 @@ if (configuredUrl) {
   if (!testDatabaseUrl.searchParams.has("connection_limit")) testDatabaseUrl.searchParams.set("connection_limit", "5");
   process.env.DATABASE_URL = testDatabaseUrl.toString();
 }
+
+// Suites log in repeatedly within seconds; the production brute-force ceiling (8/min)
+// would flake them, so specs run with a high limit unless a spec pins its own value
+// before importing AppModule (the security-hardening spec does exactly that).
+process.env.AUTH_LOGIN_RATE_LIMIT ??= "1000";

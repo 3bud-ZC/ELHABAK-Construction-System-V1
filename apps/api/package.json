@@ -7,6 +7,7 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
+    "backup:storage": "node scripts/backup-storage.mjs",
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -21,6 +22,7 @@
     "@nestjs/core": "^11.1.9",
     "@nestjs/platform-express": "^11.1.9",
     "@nestjs/platform-socket.io": "^11.1.9",
+    "@nestjs/throttler": "6.5.0",
     "@nestjs/websockets": "^11.1.9",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",

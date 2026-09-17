@@ -7,7 +7,11 @@ export const healthResponseSchema = z.object({
   status: z.enum(["ok", "degraded"]),
   service: z.string().min(1),
   timestamp: z.string().datetime(),
-  database: z.enum(["connected", "unavailable"])
+  database: z.enum(["connected", "unavailable"]),
+  // Deployed git SHA when the platform provides it (Railway: RAILWAY_GIT_COMMIT_SHA) -
+  // lets operators verify exactly which commit a live response came from. Not secret.
+  commit: z.string().min(1).optional(),
+  uptimeSeconds: z.number().int().nonnegative().optional()
 });
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;

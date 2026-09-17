@@ -16,8 +16,9 @@ async function bootstrap() {
   const { AppModule } = await import("./modules/app.module");
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
+  const trustedOrigins = [env.WEB_ORIGIN, ...env.EXTRA_WEB_ORIGINS];
   app.enableCors({
-    origin: env.WEB_ORIGIN,
+    origin: trustedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true
   });
