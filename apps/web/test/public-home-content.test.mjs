@@ -40,6 +40,14 @@ test("public website has responsive styles for the new conversion surfaces", () 
   assert.match(css, /whatsapp/);
 });
 
+test("public website keeps the delivery process compact", () => {
+  assert.match(page, /process-panel/);
+  assert.match(page, /process-grid/);
+  assert.match(css, /\.process-grid/);
+  assert.doesNotMatch(css, /grid-template-columns:\s*repeat\(6,\s*minmax\(0,\s*1fr\)\)/);
+  assert.doesNotMatch(css, /min-height:\s*214px/);
+});
+
 test("public website syncs document direction before paint on language changes", () => {
   assert.match(directionSync, /useLayoutEffect/);
   assert.match(layout, /elhabak-lang-boot/);

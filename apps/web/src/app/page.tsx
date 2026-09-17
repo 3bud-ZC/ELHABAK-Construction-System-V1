@@ -348,31 +348,40 @@ export default async function HomePage({ searchParams }: PageProps) {
         title={t.home.processTitle}
         lead={t.home.processLead}
       >
-        <div className="process-field" aria-hidden="true">
-          <span>{locale === "ar" ? "المعاينة" : "SITE INSPECTION"}</span>
-          <span>{locale === "ar" ? "التسليم النهائي" : "FINAL HANDOVER"}</span>
+        <div className="process-panel" data-reveal="up">
+          <div className="process-field" aria-hidden="true">
+            <span>{locale === "ar" ? "المعاينة" : "SITE INSPECTION"}</span>
+            <i />
+            <span>{locale === "ar" ? "التسليم النهائي" : "FINAL HANDOVER"}</span>
+          </div>
+          <ol className="process-grid" data-reveal-group>
+            {t.process.map(([title, body], index) => (
+              <li
+                className="process-stage"
+                key={title}
+                data-reveal="stage"
+                style={{ transitionDelay: `${index * 80}ms` }}
+              >
+                <span className="process-stage__node">
+                  <bdi>{String(index + 1).padStart(2, "0")}</bdi>
+                </span>
+                <span className="process-stage__label" aria-hidden="true">
+                  {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
+                </span>
+                <div className="process-stage__content">
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+                <span className="process-stage__rule" aria-hidden="true" />
+              </li>
+            ))}
+          </ol>
+          <div className="process-panel__footer" aria-hidden="true">
+            <span>{locale === "ar" ? "نطاق واضح" : "CLEAR SCOPE"}</span>
+            <span>{locale === "ar" ? "توثيق ومتابعة" : "DOCUMENTED CONTROL"}</span>
+            <span>{locale === "ar" ? "تسليم منظم" : "ORDERED HANDOVER"}</span>
+          </div>
         </div>
-        <ol className="process-track" data-reveal-group>
-          {t.process.map(([title, body], index) => (
-            <li
-              className="process-stage"
-              key={title}
-              data-reveal="stage"
-              style={{ transitionDelay: `${index * 110}ms` }}
-            >
-              <span className="process-stage__node">
-                <bdi>{String(index + 1).padStart(2, "0")}</bdi>
-              </span>
-              <span className="process-stage__label" aria-hidden="true">
-                {locale === "ar" ? "المرحلة" : "PHASE"} {String(index + 1).padStart(2, "0")}
-              </span>
-              <div className="process-stage__content">
-                <h3>{title}</h3>
-                <p>{body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
       </Section>
 
       {/* ============ 05 // METHOD ============ */}
