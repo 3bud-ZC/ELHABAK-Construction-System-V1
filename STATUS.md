@@ -918,3 +918,17 @@
 - **Production Browser Verification**:
   - Headless Chrome browser verified 34 presentation routes across Desktop (1440px) and Mobile (390px) for both Admin and Client roles: **0 errors, 0 horizontal overflow**.
   - Verified live on Railway: Web (`200 OK`) and API (`200 OK`, `status: ok`, `database: connected`).
+
+### 2026-09-18 — Final Credential Rotation & Session Security Closure
+- Admin password hash rotated: YES.
+- Client password hash rotated: YES.
+- Credentials stored locally in ignored `.credentials.local`: YES.
+- Root ignored `.env` synchronized for the Admin and Client demo password variables: YES.
+- Seed executed: NO.
+- Presentation/demo records changed: NO.
+- Stale Admin/Client sessions revoked: YES.
+- Fresh Admin login verified: YES.
+- Fresh Client login verified: YES.
+- Client RBAC regression passed: YES.
+- Final account state: 2 active / 3 inactive.
+- Tracked repository secret audit passed: YES.
