@@ -879,3 +879,42 @@
   - Exactly 0px horizontal overflow across all screens.
   - Zero application errors or unhandled exceptions.
   - Fully prepared and verified for live client demonstration.
+
+### 2026-09-18 — Final Production Demo Data & Account Hygiene Pass
+- **Canonical Presentation Project**:
+  - Code: `PRJ-KWT-01`
+  - Name: `مشروع فيلا الكوثر - سوهاج` (Al-Kawthar Villa Project - Sohag)
+  - Category: `MIXED`
+  - Phase: `EXECUTION`
+  - Progress: `35%`
+  - Connected modules: Client (`أ. أحمد عبد الرحيم`), Engineer (`م. طارق محمود`), Worker (`محمود الصعيدي`), Accountant (`أ. حسن النجار`), Finance (reconciled contract 750,000 EGP, BOQ 446,525 EGP, payments 375,000 EGP), Design Hub (`المخطط المعماري - الدور الأرضي`, Rev 02 in review), Site Activity (2 progress updates with real site media), Documents (`تقرير المعاينة الفنية الميدانية - الإصدار الأول`), Chat (two-way coordination), Reports (`/app/reports/cmtu9xkt10008ckk8bo986iag`).
+- **Demo-Data Classification**:
+  - All entities associated with `PRJ-KWT-01` (client identity `أ. أحمد عبد الرحيم`, team names, site progress photos, finance figures) are classified as **Presentation Demonstration Records**.
+  - They are maintained at a high professional architectural standard for client demonstrations, without fabricating corporate achievements or claiming real-world customer affiliations.
+- **Account State & Hygiene**:
+  - **Category A — Production Owner**: `mohamed.elhabak@elhabak.local` (`Eng. Mohamed Elhabak`, `ADMIN`, `ACTIVE`).
+  - **Category B — Presentation Demo**:
+    - `demo.client@elhabak.local` (`أ. أحمد عبد الرحيم`, `CLIENT`, `ACTIVE` — temporarily active for live Client-view demonstration).
+    - `demo.engineer@elhabak.local` (`م. طارق محمود`, `ENGINEER`, `SUSPENDED` / `INACTIVE`).
+    - `demo.worker@elhabak.local` (`محمود الصعيدي`, `WORKER`, `SUSPENDED` / `INACTIVE`).
+    - `demo.accountant@elhabak.local` (`أ. حسن النجار`, `ACCOUNTANT`, `SUSPENDED` / `INACTIVE`).
+  - **Category D — Disposable QA/Test Accounts Removed**:
+    - `abid@elhabak.local` (Permanently deleted via API).
+    - `admin@elhabak.local` (Permanently deleted via API).
+    - `abud50@elhabak.eg` (Permanently deleted via API).
+- **Demo Records Cleaned**:
+  - Client profile phone cleared to `null` to avoid exposing randomly invented reachable numbers, displaying clean non-operational indicator `—`.
+  - Design Hub updated with professional Arabic architectural title and description (`المخطط المعماري - الدور الأرضي`). Uploaded and verified Revision 02 PDF streaming with HTTP 200.
+  - Document Hub updated with professional Arabic document titles. Uploaded and verified Version 02 PDF streaming with HTTP 200.
+- **RBAC & Client Safety Verified via Production API**:
+  - Client access to internal expenses: `403 Forbidden`.
+  - Client access to contractor payments: `403 Forbidden`.
+  - Client access to `/admin/users` & `/admin/clients`: `403 Forbidden`.
+  - Internal documents (`DOC-002`) strictly filtered from client responses (1 visible vs 2 total).
+  - Client financial view strictly scoped to client-safe totals (`contractValue`, `paidAmount`, `outstandingBalance`).
+- **Cross-Module & Report Consistency**:
+  - Verified 100% data consistency across Project Workspace, Site Activity, Finance, Documents, Design Hub, Chat, and Project Report (`PRJ-KWT-01`, `EXECUTION`, `35%`).
+  - Zero stale `DEMO-MVP1` labels in visible reports.
+- **Production Browser Verification**:
+  - Headless Chrome browser verified 34 presentation routes across Desktop (1440px) and Mobile (390px) for both Admin and Client roles: **0 errors, 0 horizontal overflow**.
+  - Verified live on Railway: Web (`200 OK`) and API (`200 OK`, `status: ok`, `database: connected`).
