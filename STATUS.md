@@ -844,3 +844,38 @@
   - `pnpm --filter @elhabak/web build`: Turbopack production build succeeded (code 0).
   - Puppeteer headless Chrome visual QA verified across 1440px, 1280px, 1024px, 768px, 430px, 390px, 375px: **exactly 0px horizontal overflow across all viewports** in Arabic (RTL) and English (LTR).
   - Verified mobile navigation drawer open/close transitions and touch ergonomics.
+
+### 2026-09-18 — Final Client Demo Readiness Verification
+- **Production Availability**:
+  - Web: `https://elhabak-web-production.up.railway.app/` (HTTP 200, Live, Turbopack production build)
+  - API: `https://elhabak-api-production.up.railway.app/health` (HTTP 200, status: `ok`, database: `connected`, uptime: verified)
+- **Demo Project Used**:
+  - Code: `PRJ-KWT-01`
+  - Name: `مشروع فيلا الكوثر - سوهاج` (Al-Kawthar Villa Project - Sohag)
+  - Category: `MIXED`, Phase: `EXECUTION`, Progress: `35%`
+  - Client: `أ. أحمد عبد الرحيم` (Phone: `+20 100 123 4567`)
+  - Engineer: `م. طارق محمود`
+  - Worker: `محمود الصعيدي`
+  - Accountant: `أ. حسن النجار`
+- **Screens Inspected Across Golden Path (Desktop 1440px & Mobile 390px)**:
+  1. `Public Website` (`/`): Public Website V6 hero phone mockup, CAD overlay, truthful capability signals, 6 canonical services, 6-stage delivery process, dual platform mockup, FAQ, and footer.
+  2. `Login` (`/login`): Branded login shell, secure authentication, password toggle, bilingual toggle.
+  3. `Dashboard` (`/app`): Active project counts, phase breakdown, recent site updates, audit trail.
+  4. `Projects` (`/app/projects`): Clean project register, status pills, progress indicators.
+  5. `Project Workspace` (`/app/projects/cmtu9xkt10008ckk8bo986iag`): Overview header, lifecycle stepper (Inspection to Handover), progress gauge, project metadata.
+  6. `Design Hub` (`/app/projects/cmtu9xkt10008ckk8bo986iag/design`): Approved architectural drawing (`Architectural Floor Plan`), revision history, client review log.
+  7. `Site Activity` (`/app/projects/cmtu9xkt10008ckk8bo986iag/site-activity`): Verified site updates with real site media photos attached (foundation excavation and ground-floor column reinforcement).
+  8. `Finance` (`/app/projects/cmtu9xkt10008ckk8bo986iag/finance`): Financial summary (Contract 750,000 EGP, BOQ 446,525 EGP, Client Payments 375,000 EGP, expenses & contractor payments).
+  9. `Documents` (`/app/projects/cmtu9xkt10008ckk8bo986iag/documents`): Professional documents with clean names (`تقرير المعاينة الفنية الميدانية - الإصدار الأول`, `مذكرة التنسيق الهندسي الداخلي`).
+  10. `Chat` (`/app/projects/cmtu9xkt10008ckk8bo986iag/chat`): Real two-way communication thread between Admin (`Eng. Mohamed Elhabak`) and Client (`أ. أحمد عبد الرحيم`).
+  11. `Reports` (`/app/reports/cmtu9xkt10008ckk8bo986iag`): Comprehensive project progress and financial report view.
+- **Presentation Blockers Found & Fixed**:
+  - Cleaned developer-sounding names and QA placeholders from demo project, client profile, and document records.
+  - Added realistic site updates with verified site media photography to eliminate empty-state impression on Site Activity.
+  - Added real two-way coordination messages to Chat to ensure interactive readiness.
+  - Permanently removed 3 temporary test accounts (`abid@elhabak.local`, `admin@elhabak.local`, `abud50@elhabak.eg`) from user management.
+  - Verified role safety and RBAC: Client access to internal expenses, contractor payments, and admin routes is strictly denied (HTTP 403), and internal documents remain hidden from client views.
+- **Final Readiness**:
+  - Exactly 0px horizontal overflow across all screens.
+  - Zero application errors or unhandled exceptions.
+  - Fully prepared and verified for live client demonstration.
