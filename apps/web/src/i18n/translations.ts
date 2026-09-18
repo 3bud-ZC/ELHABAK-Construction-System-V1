@@ -17,50 +17,80 @@ export const dictionary = {
       process: "آلية العمل",
       why: "لماذا الحباك",
       platform: "المنصة",
+      faq: "الأسئلة الشائعة",
       contact: "تواصل معنا",
       login: "دخول النظام",
       language: "English"
     },
     home: {
+      heroTag: "هندسة تصنع فرقاً",
       heroTitle: "الحباك للاستشارات الهندسية",
       heroSubtitle:
-        "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية واضحة، من أول معاينة حتى التسليم.",
-      primaryCta: "اطلب معاينة",
+        "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية واضحة ومتابعة دقيقة حتى التسليم.",
+      primaryCta: "ابدأ مشروعك معنا",
       requestInspection: "طلب معاينة",
-      secondaryCta: "استعرض الخدمات",
-      whatsappCta: "تواصل واتساب",
-      whatsappMessage: "مرحبًا، أرغب في الاستفسار عن خدمات الحباك وطلب معاينة لمشروع.",
+      secondaryCta: "استعرض خدماتنا",
+      whatsappCta: "ابدأ مشروعك معنا",
+      whatsappMessage: "مرحبًا، أرغب في الاستفسار عن خدمات الحباك والبدء في مشروع.",
+      heroStats: [
+        { value: "+100", label: "مشروع منجز" },
+        { value: "+15", label: "سنة خبرة" },
+        { value: "98%", label: "رضا العملاء" }
+      ],
+      heroRailText: "هندسة لمستقبل أفضل",
       mobilePlatform: "المنصة",
-      mobileFaq: "الأسئلة",
+      mobileFaq: "الأسئلة الشائعة",
       heroPanelTitle: "نطاق واحد للمشروع",
       heroPanelText:
         "تصميم، إنشاء، تشطيب، مقاولات عامة، وتأثيث ضمن مسار عمل منظم.",
-      aboutTitle: "شركة هندسية تقود المشروع من القرار إلى التسليم",
+      aboutEyebrow: "عن الحباك",
+      aboutTitle: "شريكك الهندسي من الفكرة إلى الواقع",
       aboutLead:
-        "الحباك للاستشارات الهندسية شركة مقرها سوهاج، تقدم خدمات التصميم والتنفيذ والتشطيبات والمقاولات العامة والتأثيث لعملاء يحتاجون وضوحًا في النطاق ومتابعة جادة في الموقع.",
-      servicesTitle: "نطاق الخدمات",
-      servicesLead: "خدمات مترابطة تغطي القرار الهندسي، تنفيذ الموقع، التشطيب، وتجهيز المساحة للاستخدام.",
-      processTitle: "مسار التسليم الهندسي",
-      processLead: "ست مراحل عملية تضبط نطاق المشروع وتُبقي العميل والفريق على مسار واحد حتى التسليم.",
-      whyTitle: "وضوح قبل التنفيذ",
+        "الحباك للاستشارات الهندسية تقدم خدمات التصميم والتنفيذ والتشطيب بإدارة احترافية، نلتزم بالجودة والشفافية، ونبني شراكات طويلة الأمد مع عملائنا.",
+      aboutCta: "مزيد عن الشركة",
+      aboutBadgeTitle: "هندسة تبني مجتمعات أفضل",
+      aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
+      aboutMobileTitle: "شركة هندسية تقود المشروع من الفكرة إلى التسليم",
+      aboutMobilePoints: ["نتائج ملموسة", "خبرة عملية", "رؤية واضحة"],
+      servicesEyebrow: "خدماتنا",
+      servicesTitle: "حلول هندسية متكاملة",
+      servicesLead: "من التخطيط إلى التسليم، نوفر كل ما يحتاجه مشروعك.",
+      processEyebrow: "آلية العمل",
+      processTitle: "من خطة واضحة إلى تسليم ناجح",
+      processLead: "تخاطب كل مرحلة بإدارة دقيقة وتواصل مستمر مع العميل.",
+      processWatermark: "FROM VISION TO REALITY",
+      whyTitle: "لماذا الحباك",
       whyLead: "قيمة المشروع تبدأ من نطاق واضح، متابعة منظمة، وقرارات محفوظة في وقتها.",
-      digitalTitle: "مشروعك متابَع رقمياً",
+      digitalEyebrow: "منصتنا الرقمية",
+      digitalTitle: "تابع مشروعك في كل خطوة",
       digitalLead:
-        "كل مشروع لدى الحباك له مسار متابعة رقمي يساعد العميل على رؤية التقدم والاعتمادات والمستندات في مكان منظم.",
+        "منصة مخصصة تتيح لك متابعة الموقع، المستندات، التصاميم، والاعتمادات في مكان واحد وبشفافية تامة.",
       digitalNote: "الوصول للمنصة بحساب معتمد من الشركة.",
-      digitalCta: "دخول النظام",
+      digitalCta: "اكتشف المنصة",
+      digitalFeatures: [
+        "متابعة مباشرة",
+        "مستندات ومرفقات",
+        "تقارير دورية",
+        "تواصل مع فريق العمل"
+      ],
       principlesTitle: "قواعد العمل",
-      faqTitle: "أسئلة قبل بداية المشروع",
-      faqLead: "إجابات مختصرة على أهم ما يحتاج العميل معرفته قبل طلب المعاينة أو بدء التصميم والتنفيذ.",
-      contactTitle: "ابدأ مشروعك بخطوة هندسية واضحة",
-      contactLead: "اطلب معاينة أو تواصل مباشرة لشرح نوع المشروع، موقعه، والخدمة المطلوبة من التصميم حتى التسليم.",
+      faqEyebrow: "الأسئلة الشائعة",
+      faqTitle: "إجابات سريعة لأهم استفساراتك",
+      faqLead: "كل ما تحتاج معرفته قبل البدء في مشروعك.",
+      faqCta: "عرض جميع الأسئلة",
+      ctaTitle: "لنبدأ مشروعك القادم",
+      ctaSubtitle: "تواصل معنا الآن وكن خطوة أقرب إلى تحويل رؤيتك إلى واقع.",
+      ctaButton: "تواصل معنا",
+      contactTitle: "تواصل معنا",
+      contactLead: "تواصل معنا الآن لمناقشة مشروعك والحصول على استشارة هندسية متخصصة من أول معاينة حتى التسليم.",
       footerText: "الحباك للاستشارات الهندسية",
-      footerTagline: "شركة هندسية في سوهاج للتصميم والتنفيذ والتشطيب والمقاولات العامة والتأثيث.",
+      footerTagline: "نبني اليوم ... لمستقبل أفضل",
       footerNav: "أقسام الموقع",
       footerServices: "نطاق الخدمات",
       footerContact: "بيانات التواصل",
       footerPlatform: "المنصة",
-      footerRights: "جميع الحقوق محفوظة"
+      footerRights: "جميع الحقوق محفوظة © 2026 الحباك للاستشارات الهندسية",
+      footerPrivacy: "سياسة الخصوصية"
     },
     aboutPrinciples: [
       ["تصميم", "DESIGN"],
@@ -75,11 +105,9 @@ export const dictionary = {
       "تحديثات الموقع والتواصل مع فريق العمل"
     ],
     faq: [
-      ["هل يمكن طلب معاينة قبل الاتفاق؟", "نعم، تبدأ أغلب المشروعات بخطوة معاينة وفهم للموقع والاحتياج قبل تثبيت النطاق."],
-      ["هل تقدمون التصميم والتنفيذ معًا؟", "نعم، يمكن إدارة التصميم والإنشاء والتشطيب والتأثيث ضمن نطاق واحد واضح."],
-      ["هل المتابعة الرقمية متاحة لكل عميل؟", "يتم توفير حساب معتمد للعملاء المصرح لهم لمتابعة ما يخص مشروعهم من مراحل وملفات."],
-      ["هل تعمل الشركة خارج سوهاج؟", "يتم تقييم موقع المشروع ونطاقه أولًا، ثم تحديد إمكانية التنفيذ أو الإشراف حسب طبيعة العمل."],
-      ["ما الذي أحتاجه عند التواصل؟", "يكفي إرسال نوع الخدمة المطلوبة، موقع المشروع، ومساحة أو وصف مبدئي للمكان إن توفر."]
+      ["هل يمكن طلب معاينة قبل التعاقد؟", "نعم، نوفر جلسة معاينة أولية للموقع لفحص طبيعة المكان ومطابقة الأبعاد وتحديد الاحتياجات قبل اعتماد نطاق العمل."],
+      ["هل تقدمون التصميم والتنفيذ معاً؟", "نعم، نقدم إدارة هندسية متكاملة تضمن تطبيق المخططات المعمارية والتنفيذية بدقة متناهية على أرض الواقع."],
+      ["ما هي المتابعة الرقمية المتاحة لكل عميل؟", "يحصل العميل على حساب معتمد في منصتنا الرقمية لمتابعة التقارير اليومية والصور الميدانية والمخططات والدفعات لحظة بلحظة."]
     ],
     principles: [
       ["نطاق موثق قبل التنفيذ", "SCOPE FIRST"],
@@ -88,19 +116,16 @@ export const dictionary = {
       ["استمرارية من التصميم إلى التسليم", "DESIGN TO DELIVERY"]
     ],
     services: [
-      ["التصميم", "مخططات معمارية وهندسية تحوّل الاحتياج إلى قرار قابل للتنفيذ."],
-      ["الإنشاء", "تنفيذ إنشائي ومتابعة موقع ضمن مراحل واضحة واعتمادات عمل."],
-      ["التشطيبات", "تشطيب داخلي وخارجي بتفاصيل معتمدة ومراجعات منتظمة."],
+      ["التصميم", "تصميم معماري وهندسي يحقق رؤيتك ويعكس احتياجاتك."],
+      ["التنفيذ والتشطيب", "تنفيذ دقيق بجودة عالية ومتابعة مستمرة في جميع المراحل."],
       ["المقاولات العامة", "تنسيق وتنفيذ نطاق المقاولات وفق متطلبات المشروع."],
-      ["التأثيث والفرش", "فرش وتأثيث متوافق مع المساحة والتصميم وطريقة الاستخدام."]
+      ["التأثيث والفرش", "فرش وتأثيث متوافق مع المساحة وطريقة الاستخدام."]
     ],
     process: [
-      ["المعاينة", "فهم الموقع واحتياجات العميل ومطابقة الأبعاد قبل تثبيت نطاق العمل."],
-      ["التصميم", "إعداد ومراجعة المخططات الهندسية والمعمارية ونماذج التشطيب."],
-      ["المقايسة التقريبية", "حصر البنود والمواصفات وحساب التكلفة التقديرية وجداول الكميات."],
-      ["التنفيذ", "الإشراف الميداني وضبط الجودة وتوثيق تقدم الأعمال وتحديثات الموقع."],
-      ["التسليم الابتدائي", "فحص ومطابقة الأعمال المنجزة وإعداد قوائم الملاحظات والمعالجة."],
-      ["التسليم النهائي", "الاعتماد النهائي للأعمال وإغلاق المشروع وتسليم المخرجات للعميل."]
+      ["دراسة المتطلبات", "دراسة المتطلبات وفهم نطاق العمل بدقة."],
+      ["التصميم والتخطيط", "التصميم والتخطيط الهندسي بشكل تفصيلي."],
+      ["التنفيذ والمتابعة", "التنفيذ والمتابعة الميدانية وفق الجدول الزمني."],
+      ["التسليم ودعم ما بعد التنفيذ", "التسليم النهائي ودعم ما بعد التنفيذ."]
     ],
     why: [
       ["نطاق واحد", "التصميم والتنفيذ والتشطيب تُدار كعمل هندسي مترابط."],
@@ -131,50 +156,80 @@ export const dictionary = {
       process: "Process",
       why: "Why ELHABAK",
       platform: "Platform",
+      faq: "FAQ",
       contact: "Contact",
       login: "Login",
       language: "العربية"
     },
     home: {
+      heroTag: "Engineering That Makes a Difference",
       heroTitle: "ELHABAK Construction",
       heroSubtitle:
-        "Design, construction, and finishing for residential and commercial projects with clear engineering management from first inspection to handover.",
-      primaryCta: "Request inspection",
+        "Design, construction, and finishing for residential and commercial projects with clear engineering management and precise follow-up until handover.",
+      primaryCta: "Start Your Project",
       requestInspection: "Inspection request",
-      secondaryCta: "View services",
-      whatsappCta: "WhatsApp",
-      whatsappMessage: "Hello, I would like to ask about ELHABAK services and request a project inspection.",
+      secondaryCta: "Explore Our Services",
+      whatsappCta: "Start Your Project",
+      whatsappMessage: "Hello, I would like to inquire about ELHABAK engineering services and start a project.",
+      heroStats: [
+        { value: "+100", label: "Completed Projects" },
+        { value: "+15", label: "Years Experience" },
+        { value: "98%", label: "Client Satisfaction" }
+      ],
+      heroRailText: "Engineering for a Better Tomorrow",
       mobilePlatform: "Platform",
       mobileFaq: "FAQ",
       heroPanelTitle: "One project scope",
       heroPanelText:
         "Design, construction, finishing, general contracting, and furnishing through one organized path.",
-      aboutTitle: "Engineering leadership from decision to handover",
+      aboutEyebrow: "About ELHABAK",
+      aboutTitle: "Your Engineering Partner from Idea to Reality",
       aboutLead:
-        "ELHABAK CONSTRUCTION is an engineering company based in Sohag, delivering design, construction, finishing, general contracting, and furnishing for clients who need clear scope and serious site follow-up.",
-      servicesTitle: "Scope of services",
-      servicesLead: "Connected services covering engineering decisions, site execution, finishing, and preparing the space for use.",
-      processTitle: "Engineering delivery sequence",
-      processLead: "Six practical stages keep the project scope, client decisions, and delivery team moving in one direction.",
-      whyTitle: "Clarity before execution",
+        "ELHABAK Engineering Consulting delivers design, execution, and finishing with professional management, committing to quality, transparency, and long-term client partnerships.",
+      aboutCta: "More About Company",
+      aboutBadgeTitle: "Engineering Stronger Communities",
+      aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
+      aboutMobileTitle: "An engineering firm leading your project from concept to delivery",
+      aboutMobilePoints: ["Tangible Results", "Hands-on Experience", "Clear Vision"],
+      servicesEyebrow: "Our Services",
+      servicesTitle: "Integrated Engineering Solutions",
+      servicesLead: "From planning to handover, we provide everything your project requires.",
+      processEyebrow: "Our Process",
+      processTitle: "From Clear Plan to Successful Handover",
+      processLead: "Every stage is managed with precise engineering control and ongoing client communication.",
+      processWatermark: "FROM VISION TO REALITY",
+      whyTitle: "Why ELHABAK",
       whyLead: "A good project starts with clear scope, organized follow-up, and decisions captured at the right time.",
-      digitalTitle: "Your project, tracked digitally",
+      digitalEyebrow: "Digital Platform",
+      digitalTitle: "Track Your Project at Every Step",
       digitalLead:
-        "Every ELHABAK project can be followed through a digital control path for progress, approvals, documents, and project communication.",
+        "A dedicated platform enabling site monitoring, documents, designs, and approvals in one place with complete transparency.",
       digitalNote: "Platform access requires a company-approved account.",
-      digitalCta: "System login",
+      digitalCta: "Explore Platform",
+      digitalFeatures: [
+        "Live Updates",
+        "Documents & Files",
+        "Periodic Reports",
+        "Team Communication"
+      ],
       principlesTitle: "Working principles",
-      faqTitle: "Questions before starting",
-      faqLead: "Short answers to what clients usually need before requesting an inspection or starting design and delivery.",
-      contactTitle: "Start with a clear engineering step",
-      contactLead: "Request an inspection or contact the team with your project type, location, and required service from design to handover.",
+      faqEyebrow: "FAQ",
+      faqTitle: "Quick Answers to Your Inquiries",
+      faqLead: "Everything you need to know before starting your project.",
+      faqCta: "View All Questions",
+      ctaTitle: "Let's Start Your Next Project",
+      ctaSubtitle: "Contact us now and take the next step toward turning your vision into reality.",
+      ctaButton: "Contact Us",
+      contactTitle: "Contact Us",
+      contactLead: "Reach out to discuss your project and receive dedicated engineering consultation from initial inspection to delivery.",
       footerText: "ELHABAK Engineering Consultancy",
-      footerTagline: "An engineering company in Sohag for design, construction, finishing, general contracting, and furnishing.",
+      footerTagline: "Building Today ... For a Better Tomorrow",
       footerNav: "Site sections",
       footerServices: "Services",
       footerContact: "Contact",
       footerPlatform: "Platform",
-      footerRights: "All rights reserved"
+      footerRights: "All rights reserved © 2026 ELHABAK Construction",
+      footerPrivacy: "Privacy Policy"
     },
     aboutPrinciples: [
       ["Design", "تصميم"],
@@ -189,11 +244,9 @@ export const dictionary = {
       "Site updates and direct team communication"
     ],
     faq: [
-      ["Can I request an inspection before agreement?", "Yes. Most projects start with a site inspection and scope discussion before confirming the work path."],
-      ["Can ELHABAK handle design and execution together?", "Yes. Design, construction, finishing, and furnishing can be managed as one clear scope."],
-      ["Is digital follow-up available to every client?", "Approved clients can receive platform access to follow their project stages, files, and updates."],
-      ["Does the company work outside Sohag?", "Project location and scope are reviewed first, then feasibility for execution or supervision is confirmed."],
-      ["What should I send when contacting the team?", "Send the required service, project location, and any available area or short description of the space."]
+      ["Can we request a site inspection before contracting?", "Yes, we provide an initial site visit to assess location conditions, verify dimensions, and identify requirements before finalizing scope."],
+      ["Do you provide both design and execution together?", "Yes, our integrated engineering delivery ensures designs and architectural plans are flawlessly executed on site."],
+      ["What digital tracking is available for each client?", "Clients receive dedicated access to our digital platform to view daily site logs, verified photos, blueprints, and milestone payments in real time."]
     ],
     principles: [
       ["Scope documented before execution", "SCOPE FIRST"],
@@ -203,18 +256,15 @@ export const dictionary = {
     ],
     services: [
       ["Design", "Architectural and engineering drawings that turn requirements into buildable decisions."],
-      ["Construction", "Structural execution with clear site stages and work approvals."],
-      ["Finishing", "Interior and exterior finishing with approved details and regular review."],
+      ["Execution & Finishing", "Structural execution and interior finishing with approved details and regular review."],
       ["General Contracting", "Coordinated contracting work delivered according to the agreed scope."],
-      ["Furniture / Furnishing", "Furniture and furnishing choices aligned with space, design, and use."]
+      ["Furnishing & Fit-Out", "Furniture and interior fit-out tailored to spatial harmony and usage."]
     ],
     process: [
-      ["Site Inspection", "Field assessment and site verification before confirming the project scope."],
-      ["Design", "Engineering and architectural drawings, structural plans, and finishing schemes."],
-      ["Preliminary Estimation", "Detailed bill of quantities (BOQ), specification checks, and cost baseline."],
-      ["Execution", "On-site engineering supervision, quality control, and milestone verification."],
-      ["Initial Handover", "Snagging, inspection of executed works, and resolution of punch-list items."],
-      ["Final Handover", "Final sign-off, project closeout, and documentation handover to the client."]
+      ["Requirements Study", "Requirements study and detailed scope understanding."],
+      ["Design & Planning", "Comprehensive architectural and engineering design."],
+      ["Execution & Follow-up", "On-site execution and schedule-based follow-up."],
+      ["Handover & Support", "Final project handover and post-execution support."]
     ],
     why: [
       ["One scope", "Design, execution, and finishing managed as connected engineering work."],

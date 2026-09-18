@@ -9,6 +9,11 @@ type HeroState = {
   label: string;
 };
 
+type HeroStat = {
+  value: string;
+  label: string;
+};
+
 type PublicHeroProps = {
   states: HeroState[];
   children: ReactNode;
@@ -17,6 +22,9 @@ type PublicHeroProps = {
   scopeTitle: string;
   scopeText: string;
   alt: string;
+  tag?: string;
+  sideLabel?: string;
+  stats?: readonly HeroStat[];
 };
 
 const STATE_MS = 8000;
@@ -28,7 +36,10 @@ export function PublicHero({
   scopeIndex,
   scopeTitle,
   scopeText,
-  alt
+  alt,
+  tag,
+  sideLabel,
+  stats
 }: PublicHeroProps) {
   const [active, setActive] = useState(0);
 
@@ -42,39 +53,80 @@ export function PublicHero({
 
   return (
     <section className="hero">
-      <div className="hero-media" aria-hidden="true">
-        {states.map((state, index) => (
-          <div
-            className={`hero-media__layer${index === active ? " is-active" : ""}`}
-            key={state.key}
-          >
-            <Image
-              src={state.image}
-              alt=""
-              fill
-              priority={index === 0}
-              loading={index === 0 ? undefined : "lazy"}
-              sizes="100vw"
-            />
-          </div>
-        ))}
-      </div>
-
       <div className="container hero-layout">
-        <div className="hero-copy">{children}</div>
-        <aside className="hero-scope">
-          <div className="hero-scope__head">
-            <span>{scopeIndex}</span>
-            <bdi>{String(active + 1).padStart(2, "0")} / {String(states.length).padStart(2, "0")}</bdi>
-          </div>
-          <div className="hero-scope__body">
-            <div>
-              <strong>{scopeTitle}</strong>
-              <p>{scopeText}</p>
+        <div className="hero-copy">
+          {tag && (
+            <div className="hero-tag">
+              <span className="hero-tag__bar" aria-hidden="true" />
+              <span className="hero-tag__text">{tag}</span>
+            </div>
+          )}
+          {children}
+          {stats && stats.length > 0 && (
+            <div className="hero-stats">
+              {stats.map((stat) => (
+                <div className="hero-stat" key={stat.label}>
+                  <strong className="hero-stat__value">{stat.value}</strong>
+                  <span className="hero-stat__label">{stat.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop & Mobile Hero Visual Frame matching the target mockup */}
+        <div className="hero-visual-frame" aria-hidden="true">
+          <div className="hero-visual-frame__inner">
+            {states.map((state, index) => (
+              <div
+                className={`hero-media__layer${index === active ? " is-active" : ""}`}
+                key={state.key}
+              >
+                <Image
+                  src={state.image}
+                  alt=""
+                  fill
+                  priority={index === 0}
+                  loading={index === 0 ? undefined : "lazy"}
+                  sizes="(max-width: 980px) 100vw, 50vw"
+                />
+              </div>
+            ))}
+            <div className="hero-watermark-corner">
+              <span>BUILDING</span>
+              <span>BETTER</span>
+              <span>TOMORROW</span>
             </div>
           </div>
-        </aside>
+        </div>
       </div>
+
+      {sideLabel && (
+        <aside className="hero-side-rail" aria-hidden="true">
+          <div className="hero-side-rail__indices">
+            {states.map((_, i) => (
+              <span
+                key={i}
+                className={`hero-side-rail__num${i === active ? " is-active" : ""}`}
+                onClick={() => setActive(i)}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+            ))}
+          </div>
+          <div className="hero-side-rail__text">
+            <span>{sideLabel}</span>
+          </div>
+        </aside>
+      )}
+
+      {(scopeIndex || scopeTitle || scopeText) && (
+        <aside className="hero-scope" aria-hidden="true">
+          {scopeIndex && <span className="hero-scope__index">{scopeIndex}</span>}
+          {scopeTitle && <strong className="hero-scope__title">{scopeTitle}</strong>}
+          {scopeText && <p className="hero-scope__text">{scopeText}</p>}
+        </aside>
+      )}
 
       <div className="hero-rail">
         <div className="container hero-rail__inner">

@@ -786,3 +786,35 @@
   - `pnpm test`: passed 100% (86 tests total: 69 API tests, 17 Web tests).
   - `pnpm build`: passed (code 0, all 26 routes generated).
 - Final Acceptance Verdict: **READY FOR CLIENT PRESENTATION: YES**.
+
+### 2026-09-18 — Bespoke Architectural Design Mockup Alignment & High-Fidelity Landing Page Redesign
+- Scope: complete redesign and pixel-precise alignment of the public landing page to match the bespoke client mockup (`media_1789716891360.jpg`), across desktop and mobile form factors. Preserved 100% of underlying backend logic, Prisma models, database integrity, API contracts, RBAC permissions, and authentication cookies.
+- Visual Assets Generated & Deployed:
+  - `hero-engineers-site.webp`: Two engineers in high-visibility vests reviewing large architectural blueprints on site at golden dusk with tower crane backdrop.
+  - `about-building.webp`: Concrete brutalist architectural facade with warm cove lighting and floor-to-ceiling glazing.
+  - `service-design.webp`: Architectural drafting studio desk with technical blueprints and scale model.
+  - `service-finishing.webp`: Luxury interior finishing with illuminated recessed ceiling coves, Italian marble flooring, and panoramic terrace.
+  - `service-contracting.webp`: High-rise structural concrete formwork with rebar reinforcement and steel fixers.
+  - `service-furnishing.webp`: Bespoke modern interior living space with curved minimalist sofa, fluted wood panels, and travertine table.
+  - `process-blueprint.webp`: Precision architectural technical drawing with dark navy CAD grid background.
+  - `faq-blueprint.webp`: Architectural elevation and isometric structural axonometric sketch.
+  - `cta-skyline.webp`: Dramatic architectural skyline at dusk with tower cranes and illuminated construction towers.
+- Component & Surface Implementations:
+  - **Header**: Institutional dark navy `#0c1524`, inverted white brand logo, high-contrast navigation links, language switcher pill, and solid white `دخول النظام` CTA button.
+  - **Hero Section**: 2-column split layout. High-resolution photo frame with subtle corner watermark `BUILDING BETTER TOMORROW`. Sub-brand eyebrow `الهندسة والمقاولات ELHABAK CONSTRUCTION`, bold Arabic title `الحباك للاستشارات الهندسية`, primary orange CTA (`ابدأ مشروعك معنا`), ghost secondary CTA (`استعرض خدماتنا`), KPI stats row (`+100`, `+15`, `98%`), and side rail index `01 02 03` + `هندسة لمستقبل أفضل`.
+  - **01 // About Section**: Split editorial card layout. Left: architectural photo card with dark navy floating badge (`هندسة تبني مجتمعات أفضل / ENGINEERING STRONGER COMMUNITIES`). Right: authoritative copy and `مزيد عن الشركة ←` button. Dedicated mobile values row (`نتائج ملموسة`, `خبرة عملية`, `رؤية واضحة`) rendered on mobile viewports matching the iPhone mockup.
+  - **02 // Services Section**: 4-card horizontal register on desktop (`التصميم`, `التنفيذ والتشطيب`, `المقاولات العامة`, `التأثيث والفرش`), stacking cleanly on mobile. Each card features an architectural photo thumbnail, circular floating icon badge, concise scope description, and interactive circular arrow button.
+  - **03 // Process Section**: Blueprint background with dark navy overlay, central heading `من خطة واضحة إلى تسليم ناجح`, 4-stage connected numbered sequence (`01` to `04`), and architectural watermark `FROM VISION TO REALITY`.
+  - **04 // Digital Platform**: Dual mockup showcase (laptop + smartphone previews) paired with platform benefits and 4 feature pills (`متابعة مباشرة`, `مستندات ومرفقات`, `تقارير دورية`, `تواصل مع فريق العمل`).
+  - **05 // FAQ Section**: 3-column architectural layout with interactive accordion on the right, central inquiry prompt & `عرض جميع الأسئلة ←` button, and technical blueprint elevation drawing on the left.
+  - **06 // CTA Banner**: Dusk skyline with tower cranes, bold call to action `لنبدأ مشروعك القادم`, solid white conversion button, and phone link pill.
+  - **Footer**: Deep dark navy `#060B16` footer with orange accent bar `نبني اليوم ... لمستقبل أفضل`, copyright attribution, navigation links, and social icons.
+- Responsive QA & Overflow Verification:
+  - Verified across viewports: 1440px, 1280px, 768px, 430px (iPhone Pro Max), 390px (iPhone 14/15), 375px (iPhone SE).
+  - Exactly **0px horizontal overflow** across all screen sizes.
+  - Full bilingual fidelity: Arabic RTL (default) and English LTR (`?lang=en`) with mirrored layout coordinates.
+- Test & Build Verification:
+  - `pnpm lint`: passed (code 0).
+  - `pnpm typecheck`: passed (code 0 across all 8 workspace projects).
+  - `pnpm --filter @elhabak/web test`: passed 100% (17/17 tests passing).
+  - `pnpm build`: passed (code 0 across all workspace projects).
