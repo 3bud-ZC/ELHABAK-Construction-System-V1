@@ -16,6 +16,7 @@ import { RealtimeModule } from "./realtime/realtime.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { ChatModule } from "./chat/chat.module";
 import { ReportsModule } from "./reports/reports.module";
+import { DataOpsModule } from "./dataops/dataops.module";
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { ReportsModule } from "./reports/reports.module";
     FinanceModule,
     DocumentsModule,
     ChatModule,
-    ReportsModule
+    ReportsModule,
+    DataOpsModule
   ],
   controllers: [HealthController],
   providers: [

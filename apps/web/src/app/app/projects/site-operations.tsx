@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Badge, EmptyState, LoadingState, ProgressBar } from "@elhabak/ui";
+import { Badge, BottomSheet, EmptyState, LoadingState, ProgressBar } from "@elhabak/ui";
 
 import {
   Activity,
@@ -102,7 +102,39 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   const [workerNote, setWorkerNote] = useState("");
   const [workerFiles, setWorkerFiles] = useState<File[]>([]);
   const [submittingWorkerUpdate, setSubmittingWorkerUpdate] = useState(false);
+  const [showWorkerSheet, setShowWorkerSheet] = useState(false);
   const workerFileInputRef = useRef<HTMLInputElement>(null);
+  const workerSheetFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Field draft persistence: workers lose connectivity mid-entry on site, so the
+  // note/type survive a reload. Files cannot be persisted (browser restriction).
+  const draftKey = `elhabak:site-draft:${projectId}`;
+  const draftRestored = useRef(false);
+  useEffect(() => {
+    if (draftRestored.current) return;
+    draftRestored.current = true;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as { type?: SiteUpdateType; note?: string };
+      if (draft.type && SITE_UPDATE_TYPES.includes(draft.type)) setWorkerType(draft.type);
+      if (draft.note) setWorkerNote(draft.note);
+    } catch {
+      /* corrupted draft - ignore */
+    }
+  }, [draftKey]);
+  useEffect(() => {
+    if (!draftRestored.current) return;
+    try {
+      if (workerNote.trim() || workerType !== "PROGRESS") {
+        localStorage.setItem(draftKey, JSON.stringify({ type: workerType, note: workerNote }));
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+    } catch {
+      /* storage full/blocked - non-fatal */
+    }
+  }, [draftKey, workerNote, workerType]);
 
   // Lightbox state
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -380,8 +412,16 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         body
       });
       setWorkerNote("");
+      setWorkerType("PROGRESS");
       setWorkerFiles([]);
+      setShowWorkerSheet(false);
+      try {
+        localStorage.removeItem(draftKey);
+      } catch {
+        /* non-fatal */
+      }
       if (workerFileInputRef.current) workerFileInputRef.current.value = "";
+      if (workerSheetFileInputRef.current) workerSheetFileInputRef.current.value = "";
       setSuccess(labels.successReport);
       await loadData();
     } catch (err) {
@@ -389,6 +429,93 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
     } finally {
       setSubmittingWorkerUpdate(false);
     }
+  }
+
+  // Shared worker quick-update fields — used by the inline card and the mobile sheet.
+  function workerFormFields(fileInputRef: React.RefObject<HTMLInputElement | null>) {
+    return (
+      <>
+        {/* Category Selector Pills */}
+        <div className="worker-category-group">
+          <span className="worker-field-label">{labels.selectCategory}</span>
+          <div className="worker-pills-row">
+            {SITE_UPDATE_TYPES.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`worker-pill ${workerType === t ? "active" : ""}`}
+                onClick={() => setWorkerType(t)}
+              >
+                <span className="worker-pill__icon">{updateTypeIcon(t)}</span>
+                <span>{siteUpdateTypeLabel(t, locale)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Note */}
+        <div className="worker-field">
+          <label htmlFor="worker-note" className="worker-field-label">
+            {labels.noteOptional}
+          </label>
+          <textarea
+            id="worker-note"
+            className="worker-textarea"
+            rows={2}
+            placeholder={labels.notesPlaceholder}
+            value={workerNote}
+            onChange={(e) => setWorkerNote(e.target.value)}
+          />
+        </div>
+
+        {/* File Input */}
+        <div className="worker-field">
+          <span className="worker-field-label">{labels.attachFiles}</span>
+          <label className="worker-file-drop">
+            <Camera size={22} />
+            <span>{labels.chooseFiles}</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              capture="environment"
+              multiple
+              required
+              onChange={(e) => setWorkerFiles(Array.from(e.target.files ?? []))}
+            />
+          </label>
+          {workerFiles.length > 0 && (
+            <div className="worker-files-preview">
+              <small>{labels.filesSelected} {workerFiles.length}</small>
+              <div className="preview-chips">
+                {workerFiles.map((f) => (
+                  <span key={`${f.name}-${f.size}`} className="file-chip mono">
+                    {f.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="worker-submit-btn ui-button ui-button--primary"
+          disabled={submittingWorkerUpdate || workerFiles.length === 0}
+        >
+          {submittingWorkerUpdate ? (
+            <>
+              <RefreshCw size={16} className="spin" /> {labels.submitting}
+            </>
+          ) : (
+            <>
+              <UploadCloud size={16} /> {labels.submitReport}
+            </>
+          )}
+        </button>
+      </>
+    );
   }
 
   // Submit Progress Change
@@ -610,87 +737,33 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
             </div>
           </header>
           <form className="worker-upload-card__form" onSubmit={(e) => void handleSubmitWorker(e)}>
-            {/* Category Selector Pills */}
-            <div className="worker-category-group">
-              <span className="worker-field-label">{labels.selectCategory}</span>
-              <div className="worker-pills-row">
-                {SITE_UPDATE_TYPES.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className={`worker-pill ${workerType === t ? "active" : ""}`}
-                    onClick={() => setWorkerType(t)}
-                  >
-                    <span className="worker-pill__icon">{updateTypeIcon(t)}</span>
-                    <span>{siteUpdateTypeLabel(t, locale)}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Note */}
-            <div className="worker-field">
-              <label htmlFor="worker-note" className="worker-field-label">
-                {labels.noteOptional}
-              </label>
-              <textarea
-                id="worker-note"
-                className="worker-textarea"
-                rows={2}
-                placeholder={labels.notesPlaceholder}
-                value={workerNote}
-                onChange={(e) => setWorkerNote(e.target.value)}
-              />
-            </div>
-
-            {/* File Input */}
-            <div className="worker-field">
-              <span className="worker-field-label">{labels.attachFiles}</span>
-              <label className="worker-file-drop">
-                <Camera size={22} />
-                <span>{labels.chooseFiles}</span>
-                <input
-                  ref={workerFileInputRef}
-                  type="file"
-                  accept="image/*,video/*"
-                  capture="environment"
-                  multiple
-                  required
-                  onChange={(e) => setWorkerFiles(Array.from(e.target.files ?? []))}
-                />
-              </label>
-              {workerFiles.length > 0 && (
-                <div className="worker-files-preview">
-                  <small>{labels.filesSelected} {workerFiles.length}</small>
-                  <div className="preview-chips">
-                    {workerFiles.map((f) => (
-                      <span key={`${f.name}-${f.size}`} className="file-chip mono">
-                        {f.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="worker-submit-btn ui-button ui-button--primary"
-              disabled={submittingWorkerUpdate || workerFiles.length === 0}
-            >
-              {submittingWorkerUpdate ? (
-                <>
-                  <RefreshCw size={16} className="spin" /> {labels.submitting}
-                </>
-              ) : (
-                <>
-                  <UploadCloud size={16} /> {labels.submitReport}
-                </>
-              )}
-            </button>
+            {workerFormFields(workerFileInputRef)}
           </form>
         </section>
+      )}
+
+      {/* Mobile quick-update: floating action opens the same form in a bottom sheet */}
+      {isWorker && (
+        <>
+          <button
+            type="button"
+            className="worker-quick-fab"
+            onClick={() => setShowWorkerSheet(true)}
+            aria-label={labels.workerPanelTitle}
+          >
+            <Camera size={20} />
+          </button>
+          <BottomSheet
+            open={showWorkerSheet}
+            onClose={() => setShowWorkerSheet(false)}
+            title={labels.workerPanelTitle}
+          >
+            <p className="worker-sheet-lead">{labels.workerPanelLead}</p>
+            <form className="worker-upload-card__form" onSubmit={(e) => void handleSubmitWorker(e)}>
+              {workerFormFields(workerSheetFileInputRef)}
+            </form>
+          </BottomSheet>
+        </>
       )}
 
       {/* Action Bar for Admin / Supervising Engineer */}

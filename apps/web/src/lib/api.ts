@@ -51,6 +51,9 @@ export type ClientRecord = {
   user: UserRecord;
   phone: string | null;
   notes: string | null;
+  projectCount?: number;
+  activeProjectCount?: number;
+  lastProjectActivityAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -1089,4 +1092,119 @@ export function activityLabel(action: string, locale: "ar" | "en"): string {
   if (action.startsWith("finance.")) return financeActionLabel(action, locale);
   if (action.startsWith("documents.")) return documentActionLabel(action, locale);
   return actionLabel(action, locale);
+}
+
+/* ------------------------------ Data Operations ------------------------------ */
+
+export type DataOpsImportType = "clients" | "projects" | "boq";
+export type DataOpsDuplicateStrategy = "error" | "skip" | "update";
+export type DataOpsRowStatus = "valid" | "duplicate" | "error";
+
+export type DataOpsFieldIssue = {
+  field: string;
+  code: string;
+  message: string;
+  suggestion?: string;
+};
+
+export type DataOpsRowResult = {
+  index: number;
+  status: DataOpsRowStatus;
+  issues: DataOpsFieldIssue[];
+  data: Record<string, unknown> | null;
+};
+
+export type DataOpsPreview = {
+  fileName: string;
+  kind: "xlsx" | "csv";
+  sheets: string[];
+  sheet: string;
+  headers: string[];
+  mapping: Record<string, number>;
+  unmappedHeaders: string[];
+  rows: DataOpsRowResult[];
+  summary: {
+    total: number;
+    valid: number;
+    duplicates: number;
+    errors: number;
+    missingFields: string[];
+  };
+};
+
+export type DataOpsCommitResult = {
+  ok: boolean;
+  type: DataOpsImportType;
+  fileName: string;
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+  failures: Array<{ index: number; message: string }>;
+};
+
+export type DataOpsOverview = {
+  capabilities: {
+    clients: boolean;
+    projects: boolean;
+    boq: boolean;
+    media: boolean;
+    exports: boolean;
+  };
+  projects: Array<{ id: string; code: string | null; name: string; status: ProjectStatus }>;
+};
+
+export type DataOpsJob = {
+  id: string;
+  action: string;
+  metadata: Record<string, unknown> | null;
+  actor: { id: string; displayName: string; role: UserRole } | null;
+  project: { id: string; name: string; code: string | null } | null;
+  createdAt: string;
+};
+
+export type DataOpsMediaBatchResult = {
+  ok: boolean;
+  imported: number;
+  updates: number;
+};
+
+export function dataOpsImportBody(options: {
+  sheet?: string | undefined;
+  mapping?: Record<string, number> | undefined;
+  strategy?: DataOpsDuplicateStrategy | undefined;
+  projectId?: string | undefined;
+}) {
+  const form = new FormData();
+  if (options.sheet) form.set("sheet", options.sheet);
+  if (options.mapping) form.set("mapping", JSON.stringify(options.mapping));
+  if (options.strategy) form.set("strategy", options.strategy);
+  if (options.projectId) form.set("projectId", options.projectId);
+  return form;
+}
+
+export function dataOpsExportUrl(
+  dataset: "projects" | "clients" | "users" | "boq" | "payments" | "documents" | "designs",
+  format: "xlsx" | "csv",
+  projectId?: string
+) {
+  const query = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+  return `${apiBaseUrl}/data-ops/exports/${dataset}?format=${format}${query}`;
+}
+
+export function dataOpsTemplateUrl(type: DataOpsImportType) {
+  return `${apiBaseUrl}/data-ops/templates/${type}`;
+}
+
+export function dataOpsJobLabel(action: string, locale: "ar" | "en"): string {
+  const labels: Record<string, { ar: string; en: string }> = {
+    "data_import.clients": { ar: "استيراد عملاء", en: "Clients import" },
+    "data_import.clients_failed": { ar: "فشل استيراد عملاء", en: "Clients import failed" },
+    "data_import.projects": { ar: "استيراد مشاريع", en: "Projects import" },
+    "data_import.projects_failed": { ar: "فشل استيراد مشاريع", en: "Projects import failed" },
+    "data_import.boq": { ar: "استيراد جدول كميات", en: "BOQ import" },
+    "data_import.boq_failed": { ar: "فشل استيراد جدول كميات", en: "BOQ import failed" },
+    "data_import.media": { ar: "استيراد وسائط مجمعة", en: "Batch media import" }
+  };
+  return labels[action]?.[locale] ?? action;
 }

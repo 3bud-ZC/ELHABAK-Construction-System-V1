@@ -932,3 +932,42 @@
 - Client RBAC regression passed: YES.
 - Final account state: 2 active / 3 inactive.
 - Tracked repository secret audit passed: YES.
+
+### 2026-09-19 — ELHABAK INTERNAL PRODUCT V6 — Construction Operations System Reconstruction & Data Operations Upgrade
+
+**Scope**: evolution of the existing production product (not a rewrite). No schema changes, no production-record changes, RBAC/security model preserved.
+
+**Backend — Data Operations module (`apps/api/src/modules/dataops`)**:
+- New `dataops` module: layered architecture with a pure spreadsheet engine (`spreadsheet.ts`), pure row validators (`import-validation.ts`), pure export builders (`export-builders.ts`), and the service/controller orchestration (`dataops.service.ts`, `dataops.controller.ts`).
+- Spreadsheet engine parses `.xlsx` (ExcelJS) and RFC-4180 `.csv` (quoted fields, escaped quotes, CRLF, BOM, comma/semicolon auto-detection). Hard limits: 8 MB file, 5 sheets, 2,000 data rows, 40 columns, 2,000-char cells. Formula cells are detected and flagged — never evaluated — so business values reject them.
+- Bilingual header aliasing: canonical fields auto-map from English and Arabic header variants (`normalizeHeader` folds alef/taa-marbuta forms).
+- Import preview endpoint returns sheet names, header mapping, unmapped headers, row-level `valid`/`duplicate`/`error` statuses, per-field issues with suggestions, and summary counts — before anything is committed.
+- Client import: name/email/phone/notes/active-flag validation, email normalization, existing-account and in-file duplicate detection, `error`/`skip`/`update` duplicate strategies; commits through existing user/client creation paths.
+- Project import: code/name/category/client-email/engineer-email validation, lookup-map resolution to real client profiles and ENGINEER accounts, bilingual enum resolution (category/phase/status in Arabic and English), date-order and progress-range checks, duplicate code strategies.
+- BOQ import: project-scoped, exact arithmetic preserved via integer minor-unit math (`decimalToMinorUnits`/`computeLineTotalMinor` — no floating point), unit alias resolution in both languages, in-file and existing-code duplicate detection.
+- Batch media import: up to 30 files per request, optional manifest spreadsheet for per-file metadata (type, visibility, note, date), strict-manifest mode, magic-byte signature validation in the batch path, storage rollback on transaction failure, files grouped into site updates by effective metadata.
+- Permission-aware exports: `projects`, `clients`, `users` (admin), `boq`, `payments`, `documents`, `designs` (project-scoped, role-checked). XLSX via ExcelJS and CSV with a UTF-8 BOM; every user-controlled string cell sanitized against formula injection (`=`,`+`,`-`,`@`, tab/CR prefixes get a `'` guard) while numeric cells stay numeric; private/no-store response headers.
+- Every import/batch operation writes an `AuditLog` job record (actor, project, filenames, counts, success/failure) surfaced through a recent-jobs endpoint.
+- Dashboard summary extended with an attention payload (pending designs, overdue projects, recent client-visible documents); admin clients list extended with project counts and last-activity.
+- New non-mutating unit suite `apps/api/src/dataops-import-engine.spec.ts` — 35 tests covering CSV/XLSX parsing, limits, formula flagging, bilingual mapping, all three validators, exact BOQ minor-unit totals, and injection-safe CSV/XLSX export. No DB access, no record mutation.
+
+**Frontend — Data Operations Center (`/app/data`)**:
+- Hub page with tabbed sections: Import wizard, Batch media, Exports, Recent jobs — role-aware visibility (imports: admin; BOQ: admin/accountant; media: admin/engineer; exports: not client/worker).
+- Import wizard: file dropzone → immediate preview → column mapping step → validation review with per-row status and issue chips → duplicate strategy selection → commit with upload progress; downloadable per-type templates.
+- Batch media panel: project selector, multi-file dropzone, optional manifest, shared type/note/visibility, strict-manifest toggle, upload progress.
+- Exports panel: dataset + format + required project selection for scoped datasets, direct download links.
+
+**Shared UI (`packages/ui/src/interactive.tsx`)**: new `"use client"` primitives — Tabs, SegmentedControl, Drawer, BottomSheet, Modal, ConfirmDialog, Skeleton, SearchField, FormSection, FileDropzone, UploadProgress, ImportStepper, BulkActionBar, MobileRecordCard, PreviewDrawer, ActivityTimeline, DataToolbar, FilterDrawer, CommandBar, ErrorState.
+
+**Product surfaces**:
+- App shell: Data Operations nav entry (bilingual), role-aware mobile bottom navigation (dashboard / projects-or-finance / data / notifications / search / menu).
+- Dashboard: Action Center panel rendering real attention data (overdue projects, designs pending review, recent client-visible documents) with direct links.
+- Project Workspace: compact sticky `project-context-bar` on submodule pages (back link, identity, phase, progress, tab nav) replacing the full header for density.
+- Registers: clients show project counts + last activity and expose import/export links; projects and users registers expose export links; finance payments panel exposes a project-scoped payments export (admin/accountant).
+- Users form: secure temporary-password generator plus a per-role capability preview.
+- Client form: `autoComplete` hardening so browser credential autofill can no longer contaminate client email/password fields.
+- Documents register: inline quick-preview drawer (image/PDF/video) with download action.
+- Site Operations: worker quick-update gains local draft persistence (type+note survive reload; files never persisted) and a mobile floating action that opens the same form in a bottom sheet.
+- Notifications: grouped day sections (Today / Yesterday / Earlier) with unread styling, mark-as-read navigation, realtime refresh preserved.
+
+**Quality gate**: API typecheck PASS, web typecheck PASS, API lint PASS, web lint PASS, `packages/ui` lint+build PASS, web unit tests 17/17 PASS, import-engine tests 35/35 PASS, API build PASS, `next build` production build PASS (incl. `/app/data` route).

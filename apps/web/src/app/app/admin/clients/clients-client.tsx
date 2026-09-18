@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhabak/ui";
-import { CheckCircle2, Phone, UserRoundCog, UserX, UsersRound } from "lucide-react";
-import { accountStatusTone, apiRequest, type ClientRecord } from "../../../../lib/api";
+import { CheckCircle2, Download, Phone, UploadCloud, UserRoundCog, UserX, UsersRound } from "lucide-react";
+import { accountStatusTone, apiRequest, dataOpsExportUrl, type ClientRecord } from "../../../../lib/api";
 
 type Mode = "list" | "create" | "edit";
 
@@ -52,7 +52,10 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           total: "إجمالي العملاء",
           activeCount: "حسابات نشطة",
           inactiveCount: "حسابات غير نشطة",
-          contactReady: "بيانات اتصال مكتملة"
+          contactReady: "بيانات اتصال مكتملة",
+          projects: "المشاريع",
+          export: "تصدير",
+          import: "استيراد Excel/CSV"
         }
         : {
           title: "Clients",
@@ -79,7 +82,10 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           total: "Total clients",
           activeCount: "Active accounts",
           inactiveCount: "Inactive accounts",
-          contactReady: "Contact details ready"
+          contactReady: "Contact details ready",
+          projects: "Projects",
+          export: "Export",
+          import: "Import Excel/CSV"
         },
     [locale]
   );
@@ -145,9 +151,17 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
             <strong>{labels.title}</strong>
             <span className="admin-command-strip__subtitle">{labels.lead}</span>
           </div>
-          <Link className="ui-button ui-button--primary" href={ar ? "/app/admin/clients/new" : "/app/admin/clients/new?lang=en"}>
-            {labels.create}
-          </Link>
+          <div className="admin-command-strip__actions">
+            <a className="ui-button ui-button--ghost ui-button--sm" href={dataOpsExportUrl("clients", "xlsx")}>
+              <Download size={14} /> {labels.export}
+            </a>
+            <Link className="ui-button ui-button--secondary" href={ar ? "/app/data" : "/app/data?lang=en"}>
+              <UploadCloud size={15} /> {labels.import}
+            </Link>
+            <Link className="ui-button ui-button--primary" href={ar ? "/app/admin/clients/new" : "/app/admin/clients/new?lang=en"}>
+              {labels.create}
+            </Link>
+          </div>
         </div>
         {!loading && (
           <div className="metric-grid">
@@ -172,6 +186,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
               <div className="data-table-head client-row">
                 <span>{labels.name}</span>
                 <span>{labels.phone}</span>
+                <span>{labels.projects}</span>
                 <span>{labels.status}</span>
               </div>
               {clients.map((client) => (
@@ -182,6 +197,14 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
                   </div>
                   <div data-label={labels.phone}>
                     <span className="mono">{client.phone ?? "—"}</span>
+                  </div>
+                  <div data-label={labels.projects}>
+                    <span className="mono">
+                      <bdi>{client.projectCount ?? 0}</bdi>
+                      {typeof client.activeProjectCount === "number" && client.activeProjectCount > 0
+                        ? ` · ${client.activeProjectCount} ${ar ? "نشط" : "active"}`
+                        : ""}
+                    </span>
                   </div>
                   <div data-label={labels.status}>
                     <Badge tone={accountStatusTone(client.user.isActive)}>
@@ -208,7 +231,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         }
       />
       {loading && mode === "edit" ? <LoadingState label={labels.loadingLabel} /> : null}
-      <form className="admin-form admin-form--elevated" onSubmit={(event) => void submit(event)}>
+      <form className="admin-form admin-form--elevated" autoComplete="off" onSubmit={(event) => void submit(event)}>
         <div className="form-section">
           <div className="form-section__header">
             <span className="form-section__index">01</span>
@@ -217,15 +240,15 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           <div className="form-grid">
             <label className="ui-field">
               <span>{labels.name} <strong className="required-star">*</strong></span>
-              <input name="displayName" required defaultValue={record?.user.displayName ?? ""} placeholder={ar ? "اسم العميل أو الجهة" : "Client or Organization Name"} />
+              <input name="displayName" required autoComplete="off" defaultValue={record?.user.displayName ?? ""} placeholder={ar ? "اسم العميل أو الجهة" : "Client or Organization Name"} />
             </label>
             <label className="ui-field">
               <span>{labels.email} <strong className="required-star">*</strong></span>
-              <input name="email" type="email" required defaultValue={record?.user.email ?? ""} placeholder="client@example.com" />
+              <input name="email" type="email" required autoComplete="off" defaultValue={record?.user.email ?? ""} placeholder="client@example.com" />
             </label>
             <label className="ui-field">
               <span>{labels.phone}</span>
-              <input name="phone" defaultValue={record?.phone ?? ""} placeholder="01xxxxxxxxx" />
+              <input name="phone" autoComplete="off" defaultValue={record?.phone ?? ""} placeholder="01xxxxxxxxx" />
             </label>
             <div className="field-group-center">
               <label className="check-field check-field--toggle">
@@ -244,7 +267,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           <div className="form-grid">
             <label className="ui-field full-span">
               <span>{labels.password} {mode === "create" && <strong className="required-star">*</strong>}</span>
-              <input name="temporaryPassword" type="password" required={mode === "create"} minLength={10} placeholder={mode === "create" ? (ar ? "كلمة مرور مؤقتة لحساب العميل (١٠ أحرف على الأقل)" : "Temporary password for client account (min 10 characters)") : (ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password")} />
+              <input name="temporaryPassword" type="password" autoComplete="new-password" required={mode === "create"} minLength={10} placeholder={mode === "create" ? (ar ? "كلمة مرور مؤقتة لحساب العميل (١٠ أحرف على الأقل)" : "Temporary password for client account (min 10 characters)") : (ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password")} />
               {mode === "edit" && <span className="field-hint">{labels.passwordHint}</span>}
             </label>
             <label className="ui-field full-span">

@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Bell,
   BriefcaseBusiness,
   Camera,
+  Database,
   FileText,
   LayoutGrid,
   LogOut,
@@ -69,7 +71,9 @@ export function AppShell({ children }: AppShellProps) {
           closeMenu: "إغلاق القائمة",
           impersonating: "أنت الآن تستعرض النظام بصلاحيات",
           returnToAdmin: "العودة لحساب المدير",
-          returning: "جاري العودة..."
+          returning: "جاري العودة...",
+          dataOps: "عمليات البيانات",
+          menu: "القائمة"
         }
         : {
           productTag: "Project Operations System",
@@ -100,7 +104,9 @@ export function AppShell({ children }: AppShellProps) {
           closeMenu: "Close menu",
           impersonating: "You are viewing the system as",
           returnToAdmin: "Return to Admin",
-          returning: "Returning..."
+          returning: "Returning...",
+          dataOps: "Data Ops",
+          menu: "Menu"
         },
     [locale]
   );
@@ -122,6 +128,7 @@ export function AppShell({ children }: AppShellProps) {
     else if (section === "reports") crumbs.push(labels.reports);
     else if (section === "search") return [labels.search];
     else if (section === "notifications") return [labels.notifications];
+    else if (section === "data") return [labels.dataOps];
     else return [labels.dashboard];
     let sawId = false;
     for (const seg of rest.slice(i)) {
@@ -319,6 +326,14 @@ export function AppShell({ children }: AppShellProps) {
                     <Wallet size={17} /> {labels.finance}
                   </Link>
                 )}
+                {(user.role === "ADMIN" || user.role === "ACCOUNTANT" || user.role === "ENGINEER") && (
+                  <Link
+                    className={isActive("/app/data") ? "active" : ""}
+                    href={href("/app/data")}
+                  >
+                    <Database size={17} /> {labels.dataOps}
+                  </Link>
+                )}
                 <Link
                   className={isActive("/app/reports") ? "active" : ""}
                   href={href("/app/reports")}
@@ -408,6 +423,62 @@ export function AppShell({ children }: AppShellProps) {
           ) : null}
           {children}
         </section>
+        <nav
+          className="app-bottom-nav"
+          aria-label={locale === "ar" ? "التنقل السريع" : "Quick navigation"}
+        >
+          <Link className={pathname === "/app" ? "active" : ""} href={href("/app")}>
+            <LayoutGrid size={19} />
+            <span>{labels.dashboard}</span>
+          </Link>
+          {user.role === "ADMIN" ? (
+            <Link
+              className={isActive("/app/admin/projects") || isActive("/app/projects") ? "active" : ""}
+              href={href("/app/admin/projects")}
+            >
+              <BriefcaseBusiness size={19} />
+              <span>{labels.projects}</span>
+            </Link>
+          ) : user.role === "ACCOUNTANT" ? (
+            <Link className={isActive("/app/finance") ? "active" : ""} href={href("/app/finance")}>
+              <Wallet size={19} />
+              <span>{labels.finance}</span>
+            </Link>
+          ) : (
+            <Link className={isActive("/app/projects") ? "active" : ""} href={href("/app/projects")}>
+              {user.role === "WORKER" ? <Camera size={19} /> : <BriefcaseBusiness size={19} />}
+              <span>{user.role === "WORKER" ? labels.worker : labels.projects}</span>
+            </Link>
+          )}
+          {user.role === "ADMIN" ? (
+            <Link className={isActive("/app/data") ? "active" : ""} href={href("/app/data")}>
+              <Database size={19} />
+              <span>{labels.dataOps}</span>
+            </Link>
+          ) : (
+            <Link
+              className={isActive("/app/notifications") ? "active" : ""}
+              href={href("/app/notifications")}
+            >
+              <Bell size={19} />
+              <span>{labels.notifications}</span>
+            </Link>
+          )}
+          <Link className={isActive("/app/search") ? "active" : ""} href={href("/app/search")}>
+            <Search size={19} />
+            <span>{labels.search}</span>
+          </Link>
+          <button
+            type="button"
+            className={drawerOpen ? "active" : ""}
+            aria-label={labels.openMenu}
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Menu size={19} />
+            <span>{labels.menu}</span>
+          </button>
+        </nav>
       </main>
     </UserContext.Provider>
   );

@@ -6,6 +6,7 @@ import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhaba
 import {
   Archive,
   CheckCircle2,
+  Download,
   KeyRound,
   LogIn,
   MoreHorizontal,
@@ -18,7 +19,7 @@ import {
   UsersRound,
   X
 } from "lucide-react";
-import { apiRequest, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
+import { apiRequest, dataOpsExportUrl, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
 import { useCurrentUser } from "../../../../lib/user-context";
 
 const roles: UserRole[] = ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER", "CLIENT"];
@@ -56,6 +57,8 @@ export function UsersClient({ mode, id }: UsersClientProps) {
   const [confirmationText, setConfirmationText] = useState("");
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
+  const [formRole, setFormRole] = useState<UserRole>("ENGINEER");
+  const [generatedPassword, setGeneratedPassword] = useState("");
   const locale = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
 
@@ -180,7 +183,12 @@ export function UsersClient({ mode, id }: UsersClientProps) {
             <strong>{labels.title}</strong>
             <span className="admin-command-strip__subtitle">{labels.lead}</span>
           </div>
-          <Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>
+          <div className="admin-command-strip__actions">
+            <a className="ui-button ui-button--ghost ui-button--sm" href={dataOpsExportUrl("users", "xlsx")}>
+              <Download size={14} /> {labels.export}
+            </a>
+            <Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>
+          </div>
         </div>
 
         {!loading ? (
@@ -262,10 +270,12 @@ export function UsersClient({ mode, id }: UsersClientProps) {
           <label className="ui-field"><span>{labels.email} <strong className="required-star">*</strong></span><input name="email" type="email" required defaultValue={record?.email ?? ""} placeholder="user@elhabak.eg" /></label>
         </div></div>
         <div className="form-section"><div className="form-section__header"><span className="form-section__index">02</span><h4>{labels.roleSection}</h4></div><div className="form-grid">
-          <label className="ui-field"><span>{labels.role} <strong className="required-star">*</strong></span><select name="role" defaultValue={record?.role ?? "ENGINEER"}>{roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}</select></label>
+          <label className="ui-field"><span>{labels.role} <strong className="required-star">*</strong></span>{mode === "create" ? <select name="role" value={formRole} onChange={(event) => setFormRole(event.target.value as UserRole)}>{roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}</select> : <select name="role" defaultValue={record?.role ?? "ENGINEER"}>{roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}</select>}</label>
           {mode === "create" ? <div className="field-group-center"><label className="check-field check-field--toggle"><input name="isActive" type="checkbox" defaultChecked /><span>{labels.active}</span></label></div> : <div className="field-hint account-form-note">{labels.separateActions}</div>}
-        </div></div>
-        {mode === "create" ? <div className="form-section"><div className="form-section__header"><span className="form-section__index">03</span><h4>{labels.credentials}</h4></div><div className="form-grid"><label className="ui-field full-span"><span>{labels.password} <strong className="required-star">*</strong></span><input name="temporaryPassword" type="password" required minLength={10} autoComplete="new-password" placeholder={labels.passwordCreateHint} /></label></div></div> : null}
+        </div>
+        {mode === "create" ? <p className="field-hint role-capability-hint"><strong>{roleLabel(formRole, locale)}:</strong> {roleCapability(formRole, ar)}</p> : null}
+        </div>
+        {mode === "create" ? <div className="form-section"><div className="form-section__header"><span className="form-section__index">03</span><h4>{labels.credentials}</h4></div><div className="form-grid"><label className="ui-field full-span"><span>{labels.password} <strong className="required-star">*</strong></span><div className="password-generate-row"><input name="temporaryPassword" type="text" required minLength={10} autoComplete="new-password" value={generatedPassword} onChange={(event) => setGeneratedPassword(event.target.value)} placeholder={labels.passwordCreateHint} /><button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={() => setGeneratedPassword(generateTemporaryPassword())}><KeyRound size={14} /> {labels.generatePassword}</button></div><span className="field-hint">{labels.generateHint}</span></label></div></div> : null}
         {error ? <p className="form-error">{error}</p> : null}{success ? <p className="form-success">{success}</p> : null}
         <div className="form-actions-bar"><Link className="ui-button ui-button--secondary" href={withLocale("/app/admin/users", ar)}>{labels.back}</Link><button className="ui-button ui-button--primary" disabled={saving} type="submit">{saving ? labels.saving : labels.save}</button></div>
       </form>
@@ -320,6 +330,25 @@ function withLocale(path: string, ar: boolean) { return ar ? path : `${path}?lan
 function formValue(data: FormData, key: string) { const value = data.get(key); return typeof value === "string" ? value : ""; }
 function formatDate(value: string, locale: string) { return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { dateStyle: "medium" }).format(new Date(value)); }
 
+/** Cryptographically secure temporary password: mixed classes, 16 chars, no ambiguous lookalikes. */
+function generateTemporaryPassword() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#%";
+  const bytes = new Uint32Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join("");
+}
+
+function roleCapability(role: UserRole, ar: boolean): string {
+  const map: Record<UserRole, [string, string]> = {
+    ADMIN: ["تحكم كامل بالنظام والبيانات والمستخدمين والاستيراد.", "Full system control: users, data operations, all modules."],
+    ENGINEER: ["مشاريع مسندة: التصميم، نشاط الموقع، الدردشة، استيراد الوسائط.", "Assigned projects: design, site ops, chat, media import."],
+    ACCOUNTANT: ["السجلات المالية وجداول الكميات والمدفوعات والتقارير.", "Finance registers, BOQ, payments, and reports."],
+    WORKER: ["تحديثات الموقع الميدانية عبر الجوال.", "Field site updates via the mobile workflow."],
+    CLIENT: ["بوابة المشاريع الخاصة: المستندات والتصميم والدردشة المشتركة.", "Own-project portal: shared documents, design, and chat."]
+  };
+  return map[role][ar ? 0 : 1];
+}
+
 function dialogIcon(kind: ActionKind) {
   if (kind === "reset") return <KeyRound size={22} />;
   if (kind === "impersonate") return <LogIn size={22} />;
@@ -372,8 +401,8 @@ function relationLabel(relation: string, ar: boolean) {
 
 function copy(ar: boolean) {
   return ar ? {
-    title: "إدارة المستخدمين", lead: "دورة حياة الحسابات واختبار الصلاحيات من مكان واحد آمن.", create: "إنشاء مستخدم", edit: "تعديل المستخدم", back: "العودة للمستخدمين", search: "بحث بالاسم أو البريد", empty: "لا يوجد مستخدمون مطابقون", emptyHint: "غيّر البحث أو عوامل التصفية.", name: "الاسم", email: "البريد الإلكتروني", role: "الدور", active: "نشط", suspended: "معلّق", archived: "مؤرشف", password: "كلمة مرور مؤقتة", save: "حفظ التغييرات", saved: "تم الحفظ.", saving: "جاري الحفظ...", status: "الحالة", created: "تاريخ الإنشاء", actions: "الإجراءات", loadingLabel: "جاري تحميل المستخدمين...", total: "الإجمالي", activeCount: "النشط", suspendedCount: "المعلّق", archivedCount: "المؤرشف", roleDistribution: "توزيع الأدوار", accountSummary: "ملخص الحسابات", filterRole: "تصفية حسب الدور", filterStatus: "تصفية حسب الحالة", allRoles: "كل الأدوار", allStatuses: "كل الحالات", viewEdit: "عرض / تعديل", activate: "تفعيل", suspend: "تعليق", restore: "استعادة", resetPassword: "إعادة تعيين كلمة المرور", loginAs: "الدخول كمستخدم", archive: "أرشفة", deleteArchive: "حذف / أرشفة", close: "إغلاق", cancel: "إلغاء", processing: "جاري التنفيذ...", linkedHistory: "السجلات المرتبطة", archiveInstead: "لن يُحذف أي سجل تاريخي. المتاح هو أرشفة الحساب.", typeEmail: "اكتب البريد للتأكيد:", newTemporaryPassword: "كلمة المرور المؤقتة الجديدة", passwordRequirement: "10 أحرف على الأقل.", requestFailed: "فشل الطلب.", basic: "البيانات الأساسية", fullName: "الاسم الكامل", roleSection: "الدور الوظيفي", credentials: "بيانات الدخول", passwordCreateHint: "كلمة مرور مؤقتة (10 أحرف على الأقل)", separateActions: "التفعيل والتعليق وكلمة المرور إجراءات منفصلة ومؤكدة من قائمة المستخدم.", lifecycleHint: "غيّر حالة الحساب أو كلمة المرور من قائمة الإجراءات لضمان التأكيد والتدقيق.", editHint: "تعديل الهوية والدور دون تغيير حالة الحساب أو كلمة المرور.", createHint: "أنشئ حساباً بدور واضح وكلمة مرور مؤقتة آمنة."
+    title: "إدارة المستخدمين", lead: "دورة حياة الحسابات واختبار الصلاحيات من مكان واحد آمن.", create: "إنشاء مستخدم", export: "تصدير", edit: "تعديل المستخدم", back: "العودة للمستخدمين", search: "بحث بالاسم أو البريد", empty: "لا يوجد مستخدمون مطابقون", emptyHint: "غيّر البحث أو عوامل التصفية.", name: "الاسم", email: "البريد الإلكتروني", role: "الدور", active: "نشط", suspended: "معلّق", archived: "مؤرشف", password: "كلمة مرور مؤقتة", save: "حفظ التغييرات", saved: "تم الحفظ.", saving: "جاري الحفظ...", status: "الحالة", created: "تاريخ الإنشاء", actions: "الإجراءات", loadingLabel: "جاري تحميل المستخدمين...", total: "الإجمالي", activeCount: "النشط", suspendedCount: "المعلّق", archivedCount: "المؤرشف", roleDistribution: "توزيع الأدوار", accountSummary: "ملخص الحسابات", filterRole: "تصفية حسب الدور", filterStatus: "تصفية حسب الحالة", allRoles: "كل الأدوار", allStatuses: "كل الحالات", viewEdit: "عرض / تعديل", activate: "تفعيل", suspend: "تعليق", restore: "استعادة", resetPassword: "إعادة تعيين كلمة المرور", loginAs: "الدخول كمستخدم", archive: "أرشفة", deleteArchive: "حذف / أرشفة", close: "إغلاق", cancel: "إلغاء", processing: "جاري التنفيذ...", linkedHistory: "السجلات المرتبطة", archiveInstead: "لن يُحذف أي سجل تاريخي. المتاح هو أرشفة الحساب.", typeEmail: "اكتب البريد للتأكيد:", newTemporaryPassword: "كلمة المرور المؤقتة الجديدة", passwordRequirement: "10 أحرف على الأقل.", requestFailed: "فشل الطلب.", basic: "البيانات الأساسية", fullName: "الاسم الكامل", roleSection: "الدور الوظيفي", credentials: "بيانات الدخول", passwordCreateHint: "كلمة مرور مؤقتة (10 أحرف على الأقل)", separateActions: "التفعيل والتعليق وكلمة المرور إجراءات منفصلة ومؤكدة من قائمة المستخدم.", lifecycleHint: "غيّر حالة الحساب أو كلمة المرور من قائمة الإجراءات لضمان التأكيد والتدقيق.", editHint: "تعديل الهوية والدور دون تغيير حالة الحساب أو كلمة المرور.", createHint: "أنشئ حساباً بدور واضح وكلمة مرور مؤقتة آمنة.", generatePassword: "توليد", generateHint: "انسخ كلمة المرور وشاركها بأمان — لن تظهر مرة أخرى."
   } : {
-    title: "User Management", lead: "Account lifecycle and permission testing from one secure console.", create: "Create user", edit: "Edit user", back: "Back to users", search: "Search name or email", empty: "No matching users", emptyHint: "Adjust search or filters.", name: "Name", email: "Email", role: "Role", active: "Active", suspended: "Suspended", archived: "Archived", password: "Temporary password", save: "Save changes", saved: "Saved.", saving: "Saving...", status: "Status", created: "Created", actions: "Actions", loadingLabel: "Loading users...", total: "Total", activeCount: "Active", suspendedCount: "Suspended", archivedCount: "Archived", roleDistribution: "Role distribution", accountSummary: "Account summary", filterRole: "Filter by role", filterStatus: "Filter by status", allRoles: "All roles", allStatuses: "All statuses", viewEdit: "View / Edit", activate: "Activate", suspend: "Suspend", restore: "Restore", resetPassword: "Reset password", loginAs: "Login as user", archive: "Archive", deleteArchive: "Delete / Archive", close: "Close", cancel: "Cancel", processing: "Processing...", linkedHistory: "Linked history", archiveInstead: "No historical record will be deleted. Archive is the safe available action.", typeEmail: "Type the email to confirm:", newTemporaryPassword: "New temporary password", passwordRequirement: "At least 10 characters.", requestFailed: "Request failed.", basic: "Basic information", fullName: "Full name", roleSection: "User role", credentials: "Credentials", passwordCreateHint: "Temporary password (at least 10 characters)", separateActions: "Activation, suspension, and password reset are separate confirmed actions in the user menu.", lifecycleHint: "Change account status or password from the actions menu for confirmation and audit coverage.", editHint: "Edit identity and role without silently changing account state or password.", createHint: "Create an account with a clear role and secure temporary password."
+    title: "User Management", lead: "Account lifecycle and permission testing from one secure console.", create: "Create user", export: "Export", edit: "Edit user", back: "Back to users", search: "Search name or email", empty: "No matching users", emptyHint: "Adjust search or filters.", name: "Name", email: "Email", role: "Role", active: "Active", suspended: "Suspended", archived: "Archived", password: "Temporary password", save: "Save changes", saved: "Saved.", saving: "Saving...", status: "Status", created: "Created", actions: "Actions", loadingLabel: "Loading users...", total: "Total", activeCount: "Active", suspendedCount: "Suspended", archivedCount: "Archived", roleDistribution: "Role distribution", accountSummary: "Account summary", filterRole: "Filter by role", filterStatus: "Filter by status", allRoles: "All roles", allStatuses: "All statuses", viewEdit: "View / Edit", activate: "Activate", suspend: "Suspend", restore: "Restore", resetPassword: "Reset password", loginAs: "Login as user", archive: "Archive", deleteArchive: "Delete / Archive", close: "Close", cancel: "Cancel", processing: "Processing...", linkedHistory: "Linked history", archiveInstead: "No historical record will be deleted. Archive is the safe available action.", typeEmail: "Type the email to confirm:", newTemporaryPassword: "New temporary password", passwordRequirement: "At least 10 characters.", requestFailed: "Request failed.", basic: "Basic information", fullName: "Full name", roleSection: "User role", credentials: "Credentials", passwordCreateHint: "Temporary password (at least 10 characters)", separateActions: "Activation, suspension, and password reset are separate confirmed actions in the user menu.", lifecycleHint: "Change account status or password from the actions menu for confirmation and audit coverage.", editHint: "Edit identity and role without silently changing account state or password.", createHint: "Create an account with a clear role and secure temporary password.", generatePassword: "Generate", generateHint: "Copy the password and share it securely - it will not be shown again."
   };
 }
