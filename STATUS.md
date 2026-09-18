@@ -818,3 +818,29 @@
   - `pnpm typecheck`: passed (code 0 across all 8 workspace projects).
   - `pnpm --filter @elhabak/web test`: passed 100% (17/17 tests passing).
   - `pnpm build`: passed (code 0 across all workspace projects).
+
+### 2026-09-18 — Public Website V6: Architectural Engineering Reconstruction & Clean CSS Rebuild
+- **Scope**: Focused visual and structural reconstruction of the public-facing ELHABAK website into an authoritative architectural studio & digital engineering management platform experience.
+- **Architectural Composition & Visuals**:
+  - **Hero Recomposition**: Reconstructed hero visual composition with a standing smartphone device mockup overlay positioned in front of architectural site photography, displaying live mobile project tracking (`platform-mobile.webp`), dynamic island, live indicator, and glowing status tag. Integrated subtle SVG CAD datum lines (`EL +14.20m`, `DIM: 24.80m / AXIS A-B`).
+  - **Truthful Capability Signals**: Replaced unverified marketing statistics (`+100 completed projects`, `+15 years experience`, `98% satisfaction`) with 3 factual capability signals: `تصميم هندسي متكامل` (Approved architectural/structural drawings), `إشراف وتنفيذ ميداني` (Strict code compliance and site supervision), and `متابعة رقمية للمشروع` (Transparent digital tracking from inspection to handover).
+  - **Navigation Redesign**: Removed dead `Why ELHABAK / لماذا الحباك` and dead anchor `id="why"`. Streamlined desktop nav: `عن الحباك` (`#about`), `الخدمات` (`#services`), `آلية العمل` (`#process`), `المنصة` (`#platform`), `تواصل معنا` (`#contact`).
+  - **Mobile Navigation Drawer**: Replaced the legacy horizontal quick-nav chip strip with an accessible, high-performance slide-in mobile navigation drawer (`PublicHeader`) featuring touch-friendly targets, close button, body scroll locking, Escape key support, and direct login and WhatsApp conversion triggers.
+- **Clean 6-Experience Information Architecture**:
+  - **01 // Hero Experience**: Authoritative engineering headline, verified capability signals, primary WhatsApp button, and interactive scene stepper.
+  - **02 // About & Engineering Position**: Architectural building facade card with badge (`هندسة تبني مجتمعات أفضل / ENGINEERING STRONGER COMMUNITIES`), authoritative studio position copy, and 3 distinct position pillars: `دقة التخطيط`, `جودة التنفيذ`, `شفافية المتابعة`.
+  - **03 // Scope of Services (5 Canonical Disciplines)**: Prominent featured service card for `التصميم` (Architectural & Interior Design) paired with a 4-column responsive grid for `التنفيذ الإنشائي` (Structural Execution), `التشطيبات المعمارية` (Finishing), `المقاولات العامة` (General Contracting), and `التأثيث والفرش` (Furnishing & Fit-Out), each with authentic photography, discipline icon, and consultation CTA.
+  - **04 // 6-Stage Engineering Delivery Process**: Deep navy technical blueprint background with subtle watermark and canonical 6-stage lifecycle (`01 المعاينة والدراسة الفنية`, `02 التصميم المعماري والهندسي`, `03 المقايسة التقريبية والمواصفات`, `04 التنفيذ الميداني والإشراف الهندسي`, `05 التسليم الابتدائي والمعاينة`, `06 التسليم النهائي واعتماد المخططات`) connected by architectural datum lines.
+  - **05 // Digital Project Platform (Major Differentiator)**: Technological advantage showcase with dual device preview (desktop dashboard frame + mobile phone mockup), highlighting 4 implemented system capabilities: `متابعة حية للموقع`, `مخططات واعتمادات معمارية`, `مستندات وتقارير دورية`, `قنوات تواصل مباشرة`, and direct `دخول منصة المشاريع` CTA.
+  - **06 // FAQ, Contact CTA Banner & Footer**: 3 curated high-value FAQs with accessible accordion (`FaqAccordion`), technical elevation blueprint card, evening skyline banner with verified Sohag address (`مول أبتوان، مدينة سوهاج الجديدة، سوهاج، مصر`) and direct phone (`(+20) 011 111 309 18`), and deep architectural navy footer with zero fake links.
+- **Modular CSS Clean Rebuild**:
+  - Rebuilt `apps/web/src/app/public-home.css` cleanly from scratch (~600 lines), eliminating over 2,400 lines of legacy overrides, duplicate selectors, and `!important` declarations.
+  - Strict zero letter-spacing enforcement on Arabic texts (`[dir="rtl"]`) to prevent cursive script clipping.
+  - Complete RTL/LTR symmetry and fluid responsiveness across all screen sizes.
+- **Verification & Acceptance**:
+  - `pnpm lint`: passed (code 0, 0 errors, 0 warnings).
+  - `pnpm typecheck`: passed across all 8 workspace projects (code 0).
+  - `node --test apps/web/test/*.test.mjs`: passed 100% (17/17 tests).
+  - `pnpm --filter @elhabak/web build`: Turbopack production build succeeded (code 0).
+  - Puppeteer headless Chrome visual QA verified across 1440px, 1280px, 1024px, 768px, 430px, 390px, 375px: **exactly 0px horizontal overflow across all viewports** in Arabic (RTL) and English (LTR).
+  - Verified mobile navigation drawer open/close transitions and touch ergonomics.

@@ -17,23 +17,23 @@ test("public website exposes stronger conversion routes", () => {
 });
 
 test("public website leads with engineering scope and keeps platform as support", () => {
+  const aboutIndex = page.indexOf('id="about"');
   const servicesIndex = page.indexOf('id="services"');
-  const methodIndex = page.indexOf('id="why"');
   const processIndex = page.indexOf('id="process"');
   const platformIndex = page.indexOf('id="platform"');
   const faqIndex = page.indexOf('id="faq"');
   const contactIndex = page.indexOf('id="contact"');
 
+  assert.ok(aboutIndex > -1, "about section exists");
   assert.ok(servicesIndex > -1, "services section exists");
-  assert.ok(methodIndex > -1, "method section exists");
   assert.ok(processIndex > -1, "process section exists");
   assert.ok(platformIndex > -1, "platform section exists");
   assert.ok(faqIndex > -1, "faq section exists");
   assert.ok(contactIndex > -1, "contact section exists");
 
-  // Engineering narrative order: scope -> method -> delivery -> digital support -> FAQ -> contact.
-  assert.ok(servicesIndex < methodIndex, "services should appear before method");
-  assert.ok(methodIndex < processIndex, "method should appear before delivery process");
+  // Engineering narrative order: about -> services -> process -> platform -> FAQ -> contact.
+  assert.ok(aboutIndex < servicesIndex, "about should appear before services");
+  assert.ok(servicesIndex < processIndex, "services should appear before delivery process");
   assert.ok(processIndex < platformIndex, "delivery process should appear before the digital platform");
   assert.ok(platformIndex < faqIndex, "platform should appear before FAQ");
   assert.ok(faqIndex < contactIndex, "FAQ should appear before contact");

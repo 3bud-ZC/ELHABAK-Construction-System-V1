@@ -6,24 +6,25 @@ import {
   ArrowRight,
   Award,
   BarChart3,
+  Building2,
   Compass,
   Eye,
   FileText,
   HardHat,
-  Linkedin,
-  Instagram,
+  Mail,
+  MapPin,
   MessageCircle,
   MessageSquare,
+  PaintBucket,
   Phone,
   Sofa,
-  Target,
-  Users,
-  Youtube
+  Target
 } from "lucide-react";
 import { Button } from "@elhabak/ui";
 import { telHref, whatsappHref } from "@elhabak/contracts";
 import { dictionary, resolveLocale, textDirections } from "../i18n/translations";
 import { siteUrl } from "../lib/site";
+import { PublicHeader } from "./public-header";
 import { PublicHero } from "./public-hero";
 import { PublicMotion } from "./public-motion";
 import { FaqAccordion } from "./faq-accordion";
@@ -44,7 +45,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     return {
       title: "ELHABAK Construction | Design, Construction & Finishing in Sohag",
       description:
-        "ELHABAK Construction delivers design, construction, finishing, general contracting, and furnishing in Sohag with organized digital project follow-up.",
+        "ELHABAK Construction delivers architectural design, structural execution, finishing, general contracting, and furnishing in Sohag with organized digital project follow-up.",
       alternates: {
         canonical: "/?lang=en",
         languages: {
@@ -102,11 +103,14 @@ export default async function HomePage({ searchParams }: PageProps) {
   const arrow = dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />;
   const whatsapp = whatsappHref(t.contact, t.home.whatsappMessage);
   const tel = telHref(t.contact);
+
+  // Quick nav configuration kept for consistency and tests
   const mobileQuickNav = [
+    ["#about", t.nav.about],
     ["#services", t.nav.services],
     ["#process", t.nav.process],
-    ["#platform", t.home.mobilePlatform],
-    ["#faq", t.home.mobileFaq],
+    ["#platform", t.nav.platform],
+    ["#faq", t.home.faqEyebrow],
     ["#contact", t.nav.contact]
   ] as const;
 
@@ -179,13 +183,25 @@ export default async function HomePage({ searchParams }: PageProps) {
     }
   ];
 
-  const serviceIcons = [Compass, HardHat, Users, Sofa];
+  // 5 Canonical Services configuration
+  const serviceIcons = [Compass, HardHat, PaintBucket, Building2, Sofa];
   const serviceImages = [
-    "/marketing/service-design.webp",
+    "/marketing/services-feature.webp",
+    "/marketing/about-site.webp",
     "/marketing/service-finishing.webp",
     "/marketing/service-contracting.webp",
     "/marketing/service-furnishing.webp"
   ];
+
+  const headerNavLabels = {
+    about: t.nav.about,
+    services: t.nav.services,
+    process: t.nav.process,
+    platform: t.nav.platform,
+    contact: t.nav.contact,
+    login: t.nav.login,
+    language: t.nav.language
+  };
 
   return (
     <main className="site-shell" lang={locale} dir={dir}>
@@ -195,56 +211,43 @@ export default async function HomePage({ searchParams }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
-      {/* ============ HEADER ============ */}
-      <header className="site-header">
-        <div className="container header-inner">
-          <a className="brand-link" href={langHref(locale)} aria-label="ELHABAK Construction">
-            <Image
-              src="/brand/logo-horizontal.png"
-              alt="ELHABAK Construction"
-              width={220}
-              height={92}
-              priority
-            />
-          </a>
-          <nav className="header-nav" aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}>
-            <a href="#about">{t.nav.about}</a>
-            <a href="#services">{t.nav.services}</a>
-            <a href="#process">{t.nav.process}</a>
-            <a href="#why">{t.nav.why}</a>
-            <a href="#faq">{t.nav.faq}</a>
-            <a href="#contact">{t.nav.contact}</a>
-          </nav>
-          <div className="header-actions">
-            <a className="lang-link" href={langHref(alternate)}>
-              {t.nav.language}
-            </a>
-            <Button href={langHref(locale, "/login")} variant="primary" className="header-login header-login--solid">
-              {t.nav.login}
-            </Button>
-          </div>
-          <nav className="mobile-quick-nav" aria-label={locale === "ar" ? "تنقل سريع" : "Quick navigation"}>
-            {mobileQuickNav.map(([href, label]) => (
-              <a href={href} key={href}>{label}</a>
-            ))}
-          </nav>
-        </div>
-      </header>
+      {/* Screen-reader accessible quick navigation landmarks */}
+      <nav className="mobile-quick-nav" aria-label={locale === "ar" ? "تنقل سريع" : "Quick navigation"}>
+        {mobileQuickNav.map(([href, label]) => (
+          <a href={href} key={href}>{label}</a>
+        ))}
+      </nav>
 
-      {/* ============ HERO SECTION ============ */}
+      {/* ============ NAVIGATION HEADER ============ */}
+      <PublicHeader
+        locale={locale}
+        alternate={alternate}
+        dir={dir}
+        labels={headerNavLabels}
+        whatsappUrl={whatsapp}
+        loginHref={langHref(locale, "/login")}
+        homeHref={langHref(locale)}
+        alternateHref={langHref(alternate)}
+      />
+
+      {/* ============ 01 // HERO EXPERIENCE ============ */}
       <PublicHero
         states={heroStates}
         tag={t.home.heroTag}
         sideLabel={t.home.heroRailText}
-        stats={t.home.heroStats}
+        signals={t.home.capabilities}
         railEnd={
           locale === "ar"
             ? "قرار هندسي واضح من أول مقابلة حتى التسليم"
             : "Clear engineering decisions from first meeting to handover"
         }
         scopeIndex={locale === "ar" ? "نطاق متكامل" : "INTEGRATED SCOPE"}
-        scopeTitle={t.home.heroPanelTitle}
-        scopeText={t.home.heroPanelText}
+        scopeTitle={locale === "ar" ? "تصميم وتنفيذ متصل" : "Connected Design & Execution"}
+        scopeText={
+          locale === "ar"
+            ? "من المخطط الأول حتى تسليم المفتاح"
+            : "From initial concept to turnkey delivery"
+        }
         alt={
           locale === "ar"
             ? "مهندسون في موقع البناء يراجعون المخططات الهندسية وقت الغروب"
@@ -272,7 +275,13 @@ export default async function HomePage({ searchParams }: PageProps) {
         </h1>
         <p className="hero-subtitle">{t.home.heroSubtitle}</p>
         <div className="hero-actions">
-          <Button href={whatsapp} target="_blank" rel="noreferrer" variant="accent" className="hero-cta hero-cta--whatsapp">
+          <Button
+            href={whatsapp}
+            target="_blank"
+            rel="noreferrer"
+            variant="accent"
+            className="hero-cta hero-cta--whatsapp"
+          >
             <MessageCircle size={16} /> {t.home.primaryCta}
           </Button>
           <Button href="#services" variant="ghost" className="hero-cta hero-cta--ghost">
@@ -281,59 +290,60 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </PublicHero>
 
-      {/* ============ 01 // ABOUT ============ */}
+      {/* ============ 02 // ABOUT & ENGINEERING POSITION ============ */}
       <section id="about" className="about-section" aria-labelledby="about-title">
         <div className="container">
-          <div className="about-mockup-layout">
-            <div className="about-photo-card" data-reveal="mask">
-              <Image
-                src="/marketing/about-building.webp"
-                alt="ELHABAK Architecture"
-                fill
-                priority
-                sizes="(max-width: 980px) 100vw, 48vw"
-                className="about-photo-card__img"
-              />
-              <div className="about-photo-card__badge">
-                <strong>{t.home.aboutBadgeTitle}</strong>
-                <span>{t.home.aboutBadgeSubtitle}</span>
+          <div className="about-layout">
+            <div className="about-visual" data-reveal="mask">
+              <div className="about-photo-frame">
+                <Image
+                  src="/marketing/about-building.webp"
+                  alt="ELHABAK Architecture"
+                  fill
+                  priority
+                  sizes="(max-width: 980px) 100vw, 48vw"
+                  className="about-photo-img"
+                />
+                <div className="about-badge">
+                  <strong>{t.home.aboutBadgeTitle}</strong>
+                  <span>{t.home.aboutBadgeSubtitle}</span>
+                </div>
               </div>
             </div>
-            <div className="about-text-card" data-reveal="up">
+
+            <div className="about-content" data-reveal="up">
               <span className="section-eyebrow-tag">{t.home.aboutEyebrow}</span>
-              <h2 id="about-title" className="about-text-card__title">{t.home.aboutTitle}</h2>
-              <p className="about-text-card__lead">{t.home.aboutLead}</p>
-              <div className="about-text-card__actions">
-                <Button href="#services" variant="ghost" className="about-action-btn">
+              <h2 id="about-title" className="about-title">{t.home.aboutTitle}</h2>
+              <p className="about-lead">{t.home.aboutLead}</p>
+
+              <div className="about-pillars">
+                {t.home.aboutPillars.map((pillar, idx) => {
+                  const IconComponent = [Target, Award, Eye][idx] ?? Target;
+                  return (
+                    <div className="about-pillar-item" key={pillar.title}>
+                      <div className="about-pillar-icon">
+                        <IconComponent size={20} />
+                      </div>
+                      <div className="about-pillar-text">
+                        <strong>{pillar.title}</strong>
+                        <p>{pillar.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="about-actions">
+                <Button href="#services" variant="ghost" className="about-cta-btn">
                   {t.home.aboutCta} {arrow}
                 </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Values Section (matching iPhone mockup) */}
-          <div className="about-mobile-values" data-reveal="up">
-            <span className="section-eyebrow-tag">{t.home.aboutEyebrow}</span>
-            <h3 className="about-mobile-values__title">{t.home.aboutMobileTitle}</h3>
-            <div className="about-mobile-values__grid">
-              <div className="about-value-pill">
-                <Target size={18} className="about-value-pill__icon" />
-                <span>{t.home.aboutMobilePoints[0]}</span>
-              </div>
-              <div className="about-value-pill">
-                <Award size={18} className="about-value-pill__icon" />
-                <span>{t.home.aboutMobilePoints[1]}</span>
-              </div>
-              <div className="about-value-pill">
-                <Eye size={18} className="about-value-pill__icon" />
-                <span>{t.home.aboutMobilePoints[2]}</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ============ 02 // SERVICES ============ */}
+      {/* ============ 03 // 5 CANONICAL SERVICES ============ */}
       <section id="services" className="services-section" aria-labelledby="services-title">
         <div className="container">
           <div className="services-head" data-reveal="up">
@@ -341,49 +351,83 @@ export default async function HomePage({ searchParams }: PageProps) {
             <h2 id="services-title" className="services-head__title">{t.home.servicesTitle}</h2>
             <p className="services-head__lead">{t.home.servicesLead}</p>
           </div>
-          <div className="services-grid-cards" data-reveal-group>
-            {t.services.map(([title, body], index) => {
-              const IconComponent = serviceIcons[index] ?? Compass;
-              const imgUrl = serviceImages[index] ?? "/marketing/service-design.webp";
 
-              return (
-                <article className="service-mockup-card" key={title} data-reveal="up">
-                  <div className="service-mockup-card__thumb">
-                    <Image
-                      src={imgUrl}
-                      alt={title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 25vw"
-                      className="service-mockup-card__img"
-                    />
-                    <span className="service-mockup-card__icon-badge" aria-hidden="true">
-                      <IconComponent size={20} />
-                    </span>
+          <div className="services-showcase" data-reveal-group>
+            {/* Featured Primary Service: Design */}
+            {t.services.length > 0 && (
+              <article className="service-card service-card--featured" data-reveal="up">
+                <div className="service-card__thumb">
+                  <Image
+                    src={serviceImages[0] ?? "/marketing/services-feature.webp"}
+                    alt={t.services[0][0]}
+                    fill
+                    sizes="(max-width: 980px) 100vw, 50vw"
+                    className="service-card__img"
+                  />
+                  <div className="service-card__badge-tag">
+                    <Compass size={18} />
+                    <span>{locale === "ar" ? "خدمة رئيسية" : "FEATURED"}</span>
                   </div>
-                  <div className="service-mockup-card__body">
-                    <h3 className="service-mockup-card__title">{title}</h3>
-                    <p className="service-mockup-card__text">{body}</p>
-                    <div className="service-mockup-card__footer">
+                </div>
+                <div className="service-card__body">
+                  <span className="service-card__idx">01</span>
+                  <h3 className="service-card__title">{t.services[0][0]}</h3>
+                  <p className="service-card__desc">{t.services[0][1]}</p>
+                  <a
+                    href="#contact"
+                    className="service-card__action"
+                    aria-label={`${t.services[0][0]} - ${t.home.primaryCta}`}
+                  >
+                    <span>{t.home.primaryCta}</span>
+                    {arrow}
+                  </a>
+                </div>
+              </article>
+            )}
+
+            {/* Complementary Services: Construction, Finishing, Contracting, Furnishing */}
+            <div className="services-complementary-grid">
+              {t.services.slice(1).map(([title, body], sliceIdx) => {
+                const index = sliceIdx + 1;
+                const IconComponent = serviceIcons[index] ?? HardHat;
+                const imgUrl = serviceImages[index] ?? "/marketing/service-finishing.webp";
+
+                return (
+                  <article className="service-card service-card--compact" key={title} data-reveal="up">
+                    <div className="service-card__thumb">
+                      <Image
+                        src={imgUrl}
+                        alt={title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        className="service-card__img"
+                      />
+                      <span className="service-card__icon-badge" aria-hidden="true">
+                        <IconComponent size={18} />
+                      </span>
+                    </div>
+                    <div className="service-card__body">
+                      <span className="service-card__idx">{String(index + 1).padStart(2, "0")}</span>
+                      <h3 className="service-card__title">{title}</h3>
+                      <p className="service-card__desc">{body}</p>
                       <a
                         href="#contact"
-                        className="service-mockup-card__arrow-btn"
+                        className="service-card__link"
                         aria-label={`${title} - ${t.home.primaryCta}`}
                       >
+                        <span>{locale === "ar" ? "طلب استشارة" : "Consult"}</span>
                         {arrow}
                       </a>
                     </div>
-                  </div>
-                </article>
-              );
-            })}
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Anchor for Why section narrative check */}
-      <div id="why" className="why-anchor" aria-hidden="true" />
-
-      {/* ============ 03 // PROCESS / STEPPER ============ */}
+      {/* ============ 04 // 6-STAGE ENGINEERING DELIVERY PROCESS ============ */}
       <section id="process" className="process-section" aria-labelledby="process-title">
         <div className="process-bg-media" aria-hidden="true">
           <Image
@@ -396,9 +440,12 @@ export default async function HomePage({ searchParams }: PageProps) {
           <div className="process-bg-overlay" />
           <span className="process-watermark">{t.home.processWatermark}</span>
         </div>
+
         <div className="container process-content-wrap">
           <div className="process-head" data-reveal="up">
-            <span className="section-eyebrow-tag section-eyebrow-tag--light">{t.home.processEyebrow}</span>
+            <span className="section-eyebrow-tag section-eyebrow-tag--light">
+              {t.home.processEyebrow}
+            </span>
             <h2 id="process-title" className="process-head__title">{t.home.processTitle}</h2>
             <p className="process-head__lead">{t.home.processLead}</p>
           </div>
@@ -425,97 +472,120 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* ============ 04 // DIGITAL PLATFORM ============ */}
+      {/* ============ 05 // DIGITAL PROJECT PLATFORM ============ */}
       <section id="platform" className="platform-section" aria-labelledby="platform-title">
         <div className="container">
-          <div className="platform-mockup-layout">
-            <div className="platform-copy" data-reveal="up">
+          <div className="platform-layout">
+            <div className="platform-info" data-reveal="up">
               <span className="section-eyebrow-tag">{t.home.digitalEyebrow}</span>
               <h2 id="platform-title" className="platform-title">{t.home.digitalTitle}</h2>
               <p className="platform-lead">{t.home.digitalLead}</p>
+
+              <div className="platform-features-list">
+                {t.home.digitalFeatures.map((feat, idx) => {
+                  const IconComponent = [Activity, FileText, BarChart3, MessageSquare][idx] ?? Activity;
+                  return (
+                    <div className="platform-feature-card" key={feat.title}>
+                      <div className="platform-feature-card__icon">
+                        <IconComponent size={20} />
+                      </div>
+                      <div className="platform-feature-card__text">
+                        <strong>{feat.title}</strong>
+                        <p>{feat.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
               <div className="platform-actions">
-                <Button href={langHref(locale, "/login")} variant="primary" className="platform-cta-btn">
+                <Button
+                  href={langHref(locale, "/login")}
+                  variant="primary"
+                  className="platform-cta-btn"
+                >
                   {t.home.digitalCta} {arrow}
                 </Button>
               </div>
             </div>
 
-            <div className="platform-visuals-wrap" data-reveal="mask">
-              <div className="platform-device platform-device--laptop">
-                <Image
-                  src="/marketing/platform-desktop.webp"
-                  alt="ELHABAK Dashboard Desktop"
-                  width={680}
-                  height={425}
-                  className="platform-device__img"
-                />
+            <div className="platform-showcase" data-reveal="mask">
+              <div className="platform-device platform-device--desktop">
+                <div className="platform-device__frame">
+                  <Image
+                    src="/marketing/platform-desktop.webp"
+                    alt="ELHABAK Dashboard Desktop"
+                    width={720}
+                    height={450}
+                    className="platform-device__img"
+                  />
+                </div>
               </div>
-              <div className="platform-device platform-device--phone">
-                <Image
-                  src="/marketing/platform-mobile.webp"
-                  alt="ELHABAK Dashboard Mobile"
-                  width={220}
-                  height={476}
-                  className="platform-device__img"
-                />
-              </div>
-            </div>
-
-            <div className="platform-features-col" data-reveal="up">
-              <div className="platform-feature-pill">
-                <Activity size={18} className="platform-feature-pill__icon" />
-                <span>{t.home.digitalFeatures[0]}</span>
-              </div>
-              <div className="platform-feature-pill">
-                <FileText size={18} className="platform-feature-pill__icon" />
-                <span>{t.home.digitalFeatures[1]}</span>
-              </div>
-              <div className="platform-feature-pill">
-                <BarChart3 size={18} className="platform-feature-pill__icon" />
-                <span>{t.home.digitalFeatures[2]}</span>
-              </div>
-              <div className="platform-feature-pill">
-                <MessageSquare size={18} className="platform-feature-pill__icon" />
-                <span>{t.home.digitalFeatures[3]}</span>
+              <div className="platform-device platform-device--mobile">
+                <div className="platform-device__phone-frame">
+                  <Image
+                    src="/marketing/platform-mobile.webp"
+                    alt="ELHABAK Project Tracking Mobile"
+                    width={220}
+                    height={460}
+                    className="platform-device__phone-img"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ============ 05 // FAQ ============ */}
+      {/* ============ 06 // FAQ, CONTACT BANNER & FOOTER ============ */}
       <section id="faq" className="faq-section" aria-labelledby="faq-title">
         <div className="container">
-          <div className="faq-mockup-layout">
-            <div className="faq-accordion-side" data-reveal="up">
-              <FaqAccordion items={t.faq} />
-            </div>
-
-            <div className="faq-drawing-info" data-reveal="up">
+          <div className="faq-layout">
+            <div className="faq-content" data-reveal="up">
               <span className="section-eyebrow-tag">{t.home.faqEyebrow}</span>
-              <h2 id="faq-title" className="faq-drawing-title">{t.home.faqTitle}</h2>
-              <p className="faq-drawing-lead">{t.home.faqLead}</p>
-              <Button href={whatsapp} target="_blank" rel="noreferrer" variant="ghost" className="faq-action-btn">
-                {t.home.faqCta} {arrow}
-              </Button>
+              <h2 id="faq-title" className="faq-title">{t.home.faqTitle}</h2>
+              <p className="faq-lead">{t.home.faqLead}</p>
+
+              <div className="faq-items-wrap">
+                <FaqAccordion items={t.faq} />
+              </div>
+
+              <div className="faq-direct-action">
+                <Button
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="ghost"
+                  className="faq-action-btn"
+                >
+                  <MessageCircle size={16} />
+                  <span>{t.home.whatsappCta}</span>
+                  {arrow}
+                </Button>
+              </div>
             </div>
 
-            <div className="faq-drawing-side" data-reveal="mask">
-              <div className="faq-drawing-frame">
+            <div className="faq-visual" data-reveal="mask">
+              <div className="faq-technical-card">
                 <Image
                   src="/marketing/faq-blueprint.webp"
                   alt="Architectural Technical Elevation"
                   fill
-                  sizes="(max-width: 980px) 100vw, 32vw"
-                  className="faq-drawing-img"
+                  sizes="(max-width: 980px) 100vw, 36vw"
+                  className="faq-technical-img"
                 />
+                <div className="faq-technical-overlay">
+                  <span className="faq-technical-tag">
+                    {locale === "ar" ? "مخطط قطاع هندسي معتمد" : "ENGINEERING ELEVATION"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ============ 06 // CTA BANNER ============ */}
+      {/* Contact CTA Banner */}
       <section id="contact" className="cta-banner-section" aria-labelledby="contact-title">
         <div className="cta-banner-bg" aria-hidden="true">
           <Image
@@ -527,9 +597,13 @@ export default async function HomePage({ searchParams }: PageProps) {
           />
           <div className="cta-banner-overlay" />
         </div>
+
         <div className="container cta-banner-inner" data-reveal="up">
-          <h2 id="contact-title" className="cta-banner-title">{t.home.ctaTitle}</h2>
-          <p className="cta-banner-subtitle">{t.home.ctaSubtitle}</p>
+          <div className="cta-banner-header">
+            <h2 id="contact-title" className="cta-banner-title">{t.home.ctaTitle}</h2>
+            <p className="cta-banner-subtitle">{t.home.ctaSubtitle}</p>
+          </div>
+
           <div className="cta-banner-actions">
             <Button
               href={whatsapp}
@@ -538,49 +612,59 @@ export default async function HomePage({ searchParams }: PageProps) {
               variant="secondary"
               className="cta-banner-btn"
             >
-              {t.home.ctaButton} {arrow}
+              <MessageCircle size={18} />
+              <span>{t.home.ctaButton}</span>
+              {arrow}
             </Button>
             <a href={tel} className="cta-banner-phone">
-              <Phone size={16} />
+              <Phone size={18} />
               <bdi dir="ltr">{t.contact.phone}</bdi>
             </a>
+          </div>
+
+          <div className="cta-banner-meta">
+            <div className="cta-meta-item">
+              <MapPin size={16} className="cta-meta-item__icon" />
+              <span>{t.contact.address}</span>
+            </div>
+            <div className="cta-meta-item">
+              <Mail size={16} className="cta-meta-item__icon" />
+              <a href={`mailto:${t.contact.email}`}>{t.contact.email}</a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ============ FOOTER ============ */}
-      <footer className="site-footer site-footer--mockup">
-        <div className="container footer-mockup-inner">
-          <div className="footer-mockup-socials">
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={18} /></a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={18} /></a>
-            <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube"><Youtube size={18} /></a>
+      {/* Deep Architectural Footer */}
+      <footer className="site-footer">
+        <div className="container footer-inner">
+          <div className="footer-top">
+            <div className="footer-brand-col">
+              <Image
+                src="/brand/logo-horizontal.png"
+                alt="ELHABAK Construction"
+                width={190}
+                height={80}
+                className="footer-logo"
+              />
+              <p className="footer-slogan">{t.home.footerTagline}</p>
+            </div>
+
+            <nav className="footer-nav" aria-label={t.home.footerNav}>
+              <a href="#about" className="footer-nav__link">{t.nav.about}</a>
+              <a href="#services" className="footer-nav__link">{t.nav.services}</a>
+              <a href="#process" className="footer-nav__link">{t.nav.process}</a>
+              <a href="#platform" className="footer-nav__link">{t.nav.platform}</a>
+              <a href="#faq" className="footer-nav__link">{t.home.faqEyebrow}</a>
+              <a href="#contact" className="footer-nav__link">{t.nav.contact}</a>
+            </nav>
           </div>
 
-          <nav className="footer-mockup-links" aria-label={t.home.footerNav}>
-            <a href="#faq">{t.home.mobileFaq}</a>
-            <span className="footer-mockup-sep">|</span>
-            <a href="#contact">{t.nav.contact}</a>
-            <span className="footer-mockup-sep">|</span>
-            <a href="#about">{t.home.footerPrivacy}</a>
-          </nav>
-
-          <div className="footer-mockup-brand">
-            <Image
-              src="/brand/logo-horizontal.png"
-              alt="ELHABAK Construction"
-              width={180}
-              height={75}
-            />
-          </div>
-
-          <div className="footer-mockup-copy">
-            <span>{t.home.footerRights}</span>
-          </div>
-
-          <div className="footer-mockup-slogan">
-            <span>{t.home.footerTagline}</span>
-            <i className="footer-mockup-slogan__bar" aria-hidden="true" />
+          <div className="footer-bottom">
+            <p className="footer-copyright">{t.home.footerRights}</p>
+            <p className="footer-location">
+              {locale === "ar" ? "سوهاج — جمهورية مصر العربية" : "Sohag — Arab Republic of Egypt"}
+            </p>
           </div>
         </div>
       </footer>

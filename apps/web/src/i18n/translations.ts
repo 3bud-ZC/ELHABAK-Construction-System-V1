@@ -15,9 +15,7 @@ export const dictionary = {
       about: "عن الحباك",
       services: "الخدمات",
       process: "آلية العمل",
-      why: "لماذا الحباك",
       platform: "المنصة",
-      faq: "الأسئلة الشائعة",
       contact: "تواصل معنا",
       login: "دخول النظام",
       language: "English"
@@ -26,112 +24,132 @@ export const dictionary = {
       heroTag: "هندسة تصنع فرقاً",
       heroTitle: "الحباك للاستشارات الهندسية",
       heroSubtitle:
-        "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية واضحة ومتابعة دقيقة حتى التسليم.",
+        "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية متكاملة ومتابعة رقمية دقيقة من المعاينة حتى التسليم.",
       primaryCta: "ابدأ مشروعك معنا",
       requestInspection: "طلب معاينة",
       secondaryCta: "استعرض خدماتنا",
+      explorePlatformCta: "اكتشف المنصة",
       whatsappCta: "ابدأ مشروعك معنا",
-      whatsappMessage: "مرحبًا، أرغب في الاستفسار عن خدمات الحباك والبدء في مشروع.",
-      heroStats: [
-        { value: "+100", label: "مشروع منجز" },
-        { value: "+15", label: "سنة خبرة" },
-        { value: "98%", label: "رضا العملاء" }
-      ],
+      whatsappMessage: "مرحبًا، أرغب في الاستفسار عن خدمات الحباك الهندسية والبدء في مشروع.",
       heroRailText: "هندسة لمستقبل أفضل",
-      mobilePlatform: "المنصة",
-      mobileFaq: "الأسئلة الشائعة",
-      heroPanelTitle: "نطاق واحد للمشروع",
-      heroPanelText:
-        "تصميم، إنشاء، تشطيب، مقاولات عامة، وتأثيث ضمن مسار عمل منظم.",
+      capabilities: [
+        {
+          title: "تصميم هندسي متكامل",
+          desc: "مخططات معمارية وإنشائية وكهروميكانيكية معتمدة"
+        },
+        {
+          title: "إشراف وتنفيذ ميداني",
+          desc: "مطابقة صارمة للمواصفات ومتابعة يومية مستمرة"
+        },
+        {
+          title: "متابعة رقمية للمشروع",
+          desc: "منظومة إلكترونية شفافة للمالك من المعاينة حتى التسليم"
+        }
+      ],
       aboutEyebrow: "عن الحباك",
       aboutTitle: "شريكك الهندسي من الفكرة إلى الواقع",
       aboutLead:
         "الحباك للاستشارات الهندسية تقدم خدمات التصميم والتنفيذ والتشطيب بإدارة احترافية، نلتزم بالجودة والشفافية، ونبني شراكات طويلة الأمد مع عملائنا.",
-      aboutCta: "مزيد عن الشركة",
+      aboutCta: "استعرض خدماتنا",
       aboutBadgeTitle: "هندسة تبني مجتمعات أفضل",
       aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
-      aboutMobileTitle: "شركة هندسية تقود المشروع من الفكرة إلى التسليم",
-      aboutMobilePoints: ["نتائج ملموسة", "خبرة عملية", "رؤية واضحة"],
-      servicesEyebrow: "خدماتنا",
-      servicesTitle: "حلول هندسية متكاملة",
-      servicesLead: "من التخطيط إلى التسليم، نوفر كل ما يحتاجه مشروعك.",
-      processEyebrow: "آلية العمل",
-      processTitle: "من خطة واضحة إلى تسليم ناجح",
-      processLead: "تخاطب كل مرحلة بإدارة دقيقة وتواصل مستمر مع العميل.",
-      processWatermark: "FROM VISION TO REALITY",
-      whyTitle: "لماذا الحباك",
-      whyLead: "قيمة المشروع تبدأ من نطاق واضح، متابعة منظمة، وقرارات محفوظة في وقتها.",
-      digitalEyebrow: "منصتنا الرقمية",
-      digitalTitle: "تابع مشروعك في كل خطوة",
-      digitalLead:
-        "منصة مخصصة تتيح لك متابعة الموقع، المستندات، التصاميم، والاعتمادات في مكان واحد وبشفافية تامة.",
-      digitalNote: "الوصول للمنصة بحساب معتمد من الشركة.",
-      digitalCta: "اكتشف المنصة",
-      digitalFeatures: [
-        "متابعة مباشرة",
-        "مستندات ومرفقات",
-        "تقارير دورية",
-        "تواصل مع فريق العمل"
+      aboutPillars: [
+        { title: "دقة التخطيط", desc: "مخططات هندسية تفصيلية ومقايسات واضحة قبل البدء في التنفيذ." },
+        { title: "جودة التنفيذ", desc: "إشراف ميداني مستمر ومطابقة صارمة لأعلى المعايير القياسية." },
+        { title: "شفافية المتابعة", desc: "توثيق رقمي وتقارير دورية لكافة مراحل المشروع لحظة بلحظة." }
       ],
-      principlesTitle: "قواعد العمل",
+      servicesEyebrow: "نطاق الخدمات",
+      servicesTitle: "حلول هندسية متكاملة",
+      servicesLead: "من التخطيط والدراسة حتى التسليم النهائي، خدمات متصلة تضمن أعلى درجات الانضباط والجودة.",
+      servicesFeaturedBadge: "الخدمة المميزة",
+      processEyebrow: "منهجية التنفيذ",
+      processTitle: "مسار العمل الهندسي: من المعاينة حتى التسليم",
+      processLead: "ست مراحل واضحة تضمن انضباط الجدول الزمني والمواصفات وجودة التنفيذ في كل خطوة.",
+      processWatermark: "ENGINEERING DELIVERY SEQUENCE",
+      digitalEyebrow: "نظام المتابعة الرقمي",
+      digitalTitle: "منظومة رقمية تضع مشروعك بين يديك",
+      digitalLead:
+        "انفراد مهني يتيح لكل عميل متابعة يومية حية لموقع البناء، المستندات، والاعتمادات بكل شفافية ومن أي مكان.",
+      digitalNote: "الوصول متاح للعملاء وأطراف المشروع المعتمدة عبر حساب مؤمن.",
+      digitalCta: "دخول منصة المشاريع",
+      digitalFeatures: [
+        {
+          title: "متابعة حية للموقع",
+          desc: "صور وفيديوهات وتقارير يومية موثقة من المهندس المشرف في الموقع."
+        },
+        {
+          title: "مخططات واعتمادات معمارية",
+          desc: "استعراض كافة اللوحات الهندسية واعتماد التعديلات بلمسة واحدة."
+        },
+        {
+          title: "مستندات وتقارير دورية",
+          desc: "تقارير إنجاز أسبوعية، جداول كميات، وتوثيق فني منظم للمشروع."
+        },
+        {
+          title: "قنوات تواصل مباشرة",
+          desc: "قناة محادثة فورية وملاحظات صوتية مع إدارة المشروع والمهندس المسؤول."
+        }
+      ],
       faqEyebrow: "الأسئلة الشائعة",
       faqTitle: "إجابات سريعة لأهم استفساراتك",
-      faqLead: "كل ما تحتاج معرفته قبل البدء في مشروعك.",
-      faqCta: "عرض جميع الأسئلة",
+      faqLead: "كل ما تحتاج معرفته عن بدء مشروعك وآلية العمل والمتابعة.",
       ctaTitle: "لنبدأ مشروعك القادم",
-      ctaSubtitle: "تواصل معنا الآن وكن خطوة أقرب إلى تحويل رؤيتك إلى واقع.",
-      ctaButton: "تواصل معنا",
-      contactTitle: "تواصل معنا",
-      contactLead: "تواصل معنا الآن لمناقشة مشروعك والحصول على استشارة هندسية متخصصة من أول معاينة حتى التسليم.",
+      ctaSubtitle: "تواصل معنا الآن لمناقشة تفاصيل مشروعك والحصول على استشارة هندسية متخصصة من أول معاينة حتى التسليم.",
+      ctaButton: "تواصل معنا عبر واتساب",
+      ctaCallButton: "اتصل بنا مباشرة",
+      contactTitle: "بيانات التواصل",
+      contactLead: "فريقنا الهندسي جاهز لاستقبال استفساراتك وزيارة موقعك.",
+      contactPhoneLabel: "الهاتف المباشر",
+      contactEmailLabel: "البريد الإلكتروني",
+      contactAddressLabel: "المقر الرئيسي",
       footerText: "الحباك للاستشارات الهندسية",
       footerTagline: "نبني اليوم ... لمستقبل أفضل",
       footerNav: "أقسام الموقع",
-      footerServices: "نطاق الخدمات",
-      footerContact: "بيانات التواصل",
-      footerPlatform: "المنصة",
-      footerRights: "جميع الحقوق محفوظة © 2026 الحباك للاستشارات الهندسية",
-      footerPrivacy: "سياسة الخصوصية"
+      footerRights: "جميع الحقوق محفوظة © 2026 الحباك للاستشارات الهندسية"
     },
-    aboutPrinciples: [
-      ["تصميم", "DESIGN"],
-      ["تخطيط", "PLANNING"],
-      ["تنفيذ", "EXECUTION"],
-      ["إشراف", "SUPERVISION"]
-    ],
-    digitalPoints: [
-      "متابعة تقدم المشروع ومراحله المعتمدة",
-      "مراجعة التصاميم والاعتمادات",
-      "الوصول إلى مستندات وملفات المشروع",
-      "تحديثات الموقع والتواصل مع فريق العمل"
-    ],
     faq: [
-      ["هل يمكن طلب معاينة قبل التعاقد؟", "نعم، نوفر جلسة معاينة أولية للموقع لفحص طبيعة المكان ومطابقة الأبعاد وتحديد الاحتياجات قبل اعتماد نطاق العمل."],
-      ["هل تقدمون التصميم والتنفيذ معاً؟", "نعم، نقدم إدارة هندسية متكاملة تضمن تطبيق المخططات المعمارية والتنفيذية بدقة متناهية على أرض الواقع."],
-      ["ما هي المتابعة الرقمية المتاحة لكل عميل؟", "يحصل العميل على حساب معتمد في منصتنا الرقمية لمتابعة التقارير اليومية والصور الميدانية والمخططات والدفعات لحظة بلحظة."]
-    ],
-    principles: [
-      ["نطاق موثق قبل التنفيذ", "SCOPE FIRST"],
-      ["متابعة منظمة لكل مرحلة", "TRACKED PHASES"],
-      ["قرارات وملفات محفوظة", "DOCUMENTED"],
-      ["استمرارية من التصميم إلى التسليم", "DESIGN TO DELIVERY"]
+      [
+        "هل يمكن طلب معاينة قبل التعاقد؟",
+        "نعم، نوفر جلسة معاينة أولية للموقع لفحص طبيعة المكان ومطابقة الأبعاد وتحديد الاحتياجات الفنية بدقة قبل اعتماد نطاق العمل."
+      ],
+      [
+        "هل تقدمون التصميم والتنفيذ معاً؟",
+        "نعم، نتميز بإدارة هندسية متكاملة تربط التصميم المعماري بالتنفيذ الإنشائي والتشطيبات لضمان أعلى مستويات الدقة والمطابقة."
+      ],
+      [
+        "كيف يمكنني متابعة مشروعي عبر المنصة الرقمية؟",
+        "يحصل كل عميل على حساب مخصص للوصول إلى لوحة تحكم مشروعه لمتابعة التقارير اليومية، الصور الميدانية الموثقة، المخططات، والجدول الزمني بشفافية تامة."
+      ]
     ],
     services: [
-      ["التصميم", "تصميم معماري وهندسي يحقق رؤيتك ويعكس احتياجاتك."],
-      ["التنفيذ والتشطيب", "تنفيذ دقيق بجودة عالية ومتابعة مستمرة في جميع المراحل."],
-      ["المقاولات العامة", "تنسيق وتنفيذ نطاق المقاولات وفق متطلبات المشروع."],
-      ["التأثيث والفرش", "فرش وتأثيث متوافق مع المساحة وطريقة الاستخدام."]
+      [
+        "التصميم",
+        "تصميم معماري وإنشائي تفصيلي يحول الرؤية إلى مخططات تنفيذية معتمدة ومطابقة للكود."
+      ],
+      [
+        "التنفيذ الإنشائي",
+        "تنفيذ الأعمال الإنشائية والخرسانية بإشراف هندسي صارم ومطابقة دقيقة للمواصفات الفنية."
+      ],
+      [
+        "التشطيبات المعمارية",
+        "تشطيبات داخلية وخارجية راقية بأعلى معايير الجودة واعتماد دقيق للعينات والمواد."
+      ],
+      [
+        "المقاولات العامة",
+        "إدارة وتنفيذ شامل لكافة بنود المقاولات والتنسيق الميداني المتكامل حتى التسليم."
+      ],
+      [
+        "التأثيث والفرش",
+        "حلول تأثيث وتصميم داخلي متكاملة تتناغم مع المساحة والوظيفة والطابع المعماري."
+      ]
     ],
     process: [
-      ["دراسة المتطلبات", "دراسة المتطلبات وفهم نطاق العمل بدقة."],
-      ["التصميم والتخطيط", "التصميم والتخطيط الهندسي بشكل تفصيلي."],
-      ["التنفيذ والمتابعة", "التنفيذ والمتابعة الميدانية وفق الجدول الزمني."],
-      ["التسليم ودعم ما بعد التنفيذ", "التسليم النهائي ودعم ما بعد التنفيذ."]
-    ],
-    why: [
-      ["نطاق واحد", "التصميم والتنفيذ والتشطيب تُدار كعمل هندسي مترابط."],
-      ["تواصل مهني", "لغة واضحة بالعربية والإنجليزية للعميل وفريق العمل."],
-      ["توثيق رقمي", "منصة الشركة تنظم المشروع والملفات والتقارير."],
-      ["هوية موثقة", "حضور مهني مبني على أصول الشركة لا على قوالب عامة."]
+      ["المعاينة", "زيارة ميدانية لفحص طبيعة الموقع، مطابقة الأبعاد، وتوثيق المتطلبات الفنية."],
+      ["التصميم", "إعداد المخططات المعمارية والإنشائية والتنفيذية واعتماد كافة التفاصيل."],
+      ["المقايسة التقريبية", "إعداد جداول الكميات (BOQ) ودراسة التكاليف والمواصفات بدقة وشفافية."],
+      ["التنفيذ", "بدء الأعمال الميدانية بإشراف هندسي مستمر وتوثيق يومي للمراحل والتقدم."],
+      ["التسليم الابتدائي", "فحص ومراجعة كافة الأعمال المنفذة ومعالجة أي ملاحظات وفق أعلى المعايير."],
+      ["التسليم النهائي", "اعتماد المشروع نهائياً وتسليم كافة الوثائق والمستندات والضمانات للعميل."]
     ],
     contact: companyContact,
     login: {
@@ -154,9 +172,7 @@ export const dictionary = {
       about: "About",
       services: "Services",
       process: "Process",
-      why: "Why ELHABAK",
       platform: "Platform",
-      faq: "FAQ",
       contact: "Contact",
       login: "Login",
       language: "العربية"
@@ -165,112 +181,132 @@ export const dictionary = {
       heroTag: "Engineering That Makes a Difference",
       heroTitle: "ELHABAK Construction",
       heroSubtitle:
-        "Design, construction, and finishing for residential and commercial projects with clear engineering management and precise follow-up until handover.",
+        "Design, construction, and finishing for residential and commercial projects with integrated engineering management and precise digital follow-up from inspection to handover.",
       primaryCta: "Start Your Project",
-      requestInspection: "Inspection request",
+      requestInspection: "Request Inspection",
       secondaryCta: "Explore Our Services",
+      explorePlatformCta: "Explore Platform",
       whatsappCta: "Start Your Project",
       whatsappMessage: "Hello, I would like to inquire about ELHABAK engineering services and start a project.",
-      heroStats: [
-        { value: "+100", label: "Completed Projects" },
-        { value: "+15", label: "Years Experience" },
-        { value: "98%", label: "Client Satisfaction" }
-      ],
       heroRailText: "Engineering for a Better Tomorrow",
-      mobilePlatform: "Platform",
-      mobileFaq: "FAQ",
-      heroPanelTitle: "One project scope",
-      heroPanelText:
-        "Design, construction, finishing, general contracting, and furnishing through one organized path.",
+      capabilities: [
+        {
+          title: "Integrated Engineering Design",
+          desc: "Approved architectural, structural, and MEP working drawings"
+        },
+        {
+          title: "Field Execution Management",
+          desc: "Strict site quality control, daily supervision, and code compliance"
+        },
+        {
+          title: "Digital Project Tracking",
+          desc: "Transparent client portal from site inspection to final handover"
+        }
+      ],
       aboutEyebrow: "About ELHABAK",
       aboutTitle: "Your Engineering Partner from Idea to Reality",
       aboutLead:
         "ELHABAK Engineering Consulting delivers design, execution, and finishing with professional management, committing to quality, transparency, and long-term client partnerships.",
-      aboutCta: "More About Company",
+      aboutCta: "Explore Our Services",
       aboutBadgeTitle: "Engineering Stronger Communities",
       aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
-      aboutMobileTitle: "An engineering firm leading your project from concept to delivery",
-      aboutMobilePoints: ["Tangible Results", "Hands-on Experience", "Clear Vision"],
-      servicesEyebrow: "Our Services",
-      servicesTitle: "Integrated Engineering Solutions",
-      servicesLead: "From planning to handover, we provide everything your project requires.",
-      processEyebrow: "Our Process",
-      processTitle: "From Clear Plan to Successful Handover",
-      processLead: "Every stage is managed with precise engineering control and ongoing client communication.",
-      processWatermark: "FROM VISION TO REALITY",
-      whyTitle: "Why ELHABAK",
-      whyLead: "A good project starts with clear scope, organized follow-up, and decisions captured at the right time.",
-      digitalEyebrow: "Digital Platform",
-      digitalTitle: "Track Your Project at Every Step",
-      digitalLead:
-        "A dedicated platform enabling site monitoring, documents, designs, and approvals in one place with complete transparency.",
-      digitalNote: "Platform access requires a company-approved account.",
-      digitalCta: "Explore Platform",
-      digitalFeatures: [
-        "Live Updates",
-        "Documents & Files",
-        "Periodic Reports",
-        "Team Communication"
+      aboutPillars: [
+        { title: "Planning Precision", desc: "Detailed engineering drawings and transparent bill of quantities before site work begins." },
+        { title: "Execution Quality", desc: "Continuous on-site supervision and uncompromising adherence to engineering standards." },
+        { title: "Tracking Transparency", desc: "Real-time digital documentation and periodic progress reports at every milestone." }
       ],
-      principlesTitle: "Working principles",
+      servicesEyebrow: "Scope of Services",
+      servicesTitle: "Integrated Engineering Solutions",
+      servicesLead: "From initial study to final handover, connected services ensuring discipline, quality, and precision.",
+      servicesFeaturedBadge: "Featured Discipline",
+      processEyebrow: "Delivery Sequence",
+      processTitle: "Engineering Lifecycle: From Inspection to Handover",
+      processLead: "Six structured stages maintaining schedule discipline, technical compliance, and build quality.",
+      processWatermark: "ENGINEERING DELIVERY SEQUENCE",
+      digitalEyebrow: "Digital Management Platform",
+      digitalTitle: "A Digital Platform That Puts Your Project in Your Hands",
+      digitalLead:
+        "A proprietary digital platform enabling real-time site monitoring, drawings, documents, and approvals with complete transparency.",
+      digitalNote: "Access is reserved for approved clients and authorized project parties.",
+      digitalCta: "Access Project Platform",
+      digitalFeatures: [
+        {
+          title: "Live Site Monitoring",
+          desc: "Verified daily photos, videos, and field progress logs direct from the site engineer."
+        },
+        {
+          title: "Drawings & Approvals",
+          desc: "Review engineering blueprints, submit feedback, and sign off revisions with one click."
+        },
+        {
+          title: "Documents & Reports",
+          desc: "Weekly milestones, bill of quantities, contracts, and structured project archives."
+        },
+        {
+          title: "Direct Communication",
+          desc: "Real-time chat and voice notes directly with the project manager and lead engineer."
+        }
+      ],
       faqEyebrow: "FAQ",
       faqTitle: "Quick Answers to Your Inquiries",
-      faqLead: "Everything you need to know before starting your project.",
-      faqCta: "View All Questions",
+      faqLead: "Everything you need to know about starting your project, workflow, and tracking.",
       ctaTitle: "Let's Start Your Next Project",
-      ctaSubtitle: "Contact us now and take the next step toward turning your vision into reality.",
-      ctaButton: "Contact Us",
-      contactTitle: "Contact Us",
-      contactLead: "Reach out to discuss your project and receive dedicated engineering consultation from initial inspection to delivery.",
+      ctaSubtitle: "Contact us today to discuss your project requirements and receive specialized engineering consultation from inspection to handover.",
+      ctaButton: "Contact via WhatsApp",
+      ctaCallButton: "Call Us Directly",
+      contactTitle: "Contact Information",
+      contactLead: "Our engineering team is ready to evaluate your requirements and schedule a site visit.",
+      contactPhoneLabel: "Direct Phone",
+      contactEmailLabel: "Email Address",
+      contactAddressLabel: "Main Office",
       footerText: "ELHABAK Engineering Consultancy",
       footerTagline: "Building Today ... For a Better Tomorrow",
-      footerNav: "Site sections",
-      footerServices: "Services",
-      footerContact: "Contact",
-      footerPlatform: "Platform",
-      footerRights: "All rights reserved © 2026 ELHABAK Construction",
-      footerPrivacy: "Privacy Policy"
+      footerNav: "Site Navigation",
+      footerRights: "All rights reserved © 2026 ELHABAK Engineering Consultancy"
     },
-    aboutPrinciples: [
-      ["Design", "تصميم"],
-      ["Planning", "تخطيط"],
-      ["Execution", "تنفيذ"],
-      ["Supervision", "إشراف"]
-    ],
-    digitalPoints: [
-      "Project progress and approved phase tracking",
-      "Design review and approvals",
-      "Access to project documents and files",
-      "Site updates and direct team communication"
-    ],
     faq: [
-      ["Can we request a site inspection before contracting?", "Yes, we provide an initial site visit to assess location conditions, verify dimensions, and identify requirements before finalizing scope."],
-      ["Do you provide both design and execution together?", "Yes, our integrated engineering delivery ensures designs and architectural plans are flawlessly executed on site."],
-      ["What digital tracking is available for each client?", "Clients receive dedicated access to our digital platform to view daily site logs, verified photos, blueprints, and milestone payments in real time."]
-    ],
-    principles: [
-      ["Scope documented before execution", "SCOPE FIRST"],
-      ["Every phase followed in order", "TRACKED PHASES"],
-      ["Decisions and files preserved", "DOCUMENTED"],
-      ["Continuity from design to delivery", "DESIGN TO DELIVERY"]
+      [
+        "Can we request a site inspection before contracting?",
+        "Yes, we provide an initial site visit to assess location conditions, verify dimensions, and identify technical requirements before finalizing scope."
+      ],
+      [
+        "Do you provide both design and execution together?",
+        "Yes, our integrated engineering delivery ensures designs and architectural plans are flawlessly executed on site under unified supervision."
+      ],
+      [
+        "How can I follow my project through the digital platform?",
+        "Clients receive dedicated portal access to view daily site logs, verified field photos, blueprints, milestone reports, and timelines with total transparency."
+      ]
     ],
     services: [
-      ["Design", "Architectural and engineering drawings that turn requirements into buildable decisions."],
-      ["Execution & Finishing", "Structural execution and interior finishing with approved details and regular review."],
-      ["General Contracting", "Coordinated contracting work delivered according to the agreed scope."],
-      ["Furnishing & Fit-Out", "Furniture and interior fit-out tailored to spatial harmony and usage."]
+      [
+        "Design",
+        "Detailed architectural and engineering drawings that turn vision into buildable, approved specifications."
+      ],
+      [
+        "Construction",
+        "Structural and reinforced concrete execution under rigorous engineering supervision and code compliance."
+      ],
+      [
+        "Finishing",
+        "Premium interior and exterior architectural finishing with sample approvals and exacting quality control."
+      ],
+      [
+        "General Contracting",
+        "Coordinated contracting execution across all civil, MEP, and site trades until final closeout."
+      ],
+      [
+        "Furniture & Fit-Out",
+        "Tailored furnishing and interior fit-out harmonized with spatial flow, function, and aesthetics."
+      ]
     ],
     process: [
-      ["Requirements Study", "Requirements study and detailed scope understanding."],
-      ["Design & Planning", "Comprehensive architectural and engineering design."],
-      ["Execution & Follow-up", "On-site execution and schedule-based follow-up."],
-      ["Handover & Support", "Final project handover and post-execution support."]
-    ],
-    why: [
-      ["One scope", "Design, execution, and finishing managed as connected engineering work."],
-      ["Professional communication", "Clear Arabic and English working language for client and team."],
-      ["Digital documentation", "The company platform organizes projects, files, and reports."],
-      ["Documented identity", "A professional presence built on company assets, not generic templates."]
+      ["Site Inspection", "Field assessment to evaluate site conditions, verify dimensions, and establish technical baselines."],
+      ["Design", "Comprehensive architectural, structural, and working drawings with full detail approvals."],
+      ["Preliminary Estimation", "Precise Bill of Quantities (BOQ), specification reviews, and transparent cost baseline."],
+      ["Execution", "On-site construction with continuous engineering supervision and daily milestone tracking."],
+      ["Initial Handover", "Rigorous walkthrough, snagging list resolution, and initial milestone inspection."],
+      ["Final Handover", "Final sign-off, closeout documentation, warranties, and complete handover to the client."]
     ],
     contact: companyContact,
     login: {
