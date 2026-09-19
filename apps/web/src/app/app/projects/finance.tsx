@@ -6,7 +6,6 @@ import { Badge, EmptyState, LoadingState, MetricCard } from "@elhabak/ui";
 import {
   Banknote,
   ClipboardList,
-  Download,
   FileText,
   History as HistoryIcon,
   Landmark,
@@ -20,7 +19,6 @@ import {
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   apiRequest,
-  dataOpsExportUrl,
   uploadRequest,
   BOQ_UNITS,
   EXPENSE_CATEGORIES,
@@ -1148,8 +1146,6 @@ function ClientPaymentsPanel({
   onChanged?: () => void;
 }) {
   const ar = locale === "ar";
-  const user = useCurrentUser();
-  const canExport = user.role === "ADMIN" || user.role === "ACCOUNTANT";
   const [payments, setPayments] = useState<ClientPaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -1161,13 +1157,13 @@ function ClientPaymentsPanel({
       title: readOnly ? "سجل دفعاتي" : "دفعات العميل", lead: readOnly ? "سجل الدفعات والإيصالات المستلمة لهذا المشروع." : "سجل الدفعات الواردة من العميل مع الإيصالات.",
       add: "تسجيل دفعة", date: "التاريخ", method: "طريقة الدفع", reference: "المرجع", amount: "القيمة", status: "الحالة",
       actions: "الإجراء", empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة من العميل.", loading: "جاري تحميل الدفعات...",
-      void: "إلغاء", receipt: "الإيصال", export: "تصدير المدفوعات"
+      void: "إلغاء", receipt: "الإيصال"
     }
     : {
       title: readOnly ? "My Payment History" : "Client Payments", lead: readOnly ? "Payment and receipt history for this project." : "Incoming client payment ledger with receipts.",
       add: "Record Payment", date: "Date", method: "Method", reference: "Reference", amount: "Amount", status: "Status",
       actions: "Action", empty: "No payments recorded", emptyHint: "Record the first client payment.", loading: "Loading payments...",
-      void: "Void", receipt: "Receipt", export: "Export payments"
+      void: "Void", receipt: "Receipt"
     };
 
   const load = useCallback(() => {
@@ -1197,18 +1193,11 @@ function ClientPaymentsPanel({
           <h2>{labels.title}</h2>
           <p>{labels.lead}</p>
         </div>
-        <div className="finance-panel-heading__actions">
-          {canExport && (
-            <a className="ui-button ui-button--ghost ui-button--sm" href={dataOpsExportUrl("payments", "xlsx", projectId)}>
-              <Download size={14} /> {labels.export}
-            </a>
-          )}
-          {!readOnly && (
-            <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
-              <Plus size={16} /> {labels.add}
-            </button>
-          )}
-        </div>
+        {!readOnly && (
+          <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
+            <Plus size={16} /> {labels.add}
+          </button>
+        )}
       </div>
 
       {error && <div className="form-error">{error}</div>}

@@ -80,10 +80,7 @@ export function NotificationsClient() {
             unread: "غير مقروءة",
             markAll: "تحديد الكل كمقروء",
             empty: "لا توجد إشعارات",
-            emptyHint: "ستظهر هنا الإشعارات المتعلقة بمشاريعك.",
-            today: "اليوم",
-            yesterday: "أمس",
-            earlier: "سابقاً"
+            emptyHint: "ستظهر هنا الإشعارات المتعلقة بمشاريعك."
           }
         : {
             title: "Notifications",
@@ -92,33 +89,12 @@ export function NotificationsClient() {
             unread: "Unread",
             markAll: "Mark all as read",
             empty: "No notifications",
-            emptyHint: "Notifications related to your projects will appear here.",
-            today: "Today",
-            yesterday: "Yesterday",
-            earlier: "Earlier"
+            emptyHint: "Notifications related to your projects will appear here."
           },
     [ar]
   );
 
   const timeFormatter = new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
-
-  // Group by calendar day: Today / Yesterday / Earlier for scannable review.
-  const groups = useMemo(() => {
-    const dayStart = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-    const today = dayStart(new Date());
-    const buckets: Array<{ label: string; items: NotificationRecord[] }> = [
-      { label: labels.today, items: [] },
-      { label: labels.yesterday, items: [] },
-      { label: labels.earlier, items: [] }
-    ];
-    for (const item of items) {
-      const day = dayStart(new Date(item.createdAt));
-      if (day === today) buckets[0]!.items.push(item);
-      else if (day === today - 86400000) buckets[1]!.items.push(item);
-      else buckets[2]!.items.push(item);
-    }
-    return buckets.filter((bucket) => bucket.items.length > 0);
-  }, [items, labels]);
 
   return (
     <section className="app-page notifications-page">
@@ -155,29 +131,22 @@ export function NotificationsClient() {
         <EmptyState icon={<Bell size={20} />} title={labels.empty} description={labels.emptyHint} />
       ) : (
         <div className="notifications-list">
-          {groups.map((group) => (
-            <section className="notification-group" key={group.label}>
-              <h3 className="notification-group__header">
-                {group.label} <span className="mono">{group.items.length}</span>
-              </h3>
-              {group.items.map((item) => (
-                <button
-                  type="button"
-                  key={item.id}
-                  className={`notifications-row${item.readAt ? "" : " notifications-row--unread"}`}
-                  onClick={() => onSelect(item)}
-                >
-                  <span className="notifications-row__type">{notificationTypeLabel(item.type, locale)}</span>
-                  <span className="notifications-row__title">{item.title}</span>
-                  {item.project && (
-                    <span className="notifications-row__project mono">{item.project.code ?? item.project.name}</span>
-                  )}
-                  <span className="notifications-row__time">
-                    {timeFormatter.format(new Date(item.createdAt))} · {relativeTime(item.createdAt, locale)}
-                  </span>
-                </button>
-              ))}
-            </section>
+          {items.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              className={`notifications-row${item.readAt ? "" : " notifications-row--unread"}`}
+              onClick={() => onSelect(item)}
+            >
+              <span className="notifications-row__type">{notificationTypeLabel(item.type, locale)}</span>
+              <span className="notifications-row__title">{item.title}</span>
+              {item.project && (
+                <span className="notifications-row__project mono">{item.project.code ?? item.project.name}</span>
+              )}
+              <span className="notifications-row__time">
+                {timeFormatter.format(new Date(item.createdAt))} · {relativeTime(item.createdAt, locale)}
+              </span>
+            </button>
           ))}
         </div>
       )}

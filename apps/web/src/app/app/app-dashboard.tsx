@@ -5,16 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard, ProgressBar } from "@elhabak/ui";
 import {
-  AlertTriangle,
   ArrowUpLeft,
   Briefcase,
   Camera,
   CheckCircle2,
-  Database,
   FileText,
   FolderKanban,
   Plus,
-  Ruler,
   Users2,
   WalletCards
 } from "lucide-react";
@@ -22,15 +19,11 @@ import {
   activityLabel,
   apiRequest,
   categoryLabel,
-  disciplineLabel,
   LIFECYCLE_PHASES,
   phaseLabel,
   statusLabel,
   statusTone,
-  type DesignDiscipline,
-  type ProjectPhase,
-  type ProjectRecord,
-  type ProjectStatus
+  type ProjectRecord
 } from "../../lib/api";
 import { useCurrentUser } from "../../lib/user-context";
 
@@ -53,33 +46,6 @@ type DashboardSummary = {
     actorName: string | null;
     projectName: string | null;
   }>;
-  attention: {
-    pendingDesigns: Array<{
-      id: string;
-      projectId: string;
-      projectName: string;
-      projectCode: string | null;
-      title: string;
-      discipline: string;
-      updatedAt: string;
-    }>;
-    overdueProjects: Array<{
-      id: string;
-      code: string | null;
-      name: string;
-      targetDate: string | null;
-      phase: ProjectPhase;
-      progress: number;
-      status: ProjectStatus;
-    }>;
-    recentDocuments: Array<{
-      id: string;
-      projectId: string;
-      projectName: string;
-      title: string;
-      updatedAt: string;
-    }>;
-  };
 };
 
 export function AppDashboard() {
@@ -145,19 +111,7 @@ export function AppDashboard() {
           activityEyebrow: "سجل النشاط الميداني",
           quickEyebrow: "روابط سريعة",
           phaseEyebrow: "مراحل التنفيذ",
-          updatesEyebrow: "تقارير الموقع",
-          attentionEyebrow: "مركز الإجراءات",
-          attentionTitle: "يحتاج إلى متابعة",
-          attentionLead: "قرارات عمل معلقة عبر المشاريع.",
-          designReview: "تصميم بانتظار المراجعة",
-          overdue: "متأخر عن موعد التسليم",
-          newDoc: "مستند جديد مشترك",
-          openDesign: "مراجعة التصميم",
-          openProject: "فتح المشروع",
-          openDocs: "المستندات",
-          allClear: "لا توجد بنود معلقة",
-          allClearHint: "كل المشاريع تعمل ضمن النطاق المخطط.",
-          dataOps: "عمليات البيانات"
+          updatesEyebrow: "تقارير الموقع"
         }
         : {
           title: "Dashboard",
@@ -210,19 +164,7 @@ export function AppDashboard() {
           activityEyebrow: "FIELD ACTIVITY",
           quickEyebrow: "QUICK ACCESS",
           phaseEyebrow: "EXECUTION PHASES",
-          updatesEyebrow: "FIELD UPDATES",
-          attentionEyebrow: "ACTION CENTER",
-          attentionTitle: "Needs attention",
-          attentionLead: "Pending operational decisions across projects.",
-          designReview: "Design awaiting review",
-          overdue: "Past target date",
-          newDoc: "New shared document",
-          openDesign: "Review design",
-          openProject: "Open project",
-          openDocs: "Documents",
-          allClear: "Nothing pending",
-          allClearHint: "All projects are running within the planned envelope.",
-          dataOps: "Data Ops"
+          updatesEyebrow: "FIELD UPDATES"
         },
     [locale]
   );
@@ -416,64 +358,6 @@ export function AppDashboard() {
 
           {(user.role !== "WORKER" || dashboard) && (
             <aside className="dashboard-body__aside">
-              {dashboard && (
-                <section className="dashboard-attention-panel">
-                  <header className="dashboard-section-heading dashboard-section-heading--compact">
-                    <div>
-                      <span className="dashboard-section-heading__eyebrow">{labels.attentionEyebrow}</span>
-                      <h2>{labels.attentionTitle}</h2>
-                      <p>{labels.attentionLead}</p>
-                    </div>
-                    <strong className="dashboard-side-total mono">
-                      <bdi>{dashboard.attention.pendingDesigns.length + dashboard.attention.overdueProjects.length + dashboard.attention.recentDocuments.length}</bdi>
-                    </strong>
-                  </header>
-                  {dashboard.attention.pendingDesigns.length === 0 &&
-                  dashboard.attention.overdueProjects.length === 0 &&
-                  dashboard.attention.recentDocuments.length === 0 ? (
-                    <EmptyState icon={<CheckCircle2 size={18} />} title={labels.allClear} description={labels.allClearHint} className="dashboard-empty-state" />
-                  ) : (
-                    <div className="attention-list">
-                      {dashboard.attention.overdueProjects.map((project) => (
-                        <Link className="attention-row" href={href(`/app/projects/${project.id}`)} key={`overdue-${project.id}`}>
-                          <span className="attention-row__icon attention-row__icon--danger"><AlertTriangle size={16} /></span>
-                          <span className="attention-row__body">
-                            <strong>{project.name}</strong>
-                            <span>
-                              {labels.overdue}{project.targetDate ? <> · <bdi>{formatDate(project.targetDate, { day: "2-digit", month: "short" })}</bdi></> : null} · <bdi>{project.progress}%</bdi>
-                            </span>
-                          </span>
-                          <span className="attention-row__cta">{labels.openProject}</span>
-                        </Link>
-                      ))}
-                      {dashboard.attention.pendingDesigns.map((design) => (
-                        <Link className="attention-row" href={href(`/app/projects/${design.projectId}/design/${design.id}`)} key={`design-${design.id}`}>
-                          <span className="attention-row__icon"><Ruler size={16} /></span>
-                          <span className="attention-row__body">
-                            <strong>{design.title}</strong>
-                            <span>
-                              {labels.designReview} · {disciplineLabel(design.discipline as DesignDiscipline, locale)} · {design.projectName}
-                            </span>
-                          </span>
-                          <span className="attention-row__cta">{labels.openDesign}</span>
-                        </Link>
-                      ))}
-                      {dashboard.attention.recentDocuments.map((document) => (
-                        <Link className="attention-row" href={href(`/app/projects/${document.projectId}/documents/${document.id}`)} key={`doc-${document.id}`}>
-                          <span className="attention-row__icon attention-row__icon--info"><FileText size={16} /></span>
-                          <span className="attention-row__body">
-                            <strong>{document.title}</strong>
-                            <span>
-                              {labels.newDoc} · {document.projectName} · <bdi>{formatDate(document.updatedAt, { day: "2-digit", month: "short" })}</bdi>
-                            </span>
-                          </span>
-                          <span className="attention-row__cta">{labels.openDocs}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )}
               <section className="dashboard-quick-panel">
               <header className="dashboard-section-heading dashboard-section-heading--compact">
                 <div>
@@ -487,7 +371,6 @@ export function AppDashboard() {
                 <Link href={href("/app/reports")}><FileText size={16} /><strong>{labels.reports}</strong></Link>
                 {(user.role === "ADMIN" || user.role === "ACCOUNTANT") && <Link href={href("/app/finance")}><WalletCards size={16} /><strong>{labels.finance}</strong></Link>}
                 {isAdmin && <Link href={href("/app/admin/users")}><Users2 size={16} /><strong>{labels.team}</strong></Link>}
-                {isAdmin && <Link href={href("/app/data")}><Database size={16} /><strong>{labels.dataOps}</strong></Link>}
               </div>
             </section>
 

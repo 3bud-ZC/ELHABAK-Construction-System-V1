@@ -51,7 +51,7 @@ export class ProjectsService {
 
 
   async dashboard() {
-    const [activeProjects, clientCount, projects, recentUpdates, recentActivity, pendingDesigns, overdueProjects, recentDocuments] = await Promise.all([
+    const [activeProjects, clientCount, projects, recentUpdates, recentActivity] = await Promise.all([
       this.prisma.project.count({ where: { status: "ACTIVE" } }),
       this.prisma.clientProfile.count(),
       this.prisma.project.findMany({
@@ -75,28 +75,6 @@ export class ProjectsService {
         },
         orderBy: { createdAt: "desc" },
         take: 8
-      }),
-      // V6 Action Center: persisted work that needs an operational decision.
-      this.prisma.designItem.findMany({
-        where: { status: "IN_REVIEW" },
-        include: { project: { select: { id: true, name: true, code: true } } },
-        orderBy: { updatedAt: "asc" },
-        take: 6
-      }),
-      this.prisma.project.findMany({
-        where: {
-          targetDate: { lt: new Date() },
-          status: { notIn: ["COMPLETED", "CANCELLED"] }
-        },
-        select: { id: true, code: true, name: true, targetDate: true, phase: true, progress: true, status: true },
-        orderBy: { targetDate: "asc" },
-        take: 6
-      }),
-      this.prisma.projectDocument.findMany({
-        where: { isClientVisible: true, status: "ACTIVE" },
-        include: { project: { select: { id: true, name: true } } },
-        orderBy: { updatedAt: "desc" },
-        take: 4
       })
     ]);
 
@@ -119,34 +97,7 @@ export class ProjectsService {
         createdAt: item.createdAt.toISOString(),
         actorName: item.actor?.displayName ?? null,
         projectName: item.project?.name ?? null
-      })),
-      attention: {
-        pendingDesigns: pendingDesigns.map((design) => ({
-          id: design.id,
-          projectId: design.projectId,
-          projectName: design.project.name,
-          projectCode: design.project.code,
-          title: design.title,
-          discipline: design.discipline,
-          updatedAt: design.updatedAt.toISOString()
-        })),
-        overdueProjects: overdueProjects.map((project) => ({
-          id: project.id,
-          code: project.code,
-          name: project.name,
-          targetDate: project.targetDate?.toISOString() ?? null,
-          phase: project.phase,
-          progress: project.progress,
-          status: project.status
-        })),
-        recentDocuments: recentDocuments.map((document) => ({
-          id: document.id,
-          projectId: document.projectId,
-          projectName: document.project.name,
-          title: document.title,
-          updatedAt: document.updatedAt.toISOString()
-        }))
-      }
+      }))
     };
   }
 
