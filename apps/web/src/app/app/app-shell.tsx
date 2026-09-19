@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   BriefcaseBusiness,
   Camera,
+  Database,
   FileText,
   LayoutGrid,
   LogOut,
@@ -69,7 +70,8 @@ export function AppShell({ children }: AppShellProps) {
           closeMenu: "إغلاق القائمة",
           impersonating: "أنت الآن تستعرض النظام بصلاحيات",
           returnToAdmin: "العودة لحساب المدير",
-          returning: "جاري العودة..."
+          returning: "جاري العودة...",
+          dataOps: "عمليات البيانات"
         }
         : {
           productTag: "Project Operations System",
@@ -100,7 +102,8 @@ export function AppShell({ children }: AppShellProps) {
           closeMenu: "Close menu",
           impersonating: "You are viewing the system as",
           returnToAdmin: "Return to Admin",
-          returning: "Returning..."
+          returning: "Returning...",
+          dataOps: "Data Ops"
         },
     [locale]
   );
@@ -122,6 +125,7 @@ export function AppShell({ children }: AppShellProps) {
     else if (section === "reports") crumbs.push(labels.reports);
     else if (section === "search") return [labels.search];
     else if (section === "notifications") return [labels.notifications];
+    else if (section === "data") return [labels.dataOps];
     else return [labels.dashboard];
     let sawId = false;
     for (const seg of rest.slice(i)) {
@@ -317,6 +321,14 @@ export function AppShell({ children }: AppShellProps) {
                     href={href("/app/finance")}
                   >
                     <Wallet size={17} /> {labels.finance}
+                  </Link>
+                )}
+                {(user.role === "ADMIN" || user.role === "ACCOUNTANT" || user.role === "ENGINEER") && (
+                  <Link
+                    className={isActive("/app/data") ? "active" : ""}
+                    href={href("/app/data")}
+                  >
+                    <Database size={17} /> {labels.dataOps}
                   </Link>
                 )}
                 <Link

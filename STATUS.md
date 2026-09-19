@@ -932,3 +932,12 @@
 - Client RBAC regression passed: YES.
 - Final account state: 2 active / 3 inactive.
 - Tracked repository secret audit passed: YES.
+
+### 2026-09-19 — Controlled UX, Mobile & Operations Upgrade (PRE-V6 baseline preserved)
+- **Data Operations restored as isolated feature**: `/app/data` hub + `data-ops` API module (ExcelJS/CSV parse, header mapping, preview, error/skip/update duplicate strategies, explicit commit, audit jobs). Clients/Projects/BOQ import, batch media import (magic-byte validated, manifest-supported), permission-aware XLSX/CSV exports + templates.
+- **Import engine fix**: in-file duplicate detection no longer self-matches the first occurrence (clients/projects/BOQ validators + regression tests; 35/35 spec pass).
+- **Dashboard action center**: real pending design reviews, past-target projects, client-visible document activity with deep links (admin-only data path).
+- **Targeted UX**: clients register project counts + Excel/CSV import & export actions + credential-autofill isolation on forms; users register export + role-capability hint + crypto temporary-password generator; notifications Today/Yesterday/Earlier grouping; documents quick-preview drawer; finance payment export (ADMIN/ACCOUNTANT); site-ops field-update draft persistence + worker-only mobile bottom-sheet FAB.
+- **RBAC server-authoritative**: import/export/media role checks enforced before file processing; client RBAC smoke verified (all admin/finance/data surfaces 403); dashboard summary remains ADMIN-only.
+- **Visual identity preserved**: no global shell/sidebar/topbar change, no bottom navigation, no new design layer — 6 scoped UI primitives (Drawer, BottomSheet, PreviewDrawer, FileDropzone, UploadProgress, ImportStepper) + component-scoped CSS only.
+- **Quality gate**: db:validate, db:generate, lint, typecheck, web tests (17/17), dataops spec (35/35), full build, diff check — all pass. Real-browser matrix: 100 page loads across 7 AR + 3 EN viewports — zero horizontal overflow, zero broken routes, correct RTL/LTR.
