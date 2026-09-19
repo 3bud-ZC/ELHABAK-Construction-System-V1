@@ -41,11 +41,27 @@ export class AdminClientsService {
 
     const clients = await this.prisma.clientProfile.findMany({
       where,
-      include: { user: { select: clientUserSelect } },
+      include: {
+        user: { select: clientUserSelect },
+        projects: { select: { id: true, status: true, updatedAt: true } }
+      },
       orderBy: { createdAt: "desc" }
     });
 
-    return clients.map(toClientResponse);
+    return clients.map((client) => {
+      const response = toClientResponse(client);
+      const activeProjects = client.projects.filter((project) => project.status === "ACTIVE").length;
+      const lastActivity = client.projects.reduce<Date | null>(
+        (latest, project) => (project.updatedAt > (latest ?? new Date(0)) ? project.updatedAt : latest),
+        null
+      );
+      return {
+        ...response,
+        projectCount: client.projects.length,
+        activeProjectCount: activeProjects,
+        lastProjectActivityAt: lastActivity?.toISOString() ?? null
+      };
+    });
   }
 
   async get(id: string) {
