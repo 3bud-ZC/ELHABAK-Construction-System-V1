@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Badge, ProgressBar } from "@elhabak/ui";
-import { Activity, Building2, CalendarDays, CalendarRange, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Activity, ArrowRight, Building2, CalendarDays, CalendarRange, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
   LIFECYCLE_PHASES,
@@ -66,7 +66,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       control: "مساحة عمل المشروع",
       project: "مشروع",
       start: "البدء",
-      target: "التسليم المستهدف"
+      target: "التسليم المستهدف",
+      back: "كل المشاريع"
     }
     : {
       phase: "Current phase",
@@ -89,7 +90,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       control: "Project Workspace",
       project: "Project",
       start: "Start",
-      target: "Target delivery"
+      target: "Target delivery",
+      back: "All projects"
     };
 
   function href(path: string) {
@@ -121,8 +123,77 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       : [])
   ];
 
+  const nav = (
+    <nav
+      className={active === "overview" ? "project-workspace-nav" : "project-context-bar__nav"}
+      aria-label={ar ? "أقسام مساحة العمل" : "Workspace sections"}
+    >
+      {sections.map((section) => {
+        const Icon = section.icon;
+        return (
+          <Link
+            className={active === section.id ? "active" : ""}
+            href={href(section.href)}
+            key={section.id}
+            aria-current={active === section.id ? "page" : undefined}
+          >
+            <Icon size={16} /> {section.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  // Submodule pages get the compact sticky context bar - full operational context
+  // (identity, phase, progress, module nav) in one dense strip instead of the tall header.
+  if (active !== "overview") {
+    return (
+      <div className="project-context-bar">
+        <div className="project-context-bar__identity">
+          <Link
+            className="project-context-bar__back"
+            href={href(role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}
+            aria-label={labels.back}
+            title={labels.back}
+          >
+            <ArrowRight size={16} />
+          </Link>
+          <div className="project-context-bar__name">
+            <strong>{project.name}</strong>
+            <small className="mono">{project.code ?? labels.project}</small>
+          </div>
+        </div>
+        <div className="project-context-bar__phase">
+          <CalendarRange size={15} aria-hidden="true" />
+          <span>
+            <small>
+              <bdi className="mono">{String(currentPhaseIndex + 1).padStart(2, "0")}/06</bdi> · {labels.phase}
+            </small>
+            <strong>{phaseLabel(project.phase, locale)}</strong>
+          </span>
+          <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
+        </div>
+        <div className="project-context-bar__progress">
+          <ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} />
+          <strong><bdi>{project.progress}%</bdi></strong>
+        </div>
+        {nav}
+        {role === "ADMIN" && (
+          <Link
+            className="ui-icon-button"
+            href={href(`/app/admin/projects/${project.id}`)}
+            aria-label={labels.edit}
+            title={labels.edit}
+          >
+            <Pencil size={15} />
+          </Link>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className={`project-workspace-container${active === "overview" ? "" : " project-workspace-container--sub"}`}>
+    <div className="project-workspace-container">
       <header className="project-command-header project-command-header--v5">
         <div className="project-command-header__topbar">
           <div className="project-command-header__ref-group">
@@ -162,16 +233,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
 
       <div className="project-workspace-bar">
         <span className="project-workspace-bar__label">{labels.modules}</span>
-        <nav className="project-workspace-nav" aria-label={ar ? "أقسام مساحة العمل" : "Workspace sections"}>
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <Link className={active === section.id ? "active" : ""} href={href(section.href)} key={section.id} aria-current={active === section.id ? "page" : undefined}>
-                <Icon size={16} /> {section.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {nav}
       </div>
 
       <div className="project-command-facts">
