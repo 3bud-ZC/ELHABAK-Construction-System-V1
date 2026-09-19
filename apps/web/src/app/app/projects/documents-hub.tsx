@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard } from "@elhabak/ui";
-import { Archive, FilePlus2, FileStack, Filter, FolderOpen, RotateCcw, Search, Share2, UploadCloud, X } from "lucide-react";
+import { Badge, EmptyState, LoadingState, MetricCard, PreviewDrawer } from "@elhabak/ui";
+import { Archive, Eye, FilePlus2, FileStack, Filter, FolderOpen, RotateCcw, Search, Share2, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   DOCUMENT_CATEGORIES,
   DOCUMENT_STATUSES,
   apiRequest,
   documentCategoryLabel,
+  documentFileUrl,
   documentFormatCode,
   documentStatusLabel,
   documentStatusTone,
@@ -95,6 +96,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<ProjectDocumentRecord | null>(null);
 
   const labels = ar
     ? {
@@ -102,14 +104,14 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
       add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات", clear: "مسح المرشحات", results: "نتائج",
       empty: "لا توجد مستندات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
       document: "المرجع والمستند", category: "الفئة", version: "النسخة", format: "الصيغة", visibility: "المشاركة", status: "الحالة", updated: "التحديث",
-      action: "الإجراء", open: "فتح المستند", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل..."
+      action: "الإجراء", open: "فتح المستند", preview: "معاينة", download: "تنزيل", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل..."
     }
     : {
       title: "Document Register", lead: "Control center for general project records - contracts, permits, reports, and correspondence.",
       add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses", clear: "Clear filters", results: "results",
       empty: "No documents registered", emptyHint: "Register the first document for this project.", noResults: "No matching documents", noResultsHint: "Change search query or filter criteria.",
       document: "Reference & Document", category: "Category", version: "Version", format: "Format", visibility: "Visibility", status: "Status", updated: "Updated",
-      action: "Action", open: "Open Document", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register..."
+      action: "Action", open: "Open Document", preview: "Preview", download: "Download", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register..."
     };
 
   const load = useCallback(async () => {
@@ -248,6 +250,17 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
                   <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi>
                 </span>
                 <div className="finance-register__actions">
+                  {document.currentVersion && (
+                    <button
+                      className="ui-icon-button project-register-preview"
+                      type="button"
+                      onClick={() => setPreviewDoc(document)}
+                      aria-label={`${labels.preview}: ${document.title}`}
+                      title={labels.preview}
+                    >
+                      <Eye size={15} />
+                    </button>
+                  )}
                   <Link className="project-register-open" href={href(`/app/projects/${projectId}/documents/${document.id}`)} aria-label={`${labels.open}: ${document.title}`}>
                     {ar ? "فتح ←" : "Open →"}
                   </Link>
@@ -268,6 +281,17 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
             setSuccess(ar ? "تمت إضافة المستند إلى السجل." : "Document added to register.");
             void Promise.all([load(), refreshMetrics()]);
           }}
+        />
+      )}
+      {previewDoc?.currentVersion && (
+        <PreviewDrawer
+          open={Boolean(previewDoc)}
+          onClose={() => setPreviewDoc(null)}
+          title={`${previewDoc.reference} — ${previewDoc.title}`}
+          url={documentFileUrl(projectId, previewDoc.id, previewDoc.currentVersion.id)}
+          mimeType={previewDoc.currentVersion.mimeType}
+          downloadUrl={documentFileUrl(projectId, previewDoc.id, previewDoc.currentVersion.id, true)}
+          downloadLabel={labels.download}
         />
       )}
     </>

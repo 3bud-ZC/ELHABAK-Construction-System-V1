@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
-import { BriefcaseBusiness, CalendarDays, Clock3, Filter, FolderKanban, MapPin, RotateCcw, TrendingUp } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Clock3, Download, Filter, FolderKanban, MapPin, RotateCcw, TrendingUp } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
+  dataOpsExportUrl,
   phaseLabel,
   statusLabel,
   statusTone,
@@ -68,7 +69,8 @@ export function ProjectsClient() {
           activeCount: "مشاريع نشطة",
           avgProgress: "متوسط الإنجاز",
           overdue: "تجاوزت الموعد",
-          noDate: "غير محدد"
+          noDate: "غير محدد",
+          export: "تصدير"
         }
         : {
           eyebrow: "Project Portfolio Management",
@@ -101,7 +103,8 @@ export function ProjectsClient() {
           activeCount: "Active projects",
           avgProgress: "Average progress",
           overdue: "Past target date",
-          noDate: "Not set"
+          noDate: "Not set",
+          export: "Export"
         },
     [locale]
   );
@@ -234,6 +237,9 @@ export function ProjectsClient() {
           </div>
           <div className="project-register-toolbar__meta">
             <span><bdi>{visibleProjects.length}</bdi> {visibleProjects.length === 1 ? labels.result : labels.results}</span>
+            <a className="project-register-clear" href={dataOpsExportUrl("projects", "xlsx")} title={labels.export}>
+              <Download size={13} /> {labels.export}
+            </a>
             {hasFilters && <button type="button" className="project-register-clear" onClick={clearFilters}><RotateCcw size={13} /> {labels.clear}</button>}
           </div>
         </div>
