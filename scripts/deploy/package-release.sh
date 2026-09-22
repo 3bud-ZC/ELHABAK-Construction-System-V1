@@ -55,7 +55,7 @@ EOF
 
 # Forbidden in any release: real env files, credentials, secrets, QA material,
 # build/runtime artifacts, and local backups. Templates remain allowed.
-FORBIDDEN_REGEX='(^|/)(\.env$|\.env\.(local|development|production|test|staging)(\.|$)|\.credentials\.|[^/]*\.secret$|[^/]*\.(pem|key)$|id_rsa|qa-pass|admin-visual|admin-verify|create-qa|cleanup-qa|revoke-sessions|storage-backups|(^|/)backups(/|$)|[^/]*\.(dump|sql|tar\.gz)$|node_modules|\.next|dist|coverage|test-results)'
+FORBIDDEN_REGEX='(^|/)(\.env$|\.env\.(local|development|production|test|staging)(\.|$)|\.credentials\.|[^/]*\.secret$|[^/]*\.(pem|key)$|id_rsa|qa-pass|admin-visual|admin-verify|create-qa|cleanup-qa|revoke-sessions|storage-backups|(^|/)backups(/|$)|[^/]*\.(dump|tar\.gz)$|node_modules|\.next|dist|coverage|test-results)'
 
 EXCLUDES=(
   --exclude='./.git' --exclude='.git' --exclude='./node_modules' --exclude='node_modules'
