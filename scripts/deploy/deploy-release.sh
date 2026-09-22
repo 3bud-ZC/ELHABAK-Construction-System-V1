@@ -61,10 +61,11 @@ echo ">> full preflight (env + sanity + build output)"
 "$SCRIPT_DIR/release-preflight.sh" "$REL"
 
 # --- switch -------------------------------------------------------------------
+RELEASE_COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commitSha"])' "$REL/.release-meta.json")"
 echo ">> switching /current -> $REL (previous: ${PREV:-none})"
 ln -sfn "$REL" "$BASE/current"
 
-su -s /bin/bash "$APP_USER" -c "pm2 restart elhabak-api elhabak-web --update-env" >/dev/null
+su -s /bin/bash "$APP_USER" -c "COMMIT_SHA=$RELEASE_COMMIT pm2 restart elhabak-api elhabak-web --update-env" >/dev/null
 sleep 4
 
 HEALTH=""
