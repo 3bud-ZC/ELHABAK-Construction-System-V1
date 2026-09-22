@@ -37,8 +37,9 @@ tar -xf "$SOURCE_TAR" -C "$STAGE"
 find "$STAGE" -type f -name '*.sh' -exec sed -i 's/\r$//' {} +
 ARCHIVE_SHA256="$(tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
   --exclude='./.release-meta.json' --exclude='./apps/web/next-env.d.ts' --exclude='./node_modules' --exclude='./.next' --exclude='./dist' \
+  --exclude='*/node_modules' --exclude='*/.next' --exclude='*/dist' --exclude='*/coverage' --exclude='*/storage' \
   --exclude='./.turbo' --exclude='./coverage' --exclude='./.pnpm-store' --exclude='./storage' \
-  --exclude='./test-results' --exclude='./storage-backups' --exclude='./backups' --exclude='*.tsbuildinfo' \
+  --exclude='*/.turbo' --exclude='*/test-results' --exclude='./test-results' --exclude='./storage-backups' --exclude='./backups' --exclude='*.tsbuildinfo' \
   --exclude='*.log' --exclude='.env' --exclude='.env.*' --exclude='.credentials.local' \
   --exclude='*.secret' --exclude='*.pem' --exclude='*.key' --exclude='id_rsa*' \
   --exclude='.codex-*-qa' --exclude='.codex-brand-preview' --exclude='.playwright-cli' \
