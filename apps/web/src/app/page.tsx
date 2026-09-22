@@ -28,6 +28,7 @@ import { PublicHeader } from "./public-header";
 import { PublicHero } from "./public-hero";
 import { PublicMotion } from "./public-motion";
 import { FaqAccordion } from "./faq-accordion";
+import { publicNavItems } from "./seo-page";
 
 type PageProps = {
   searchParams?: Promise<{ lang?: string }>;
@@ -43,9 +44,19 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
   if (locale === "en") {
     return {
-      title: "ELHABAK Construction | Design, Construction & Finishing in Sohag",
+      title: "ELHABAK Construction | Engineering & Construction in Egypt",
       description:
-        "ELHABAK Construction delivers architectural design, structural execution, finishing, general contracting, and furnishing in Sohag with organized digital project follow-up.",
+        "ELHABAK Construction provides architectural design, engineering consultancy, construction management, site supervision, contracting and digital project tracking in Egypt.",
+      keywords: [
+        "ELHABAK Construction",
+        "Elhabak",
+        "engineering consultancy",
+        "construction management",
+        "project tracking platform",
+        "engineering project management system",
+        "site supervision",
+        "design and execution"
+      ],
       alternates: {
         canonical: "/?lang=en",
         languages: {
@@ -54,24 +65,45 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
         }
       },
       openGraph: {
-        title: "ELHABAK Construction | Design, Construction & Finishing in Sohag",
+        title: "ELHABAK Construction | Engineering & Construction in Egypt",
         description:
           "Engineering delivery for residential and commercial projects with digital project tracking from inspection to handover.",
         url: "/?lang=en",
-        locale: "en_US"
+        siteName: "ELHABAK Construction",
+        locale: "en_US",
+        images: [
+          {
+            url: "/marketing/hero-delivery.webp",
+            width: 1536,
+            height: 866,
+            alt: "ELHABAK Construction completed building"
+          }
+        ]
       },
       twitter: {
-        title: "ELHABAK Construction | Design, Construction & Finishing in Sohag",
+        card: "summary_large_image",
+        title: "ELHABAK Construction | Engineering & Construction in Egypt",
         description:
-          "Design, construction, finishing, general contracting, and furnishing with organized digital project follow-up."
+          "Design, construction, finishing, general contracting, and furnishing with organized digital project follow-up.",
+        images: ["/marketing/hero-delivery.webp"]
       }
     };
   }
 
   return {
-    title: "ELHABAK — الحباك للاستشارات الهندسية في سوهاج",
+    title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
     description:
-      "الحباك للاستشارات الهندسية تقدم التصميم والتنفيذ والتشطيب والمقاولات العامة والتأثيث في سوهاج مع متابعة رقمية منظمة للمشروع.",
+      "شركة الحباك للمقاولات والاستشارات الهندسية تقدم خدمات التصميم المعماري، إدارة المشروعات، الإشراف على التنفيذ، المقاولات والتشطيبات، مع نظام رقمي لمتابعة تقدم المشروع.",
+    keywords: [
+      "الحباك للمقاولات والاستشارات الهندسية",
+      "الحباك للمقاولات",
+      "الحباك للاستشارات الهندسية",
+      "ELHABAK Construction",
+      "مقاولات سوهاج",
+      "إدارة المشاريع الهندسية",
+      "متابعة مواقع التنفيذ",
+      "منصة متابعة المشاريع"
+    ],
     alternates: {
       canonical: "/",
       languages: {
@@ -80,16 +112,27 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       }
     },
     openGraph: {
-      title: "ELHABAK — الحباك للاستشارات الهندسية في سوهاج",
+      title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
       description:
-        "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية واضحة ومتابعة رقمية من المعاينة حتى التسليم.",
+        "شركة مقاولات واستشارات هندسية: تصميم معماري، إدارة مشروعات، إشراف على التنفيذ، وتشطيبات للمشروعات السكنية والتجارية بمتابعة رقمية من المعاينة حتى التسليم.",
       url: "/",
-      locale: "ar_EG"
+      siteName: "ELHABAK Construction",
+      locale: "ar_EG",
+      images: [
+        {
+          url: "/marketing/hero-delivery.webp",
+          width: 1536,
+          height: 866,
+          alt: "ELHABAK Construction completed building"
+        }
+      ]
     },
     twitter: {
-      title: "ELHABAK — الحباك للاستشارات الهندسية في سوهاج",
+      card: "summary_large_image",
+      title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
       description:
-        "تصميم وتنفيذ وتشطيب ومقاولات عامة وتأثيث مع متابعة رقمية منظمة للمشروع."
+        "تصميم معماري، إدارة مشروعات، إشراف على التنفيذ، مقاولات وتشطيبات مع متابعة رقمية منظمة للمشروع.",
+      images: ["/marketing/hero-delivery.webp"]
     }
   };
 }
@@ -106,12 +149,12 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   // Quick nav configuration kept for consistency and tests
   const mobileQuickNav = [
-    ["#about", t.nav.about],
-    ["#services", t.nav.services],
-    ["#process", t.nav.process],
-    ["#platform", t.nav.platform],
-    ["#faq", t.home.faqEyebrow],
-    ["#contact", t.nav.contact]
+    [langHref(locale, "/about"), t.nav.about],
+    [langHref(locale, "/services"), t.nav.services],
+    [`${langHref(locale)}#process`, t.nav.process],
+    [langHref(locale, "/platform"), t.nav.platform],
+    [`${langHref(locale)}#faq`, t.home.faqEyebrow],
+    [langHref(locale, "/contact"), t.nav.contact]
   ] as const;
 
   const jsonLd = {
@@ -121,7 +164,15 @@ export default async function HomePage({ searchParams }: PageProps) {
         "@type": ["Organization", "ProfessionalService"],
         "@id": `${siteUrl}/#organization`,
         name: "ELHABAK Construction",
-        alternateName: "الحباك للاستشارات الهندسية",
+        legalName: "الحباك للمقاولات والاستشارات الهندسية",
+        alternateName: [
+          "ELHABAK",
+          "Elhabak",
+          "الحباك",
+          "الحباك للمقاولات والاستشارات الهندسية",
+          "الحباك للمقاولات",
+          "الحباك للاستشارات الهندسية"
+        ],
         url: `${siteUrl}/`,
         description: t.home.aboutLead,
         email: t.contact.email,
@@ -161,6 +212,15 @@ export default async function HomePage({ searchParams }: PageProps) {
             }
           }))
         }
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        url: `${siteUrl}/`,
+        name: "ELHABAK Construction",
+        alternateName: ["ELHABAK", "الحباك", "الحباك للمقاولات والاستشارات الهندسية"],
+        publisher: { "@id": `${siteUrl}/#organization` },
+        inLanguage: ["ar", "en"]
       }
     ]
   };
@@ -191,6 +251,13 @@ export default async function HomePage({ searchParams }: PageProps) {
     "/marketing/service-finishing.webp",
     "/marketing/service-contracting.webp",
     "/marketing/service-furnishing.webp"
+  ];
+  const serviceHrefs = [
+    "/architectural-design",
+    "/construction-management",
+    "/services",
+    "/services",
+    "/services"
   ];
 
   const headerNavLabels = {
@@ -228,6 +295,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         loginHref={langHref(locale, "/login")}
         homeHref={langHref(locale)}
         alternateHref={langHref(alternate)}
+        navItems={publicNavItems(locale, t.nav)}
       />
 
       {/* ============ 01 // HERO EXPERIENCE ============ */}
@@ -264,7 +332,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           {locale === "ar" ? (
             <>
               <span className="hero-title__brand">الحباك</span>
-              <span className="hero-title__line">للاستشارات الهندسية</span>
+              <span className="hero-title__line">للمقاولات والاستشارات الهندسية</span>
             </>
           ) : (
             <>
@@ -284,9 +352,16 @@ export default async function HomePage({ searchParams }: PageProps) {
           >
             <MessageCircle size={16} /> {t.home.primaryCta}
           </Button>
-          <Button href="#services" variant="ghost" className="hero-cta hero-cta--ghost">
+          <Button href={langHref(locale, "/services")} variant="ghost" className="hero-cta hero-cta--ghost">
             {t.home.secondaryCta} {arrow}
           </Button>
+        </div>
+        <div className="hero-system-note" data-reveal="up">
+          <span className="hero-system-note__signal" aria-hidden="true"><Activity size={16} /></span>
+          <div>
+            <strong>{locale === "ar" ? "منصة تشغيل المشروع" : "PROJECT OPERATIONS PLATFORM"}</strong>
+            <p>{locale === "ar" ? "متابعة التصميم والتنفيذ والمالية من مساحة عمل واحدة." : "Design, execution, finance, and client visibility in one workspace."}</p>
+          </div>
         </div>
       </PublicHero>
 
@@ -300,7 +375,6 @@ export default async function HomePage({ searchParams }: PageProps) {
                   src="/marketing/about-building.webp"
                   alt="ELHABAK Architecture"
                   fill
-                  priority
                   sizes="(max-width: 980px) 100vw, 48vw"
                   className="about-photo-img"
                 />
@@ -334,7 +408,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               </div>
 
               <div className="about-actions">
-                <Button href="#services" variant="ghost" className="about-cta-btn">
+                <Button href={langHref(locale, "/services")} variant="ghost" className="about-cta-btn">
                   {t.home.aboutCta} {arrow}
                 </Button>
               </div>
@@ -374,11 +448,11 @@ export default async function HomePage({ searchParams }: PageProps) {
                   <h3 className="service-card__title">{t.services[0][0]}</h3>
                   <p className="service-card__desc">{t.services[0][1]}</p>
                   <a
-                    href="#contact"
+                    href={langHref(locale, serviceHrefs[0] ?? "/services")}
                     className="service-card__action"
-                    aria-label={`${t.services[0][0]} - ${t.home.primaryCta}`}
+                    aria-label={`${t.services[0][0]} - ${locale === "ar" ? "تفاصيل الخدمة" : "service details"}`}
                   >
-                    <span>{t.home.primaryCta}</span>
+                    <span>{locale === "ar" ? "تفاصيل الخدمة" : "Service details"}</span>
                     {arrow}
                   </a>
                 </div>
@@ -411,7 +485,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                       <h3 className="service-card__title">{title}</h3>
                       <p className="service-card__desc">{body}</p>
                       <a
-                        href="#contact"
+                        href={langHref(locale, serviceHrefs[index] ?? "/services")}
                         className="service-card__link"
                         aria-label={`${title} - ${t.home.primaryCta}`}
                       >
@@ -500,7 +574,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
               <div className="platform-actions">
                 <Button
-                  href={langHref(locale, "/login")}
+                  href={langHref(locale, "/platform")}
                   variant="primary"
                   className="platform-cta-btn"
                 >
@@ -568,15 +642,15 @@ export default async function HomePage({ searchParams }: PageProps) {
             <div className="faq-visual" data-reveal="mask">
               <div className="faq-technical-card">
                 <Image
-                  src="/marketing/faq-blueprint.webp"
-                  alt="Architectural Technical Elevation"
+                  src="/marketing/process-blueprint.webp"
+                  alt="Isometric engineering project blueprint"
                   fill
                   sizes="(max-width: 980px) 100vw, 36vw"
                   className="faq-technical-img"
                 />
                 <div className="faq-technical-overlay">
                   <span className="faq-technical-tag">
-                    {locale === "ar" ? "مخطط قطاع هندسي معتمد" : "ENGINEERING ELEVATION"}
+                    {locale === "ar" ? "مخطط تشغيل هندسي متكامل" : "INTEGRATED ENGINEERING BLUEPRINT"}
                   </span>
                 </div>
               </div>
@@ -648,15 +722,20 @@ export default async function HomePage({ searchParams }: PageProps) {
                 className="footer-logo"
               />
               <p className="footer-slogan">{t.home.footerTagline}</p>
+              <p className="footer-entity">
+                <bdi>{t.home.footerText}</bdi>
+                <span aria-hidden="true"> · </span>
+                <bdi>{locale === "ar" ? "ELHABAK Construction" : "الحباك للمقاولات والاستشارات الهندسية"}</bdi>
+              </p>
             </div>
 
             <nav className="footer-nav" aria-label={t.home.footerNav}>
-              <a href="#about" className="footer-nav__link">{t.nav.about}</a>
-              <a href="#services" className="footer-nav__link">{t.nav.services}</a>
-              <a href="#process" className="footer-nav__link">{t.nav.process}</a>
-              <a href="#platform" className="footer-nav__link">{t.nav.platform}</a>
-              <a href="#faq" className="footer-nav__link">{t.home.faqEyebrow}</a>
-              <a href="#contact" className="footer-nav__link">{t.nav.contact}</a>
+              <a href={langHref(locale, "/about")} className="footer-nav__link">{t.nav.about}</a>
+              <a href={langHref(locale, "/services")} className="footer-nav__link">{t.nav.services}</a>
+              <a href={`${langHref(locale)}#process`} className="footer-nav__link">{t.nav.process}</a>
+              <a href={langHref(locale, "/platform")} className="footer-nav__link">{t.nav.platform}</a>
+              <a href={`${langHref(locale)}#faq`} className="footer-nav__link">{t.home.faqEyebrow}</a>
+              <a href={langHref(locale, "/contact")} className="footer-nav__link">{t.nav.contact}</a>
             </nav>
           </div>
 

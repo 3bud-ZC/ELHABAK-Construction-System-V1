@@ -34,6 +34,15 @@ export class NotificationService {
       return;
     }
 
+    // All recipients share the same project - fetch it once so the realtime payload
+    // carries the same project identity as the REST list response.
+    const project = input.projectId
+      ? await this.prisma.project.findUnique({
+          where: { id: input.projectId },
+          select: { id: true, code: true, name: true }
+        })
+      : null;
+
     const [notifications, unreadCounts] = await Promise.all([
       this.prisma.$transaction(
         unique.map((userId) =>
@@ -59,7 +68,7 @@ export class NotificationService {
     const unreadCountByUser = new Map(unreadCounts.map((row) => [row.userId, row._count._all]));
     for (const notification of notifications) {
       this.realtime.emitToUser(notification.userId, "notification:new", {
-        notification: toNotificationResponse({ ...notification, project: null }),
+        notification: toNotificationResponse({ ...notification, project }),
         unreadCount: unreadCountByUser.get(notification.userId) ?? 1
       });
     }

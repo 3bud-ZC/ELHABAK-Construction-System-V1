@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
 import { Building2, Calendar, MapPin, UserRound, Users } from "lucide-react";
@@ -47,7 +47,6 @@ const phases: ProjectPhase[] = ["SITE_INSPECTION", "DESIGN", "PRELIMINARY_ESTIMA
 const statuses: ProjectStatus[] = ["PLANNED", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"];
 
 export function ProjectForm({ mode, projectId }: ProjectFormProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -57,7 +56,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
     name: "",
     code: "",
     category: "MIXED",
-    clientId: "",
+    clientId: mode === "create" ? searchParams.get("clientId") ?? "" : "",
     engineerId: "",
     workerIds: [],
     location: "",
@@ -85,9 +84,10 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             basicInfo: "بيانات المشروع",
             teamAssignment: "الفريق والعميل",
             schedule: "الجدول الزمني",
-            statusPhase: "الحالة والمرحلة",
+            optionalDetails: "تفاصيل اختيارية",
             name: "اسم المشروع",
-            code: "كود المشروع",
+            code: "معرّف المشروع",
+            codeAuto: "يتم إنشاء المعرّف تلقائياً عند الحفظ",
             category: "الفئة",
             client: "العميل",
             engineer: "المهندس المسؤول",
@@ -104,6 +104,9 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             emptyUpdatesHint: "ستظهر هنا تحديثات المهندسين والعمال الميدانية.",
             required: "راجع الحقول المطلوبة.",
             saved: "تم حفظ المشروع.",
+            createdTitle: "تم إنشاء المشروع",
+            openWorkspace: "فتح مساحة المشروع",
+            financialSetup: "الإعداد المالي",
             loadingLabel: "جاري تحميل بيانات المشروع...",
             loadingTitle: "جاري التحميل...",
             noClient: "بلا عميل",
@@ -127,9 +130,10 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             basicInfo: "Project details",
             teamAssignment: "Team & client",
             schedule: "Schedule",
-            statusPhase: "Status & phase",
+            optionalDetails: "Optional details",
             name: "Project name",
-            code: "Project code",
+            code: "Project identifier",
+            codeAuto: "Generated automatically when the project is saved",
             category: "Category",
             client: "Client",
             engineer: "Responsible engineer",
@@ -146,6 +150,9 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             emptyUpdatesHint: "Field updates from engineers and workers will appear here.",
             required: "Check required fields.",
             saved: "Project saved.",
+            createdTitle: "Project created",
+            openWorkspace: "Open project workspace",
+            financialSetup: "Financial setup",
             loadingLabel: "Loading project data...",
             loadingTitle: "Loading...",
             noClient: "No client",
@@ -209,7 +216,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
     event.preventDefault();
     setError("");
     setSuccess("");
-    if (!form.name || !form.code || !form.clientId || !form.engineerId) {
+    if (!form.name || !form.clientId || !form.engineerId) {
       setError(labels.required);
       return;
     }
@@ -221,8 +228,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
         body: JSON.stringify(payload)
       });
       setSuccess(labels.saved);
-      if (mode === "create") router.replace(locale === "ar" ? `/app/projects/${saved.id}` : `/app/projects/${saved.id}?lang=en`);
-      else setProject(saved);
+      setProject(saved);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Request failed.");
     } finally {
@@ -257,6 +263,27 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
       {loading && <LoadingState label={labels.loadingLabel} />}
       {error && <div className="form-error">{error}</div>}
       {success && <div className="form-success">{success}</div>}
+      {mode === "create" && project && (
+        <section className="project-created-banner" aria-live="polite">
+          <div className="project-created-banner__identity">
+            <span className="project-created-banner__eyebrow">{labels.createdTitle}</span>
+            <strong>{project.name}</strong>
+            <span className="mono"><bdi>{project.code}</bdi></span>
+          </div>
+          <div className="project-created-banner__context">
+            <span>{project.client?.user.displayName ?? labels.unassigned}</span>
+            <span>{project.engineer?.displayName ?? labels.unassigned}</span>
+          </div>
+          <div className="project-created-banner__actions">
+            <Link className="ui-button ui-button--primary ui-button--sm" href={locale === "ar" ? `/app/projects/${project.id}` : `/app/projects/${project.id}?lang=en`}>
+              {labels.openWorkspace}
+            </Link>
+            <Link className="ui-button ui-button--ghost ui-button--sm" href={locale === "ar" ? `/app/projects/${project.id}/finance` : `/app/projects/${project.id}/finance?lang=en`}>
+              {labels.financialSetup}
+            </Link>
+          </div>
+        </section>
+      )}
 
       {!loading && (
         <>
@@ -340,10 +367,11 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   <span>{labels.name} <strong className="required-star">*</strong></span>
                   <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
                 </label>
-                <label className="ui-field">
-                  <span>{labels.code} <strong className="required-star">*</strong></span>
-                  <input className="mono" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} required placeholder="PRJ-XXXX" />
-                </label>
+                <div className="ui-field generated-code-field">
+                  <span>{labels.code}</span>
+                  <div className="generated-code-field__value mono"><bdi>{form.code || "PRJ-2026-XXXX"}</bdi></div>
+                  <small>{labels.codeAuto}</small>
+                </div>
                 <label className="ui-field">
                   <span>{labels.category}</span>
                   <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value as ProjectCategory })}>
@@ -427,7 +455,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             <div className="form-panel">
               <div className="form-panel__head">
                 <span className="form-panel__index">04</span>
-                <h3 className="form-panel__title">{labels.statusPhase}</h3>
+                <h3 className="form-panel__title">{labels.optionalDetails}</h3>
               </div>
               <div className="form-grid">
                 <label className="ui-field">
@@ -508,8 +536,8 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
               <div className="section-title">
                 <h2>{labels.recent}</h2>
               </div>
-              {project.siteUpdates.length === 0 && <EmptyState title={labels.emptyUpdates} description={labels.emptyUpdatesHint} />}
-              {project.siteUpdates.map((update) => (
+              {(project.siteUpdates ?? []).length === 0 && <EmptyState title={labels.emptyUpdates} description={labels.emptyUpdatesHint} />}
+              {(project.siteUpdates ?? []).map((update) => (
                 <article className="update-card" key={update.id}>
                   <div className="update-card__head">
                     <div className="update-card__author">

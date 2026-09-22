@@ -10,6 +10,7 @@ import {
   apiRequest,
   designEventLabel,
   designFileUrl,
+  designNextAction,
   designStatusLabel,
   designStatusTone,
   disciplineLabel,
@@ -48,7 +49,10 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     cancel: "إلغاء", confirm: "تأكيد", approve: "اعتماد", reject: "رفض", approvalTitle: "قرار العميل", approvalLead: "راجع الملف والبيانات قبل تسجيل القرار النهائي.",
     commentOptional: "تعليق (اختياري عند الاعتماد)", rejectionRequired: "سبب الرفض مطلوب", addComment: "إضافة تعليق", commentPlaceholder: "اكتب تعليقاً مرتبطاً بهذه المراجعة...",
     commentSaved: "تمت إضافة التعليق.", approved: "تم اعتماد المراجعة وتسجيل القرار.", rejected: "تم رفض المراجعة وحفظ التعليق.", submitted: "تم إرسال المراجعة للعميل.",
-    edit: "تعديل البيانات", save: "حفظ التعديلات", title: "عنوان التصميم", updated: "تم تحديث بيانات التصميم.", pdfFallback: "إذا لم تظهر المعاينة، نزّل الملف لفتحه.", fileMeta: "بيانات الملف"
+    edit: "تعديل البيانات", save: "حفظ التعديلات", title: "عنوان التصميم", updated: "تم تحديث بيانات التصميم.", pdfFallback: "إذا لم تظهر المعاينة، نزّل الملف لفتحه.", fileMeta: "بيانات الملف",
+    viewingOld: "تعاين مراجعة سابقة", latestIs: "الأحدث", backToLatest: "العودة للأحدث", revisionNote: "ملاحظة المراجعة",
+    rejectionReason: "سبب رفض العميل", rejectedFollowUp: "ارفع مراجعة جديدة لمعالجة ملاحظات العميل.", commentOn: "تعليق على",
+    approveConfirm: "تأكيد اعتماد", rejectConfirm: "تأكيد رفض", decisionBy: "سُجّل القرار بواسطة", nextAction: "الإجراء التالي"
   } : {
     loading: "Loading design detail...", back: "Design register", current: "Current revision", discipline: "Discipline", uploader: "Uploader", uploaded: "Uploaded",
     description: "Design description", file: "Revision file", preview: "File preview", download: "Download", revisionHistory: "Revision history", newest: "Newest",
@@ -56,7 +60,10 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     cancel: "Cancel", confirm: "Confirm", approve: "Approve", reject: "Reject", approvalTitle: "Client decision", approvalLead: "Inspect the file and metadata before recording a final decision.",
     commentOptional: "Comment (optional for approval)", rejectionRequired: "Rejection reason is required", addComment: "Add comment", commentPlaceholder: "Write a comment linked to this revision...",
     commentSaved: "Comment added.", approved: "Revision approved and decision recorded.", rejected: "Revision rejected and comment preserved.", submitted: "Revision submitted to client.",
-    edit: "Edit details", save: "Save changes", title: "Design title", updated: "Design details updated.", pdfFallback: "If preview does not load, download the file to open it.", fileMeta: "File metadata"
+    edit: "Edit details", save: "Save changes", title: "Design title", updated: "Design details updated.", pdfFallback: "If preview does not load, download the file to open it.", fileMeta: "File metadata",
+    viewingOld: "You are viewing a historical revision", latestIs: "Latest", backToLatest: "Back to latest", revisionNote: "Revision note",
+    rejectionReason: "Client rejection reason", rejectedFollowUp: "Upload a new revision to address the client's notes.", commentOn: "Comment on",
+    approveConfirm: "Confirm approval of", rejectConfirm: "Confirm rejection of", decisionBy: "Decision recorded by", nextAction: "Next action"
   }, [ar]);
 
   const load = useCallback(async () => {
@@ -88,6 +95,10 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
   const selected = design.revisions.find((revision) => revision.id === selectedRevisionId) ?? design.currentRevision;
   const canManage = user.role === "ADMIN" || user.role === "ENGINEER";
   const canDecide = user.role === "CLIENT" && design.currentRevision.status === "IN_REVIEW" && selected.id === design.currentRevision.id;
+  const viewingHistorical = selected.id !== design.currentRevision.id;
+  const rejectionEvent = design.currentRevision.status === "REJECTED"
+    ? design.events.find((event) => event.action === "CLIENT_REJECTED" && event.revisionId === design.currentRevision.id)
+    : undefined;
   const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
 
   async function addComment(event: FormEvent) {
@@ -106,6 +117,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
         <div className="design-detail-badges">
           <Badge tone={designStatusTone(selected.status)}>{designStatusLabel(selected.status, locale)}</Badge>
           <span className="discipline-tag mono">{disciplineLabel(design.discipline, locale)}</span>
+          <span className="design-next-action"><small>{labels.nextAction}:</small> {designNextAction(design.status, user.role, locale)}</span>
         </div>
       </div>
       <div className="design-detail-actions">
@@ -124,6 +136,24 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     {error && <div className="form-error">{error}</div>}
     {success && <div className="form-success">{success}</div>}
 
+    {viewingHistorical && (
+      <div className="design-history-banner" role="status">
+        <span><FileClock size={15} aria-hidden="true" /> {labels.viewingOld}: <bdi className="mono">{selected.revisionCode}</bdi> — {labels.latestIs} <bdi className="mono">{design.currentRevision.revisionCode}</bdi></span>
+        <button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setSelectedRevisionId(design.currentRevision.id)}>{labels.backToLatest}</button>
+      </div>
+    )}
+
+    {design.currentRevision.status === "REJECTED" && rejectionEvent && (
+      <div className="design-rejection-banner" role="alert">
+        <div>
+          <strong>{labels.rejectionReason} (<bdi className="mono">{design.currentRevision.revisionCode}</bdi>):</strong>
+          <p>{rejectionEvent.comment}</p>
+          <small>{labels.decisionBy} {rejectionEvent.actor.displayName} · {roleLabel(rejectionEvent.actor.role, locale)} · <bdi className="mono">{dateTime(rejectionEvent.createdAt)}</bdi></small>
+        </div>
+        {canManage && <span className="design-rejection-banner__hint">{labels.rejectedFollowUp}</span>}
+      </div>
+    )}
+
     <div className="design-detail-layout technical-record-layout">
       <main className="design-preview-column technical-preview-column">
         <section className="workspace-panel design-file-panel technical-file-panel">
@@ -140,6 +170,9 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
           <div className="cad-preview-frame">
             <FilePreview projectId={projectId} designId={designId} revision={selected} fallback={labels.pdfFallback} />
           </div>
+          {selected.notes && (
+            <p className="design-revision-note"><small>{labels.revisionNote}</small><bdi>{selected.notes}</bdi></p>
+          )}
           <div className="drawing-titleblock">
             <div className="drawing-titleblock__cell">
               <span className="titleblock-label">{labels.file}</span>
@@ -181,6 +214,9 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
             )}
             {decision && (
               <div className="approval-confirm">
+                <p className="approval-confirm__revision">
+                  {decision === "APPROVE" ? labels.approveConfirm : labels.rejectConfirm} <bdi className="mono">{selected.revisionCode}</bdi> — <bdi>{selected.originalFilename}</bdi>
+                </p>
                 <label className="ui-field">
                   <span>{decision === "REJECT" ? labels.rejectionRequired : labels.commentOptional}</span>
                   <textarea value={decisionComment} onChange={(event) => setDecisionComment(event.target.value)} required={decision === "REJECT"} placeholder={decision === "REJECT" ? (ar ? "اذكر سبب رفض المراجعة والملاحظات المطلوبة..." : "State reason for rejection and required changes...") : ""} />
@@ -204,6 +240,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
             <h3>{labels.addComment}</h3>
           </div>
           <form className="comment-form" onSubmit={(event) => void addComment(event)}>
+            <span className="comment-form__target mono">{labels.commentOn} <bdi>{selected.revisionCode}</bdi></span>
             <textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder={labels.commentPlaceholder} maxLength={2000} />
             <div className="comment-form__footer">
               <button className="ui-button ui-button--primary ui-button--sm" type="submit" disabled={mutating || !comment.trim()}>
@@ -228,7 +265,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
             <div><dt>{labels.description}</dt><dd>{design.description || "—"}</dd></div>
           </dl>
           {canManage && design.currentRevision.status === "DRAFT" && (
-            <SubmitRevisionButton labels={labels} disabled={mutating} onConfirm={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${design.currentRevision.id}/submit`, {}, labels.submitted)} />
+            <SubmitRevisionButton labels={labels} revisionCode={design.currentRevision.revisionCode} disabled={mutating} onConfirm={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${design.currentRevision.id}/submit`, {}, labels.submitted)} />
           )}
         </section>
 
@@ -290,19 +327,19 @@ function FilePreview({ projectId, designId, revision, fallback }: { projectId: s
   return <div className="file-preview file-preview--pdf"><iframe src={src} title={revision.originalFilename} /><p>{fallback}</p></div>;
 }
 
-function SubmitRevisionButton({ labels, disabled, onConfirm }: { labels: Record<string, string>; disabled: boolean; onConfirm: () => void }) {
+function SubmitRevisionButton({ labels, revisionCode, disabled, onConfirm }: { labels: Record<string, string>; revisionCode: string; disabled: boolean; onConfirm: () => void }) {
   const [confirming, setConfirming] = useState(false);
   if (!confirming) return <button className="ui-button ui-button--accent full-width" type="button" onClick={() => setConfirming(true)}><Send size={15} />{labels.submit}</button>;
-  return <div className="inline-confirm"><strong>{labels.submitConfirm}</strong><div><button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setConfirming(false)}>{labels.cancel}</button><button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={onConfirm} disabled={disabled}>{labels.confirm}</button></div></div>;
+  return <div className="inline-confirm"><strong>{labels.submitConfirm} <bdi className="mono">{revisionCode}</bdi></strong><div><button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setConfirming(false)}>{labels.cancel}</button><button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={onConfirm} disabled={disabled}>{labels.confirm}</button></div></div>;
 }
 
 function RevisionUploadDialog({ projectId, design, locale, onClose, onUpdated }: { projectId: string; design: DesignRecord; locale: "ar" | "en"; onClose: () => void; onUpdated: (design: DesignRecord) => void }) {
   const ar = locale === "ar"; const [file, setFile] = useState<File | null>(null); const [notes, setNotes] = useState(""); const [error, setError] = useState(""); const [uploading, setUploading] = useState(false); const [progress, setProgress] = useState(0); const inputRef = useRef<HTMLInputElement>(null);
-  const labels = ar ? { title: "رفع مراجعة جديدة", next: "المراجعة التالية", notes: "ملاحظات المراجعة", choose: "اسحب الملف هنا أو اختر من جهازك", support: "PDF أو PNG أو JPG/JPEG", draft: "حفظ كمسودة", review: "رفع وإرسال للمراجعة", close: "إغلاق", required: "اختر ملفاً صالحاً.", uploading: "جاري الرفع" } : { title: "Upload new revision", next: "Next revision", notes: "Revision notes", choose: "Drop file here or choose from device", support: "PDF, PNG, or JPG/JPEG", draft: "Save draft", review: "Upload & submit for review", close: "Close", required: "Choose a valid file.", uploading: "Uploading" };
+  const labels = ar ? { title: "رفع مراجعة جديدة", next: "المراجعة التالية", current: "الحالية", becomes: "ستصبح", notes: "ملاحظات المراجعة", choose: "اسحب الملف هنا أو اختر من جهازك", support: "PDF أو PNG أو JPG/JPEG", draft: "حفظ كمسودة", review: "رفع وإرسال للمراجعة", close: "إغلاق", required: "اختر ملفاً صالحاً.", uploading: "جاري الرفع" } : { title: "Upload new revision", next: "Next revision", current: "Current", becomes: "will become", notes: "Revision notes", choose: "Drop file here or choose from device", support: "PDF, PNG, or JPG/JPEG", draft: "Save draft", review: "Upload & submit for review", close: "Close", required: "Choose a valid file.", uploading: "Uploading" };
   function choose(selected?: File) { setFile(selected ?? null); setError(""); }
   function drop(event: DragEvent<HTMLDivElement>) { event.preventDefault(); choose(event.dataTransfer.files[0]); }
   async function submit(event: FormEvent, submitForReview: boolean) { event.preventDefault(); if (!file) { setError(labels.required); return; } setUploading(true); const body = new FormData(); body.set("notes", notes); body.set("submitForReview", String(submitForReview)); body.set("file", file); try { onUpdated(await uploadRequest(`/projects/${projectId}/designs/${design.id}/revisions`, body, setProgress)); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Request failed."); setUploading(false); } }
-  return <div className="modal-backdrop"><section className="design-dialog design-dialog--compact" role="dialog" aria-modal="true"><header><div><span>{labels.next}</span><h2>{labels.title}</h2></div><button className="icon-button" type="button" onClick={onClose} disabled={uploading} aria-label={labels.close}><X size={20} /></button></header><form onSubmit={(event) => void submit(event, false)}><div className="next-revision"><bdi>REV {String(design.currentRevisionNumber + 1).padStart(2, "0")}</bdi></div><div className="upload-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={drop} onClick={() => inputRef.current?.click()} role="button" tabIndex={0}><UploadCloud size={27} /><strong>{labels.choose}</strong><span>{labels.support}</span><input ref={inputRef} type="file" accept="application/pdf,image/png,image/jpeg" hidden onChange={(event: ChangeEvent<HTMLInputElement>) => choose(event.target.files?.[0])} /></div>{file && <div className="selected-file"><span><bdi>{file.name}</bdi><small>{formatFileSize(file.size, locale)}</small></span><button type="button" onClick={() => choose()}><X size={16} /></button></div>}<label className="ui-field">{labels.notes}<textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></label>{error && <div className="form-error">{error}</div>}{uploading && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}<footer><button className="ui-button ui-button--secondary" type="submit" disabled={uploading}>{labels.draft}</button><button className="ui-button ui-button--primary" type="button" disabled={uploading} onClick={(event) => void submit(event, true)}>{labels.review}</button></footer></form></section></div>;
+  return <div className="modal-backdrop"><section className="design-dialog design-dialog--compact" role="dialog" aria-modal="true"><header><div><span>{design.title}</span><h2>{labels.title}</h2></div><button className="icon-button" type="button" onClick={onClose} disabled={uploading} aria-label={labels.close}><X size={20} /></button></header><form onSubmit={(event) => void submit(event, false)}><div className="next-revision"><small>{labels.current}: <bdi className="mono">{design.currentRevision.revisionCode}</bdi></small><span>{labels.becomes} <bdi>REV {String(design.currentRevisionNumber + 1).padStart(2, "0")}</bdi></span></div><div className="upload-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={drop} onClick={() => inputRef.current?.click()} role="button" tabIndex={0}><UploadCloud size={27} /><strong>{labels.choose}</strong><span>{labels.support}</span><input ref={inputRef} type="file" accept="application/pdf,image/png,image/jpeg" hidden onChange={(event: ChangeEvent<HTMLInputElement>) => choose(event.target.files?.[0])} /></div>{file && <div className="selected-file"><span><bdi>{file.name}</bdi><small>{formatFileSize(file.size, locale)}</small></span><button type="button" onClick={() => choose()}><X size={16} /></button></div>}<label className="ui-field">{labels.notes}<textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></label>{error && <div className="form-error">{error}</div>}{uploading && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}<footer><button className="ui-button ui-button--secondary" type="submit" disabled={uploading}>{labels.draft}</button><button className="ui-button ui-button--primary" type="button" disabled={uploading} onClick={(event) => void submit(event, true)}>{labels.review}</button></footer></form></section></div>;
 }
 
 function EditDesignDialog({ projectId, design, locale, onClose, onUpdated }: { projectId: string; design: DesignRecord; locale: "ar" | "en"; onClose: () => void; onUpdated: (design: DesignRecord) => void }) {

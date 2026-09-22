@@ -67,7 +67,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       project: "مشروع",
       start: "البدء",
       target: "التسليم المستهدف",
-      back: "كل المشاريع"
+      back: "كل المشاريع",
+      fieldActions: "إجراءات ميدانية سريعة"
     }
     : {
       phase: "Current phase",
@@ -91,7 +92,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       project: "Project",
       start: "Start",
       target: "Target delivery",
-      back: "All projects"
+      back: "All projects",
+      fieldActions: "Quick field actions"
     };
 
   function href(path: string) {
@@ -243,6 +245,17 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
         <span><CalendarDays size={15} /><small>{labels.schedule}</small><strong><bdi>{formatDate(project.startDate)} — {formatDate(project.targetDate)}</bdi></strong></span>
         <span><Building2 size={15} /><small>{labels.team}</small><strong><bdi>{team}</bdi></strong></span>
       </div>
+      {(role === "ENGINEER" || role === "WORKER") && (
+        <div className="project-mobile-actions">
+          <span className="project-mobile-actions__label">{labels.fieldActions}</span>
+          <div>
+            {sections.filter((section) => section.id === "site" || section.id === "design" || section.id === "documents" || section.id === "chat").map((section) => {
+              const Icon = section.icon;
+              return <Link href={href(section.href)} key={section.id}><Icon size={15} /> {section.label}</Link>;
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

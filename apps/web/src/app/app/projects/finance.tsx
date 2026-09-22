@@ -1,12 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard } from "@elhabak/ui";
 import {
   Banknote,
   ClipboardList,
+  Copy,
   Download,
+  Search,
   FileText,
   History as HistoryIcon,
   Landmark,
@@ -17,6 +19,15 @@ import {
   Wallet,
   X
 } from "lucide-react";
+import {
+  computeLineTotalMinor,
+  decimalToMinorUnits,
+  formatMoneyMajor,
+  MONEY_DECIMALS,
+  MONEY_PATTERN,
+  QUANTITY_DECIMALS,
+  QUANTITY_PATTERN
+} from "@elhabak/validation/money-core";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   apiRequest,
@@ -102,6 +113,16 @@ export function Finance({ projectId }: { projectId: string }) {
           <span className="section-kicker">{locale === "ar" ? "المتابعة المالية للمشروع" : "Project Cost Control"}</span>
           <strong>{context.name} <bdi className="mono finance-command-strip__code">{context.code ?? "—"}</bdi></strong>
         </div>
+        <div className="finance-command-strip__meta">
+          {context.client && <span>{locale === "ar" ? "العميل" : "Client"}: <bdi>{context.client.user.displayName}</bdi></span>}
+          <span>{locale === "ar" ? "العملة" : "Currency"}: <bdi>{context.currency}</bdi></span>
+          {user.role !== "ENGINEER" && (
+            <span>
+              {locale === "ar" ? "العقد" : "Contract"}:{" "}
+              <bdi>{context.contractValue !== null ? money(context.contractValue, context.currency, locale) : (locale === "ar" ? "غير محدد" : "Not set")}</bdi>
+            </span>
+          )}
+        </div>
       </div>
       {user.role === "ADMIN" || user.role === "ACCOUNTANT" ? (
         <AdminFinancePanels projectId={projectId} locale={locale} />
@@ -142,6 +163,26 @@ function dateOnly(iso: string, locale: "ar" | "en") {
 
 function isOverpaid(outstanding: string | null) {
   return Boolean(outstanding && outstanding.trim().startsWith("-"));
+}
+
+/* Exact minor-unit sum of displayed money strings — the same integer arithmetic the
+   server uses (decimalToMinorUnits + safe-integer addition), never floating point. */
+function sumAmountMinor(amounts: Array<string | null | undefined>): number {
+  let total = 0;
+  for (const amount of amounts) {
+    if (amount === null || amount === undefined || amount.trim() === "") continue;
+    total += decimalToMinorUnits(amount.trim(), MONEY_DECIMALS);
+  }
+  return total;
+}
+
+/* Line-total preview inside the item dialog — identical inputs/outputs to the backend
+   schema (decimal strings -> minor units -> BigInt product -> minor units). */
+function previewLineTotal(quantity: string, unitRate: string): string | null {
+  const q = quantity.trim();
+  const r = unitRate.trim();
+  if (!QUANTITY_PATTERN.test(q) || !MONEY_PATTERN.test(r)) return null;
+  return formatMoneyMajor(computeLineTotalMinor(decimalToMinorUnits(q, QUANTITY_DECIMALS), decimalToMinorUnits(r, MONEY_DECIMALS)));
 }
 
 /* Compact audit context for a history row - surfaces the amount, revision/version,
@@ -202,7 +243,7 @@ function AdminFinancePanels({ projectId, locale }: { projectId: string; locale: 
       {tab === "estimate" && <EstimatePanel projectId={projectId} locale={locale} />}
       {tab === "boq" && <BoqPanel projectId={projectId} locale={locale} readOnly={false} onChanged={loadSummary} />}
       {tab === "expenses" && <ExpensesPanel projectId={projectId} locale={locale} currency={summary?.currency ?? "EGP"} onChanged={loadSummary} />}
-      {tab === "client-payments" && <ClientPaymentsPanel projectId={projectId} locale={locale} currency={summary?.currency ?? "EGP"} readOnly={false} onChanged={loadSummary} />}
+      {tab === "client-payments" && <ClientPaymentsPanel projectId={projectId} locale={locale} currency={summary?.currency ?? "EGP"} readOnly={false} summary={summary} onChanged={loadSummary} />}
       {tab === "contractor-payments" && <ContractorPaymentsPanel projectId={projectId} locale={locale} currency={summary?.currency ?? "EGP"} onChanged={loadSummary} />}
       {tab === "history" && <HistoryPanel projectId={projectId} locale={locale} />}
     </>
@@ -231,14 +272,16 @@ function SummaryPanel({
       setContract: "تحديد القيمة التعاقدية", contractValue: "القيمة التعاقدية", boqTotal: "إجمالي جدول الكميات",
       estimateTotal: "إجمالي المقايسة الحالية", clientPayments: "دفعات العميل المستلمة", outstanding: "الرصيد المتبقي على العميل",
       overpaidNote: "تنبيه: العميل دفع أكثر من القيمة التعاقدية.", expenses: "إجمالي المصروفات الداخلية",
-      contractorPayments: "دفعات المقاولين", committed: "إجمالي التكلفة الفعلية (مصروفات + مقاولين)", notSet: "غير محدد بعد"
+      contractorPayments: "دفعات المقاولين", committed: "إجمالي التكلفة الفعلية (مصروفات + مقاولين)", notSet: "غير محدد بعد",
+      noEstimate: "لا توجد مقايسة حالية", collected: "تم تحصيل", ofContract: "من قيمة العقد"
     }
     : {
       title: "Project Financial Summary", lead: "Real figures calculated from actually persisted financial records.",
       setContract: "Set Contract Value", contractValue: "Contract Value", boqTotal: "BOQ Total",
       estimateTotal: "Current Estimate Total", clientPayments: "Client Payments Received", outstanding: "Client Outstanding Balance",
       overpaidNote: "Warning: the client has paid more than the agreed contract value.", expenses: "Internal Expenses Total",
-      contractorPayments: "Contractor Payments", committed: "Committed Actual Cost (expenses + contractors)", notSet: "Not set yet"
+      contractorPayments: "Contractor Payments", committed: "Committed Actual Cost (expenses + contractors)", notSet: "Not set yet",
+      noEstimate: "No current estimate", collected: "Collected", ofContract: "of contract value"
     };
 
   return (
@@ -265,9 +308,33 @@ function SummaryPanel({
           hint={overpaid ? labels.overpaidNote : undefined}
         />
       </div>
+
+      {summary?.contractValue !== null && summary?.contractValue !== undefined && summary.clientPaymentsTotal !== undefined && (() => {
+        /* Exact collection ratio: minor units only, capped at 100% for the bar. */
+        const contractMinor = decimalToMinorUnits(summary.contractValue, MONEY_DECIMALS);
+        const paidMinor = decimalToMinorUnits(summary.clientPaymentsTotal, MONEY_DECIMALS);
+        const pct = contractMinor > 0 ? Math.min(100, Math.round((paidMinor / contractMinor) * 100)) : paidMinor > 0 ? 100 : 0;
+        return (
+          <div className="finance-collection-bar" role="img" aria-label={`${labels.collected} ${pct}% ${labels.ofContract}`}>
+            <div className="finance-collection-bar__track">
+              <div className={`finance-collection-bar__fill${overpaid ? " finance-collection-bar__fill--overpaid" : ""}`} style={{ width: `${pct}%` }} />
+            </div>
+            <span className="finance-collection-bar__label">
+              <strong>{labels.collected} <bdi>{money(summary.clientPaymentsTotal, currency, locale)}</bdi></strong>
+              <small><bdi>{pct}%</bdi> {labels.ofContract}</small>
+            </span>
+          </div>
+        );
+      })()}
+
       <div className="finance-kpi-grid finance-summary-secondary">
         <MetricCard tone="orange" icon={<ClipboardList size={18} />} label={labels.boqTotal} value={money(summary?.boqTotal, currency, locale)} />
-        <MetricCard tone="orange" icon={<FileText size={18} />} label={labels.estimateTotal} value={money(summary?.estimateTotal, currency, locale)} />
+        <MetricCard
+          tone="orange"
+          icon={<FileText size={18} />}
+          label={labels.estimateTotal}
+          value={summary?.estimateTotal === null ? labels.noEstimate : money(summary?.estimateTotal, currency, locale)}
+        />
         <MetricCard tone="danger" icon={<Receipt size={18} />} label={labels.expenses} value={money(summary?.expensesTotal, currency, locale)} />
         <MetricCard tone="danger" icon={<Landmark size={18} />} label={labels.contractorPayments} value={money(summary?.contractorPaymentsTotal, currency, locale)} />
         <MetricCard tone="navy" icon={<Wallet size={18} />} label={labels.committed} value={money(summary?.committedCostTotal, currency, locale)} />
@@ -364,6 +431,8 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [showItemDialog, setShowItemDialog] = useState<{ item?: LineItemLike } | null>(null);
+  const [confirmVersion, setConfirmVersion] = useState(false);
+  const [versionSaving, setVersionSaving] = useState(false);
 
   const labels = ar
     ? {
@@ -371,18 +440,24 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
       create: "إنشاء مقايسة", newVersion: "إصدار نسخة جديدة", addItem: "إضافة بند", empty: "لا توجد مقايسة مسجلة",
       emptyHint: "ابدأ بإنشاء أول مقايسة تقريبية لهذا المشروع.", description: "الوصف", unit: "الوحدة", quantity: "الكمية",
       unitRate: "سعر الوحدة", total: "الإجمالي", actions: "الإجراء", version: "نسخة", finalized: "نسخة سابقة (نهائية)",
-      current: "النسخة الحالية", loading: "جاري تحميل المقايسة...", removeConfirm: "هل تريد حذف هذا البند؟", noItems: "لا توجد بنود في هذه المقايسة بعد."
+      current: "النسخة الحالية", loading: "جاري تحميل المقايسة...", removeConfirm: "هل تريد حذف هذا البند؟", noItems: "لا توجد بنود في هذه المقايسة بعد.",
+      versionTitle: "إصدار نسخة جديدة من المقايسة",
+      versionBody: (v: number, next: number) => `سيتم إقفال النسخة الحالية V${String(v).padStart(2, "0")} كنهائية للقراءة فقط، وإنشاء نسخة عمل جديدة قابلة للتعديل V${String(next).padStart(2, "0")} بنفس البنود. لا يمكن التراجع عن الإقفال.`,
+      versionConfirm: "إقفال وإصدار النسخة الجديدة", cancel: "إلغاء"
     }
     : {
       title: "Preliminary Estimation", lead: "The current working document for the project's preliminary cost estimate.",
       create: "Create Estimate", newVersion: "New Version", addItem: "Add Item", empty: "No estimate recorded",
       emptyHint: "Start by creating the first preliminary estimate for this project.", description: "Description", unit: "Unit", quantity: "Quantity",
       unitRate: "Unit Rate", total: "Total", actions: "Action", version: "version", finalized: "Previous version (finalized)",
-      current: "Current version", loading: "Loading estimate...", removeConfirm: "Remove this item?", noItems: "No items in this estimate yet."
+      current: "Current version", loading: "Loading estimate...", removeConfirm: "Remove this item?", noItems: "No items in this estimate yet.",
+      versionTitle: "Create a new estimate version",
+      versionBody: (v: number, next: number) => `The current version V${String(v).padStart(2, "0")} will be finalized as read-only, and a new editable working version V${String(next).padStart(2, "0")} will be created with the same items. Finalization cannot be undone.`,
+      versionConfirm: "Finalize & create new version", cancel: "Cancel"
     };
 
-  const load = useCallback(() => {
-    setLoading(true);
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     apiRequest<CostEstimateRecord[]>(`/projects/${projectId}/finance/estimates`)
       .then((result) => {
         setEstimates(result);
@@ -410,8 +485,16 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
 
   async function newVersion() {
     if (!current) return;
-    await apiRequest(`/projects/${projectId}/finance/estimates/${current.id}/new-version`, { method: "POST", body: "{}" });
-    load();
+    setVersionSaving(true);
+    try {
+      await apiRequest(`/projects/${projectId}/finance/estimates/${current.id}/new-version`, { method: "POST", body: "{}" });
+      setConfirmVersion(false);
+      load();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Request failed.");
+    } finally {
+      setVersionSaving(false);
+    }
   }
 
   if (loading) return <LoadingState label={labels.loading} />;
@@ -426,7 +509,7 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
         </div>
         {current ? (
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button className="ui-button ui-button--secondary" type="button" onClick={() => void newVersion()}>{labels.newVersion}</button>
+            <button className="ui-button ui-button--secondary" type="button" onClick={() => setConfirmVersion(true)}>{labels.newVersion}</button>
             <button className="ui-button ui-button--accent" type="button" onClick={() => setShowItemDialog({})}>
               <Plus size={16} /> {labels.addItem}
             </button>
@@ -512,7 +595,24 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
             setShowItemDialog(null);
             load();
           }}
+          onItemSaved={() => load(true)}
         />
+      )}
+
+      {confirmVersion && current && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target && !versionSaving) setConfirmVersion(false); }}>
+          <section className="design-dialog design-dialog--compact" role="dialog" aria-modal="true" aria-labelledby="new-version-title">
+            <header>
+              <div><span>{ar ? "المقايسة" : "ESTIMATE"}</span><h2 id="new-version-title">{labels.versionTitle}</h2></div>
+              <button type="button" className="icon-button" onClick={() => setConfirmVersion(false)} disabled={versionSaving} aria-label={labels.cancel}><X size={20} /></button>
+            </header>
+            <p className="finance-version-confirm">{labels.versionBody(current.version, current.version + 1)}</p>
+            <footer className="finance-dialog-actions">
+              <button className="ui-button" type="button" onClick={() => setConfirmVersion(false)} disabled={versionSaving}>{labels.cancel}</button>
+              <button className="ui-button ui-button--accent" type="button" onClick={() => void newVersion()} disabled={versionSaving}>{labels.versionConfirm}</button>
+            </footer>
+          </section>
+        </div>
       )}
     </section>
   );
@@ -608,8 +708,8 @@ function LineItemRegister({
           <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}><bdi>{num(item.unitRate, 2)}</bdi></span>
           <span className="finance-register__cell finance-register__cell--amount finance-register__cell--total" data-label={labels.total}><bdi>{num(item.lineTotal, 2)}</bdi></span>
           <div className="finance-register__actions">
-            <button className="icon-button" type="button" onClick={() => onEdit(item)} aria-label="Edit"><Pencil size={15} /></button>
-            <button className="icon-button" type="button" onClick={() => onRemove(item)} aria-label="Delete"><Trash2 size={15} /></button>
+            <button className="icon-button" type="button" onClick={() => onEdit(item)} aria-label={`${locale === "ar" ? "تعديل" : "Edit"}: ${item.description}`}><Pencil size={15} /></button>
+            <button className="icon-button" type="button" onClick={() => onRemove(item)} aria-label={`${locale === "ar" ? "حذف" : "Delete"}: ${item.description}`}><Trash2 size={15} /></button>
           </div>
         </div>
       ))}
@@ -623,19 +723,24 @@ function LineItemDialog({
   parentId,
   locale,
   item,
+  duplicate,
   onClose,
-  onSaved
+  onSaved,
+  onItemSaved
 }: {
   mode: "estimate" | "boq";
   projectId: string;
   parentId: string;
   locale: "ar" | "en";
   item: (LineItemLike & { code?: string; section?: string | null }) | undefined;
+  duplicate?: boolean;
   onClose: () => void;
   onSaved: () => void;
+  onItemSaved?: () => void;
 }) {
   const ar = locale === "ar";
-  const [code, setCode] = useState(item?.code ?? "");
+  const editing = Boolean(item && !duplicate);
+  const [code, setCode] = useState(editing ? (item?.code ?? "") : "");
   const [section, setSection] = useState(item?.section ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [unit, setUnit] = useState<BoqUnit>(item?.unit ?? "M2");
@@ -644,18 +749,27 @@ function LineItemDialog({
   const [note, setNote] = useState(item?.note ?? "");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const descriptionRef = useRef<HTMLInputElement>(null);
 
   const labels = ar
     ? {
-      title: item ? "تعديل بند" : "إضافة بند", code: "الكود", section: "القسم / التصنيف", description: "الوصف",
-      unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة", note: "ملاحظة (اختياري)", save: "حفظ", close: "إغلاق"
+      title: editing ? "تعديل بند" : duplicate ? "نسخ بند إلى جديد" : "إضافة بند", code: "الكود", codeAuto: "يتم إنشاؤه تلقائياً عند الإضافة", section: "القسم / التصنيف", description: "الوصف",
+      unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة", note: "ملاحظة (اختياري)", save: "حفظ", saveAdd: "حفظ وإضافة آخر", close: "إغلاق",
+      lineTotal: "إجمالي البند", lineTotalHint: "نفس المعادلة الحسابية المستخدمة في الخادم"
     }
     : {
-      title: item ? "Edit item" : "Add item", code: "Code", section: "Section / category", description: "Description",
-      unit: "Unit", quantity: "Quantity", unitRate: "Unit rate", note: "Note (optional)", save: "Save", close: "Close"
+      title: editing ? "Edit item" : duplicate ? "Copy to new item" : "Add item", code: "Code", codeAuto: "Generated automatically when added", section: "Section / category", description: "Description",
+      unit: "Unit", quantity: "Quantity", unitRate: "Unit rate", note: "Note (optional)", save: "Save", saveAdd: "Save & add another", close: "Close",
+      lineTotal: "Line total", lineTotalHint: "Same exact calculation as the server"
     };
 
-  async function submit(event: FormEvent) {
+  useEffect(() => {
+    if (!editing) descriptionRef.current?.focus();
+  }, [editing]);
+
+  const linePreview = previewLineTotal(quantity, unitRate);
+
+  async function submit(event: { preventDefault(): void }, addAnother: boolean) {
     event.preventDefault();
     setSaving(true);
     setError("");
@@ -665,11 +779,23 @@ function LineItemDialog({
       body.section = section;
     }
     const basePath = mode === "boq" ? `/projects/${projectId}/finance/boq` : `/projects/${projectId}/finance/estimates/${parentId}/items`;
-    const path = item ? `${basePath}/${item.id}` : basePath;
-    const method = item ? "PATCH" : "POST";
+    const path = editing ? `${basePath}/${item!.id}` : basePath;
+    const method = editing ? "PATCH" : "POST";
     try {
       await apiRequest(path, { method, body: JSON.stringify(body) });
-      onSaved();
+      if (addAnother && !editing) {
+        /* Repetitive-entry mode: keep section/unit, clear the per-line fields, refocus. */
+        setCode("");
+        setDescription("");
+        setQuantity("");
+        setUnitRate("");
+        setNote("");
+        setSaving(false);
+        onItemSaved?.();
+        setTimeout(() => descriptionRef.current?.focus(), 0);
+      } else {
+        onSaved();
+      }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Request failed.");
       setSaving(false);
@@ -683,15 +809,23 @@ function LineItemDialog({
           <div><span>{mode === "boq" ? (ar ? "جدول الكميات" : "BOQ") : (ar ? "المقايسة" : "ESTIMATE")}</span><h2>{labels.title}</h2></div>
           <button type="button" className="icon-button" onClick={onClose} disabled={saving} aria-label={labels.close}><X size={20} /></button>
         </header>
-        <form onSubmit={(event) => void submit(event)}>
+        <form onSubmit={(event) => void submit(event, false)}>
           <fieldset disabled={saving}>
             {mode === "boq" && (
               <>
-                <label className="ui-field">{labels.code}<input value={code} onChange={(event) => setCode(event.target.value)} maxLength={40} required /></label>
+                {editing ? (
+                  <label className="ui-field">{labels.code}<input value={code} onChange={(event) => setCode(event.target.value)} maxLength={40} required /></label>
+                ) : (
+                  <div className="ui-field generated-code-field">
+                    <span>{labels.code}</span>
+                    <div className="generated-code-field__value mono">BOQ-001-XXX</div>
+                    <small>{labels.codeAuto}</small>
+                  </div>
+                )}
                 <label className="ui-field">{labels.section}<input value={section ?? ""} onChange={(event) => setSection(event.target.value)} maxLength={120} /></label>
               </>
             )}
-            <label className="ui-field full-span">{labels.description}<input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} required /></label>
+            <label className="ui-field full-span">{labels.description}<input ref={descriptionRef} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} required /></label>
             <label className="ui-field">
               {labels.unit}
               <select value={unit} onChange={(event) => setUnit(event.target.value as BoqUnit)}>
@@ -700,12 +834,21 @@ function LineItemDialog({
                 ))}
               </select>
             </label>
-            <label className="ui-field">{labels.quantity}<input inputMode="decimal" value={quantity} onChange={(event) => setQuantity(event.target.value)} required /></label>
-            <label className="ui-field">{labels.unitRate}<input inputMode="decimal" value={unitRate} onChange={(event) => setUnitRate(event.target.value)} required /></label>
+            <label className="ui-field">{labels.quantity}<input inputMode="decimal" value={quantity} onChange={(event) => setQuantity(event.target.value)} required aria-describedby="line-total-preview" /></label>
+            <label className="ui-field">{labels.unitRate}<input inputMode="decimal" value={unitRate} onChange={(event) => setUnitRate(event.target.value)} required aria-describedby="line-total-preview" /></label>
+            <div className="finance-line-preview" id="line-total-preview" role="status" aria-live="polite">
+              <span>{labels.lineTotal}: <strong className="finance-line-preview__value"><bdi>{linePreview !== null ? money(linePreview, "EGP", locale) : "—"}</bdi></strong></span>
+              <small>{labels.lineTotalHint}</small>
+            </div>
             <label className="ui-field full-span">{labels.note}<textarea value={note ?? ""} onChange={(event) => setNote(event.target.value)} maxLength={1000} /></label>
           </fieldset>
-          {error && <div className="form-error">{error}</div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button></footer>
+          {error && <div className="form-error" role="alert">{error}</div>}
+          <footer className="finance-dialog-actions">
+            {!editing && (
+              <button className="ui-button" type="button" disabled={saving} onClick={(event) => void submit(event, true)}>{labels.saveAdd}</button>
+            )}
+            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+          </footer>
         </form>
       </section>
     </div>
@@ -729,24 +872,32 @@ function BoqPanel({
   const [data, setData] = useState<BoqListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showDialog, setShowDialog] = useState<{ item?: BoqItemRecord } | null>(null);
+  const [showDialog, setShowDialog] = useState<{ item?: BoqItemRecord; duplicate?: boolean } | null>(null);
+  const [search, setSearch] = useState("");
+  const [sectionFilter, setSectionFilter] = useState("");
 
   const labels = ar
     ? {
       title: "جدول الكميات (BOQ)", lead: "سجل هندسي كثيف لبنود الكميات والأسعار والإجماليات المعتمدة.",
       addItem: "إضافة بند", code: "الكود", description: "الوصف", unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة",
       total: "الإجمالي", actions: "الإجراء", empty: "لا توجد بنود في جدول الكميات", emptyHint: "ابدأ بإضافة أول بند.",
-      overall: "الإجمالي الكلي", loading: "جاري تحميل جدول الكميات...", removeConfirm: "هل تريد حذف هذا البند؟", section: "القسم"
+      overall: "الإجمالي الكلي", loading: "جاري تحميل جدول الكميات...", removeConfirm: "هل تريد حذف هذا البند؟", section: "القسم",
+      searchPlaceholder: "بحث بالكود أو الوصف أو القسم...", allSections: "كل الأقسام", unsectioned: "بدون قسم",
+      itemsCount: (n: number) => `${n} بند`, shownOf: (shown: number, total: number) => `${shown} من ${total} بند`,
+      noMatch: "لا توجد بنود مطابقة", subtotal: "إجمالي القسم", copy: "نسخ البند"
     }
     : {
       title: "Bill of Quantities (BOQ)", lead: "Dense engineering register of quantities, rates, and approved totals.",
       addItem: "Add Item", code: "Code", description: "Description", unit: "Unit", quantity: "Quantity", unitRate: "Unit Rate",
       total: "Total", actions: "Action", empty: "No BOQ items registered", emptyHint: "Start by adding the first item.",
-      overall: "Overall Total", loading: "Loading BOQ...", removeConfirm: "Remove this item?", section: "Section"
+      overall: "Overall Total", loading: "Loading BOQ...", removeConfirm: "Remove this item?", section: "Section",
+      searchPlaceholder: "Search code, description, or section...", allSections: "All sections", unsectioned: "Unsectioned",
+      itemsCount: (n: number) => `${n} item${n === 1 ? "" : "s"}`, shownOf: (shown: number, total: number) => `${shown} of ${total} items`,
+      noMatch: "No items match the current filter", subtotal: "Section subtotal", copy: "Copy item"
     };
 
-  const load = useCallback(() => {
-    setLoading(true);
+  const load = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     apiRequest<BoqListResponse>(`/projects/${projectId}/finance/boq`)
       .then((result) => {
         setData(result);
@@ -767,9 +918,42 @@ function BoqPanel({
     onChanged?.();
   }
 
+  const sectionNames = useMemo(() => {
+    if (!data) return [] as string[];
+    const names = new Set<string>();
+    for (const item of data.items) names.add(item.section ?? "");
+    return [...names];
+  }, [data]);
+
+  const visibleItems = useMemo(() => {
+    if (!data) return [] as BoqItemRecord[];
+    const query = search.trim().toLowerCase();
+    return data.items.filter((item) => {
+      if (sectionFilter !== "" && (item.section ?? "") !== sectionFilter) return false;
+      if (query === "") return true;
+      return (
+        item.code.toLowerCase().includes(query) ||
+        item.description.toLowerCase().includes(query) ||
+        (item.section ?? "").toLowerCase().includes(query)
+      );
+    });
+  }, [data, search, sectionFilter]);
+
+  const groupedItems = useMemo(() => {
+    const groups = new Map<string, BoqItemRecord[]>();
+    for (const item of visibleItems) {
+      const key = item.section ?? "";
+      const group = groups.get(key);
+      if (group) group.push(item);
+      else groups.set(key, [item]);
+    }
+    return [...groups.entries()];
+  }, [visibleItems]);
+
   if (loading) return <LoadingState label={labels.loading} />;
 
-  const cols = "minmax(160px,1.6fr) minmax(130px,1fr) 90px 90px 110px 120px" + (readOnly ? "" : " 80px");
+  const filtering = search.trim() !== "" || sectionFilter !== "";
+  const cols = "minmax(200px,2fr) 96px 100px 116px 132px" + (readOnly ? "" : " 112px");
 
   return (
     <section>
@@ -792,43 +976,88 @@ function BoqPanel({
 
       {data && data.items.length > 0 && (
         <>
+          {data.items.length > 8 && (
+          <div className="finance-boq-toolbar">
+            <label className="ui-search-field finance-boq-search">
+              <Search className="ui-search-field__icon" size={15} aria-hidden="true" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={labels.searchPlaceholder}
+                aria-label={labels.searchPlaceholder}
+              />
+            </label>
+            <label className="finance-boq-section-filter">
+              <span>{labels.section}</span>
+              <select value={sectionFilter} onChange={(event) => setSectionFilter(event.target.value)}>
+                <option value="">{labels.allSections}</option>
+                {sectionNames.map((name) => (
+                  <option key={name || "none"} value={name}>{name === "" ? labels.unsectioned : name}</option>
+                ))}
+              </select>
+            </label>
+            <span className="finance-boq-count" role="status">
+              {filtering ? labels.shownOf(visibleItems.length, data.items.length) : labels.itemsCount(data.items.length)}
+            </span>
+          </div>
+          )}
+
           <div className="finance-totals-strip">
             <span><small>{labels.overall}</small><strong>{money(data.overallTotal, "EGP", locale)}</strong></span>
             {data.sectionTotals.map((entry) => (
-              <span key={entry.section ?? "none"}><small>{entry.section ?? labels.section}</small><strong>{money(entry.total, "EGP", locale)}</strong></span>
+              <span key={entry.section ?? "none"}><small>{entry.section ?? labels.unsectioned}</small><strong>{money(entry.total, "EGP", locale)}</strong></span>
             ))}
           </div>
 
-          <div className="finance-register" style={{ "--finance-cols": cols } as React.CSSProperties}>
-            <div className="finance-register__head">
-              <span>{labels.description}</span>
-              <span>{labels.section}</span>
-              <span>{labels.unit}</span>
-              <span>{labels.quantity}</span>
-              <span>{labels.unitRate}</span>
-              <span>{labels.total}</span>
-              {!readOnly && <span>{labels.actions}</span>}
-            </div>
-            {data.items.map((item) => (
-              <div className="finance-register__row" key={item.id}>
-                <div className="finance-register__identity" data-label={labels.description}>
-                  <span className="mono" style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{item.code}</span>
-                  <strong>{item.description}</strong>
-                </div>
-                <span className="finance-register__cell finance-register__cell--muted" data-label={labels.section}>{item.section ?? "—"}</span>
-                <span className="finance-register__cell" data-label={labels.unit}>{boqUnitLabel(item.unit, locale)}</span>
-                <span className="finance-register__cell finance-register__cell--amount" data-label={labels.quantity}><bdi>{num(item.quantity)}</bdi></span>
-                <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}><bdi>{num(item.unitRate, 2)}</bdi></span>
-                <span className="finance-register__cell finance-register__cell--amount finance-register__cell--total" data-label={labels.total}><bdi>{num(item.lineTotal, 2)}</bdi></span>
-                {!readOnly && (
-                  <div className="finance-register__actions">
-                    <button className="icon-button" type="button" onClick={() => setShowDialog({ item })} aria-label="Edit"><Pencil size={15} /></button>
-                    <button className="icon-button" type="button" onClick={() => void removeItem(item.id)} aria-label="Delete"><Trash2 size={15} /></button>
-                  </div>
-                )}
+          {visibleItems.length === 0 ? (
+            <p className="finance-register__empty-filter">{labels.noMatch}</p>
+          ) : (
+            <div className="finance-register" style={{ "--finance-cols": cols } as React.CSSProperties}>
+              <div className="finance-register__head">
+                <span>{labels.description}</span>
+                <span>{labels.unit}</span>
+                <span>{labels.quantity}</span>
+                <span>{labels.unitRate}</span>
+                <span>{labels.total}</span>
+                {!readOnly && <span>{labels.actions}</span>}
               </div>
-            ))}
-          </div>
+              {groupedItems.map(([section, items]) => {
+                const subtotal = formatMoneyMajor(sumAmountMinor(items.map((item) => item.lineTotal)));
+                return (
+                  <Fragment key={section || "__none__"}>
+                    <div className="finance-section-header" role="row">
+                      <strong className="finance-section-header__name">{section === "" ? labels.unsectioned : section}</strong>
+                      <span className="finance-section-header__count">{labels.itemsCount(items.length)}</span>
+                      <span className="finance-section-header__total">
+                        <small>{labels.subtotal}</small>
+                        <bdi>{money(subtotal, "EGP", locale)}</bdi>
+                      </span>
+                    </div>
+                    {items.map((item) => (
+                      <div className="finance-register__row" key={item.id}>
+                        <div className="finance-register__identity" data-label={labels.description}>
+                          <span className="mono" style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{item.code}</span>
+                          <strong>{item.description}</strong>
+                        </div>
+                        <span className="finance-register__cell" data-label={labels.unit}>{boqUnitLabel(item.unit, locale)}</span>
+                        <span className="finance-register__cell finance-register__cell--amount" data-label={labels.quantity}><bdi>{num(item.quantity)}</bdi></span>
+                        <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}><bdi>{num(item.unitRate, 2)}</bdi></span>
+                        <span className="finance-register__cell finance-register__cell--amount finance-register__cell--total" data-label={labels.total}><bdi>{num(item.lineTotal, 2)}</bdi></span>
+                        {!readOnly && (
+                          <div className="finance-register__actions">
+                            <button className="icon-button" type="button" onClick={() => setShowDialog({ item })} aria-label={`${ar ? "تعديل" : "Edit"} ${item.code}`}><Pencil size={15} /></button>
+                            <button className="icon-button" type="button" onClick={() => setShowDialog({ item, duplicate: true })} aria-label={`${labels.copy} ${item.code}`} title={labels.copy}><Copy size={15} /></button>
+                            <button className="icon-button" type="button" onClick={() => void removeItem(item.id)} aria-label={`${ar ? "حذف" : "Delete"} ${item.code}`}><Trash2 size={15} /></button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </Fragment>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
 
@@ -839,10 +1068,15 @@ function BoqPanel({
           parentId=""
           locale={locale}
           item={showDialog.item}
+          duplicate={showDialog.duplicate === true}
           onClose={() => setShowDialog(null)}
           onSaved={() => {
             setShowDialog(null);
             load();
+            onChanged?.();
+          }}
+          onItemSaved={() => {
+            load(true);
             onChanged?.();
           }}
         />
@@ -877,13 +1111,15 @@ function ExpensesPanel({
       title: "المصروفات الداخلية", lead: "سجل داخلي للمصروفات - لا يظهر للعميل مطلقاً.", add: "تسجيل مصروف",
       allCategories: "كل الفئات", date: "التاريخ", category: "الفئة", description: "الوصف", vendor: "المورد", amount: "القيمة",
       status: "الحالة", actions: "الإجراء", empty: "لا توجد مصروفات مسجلة", emptyHint: "سجل أول مصروف لهذا المشروع.",
-      loading: "جاري تحميل المصروفات...", void: "إلغاء", receipt: "إيصال"
+      loading: "جاري تحميل المصروفات...", void: "إلغاء", receipt: "إيصال",
+      activeTotal: "إجمالي المصروفات الفعالة", voided: (n: number) => `${n} ملغي`
     }
     : {
       title: "Internal Expenses", lead: "Internal expense ledger - never shown to the Client.", add: "Record Expense",
       allCategories: "All Categories", date: "Date", category: "Category", description: "Description", vendor: "Vendor", amount: "Amount",
       status: "Status", actions: "Action", empty: "No expenses recorded", emptyHint: "Record the first expense for this project.",
-      loading: "Loading expenses...", void: "Void", receipt: "Receipt"
+      loading: "Loading expenses...", void: "Void", receipt: "Receipt",
+      activeTotal: "Active expenses total", voided: (n: number) => `${n} void`
     };
 
   const load = useCallback(() => {
@@ -933,6 +1169,17 @@ function ExpensesPanel({
       {error && <div className="form-error">{error}</div>}
 
       {expenses.length === 0 && <EmptyState icon={<Receipt size={20} />} title={labels.empty} description={labels.emptyHint} />}
+
+      {expenses.length > 0 && (() => {
+        const voidedCount = expenses.filter((expense) => expense.status === "VOID").length;
+        const activeTotal = formatMoneyMajor(sumAmountMinor(expenses.filter((expense) => expense.status === "ACTIVE").map((expense) => expense.amount)));
+        return (
+          <div className="finance-register-meta">
+            <span>{labels.activeTotal}: <bdi className="mono">{money(activeTotal, currency, locale)}</bdi></span>
+            {voidedCount > 0 && <span className="finance-register-meta__voided">{labels.voided(voidedCount)}</span>}
+          </div>
+        );
+      })()}
 
       {expenses.length > 0 && (
         <div className="finance-register" style={{ "--finance-cols": cols } as React.CSSProperties}>
@@ -988,6 +1235,12 @@ function ExpensesPanel({
       {voidTarget && (
         <VoidDialog
           locale={locale}
+          record={{
+            title: voidTarget.description,
+            amount: money(voidTarget.amount, currency, locale),
+            date: dateOnly(voidTarget.expenseDate, locale),
+            reference: voidTarget.reference
+          }}
           onClose={() => setVoidTarget(null)}
           onConfirm={async (reason) => {
             await apiRequest(`/projects/${projectId}/finance/expenses/${voidTarget.id}/void`, { method: "POST", body: JSON.stringify({ reason }) });
@@ -1066,7 +1319,7 @@ function ExpenseDialog({ projectId, locale, onClose, onCreated }: { projectId: s
               </select>
             </label>
             <label className="ui-field">{labels.amount}<input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} required /></label>
-            <label className="ui-field full-span">{labels.description}<input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={255} required /></label>
+            <label className="ui-field full-span">{labels.description}<input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={255} required autoFocus /></label>
             <label className="ui-field">{labels.date}<input type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} required /></label>
             <label className="ui-field">{labels.vendor}<input value={vendor} onChange={(event) => setVendor(event.target.value)} maxLength={255} /></label>
             <label className="ui-field">{labels.reference}<input value={reference} onChange={(event) => setReference(event.target.value)} maxLength={120} /></label>
@@ -1091,14 +1344,24 @@ function ExpenseDialog({ projectId, locale, onClose, onCreated }: { projectId: s
   );
 }
 
-function VoidDialog({ locale, onClose, onConfirm }: { locale: "ar" | "en"; onClose: () => void; onConfirm: (reason: string) => Promise<void> }) {
+function VoidDialog({
+  locale,
+  record,
+  onClose,
+  onConfirm
+}: {
+  locale: "ar" | "en";
+  record?: { title: string; amount: string; date: string; reference?: string | null };
+  onClose: () => void;
+  onConfirm: (reason: string) => Promise<void>;
+}) {
   const ar = locale === "ar";
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const labels = ar
-    ? { title: "إلغاء السجل المالي", reason: "سبب الإلغاء", confirm: "تأكيد الإلغاء", close: "إغلاق" }
-    : { title: "Void Financial Record", reason: "Reason for voiding", confirm: "Confirm Void", close: "Close" };
+    ? { title: "إلغاء السجل المالي", reason: "سبب الإلغاء", confirm: "تأكيد الإلغاء", close: "إغلاق", record: "السجل", keepNote: "يبقى السجل محفوظاً في السجل المالي ويُستبعد من الإجماليات." }
+    : { title: "Void Financial Record", reason: "Reason for voiding", confirm: "Confirm Void", close: "Close", record: "Record", keepNote: "The record stays in the ledger and is excluded from totals." };
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -1122,10 +1385,19 @@ function VoidDialog({ locale, onClose, onConfirm }: { locale: "ar" | "en"; onClo
         </header>
         <form onSubmit={(event) => void submit(event)}>
           <fieldset disabled={saving}>
+            {record && (
+              <div className="finance-void-summary" aria-label={labels.record}>
+                <strong>{record.title}</strong>
+                <span className="mono"><bdi>{record.amount}</bdi></span>
+                <span><bdi>{record.date}</bdi></span>
+                {record.reference && <span className="finance-register__cell--muted">{record.reference}</span>}
+              </div>
+            )}
             <label className="ui-field full-span">{labels.reason}<textarea value={reason} onChange={(event) => setReason(event.target.value)} maxLength={500} required autoFocus /></label>
+            <p className="finance-void-note">{labels.keepNote}</p>
           </fieldset>
-          {error && <div className="form-error">{error}</div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.confirm}</button></footer>
+          {error && <div className="form-error" role="alert">{error}</div>}
+          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving || reason.trim() === ""}>{labels.confirm}</button></footer>
         </form>
       </section>
     </div>
@@ -1139,12 +1411,14 @@ function ClientPaymentsPanel({
   locale,
   currency,
   readOnly,
+  summary,
   onChanged
 }: {
   projectId: string;
   locale: "ar" | "en";
   currency: string;
   readOnly: boolean;
+  summary?: FinanceSummary | null;
   onChanged?: () => void;
 }) {
   const ar = locale === "ar";
@@ -1161,13 +1435,15 @@ function ClientPaymentsPanel({
       title: readOnly ? "سجل دفعاتي" : "دفعات العميل", lead: readOnly ? "سجل الدفعات والإيصالات المستلمة لهذا المشروع." : "سجل الدفعات الواردة من العميل مع الإيصالات.",
       add: "تسجيل دفعة", date: "التاريخ", method: "طريقة الدفع", reference: "المرجع", amount: "القيمة", status: "الحالة",
       actions: "الإجراء", empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة من العميل.", loading: "جاري تحميل الدفعات...",
-      void: "إلغاء", receipt: "الإيصال", export: "تصدير المدفوعات"
+      void: "إلغاء", receipt: "الإيصال", export: "تصدير المدفوعات",
+      totalPaid: "إجمالي المحصل", outstanding: "المتبقي على العميل", overpaidShort: "دفع زيادة عن العقد", voided: (n: number) => `${n} ملغي`
     }
     : {
       title: readOnly ? "My Payment History" : "Client Payments", lead: readOnly ? "Payment and receipt history for this project." : "Incoming client payment ledger with receipts.",
       add: "Record Payment", date: "Date", method: "Method", reference: "Reference", amount: "Amount", status: "Status",
       actions: "Action", empty: "No payments recorded", emptyHint: "Record the first client payment.", loading: "Loading payments...",
-      void: "Void", receipt: "Receipt", export: "Export payments"
+      void: "Void", receipt: "Receipt", export: "Export payments",
+      totalPaid: "Total collected", outstanding: "Outstanding balance", overpaidShort: "Paid above contract", voided: (n: number) => `${n} void`
     };
 
   const load = useCallback(() => {
@@ -1214,6 +1490,21 @@ function ClientPaymentsPanel({
       {error && <div className="form-error">{error}</div>}
 
       {payments.length === 0 && <EmptyState icon={<Banknote size={20} />} title={labels.empty} description={!readOnly ? labels.emptyHint : undefined} />}
+
+      {summary && payments.length > 0 && (
+        <div className="finance-register-meta">
+          <span>{labels.totalPaid}: <bdi className="mono">{money(summary.clientPaymentsTotal, currency, locale)}</bdi></span>
+          {summary.outstandingBalance !== null && (
+            <span className={isOverpaid(summary.outstandingBalance) ? "finance-register-meta__voided" : ""}>
+              {isOverpaid(summary.outstandingBalance) ? labels.overpaidShort : labels.outstanding}: <bdi className="mono">{money(summary.outstandingBalance, currency, locale)}</bdi>
+            </span>
+          )}
+          {(() => {
+            const voidedCount = payments.filter((payment) => payment.status === "VOID").length;
+            return voidedCount > 0 ? <span className="finance-register-meta__voided">{labels.voided(voidedCount)}</span> : null;
+          })()}
+        </div>
+      )}
 
       {payments.length > 0 && (
         <div className="finance-register" style={{ "--finance-cols": cols } as React.CSSProperties}>
@@ -1267,6 +1558,12 @@ function ClientPaymentsPanel({
       {voidTarget && (
         <VoidDialog
           locale={locale}
+          record={{
+            title: paymentMethodLabel(voidTarget.method, locale),
+            amount: money(voidTarget.amount, currency, locale),
+            date: dateOnly(voidTarget.paymentDate, locale),
+            reference: voidTarget.reference
+          }}
           onClose={() => setVoidTarget(null)}
           onConfirm={async (reason) => {
             await apiRequest(`/projects/${projectId}/finance/client-payments/${voidTarget.id}/void`, { method: "POST", body: JSON.stringify({ reason }) });
@@ -1332,7 +1629,7 @@ function ClientPaymentDialog({ projectId, locale, onClose, onCreated }: { projec
         </header>
         <form onSubmit={(event) => void submit(event)}>
           <fieldset disabled={saving}>
-            <label className="ui-field">{labels.amount}<input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} required /></label>
+            <label className="ui-field">{labels.amount}<input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} required autoFocus /></label>
             <label className="ui-field">{labels.date}<input type="date" value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} required /></label>
             <label className="ui-field">
               {labels.method}
@@ -1388,12 +1685,14 @@ function ContractorPaymentsPanel({
     ? {
       title: "دفعات المقاولين", lead: "سجل داخلي لدفعات المقاولين والمقاولين الفرعيين - لا يظهر للعميل.", add: "تسجيل دفعة",
       date: "التاريخ", payee: "المستفيد", method: "طريقة الدفع", amount: "القيمة", status: "الحالة", actions: "الإجراء",
-      empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة لمقاول.", loading: "جاري تحميل الدفعات...", void: "إلغاء", receipt: "الإيصال"
+      empty: "لا توجد دفعات مسجلة", emptyHint: "سجل أول دفعة لمقاول.", loading: "جاري تحميل الدفعات...", void: "إلغاء", receipt: "الإيصال",
+      activeTotal: "إجمالي الدفعات الفعالة", voided: (n: number) => `${n} ملغي`
     }
     : {
       title: "Contractor Payments", lead: "Internal outgoing ledger for contractors/subcontractors - never shown to the Client.", add: "Record Payment",
       date: "Date", payee: "Payee", method: "Method", amount: "Amount", status: "Status", actions: "Action",
-      empty: "No payments recorded", emptyHint: "Record the first contractor payment.", loading: "Loading payments...", void: "Void", receipt: "Receipt"
+      empty: "No payments recorded", emptyHint: "Record the first contractor payment.", loading: "Loading payments...", void: "Void", receipt: "Receipt",
+      activeTotal: "Active payments total", voided: (n: number) => `${n} void`
     };
 
   const load = useCallback(() => {
@@ -1431,6 +1730,17 @@ function ContractorPaymentsPanel({
       {error && <div className="form-error">{error}</div>}
 
       {payments.length === 0 && <EmptyState icon={<Landmark size={20} />} title={labels.empty} description={labels.emptyHint} />}
+
+      {payments.length > 0 && (() => {
+        const voidedCount = payments.filter((payment) => payment.status === "VOID").length;
+        const activeTotal = formatMoneyMajor(sumAmountMinor(payments.filter((payment) => payment.status === "ACTIVE").map((payment) => payment.amount)));
+        return (
+          <div className="finance-register-meta">
+            <span>{labels.activeTotal}: <bdi className="mono">{money(activeTotal, currency, locale)}</bdi></span>
+            {voidedCount > 0 && <span className="finance-register-meta__voided">{labels.voided(voidedCount)}</span>}
+          </div>
+        );
+      })()}
 
       {payments.length > 0 && (
         <div className="finance-register" style={{ "--finance-cols": cols } as React.CSSProperties}>
@@ -1484,6 +1794,12 @@ function ContractorPaymentsPanel({
       {voidTarget && (
         <VoidDialog
           locale={locale}
+          record={{
+            title: voidTarget.payee,
+            amount: money(voidTarget.amount, currency, locale),
+            date: dateOnly(voidTarget.paymentDate, locale),
+            reference: voidTarget.reference
+          }}
           onClose={() => setVoidTarget(null)}
           onConfirm={async (reason) => {
             await apiRequest(`/projects/${projectId}/finance/contractor-payments/${voidTarget.id}/void`, { method: "POST", body: JSON.stringify({ reason }) });
@@ -1555,7 +1871,7 @@ function ContractorPaymentDialog({ projectId, locale, onClose, onCreated }: { pr
         </header>
         <form onSubmit={(event) => void submit(event)}>
           <fieldset disabled={saving}>
-            <label className="ui-field full-span">{labels.payee}<input value={payee} onChange={(event) => setPayee(event.target.value)} maxLength={255} required /></label>
+            <label className="ui-field full-span">{labels.payee}<input value={payee} onChange={(event) => setPayee(event.target.value)} maxLength={255} required autoFocus /></label>
             <label className="ui-field">{labels.amount}<input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} required /></label>
             <label className="ui-field">{labels.date}<input type="date" value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} required /></label>
             <label className="ui-field">

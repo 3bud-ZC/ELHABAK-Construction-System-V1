@@ -340,6 +340,26 @@ describe("Milestone 05 Site Operations, Progress & Phase Management, and Timelin
     expect(projectAfterEngineer.progress).toBe(85);
   });
 
+  it("rejects site media whose bytes do not match the declared image/video type", async () => {
+    // Declared as PNG (matching .png extension + image/png MIME) but the payload is
+    // plain text - signature check must reject it even though MIME/extension pass.
+    const spoofed = Buffer.from("not a real png payload, just text bytes");
+    await request(app.getHttpServer())
+      .post(`/projects/${projectId}/site-updates`)
+      .set("Cookie", workerCookie)
+      .field("type", "GENERAL")
+      .attach("media", spoofed, { filename: "spoofed.png", contentType: "image/png" })
+      .expect(400);
+
+    // A genuine-signature PNG still succeeds.
+    await request(app.getHttpServer())
+      .post(`/projects/${projectId}/site-updates`)
+      .set("Cookie", workerCookie)
+      .field("type", "GENERAL")
+      .attach("media", fakeImageBuffer(), { filename: "genuine.png", contentType: "image/png" })
+      .expect(201);
+  });
+
   it("protects internal updates from Client and prevents IDOR on private site media", async () => {
     // Admin creates an internal site update (isClientVisible = false)
     const internalRes = await request(app.getHttpServer())
@@ -354,23 +374,31 @@ describe("Milestone 05 Site Operations, Progress & Phase Management, and Timelin
     expect(internalRes.body.isClientVisible).toBe(false);
     internalMediaId = internalRes.body.media[0].id;
 
-    // Admin can see the internal update in project details
-    const adminProj = await request(app.getHttpServer())
-      .get(`/projects/${projectId}`)
+    // Admin can see the internal update on the project timeline
+    const adminTimeline = await request(app.getHttpServer())
+      .get(`/projects/${projectId}/timeline`)
       .set("Cookie", adminCookie)
       .expect(200);
 
-    const adminHasInternal = adminProj.body.siteUpdates.some((u: { id: string }) => u.id === internalRes.body.id);
+    const adminHasInternal = adminTimeline.body.some((u: { id: string }) => u.id === internalRes.body.id);
     expect(adminHasInternal).toBe(true);
 
-    // Client viewing project does NOT see the internal update
-    const clientProj = await request(app.getHttpServer())
-      .get(`/projects/${projectId}`)
+    // Client viewing the project timeline does NOT see the internal update
+    const clientTimeline = await request(app.getHttpServer())
+      .get(`/projects/${projectId}/timeline`)
       .set("Cookie", clientCookie)
       .expect(200);
 
-    const clientHasInternal = clientProj.body.siteUpdates.some((u: { id: string }) => u.id === internalRes.body.id);
+    const clientHasInternal = clientTimeline.body.some((u: { id: string }) => u.id === internalRes.body.id);
     expect(clientHasInternal).toBe(false);
+
+    // The same visibility filter holds on the role-scoped overview payload
+    const clientOverview = await request(app.getHttpServer())
+      .get(`/projects/${projectId}/overview`)
+      .set("Cookie", clientCookie)
+      .expect(200);
+    const clientOverviewHasInternal = clientOverview.body.site.recent.some((u: { id: string }) => u.id === internalRes.body.id);
+    expect(clientOverviewHasInternal).toBe(false);
 
     // Client can access public media
     await request(app.getHttpServer())

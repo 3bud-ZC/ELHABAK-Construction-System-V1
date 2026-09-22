@@ -4,14 +4,25 @@ import { toRequestUser } from "../auth/auth.service";
 const userSummarySelect = { id: true, email: true, displayName: true, role: true, isActive: true } satisfies Prisma.UserSelect;
 
 /**
+ * Header-only include: everything a project context bar, register row, or list card needs.
+ * `siteUpdates` is deliberately excluded - list/dashboard/module-header consumers never render
+ * update history, and including it pulled up to 20 update+media rows per project per request.
+ */
+export function projectHeaderInclude() {
+  return {
+    client: { include: { user: { select: userSummarySelect } } },
+    engineer: { select: userSummarySelect },
+    assignments: { include: { user: { select: userSummarySelect } }, orderBy: { createdAt: "asc" } }
+  } satisfies Prisma.ProjectInclude;
+}
+
+/**
  * `siteUpdates` is filtered to client-visible rows in the query itself (not after fetch) when the
  * viewer is a CLIENT, so the `take: 20` window is never filled by internal-only rows a client can't see.
  */
 export function projectIncludeFor(viewerRole?: string) {
   return {
-    client: { include: { user: { select: userSummarySelect } } },
-    engineer: { select: userSummarySelect },
-    assignments: { include: { user: { select: userSummarySelect } }, orderBy: { createdAt: "asc" } },
+    ...projectHeaderInclude(),
     siteUpdates: {
       ...(viewerRole === "CLIENT" ? { where: { isClientVisible: true } } : {}),
       include: { author: { select: { id: true, displayName: true, role: true } }, media: { orderBy: { createdAt: "asc" } } },
@@ -22,8 +33,10 @@ export function projectIncludeFor(viewerRole?: string) {
 }
 
 export type ProjectWithRelations = Prisma.ProjectGetPayload<{ include: ReturnType<typeof projectIncludeFor> }>;
+export type ProjectHeaderPayload = Prisma.ProjectGetPayload<{ include: ReturnType<typeof projectHeaderInclude> }>;
 
-export function toProjectResponse(project: ProjectWithRelations, viewerRole?: string) {
+export function toProjectResponse(project: ProjectWithRelations | ProjectHeaderPayload, viewerRole?: string) {
+  const siteUpdates = "siteUpdates" in project && Array.isArray(project.siteUpdates) ? project.siteUpdates : undefined;
   return {
     id: project.id,
     code: project.code,
@@ -47,27 +60,31 @@ export function toProjectResponse(project: ProjectWithRelations, viewerRole?: st
       : null,
     engineer: project.engineer ? toRequestUser(project.engineer) : null,
     workers: project.assignments.filter((assignment) => assignment.user.role === "WORKER").map((assignment) => toRequestUser(assignment.user)),
-    siteUpdates: project.siteUpdates
-      .filter((update) => (viewerRole === "CLIENT" ? update.isClientVisible : true))
-      .map((update) => ({
-        id: update.id,
-        type: update.type,
-        phase: update.phase,
-        progressImpact: update.progressImpact,
-        isClientVisible: update.isClientVisible,
-        note: update.note,
-        createdAt: update.createdAt.toISOString(),
-        updatedAt: update.updatedAt.toISOString(),
-        author: { id: update.author.id, displayName: update.author.displayName, role: update.author.role },
-        media: update.media.map((media) => ({
-          id: media.id,
-          mediaType: media.mediaType,
-          originalFilename: media.originalFilename,
-          mimeType: media.mimeType,
-          fileSize: media.fileSize,
-          createdAt: media.createdAt.toISOString()
-        }))
-      }))
+    ...(siteUpdates
+      ? {
+          siteUpdates: siteUpdates
+            .filter((update) => (viewerRole === "CLIENT" ? update.isClientVisible : true))
+            .map((update) => ({
+              id: update.id,
+              type: update.type,
+              phase: update.phase,
+              progressImpact: update.progressImpact,
+              isClientVisible: update.isClientVisible,
+              note: update.note,
+              createdAt: update.createdAt.toISOString(),
+              updatedAt: update.updatedAt.toISOString(),
+              author: { id: update.author.id, displayName: update.author.displayName, role: update.author.role },
+              media: update.media.map((media) => ({
+                id: media.id,
+                mediaType: media.mediaType,
+                originalFilename: media.originalFilename,
+                mimeType: media.mimeType,
+                fileSize: media.fileSize,
+                createdAt: media.createdAt.toISOString()
+              }))
+            }))
+        }
+      : {})
   };
 }
 

@@ -66,14 +66,14 @@ describe("Milestone 03 projects, lifecycle, worker/client flow", () => {
   afterAll(async () => {
     await prisma.authSession.deleteMany({ where: { user: { email: { endsWith: testDomain } } } });
     await prisma.siteMedia.deleteMany({
-      where: { OR: [{ project: { code: { startsWith: "M03-" } } }, { uploader: { email: { endsWith: testDomain } } }] }
+      where: { OR: [{ project: { name: "M03 Test Project" } }, { uploader: { email: { endsWith: testDomain } } }] }
     });
     await prisma.siteUpdate.deleteMany({
-      where: { OR: [{ project: { code: { startsWith: "M03-" } } }, { author: { email: { endsWith: testDomain } } }] }
+      where: { OR: [{ project: { name: "M03 Test Project" } }, { author: { email: { endsWith: testDomain } } }] }
     });
-    await prisma.projectAssignment.deleteMany({ where: { project: { code: { startsWith: "M03-" } } } });
-    await prisma.auditLog.deleteMany({ where: { OR: [{ actor: { email: { endsWith: testDomain } } }, { project: { code: { startsWith: "M03-" } } }] } });
-    await prisma.project.deleteMany({ where: { code: { startsWith: "M03-" } } });
+    await prisma.projectAssignment.deleteMany({ where: { project: { name: "M03 Test Project" } } });
+    await prisma.auditLog.deleteMany({ where: { OR: [{ actor: { email: { endsWith: testDomain } } }, { project: { name: "M03 Test Project" } }] } });
+    await prisma.project.deleteMany({ where: { name: "M03 Test Project" } });
     await prisma.clientProfile.deleteMany({ where: { user: { email: { endsWith: testDomain } } } });
     await prisma.user.deleteMany({ where: { email: { endsWith: testDomain } } });
     await app.close();
@@ -90,7 +90,6 @@ describe("Milestone 03 projects, lifecycle, worker/client flow", () => {
       .set("Cookie", adminCookie)
       .send({
         name: "M03 Test Project",
-        code: `M03-${suffix}-A`,
         category: "CONSTRUCTION",
         clientId: client.id,
         engineerId: engineer.id,
@@ -108,6 +107,7 @@ describe("Milestone 03 projects, lifecycle, worker/client flow", () => {
     projectId = created.body.id;
     expect(created.body.engineer.id).toBe(engineer.id);
     expect(created.body.workers[0].id).toBe(worker.id);
+    expect(created.body.code).toMatch(/^PRJ-\d{4}-[A-Z0-9]{4}$/);
 
     await request(app.getHttpServer())
       .post("/admin/projects")
@@ -166,7 +166,7 @@ describe("Milestone 03 projects, lifecycle, worker/client flow", () => {
       .post(`/projects/${projectId}/site-updates`)
       .set("Cookie", workerCookie)
       .field("note", "Worker test update")
-      .attach("media", Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]), { filename: "site-test.png", contentType: "image/png" })
+      .attach("media", Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), { filename: "site-test.png", contentType: "image/png" })
       .expect(201);
 
     expect(update.body.media[0].id).toBeTruthy();
@@ -180,8 +180,8 @@ describe("Milestone 03 projects, lifecycle, worker/client flow", () => {
     const ownList = await request(app.getHttpServer()).get("/projects").set("Cookie", clientCookie).expect(200);
     expect(ownList.body.some((item: { id: string }) => item.id === projectId)).toBe(true);
 
-    const ownProject = await request(app.getHttpServer()).get(`/projects/${projectId}`).set("Cookie", clientCookie).expect(200);
-    expect(ownProject.body.siteUpdates.some((update: { media: unknown[] }) => update.media.length > 0)).toBe(true);
+    const ownTimeline = await request(app.getHttpServer()).get(`/projects/${projectId}/timeline`).set("Cookie", clientCookie).expect(200);
+    expect(ownTimeline.body.some((event: { kind: string; media?: unknown[] }) => event.kind === "SITE_UPDATE" && (event.media?.length ?? 0) > 0)).toBe(true);
     await request(app.getHttpServer()).get(`/projects/${projectId}`).set("Cookie", otherClientCookie).expect(403);
   });
 

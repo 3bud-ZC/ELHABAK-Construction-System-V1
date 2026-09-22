@@ -10,14 +10,15 @@ import {
   DESIGN_DISCIPLINES,
   DESIGN_STATUSES,
   apiRequest,
+  designNextAction,
   designStatusLabel,
   designStatusTone,
   disciplineLabel,
   formatFileSize,
   uploadRequest,
   type DesignDiscipline,
-  type DesignRecord,
   type DesignStatus,
+  type DesignSummaryRecord,
   type ProjectRecord
 } from "../../../lib/api";
 import { useCurrentUser } from "../../../lib/user-context";
@@ -47,7 +48,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
-  const [designs, setDesigns] = useState<DesignRecord[]>([]);
+  const [designs, setDesigns] = useState<DesignSummaryRecord[]>([]);
   const [metrics, setMetrics] = useState({ total: 0, pending: 0, approved: 0 });
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<DesignStatus | "">("");
@@ -82,7 +83,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
     const suffix = params.size ? `?${params.toString()}` : "";
     setLoading(true);
     try {
-      const result = await apiRequest<DesignRecord[]>(`/projects/${projectId}/designs${suffix}`);
+      const result = await apiRequest<DesignSummaryRecord[]>(`/projects/${projectId}/designs${suffix}`);
       setDesigns(result);
       if (!query.trim() && !status && !discipline) {
         setMetrics({
@@ -109,7 +110,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
 
   function href(path: string) { return ar ? path : `${path}?lang=en`; }
   async function refreshMetrics() {
-    const result = await apiRequest<DesignRecord[]>(`/projects/${projectId}/designs`);
+    const result = await apiRequest<DesignSummaryRecord[]>(`/projects/${projectId}/designs`);
     setMetrics({ total: result.length, pending: result.filter((design) => design.status === "IN_REVIEW").length, approved: result.filter((design) => design.status === "APPROVED").length });
   }
   const canManage = user.role === "ADMIN" || user.role === "ENGINEER";
@@ -134,7 +135,9 @@ export function DesignHub({ projectId }: { projectId: string }) {
 
     <div className="design-kpi-strip">
       <span><small>{labels.total}</small><strong><bdi>{metrics.total}</bdi></strong></span>
-      <span className={user.role === "CLIENT" && metrics.pending > 0 ? "attention" : ""}><small>{user.role === "CLIENT" ? labels.pending : labels.inReview}</small><strong><bdi>{metrics.pending}</bdi></strong></span>
+      <button className={`design-kpi-strip__filter ${user.role === "CLIENT" && metrics.pending > 0 ? "attention" : ""}`} type="button" onClick={() => setStatus(status === "IN_REVIEW" ? "" : "IN_REVIEW")} aria-pressed={status === "IN_REVIEW"} title={ar ? "تصفية: قيد المراجعة" : "Filter: in review"}>
+        <small>{user.role === "CLIENT" ? labels.pending : labels.inReview}</small><strong><bdi>{metrics.pending}</bdi></strong>
+      </button>
       <span><small>{labels.approved}</small><strong><bdi>{metrics.approved}</bdi></strong></span>
       {user.role === "CLIENT" && metrics.pending > 0 && <p>{labels.pendingHint}</p>}
     </div>
@@ -182,7 +185,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
             </div>
             <div className="design-register__cell design-register__revision-cell" data-label={labels.revision}>
               <bdi className="revision-badge mono">{design.currentRevision.revisionCode}</bdi>
-              {design.revisions.length > 1 && <small className="revision-count mono"><bdi>{design.revisions.length}</bdi> REV</small>}
+              {design.revisionCount > 1 && <small className="revision-count mono"><bdi>{design.revisionCount}</bdi> REV</small>}
             </div>
             <div className="design-register__cell" data-label={labels.formatSize}>
               <div className="format-size-group">
@@ -192,6 +195,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
             </div>
             <div className="design-register__cell" data-label={labels.status}>
               <Badge tone={designStatusTone(design.status)}>{designStatusLabel(design.status, locale)}</Badge>
+              <small className="design-register__next-action">{designNextAction(design.status, user.role, locale)}</small>
             </div>
             <div className="design-register__cell design-register__meta-cell" data-label={labels.authorDate}>
               <strong>{design.currentRevision.uploader.displayName}</strong>

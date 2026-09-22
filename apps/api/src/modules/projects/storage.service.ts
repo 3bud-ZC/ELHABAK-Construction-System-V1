@@ -52,6 +52,9 @@ export class StorageService {
     if (!mediaType) {
       throw new BadRequestException("Only image and video uploads are allowed.");
     }
+    if (!hasExpectedMediaSignature(file.buffer, file.mimetype)) {
+      throw new BadRequestException("Only genuine image and video files are allowed.");
+    }
 
     return mediaType;
   }
@@ -235,6 +238,31 @@ function mediaTypeFor(mimeType: string, extension: string): SiteMediaType | null
     return "VIDEO";
   }
   return null;
+}
+
+function hasExpectedMediaSignature(buffer: Buffer, mimeType: string) {
+  if (mimeType === "image/png") {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (mimeType === "image/jpeg") {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (mimeType === "image/webp") {
+    return (
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+      buffer.subarray(8, 12).toString("ascii") === "WEBP"
+    );
+  }
+  if (mimeType === "video/mp4") {
+    // ISO BMFF: bytes 4-8 hold the "ftyp" box brand.
+    return buffer.length >= 8 && buffer.subarray(4, 8).toString("ascii") === "ftyp";
+  }
+  if (mimeType === "video/webm") {
+    // EBML header magic bytes - shared by WebM and Matroska containers.
+    return buffer.length >= 4 && buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3;
+  }
+  return false;
 }
 
 function designMimeFor(extension: string): "application/pdf" | "image/png" | "image/jpeg" | null {

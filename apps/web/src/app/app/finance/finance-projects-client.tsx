@@ -7,6 +7,7 @@ import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } 
 import { BriefcaseBusiness, CheckCircle2, FolderKanban, TrendingUp, Wallet } from "lucide-react";
 import {
   apiRequest,
+  formatMoney,
   phaseLabel,
   statusLabel,
   statusTone,
@@ -30,7 +31,8 @@ export function FinanceProjectsClient() {
           empty: "لا توجد مشاريع مسجلة",
           emptyHint: "سيظهر هنا أي مشروع بعد إنشائه.",
           client: "العميل",
-          loading: "جاري تحميل المشاريع..."
+          loading: "جاري تحميل المشاريع...",
+          contract: "العقد", paid: "المحصل", outstanding: "المتبقي", notSet: "غير محدد", overpaid: "تحصيل زائد"
         }
         : {
           title: "Project Finance",
@@ -38,7 +40,8 @@ export function FinanceProjectsClient() {
           empty: "No projects registered",
           emptyHint: "Any created project will appear here.",
           client: "Client",
-          loading: "Loading projects..."
+          loading: "Loading projects...",
+          contract: "Contract", paid: "Collected", outstanding: "Outstanding", notSet: "Not set", overpaid: "Overpaid"
         },
     [ar]
   );
@@ -88,16 +91,27 @@ export function FinanceProjectsClient() {
           <span>{projects.length} {ar ? "مشروع" : "projects"}</span>
         </div>
         <div className="finance-portfolio-grid finance-portfolio-register">
-          {projects.map((project) => (
-            <Link href={href(`/app/projects/${project.id}/finance`)} key={project.id}>
-              <div className="finance-portfolio-card__identity"><span className="mono"><bdi>{project.code}</bdi></span><h3>{project.name}</h3></div>
-              <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
-              <span>{labels.client}: {project.client?.user.displayName ?? "—"}</span>
-              <div className="finance-portfolio-card__phase"><span>{phaseLabel(project.phase, locale)}</span><strong>{project.progress}%</strong></div>
-              <ProgressBar value={project.progress} />
-              <b>{ar ? "فتح التحكم المالي" : "Open cost control"}</b>
-            </Link>
-          ))}
+          {projects.map((project) => {
+            const overpaid = project.outstandingBalance !== null && project.outstandingBalance.trim().startsWith("-");
+            return (
+              <Link href={href(`/app/projects/${project.id}/finance`)} key={project.id}>
+                <div className="finance-portfolio-card__identity"><span className="mono"><bdi>{project.code}</bdi></span><h3>{project.name}</h3></div>
+                <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
+                <span>{labels.client}: {project.client?.user.displayName ?? "—"}</span>
+                <div className="finance-portfolio-card__finance">
+                  <span><small>{labels.contract}</small><bdi className="mono">{project.contractValue !== null ? formatMoney(project.contractValue, "EGP", locale) : labels.notSet}</bdi></span>
+                  <span><small>{labels.paid}</small><bdi className="mono">{formatMoney(project.clientPaymentsTotal, "EGP", locale)}</bdi></span>
+                  <span className={overpaid ? "finance-portfolio-card__overpaid" : ""}>
+                    <small>{overpaid ? labels.overpaid : labels.outstanding}</small>
+                    <bdi className="mono">{project.outstandingBalance !== null ? formatMoney(project.outstandingBalance, "EGP", locale) : "—"}</bdi>
+                  </span>
+                </div>
+                <div className="finance-portfolio-card__phase"><span>{phaseLabel(project.phase, locale)}</span><strong>{project.progress}%</strong></div>
+                <ProgressBar value={project.progress} />
+                <b>{ar ? "فتح التحكم المالي" : "Open cost control"}</b>
+              </Link>
+            );
+          })}
         </div>
       </>}
     </section>

@@ -75,7 +75,65 @@ export type ProjectRecord = {
   client: { id: string; phone: string | null; user: UserRecord } | null;
   engineer: UserRecord | null;
   workers: UserRecord[];
-  siteUpdates: SiteUpdateRecord[];
+  /** Only present on the admin project-edit payload; list/detail responses omit update history. */
+  siteUpdates?: SiteUpdateRecord[];
+};
+
+/**
+ * Role-scoped landing payload from `GET /projects/:id/overview`. Every block is already
+ * filtered server-side to the viewer's authorization - a `null` block means the role has
+ * no access to that module and the UI must not render it.
+ */
+export type ProjectOverviewRecord = {
+  project: ProjectRecord;
+  setup: {
+    clientAssigned: boolean;
+    engineerAssigned: boolean;
+    scheduleConfigured: boolean;
+    hasSiteUpdate: boolean;
+  };
+  site: {
+    updateCount: number;
+    recent: Array<{
+      id: string;
+      type: SiteUpdateType;
+      phase: ProjectPhase | null;
+      progressImpact: number | null;
+      isClientVisible: boolean;
+      note: string | null;
+      createdAt: string;
+      author: { id: string; displayName: string; role: UserRole };
+      mediaCount: number;
+    }>;
+  };
+  design: null | {
+    total: number;
+    inReview: number;
+    rejected: number;
+    latest: null | {
+      id: string;
+      title: string;
+      discipline: DesignDiscipline;
+      status: DesignStatus;
+      currentRevisionNumber: number;
+      updatedAt: string;
+    };
+  };
+  documents: null | { total: number; clientVisible?: number };
+  finance: null | {
+    configured: boolean;
+    currency: string;
+    contractValue: string | null;
+    paidAmount: string;
+    outstandingBalance: string | null;
+  };
+  chat: { unreadCount: number };
+  recentActivity: Array<{
+    id: string;
+    action: string;
+    actorName: string | null;
+    createdAt: string;
+  }>;
 };
 
 export type SiteUpdateType = "PROGRESS" | "INSPECTION" | "ISSUE" | "MATERIAL" | "GENERAL";
@@ -153,6 +211,12 @@ export type DesignRecord = {
   events: DesignEventRecord[];
   createdAt: string;
   updatedAt: string;
+};
+
+// Lightweight register row: no revision/event history — detail endpoint serves that.
+export type DesignSummaryRecord = Omit<DesignRecord, "revisions" | "events"> & {
+  revisionCount: number;
+  eventCount: number;
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
@@ -264,6 +328,8 @@ export type FinanceProjectContext = {
   status: ProjectStatus;
   progress: number;
   location: string | null;
+  currency: string;
+  contractValue: string | null;
   client: { id: string; phone: string | null; user: UserRecord } | null;
   engineer: UserRecord | null;
 };
@@ -277,13 +343,16 @@ export type FinanceProjectListItem = {
   status: ProjectStatus;
   progress: number;
   client: { id: string; user: UserRecord } | null;
+  contractValue: string | null;
+  clientPaymentsTotal: string;
+  outstandingBalance: string | null;
 };
 
 export type FinanceSummary = {
   currency: string;
   contractValue: string | null;
   boqTotal?: string;
-  estimateTotal?: string;
+  estimateTotal?: string | null;
   clientPaymentsTotal?: string;
   paidAmount?: string;
   outstandingBalance: string | null;
@@ -562,6 +631,11 @@ export type ProjectDocumentRecord = {
   updatedAt: string;
 };
 
+/** Slim register row: latest version summary + version count, no history arrays. */
+export type ProjectDocumentSummary = Omit<ProjectDocumentRecord, "versions"> & {
+  versionCount: number;
+};
+
 export function documentFileUrl(
   projectId: string,
   documentId: string,
@@ -724,7 +798,9 @@ export function notificationDestination(notification: NotificationRecord): strin
     case "DESIGN_REJECTED":
       return notification.entityId ? `${base}/design/${notification.entityId}` : `${base}/design`;
     case "DOCUMENT_SHARED":
-      return `${base}/documents`;
+      // entityId is the document id; the detail endpoint stays the authorization gate
+      // (internal/archived docs return an indistinguishable 404 for a Client).
+      return notification.entityId ? `${base}/documents/${notification.entityId}` : `${base}/documents`;
     case "SITE_UPDATE":
     case "PROJECT_PROGRESS_CHANGED":
       return `${base}/site-activity`;
@@ -835,6 +911,30 @@ export function designStatusLabel(status: DesignStatus, locale: "ar" | "en") {
     REJECTED: { ar: "مرفوض", en: "Rejected" }
   };
   return labels[status][locale];
+}
+
+export function designNextAction(status: DesignStatus, role: UserRole, locale: "ar" | "en") {
+  const client = role === "CLIENT";
+  const labels: Record<DesignStatus, { ar: string; en: string; clientAr: string; clientEn: string }> = {
+    DRAFT: {
+      ar: "بانتظار الإرسال لمراجعة العميل", en: "Needs submission for client review",
+      clientAr: "مسودة قيد الإعداد", clientEn: "Draft in preparation"
+    },
+    IN_REVIEW: {
+      ar: "بانتظار قرار العميل", en: "Awaiting client decision",
+      clientAr: "مطلوب مراجعتك وقرارك", clientEn: "Your review decision is required"
+    },
+    APPROVED: {
+      ar: "معتمد — لا إجراء مطلوب", en: "Approved — no action pending",
+      clientAr: "معتمد — لا إجراء مطلوب", clientEn: "Approved — no action pending"
+    },
+    REJECTED: {
+      ar: "مرفوض — مطلوب رفع مراجعة جديدة", en: "Rejected — upload a new revision",
+      clientAr: "مرفوض — بانتظار مراجعة محدثة", clientEn: "Rejected — awaiting an updated revision"
+    }
+  };
+  const entry = labels[status];
+  return client ? (locale === "ar" ? entry.clientAr : entry.clientEn) : entry[locale];
 }
 
 export function designStatusTone(status: DesignStatus): BadgeTone {

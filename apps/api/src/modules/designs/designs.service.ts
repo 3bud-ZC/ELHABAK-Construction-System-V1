@@ -14,7 +14,7 @@ import { AuditService } from "../admin/audit.service";
 import { NotificationService } from "../notifications/notification.service";
 import { StorageService } from "../projects/storage.service";
 import { DesignAccessService } from "./design-access.service";
-import { designInclude, toDesignResponse } from "./design-response";
+import { designInclude, designListInclude, toDesignResponse, toDesignSummaryResponse } from "./design-response";
 
 const statuses: DesignStatus[] = ["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"];
 const disciplines: DesignDiscipline[] = [
@@ -56,8 +56,8 @@ export class DesignsService {
       ];
     }
 
-    const designs = await this.prisma.designItem.findMany({ where, include: designInclude, orderBy: { updatedAt: "desc" } });
-    return designs.map(toDesignResponse);
+    const designs = await this.prisma.designItem.findMany({ where, include: designListInclude, orderBy: { updatedAt: "desc" } });
+    return designs.map(toDesignSummaryResponse);
   }
 
   async get(user: RequestUser, projectId: string, designId: string) {

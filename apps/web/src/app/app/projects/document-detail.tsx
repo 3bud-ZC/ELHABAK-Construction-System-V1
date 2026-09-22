@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Badge, EmptyState, LoadingState } from "@elhabak/ui";
-import { Archive, ArchiveRestore, Download, Eye, EyeOff, FileClock, FileText, Pencil, UploadCloud, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, Copy, Download, Eye, EyeOff, FileClock, FileText, Pencil, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   apiRequest,
@@ -51,6 +51,8 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
   const [showEdit, setShowEdit] = useState(false);
   const [showVersion, setShowVersion] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmRestore, setConfirmRestore] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const labels = ar
     ? {
@@ -60,7 +62,10 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
         updated: "تم تحديث بيانات المستند.", pdfFallback: "إذا لم تظهر المعاينة، نزّل الملف لفتحه.", fileMeta: "بيانات الملف", checksum: "بصمة الملف (SHA-256)",
         share: "مشاركة مع العميل", hide: "إخفاء عن العميل", shareConfirm: "تمت مشاركة المستند مع العميل.", hideConfirm: "تم إخفاء المستند عن العميل.",
         archive: "أرشفة", restore: "استعادة", archiveConfirm: "هل تريد أرشفة هذا المستند؟ سيبقى متاحاً للمستخدمين الداخليين المخوّلين.",
-        cancel: "إلغاء", confirmArchive: "تأكيد الأرشفة", archived: "تمت أرشفة المستند.", restored: "تمت استعادة المستند.", noHistory: "لا يوجد سجل نشاط بعد."
+        restoreConfirm: "استعادة هذا المستند إلى السجل الفعّال؟", confirmRestore: "تأكيد الاستعادة",
+        cancel: "إلغاء", confirmArchive: "تأكيد الأرشفة", archived: "تمت أرشفة المستند.", restored: "تمت استعادة المستند.", noHistory: "لا يوجد سجل نشاط بعد.",
+        viewingOld: "تعاين نسخة سابقة", latestIs: "الأحدث", backToLatest: "العودة للأحدث", note: "ملاحظة النسخة",
+        size: "الحجم", copyChecksum: "نسخ البصمة", copied: "تم النسخ", versions: "نسخة"
       }
     : {
         loading: "Loading document detail...", back: "Document register", current: "Current version", category: "Category", uploader: "Uploader", uploaded: "Uploaded",
@@ -69,7 +74,10 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
         updated: "Document details updated.", pdfFallback: "If preview does not load, download the file to open it.", fileMeta: "File metadata", checksum: "File checksum (SHA-256)",
         share: "Share with Client", hide: "Hide from Client", shareConfirm: "Document shared with the Client.", hideConfirm: "Document hidden from the Client.",
         archive: "Archive", restore: "Restore", archiveConfirm: "Archive this document? It stays available to authorized internal users.",
-        cancel: "Cancel", confirmArchive: "Confirm Archive", archived: "Document archived.", restored: "Document restored.", noHistory: "No activity history yet."
+        restoreConfirm: "Restore this document to the active register?", confirmRestore: "Confirm Restore",
+        cancel: "Cancel", confirmArchive: "Confirm Archive", archived: "Document archived.", restored: "Document restored.", noHistory: "No activity history yet.",
+        viewingOld: "You are viewing a historical version", latestIs: "Latest", backToLatest: "Back to latest", note: "Version note",
+        size: "Size", copyChecksum: "Copy checksum", copied: "Copied", versions: "versions"
       };
 
   const load = useCallback(async () => {
@@ -108,6 +116,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
       setDocument(updated);
       setSuccess(message);
       setConfirmArchive(false);
+      setConfirmRestore(false);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Request failed.");
     } finally {
@@ -126,7 +135,18 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
 
   const selected = document.versions.find((version) => version.id === selectedVersionId) ?? document.currentVersion;
   const canManage = user.role === "ADMIN" || user.role === "ENGINEER";
+  const viewingHistorical = Boolean(selected && document.currentVersion && selected.id !== document.currentVersion.id);
   const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
+
+  async function copyChecksum(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <section className="app-page project-workspace-page">
@@ -160,7 +180,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
                 <Archive size={15} />{labels.archive}
               </button>
             ) : (
-              <button className="ui-button ui-button--secondary ui-button--sm" type="button" disabled={mutating} onClick={() => void mutate(`/projects/${projectId}/documents/${documentId}/restore`, "POST", undefined, labels.restored)}>
+              <button className="ui-button ui-button--secondary ui-button--sm" type="button" disabled={mutating} onClick={() => setConfirmRestore(true)}>
                 <ArchiveRestore size={15} />{labels.restore}
               </button>
             )}
@@ -171,11 +191,26 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
       {success && <div className="form-success">{success}</div>}
       {confirmArchive && (
         <div className="inline-confirm">
-          <strong>{labels.archiveConfirm}</strong>
+          <strong>{labels.archiveConfirm} <bdi className="mono">{document.reference}</bdi></strong>
           <div>
             <button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setConfirmArchive(false)} disabled={mutating}>{labels.cancel}</button>
             <button className="ui-button ui-button--accent ui-button--sm" type="button" disabled={mutating} onClick={() => void mutate(`/projects/${projectId}/documents/${documentId}/archive`, "POST", undefined, labels.archived)}>{labels.confirmArchive}</button>
           </div>
+        </div>
+      )}
+      {confirmRestore && (
+        <div className="inline-confirm">
+          <strong>{labels.restoreConfirm} <bdi className="mono">{document.reference}</bdi></strong>
+          <div>
+            <button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setConfirmRestore(false)} disabled={mutating}>{labels.cancel}</button>
+            <button className="ui-button ui-button--accent ui-button--sm" type="button" disabled={mutating} onClick={() => void mutate(`/projects/${projectId}/documents/${documentId}/restore`, "POST", undefined, labels.restored)}>{labels.confirmRestore}</button>
+          </div>
+        </div>
+      )}
+      {viewingHistorical && selected && document.currentVersion && (
+        <div className="design-history-banner" role="status">
+          <span><FileClock size={15} aria-hidden="true" /> {labels.viewingOld}: <bdi className="mono">{selected.versionCode}</bdi> — {labels.latestIs} <bdi className="mono">{document.currentVersion.versionCode}</bdi></span>
+          <button className="ui-button ui-button--secondary ui-button--sm" type="button" onClick={() => setSelectedVersionId(document.currentVersion!.id)}>{labels.backToLatest}</button>
         </div>
       )}
 
@@ -214,9 +249,25 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
                   <strong className="mono"><bdi>{selected.mimeType} · {formatFileSize(selected.fileSize, locale)}</bdi></strong>
                 </div>
               </div>
+              {selected.note && (
+                <div className="design-revision-note">
+                  <small>{labels.note}</small>
+                  <bdi>{selected.note}</bdi>
+                </div>
+              )}
               {canManage && selected.checksumSha256 && (
-                <p className="field-hint mono" style={{ wordBreak: "break-all" }}>
+                <p className="field-hint mono" style={{ wordBreak: "break-all", display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
                   {labels.checksum}: <bdi title={selected.checksumSha256}>{selected.checksumSha256.slice(0, 12)}…{selected.checksumSha256.slice(-8)}</bdi>
+                  <button
+                    type="button"
+                    className="ui-icon-button"
+                    onClick={() => void copyChecksum(selected.checksumSha256!)}
+                    aria-label={labels.copyChecksum}
+                    title={labels.copyChecksum}
+                  >
+                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                  </button>
+                  {copied && <span className="field-hint" role="status">{labels.copied}</span>}
                 </p>
               )}
             </section>
@@ -272,14 +323,33 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
             </div>
             <div className="revision-list">
               {document.versions.map((version, index) => (
-                <button className={`revision-card ${selected?.id === version.id ? "active" : ""}`} type="button" key={version.id} onClick={() => setSelectedVersionId(version.id)}>
-                  <div className="revision-card__header">
-                    <span className="revision-badge mono"><bdi>{version.versionCode}</bdi></span>
-                    {index === 0 && <span className="revision-tag revision-tag--newest">{labels.newest}</span>}
-                  </div>
-                  <time className="mono"><bdi>{dateTime(version.createdAt)}</bdi></time>
-                  <span className="revision-card__filename mono"><bdi>{version.originalFilename}</bdi></span>
-                </button>
+                <div className={`revision-card ${selected?.id === version.id ? "active" : ""}`} key={version.id}>
+                  <button
+                    type="button"
+                    className="revision-card__body"
+                    onClick={() => setSelectedVersionId(version.id)}
+                    aria-label={`${version.versionCode} — ${version.originalFilename}`}
+                  >
+                    <div className="revision-card__header">
+                      <span className="revision-badge mono"><bdi>{version.versionCode}</bdi></span>
+                      {index === 0 && <span className="revision-tag revision-tag--newest">{labels.newest}</span>}
+                    </div>
+                    <time className="mono"><bdi>{dateTime(version.createdAt)}</bdi></time>
+                    <span className="revision-card__filename mono"><bdi>{version.originalFilename}</bdi></span>
+                    <span className="revision-card__uploader">
+                      {version.uploadedBy.displayName} · <bdi>{formatFileSize(version.fileSize, locale)}</bdi>
+                    </span>
+                    {version.note && <span className="revision-card__note">{version.note}</span>}
+                  </button>
+                  <a
+                    className="revision-card__download ui-icon-button"
+                    href={documentFileUrl(projectId, documentId, version.id, true)}
+                    aria-label={`${labels.download} ${version.versionCode}`}
+                    title={`${labels.download} ${version.versionCode}`}
+                  >
+                    <Download size={14} />
+                  </a>
+                </div>
               ))}
             </div>
           </section>
@@ -341,8 +411,8 @@ function VersionUploadDialog({ projectId, document, locale, onClose, onUpdated }
   const [progress, setProgress] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const labels = ar
-    ? { title: "رفع نسخة جديدة", next: "النسخة التالية", notes: "ملاحظة النسخة", choose: "اسحب الملف هنا أو اختر من جهازك", support: "PDF، PNG، JPG/JPEG، DOCX، أو XLSX", save: "رفع النسخة", close: "إغلاق", required: "اختر ملفاً صالحاً.", uploading: "جاري الرفع" }
-    : { title: "Upload new version", next: "Next version", notes: "Version note", choose: "Drop file here or choose from device", support: "PDF, PNG, JPG/JPEG, DOCX, or XLSX", save: "Upload Version", close: "Close", required: "Choose a valid file.", uploading: "Uploading" };
+    ? { title: "رفع نسخة جديدة", next: "النسخة التالية", notes: "ملاحظة النسخة", choose: "اسحب الملف هنا أو اختر من جهازك", support: "PDF، PNG، JPG/JPEG، DOCX، أو XLSX", save: "رفع النسخة", close: "إغلاق", required: "اختر ملفاً صالحاً.", uploading: "جاري الرفع", doc: "المستند", current: "الحالية", becomes: "الجديدة" }
+    : { title: "Upload new version", next: "Next version", notes: "Version note", choose: "Drop file here or choose from device", support: "PDF, PNG, JPG/JPEG, DOCX, or XLSX", save: "Upload Version", close: "Close", required: "Choose a valid file.", uploading: "Uploading", doc: "Document", current: "Current", becomes: "New" };
 
   function choose(selected?: File) {
     setFile(selected ?? null);
@@ -376,11 +446,14 @@ function VersionUploadDialog({ projectId, document, locale, onClose, onUpdated }
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target && !uploading) onClose(); }}>
       <section className="design-dialog design-dialog--compact" role="dialog" aria-modal="true">
         <header>
-          <div><span>{labels.next}</span><h2>{labels.title}</h2></div>
+          <div><span>{document.title} · <bdi className="mono">{document.reference}</bdi></span><h2>{labels.title}</h2></div>
           <button className="icon-button" type="button" onClick={onClose} disabled={uploading} aria-label={labels.close}><X size={20} /></button>
         </header>
         <form onSubmit={(event) => void submit(event)}>
-          <div className="next-revision"><bdi>V{String(document.currentVersionNumber + 1).padStart(2, "0")}</bdi></div>
+          <div className="next-revision">
+            <small>{labels.current}: <bdi className="mono">V{String(document.currentVersionNumber).padStart(2, "0")}</bdi></small>
+            <span>{labels.becomes} <bdi>V{String(document.currentVersionNumber + 1).padStart(2, "0")}</bdi></span>
+          </div>
           <div className="upload-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={drop} onClick={() => inputRef.current?.click()} role="button" tabIndex={0}>
             <UploadCloud size={27} />
             <strong>{labels.choose}</strong>

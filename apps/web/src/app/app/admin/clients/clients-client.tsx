@@ -55,7 +55,8 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           contactReady: "بيانات اتصال مكتملة",
           projects: "المشاريع",
           export: "تصدير",
-          import: "استيراد Excel/CSV"
+          import: "استيراد Excel/CSV",
+          createProject: "إنشاء مشروع لهذا العميل"
         }
         : {
           title: "Clients",
@@ -85,7 +86,8 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           contactReady: "Contact details ready",
           projects: "Projects",
           export: "Export",
-          import: "Import Excel/CSV"
+          import: "Import Excel/CSV",
+          createProject: "Create project for this client"
         },
     [locale]
   );
@@ -279,6 +281,20 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
 
         {error ? <p className="form-error">{error}</p> : null}
         {success ? <p className="form-success">{success}</p> : null}
+        {mode === "create" && record ? (
+          <div className="client-create-next-step">
+            <div>
+              <strong>{record.user.displayName}</strong>
+              <span>{record.user.email}</span>
+            </div>
+            <Link
+              className="ui-button ui-button--primary ui-button--sm"
+              href={ar ? `/app/admin/projects/new?clientId=${record.id}` : `/app/admin/projects/new?clientId=${record.id}&lang=en`}
+            >
+              {labels.createProject}
+            </Link>
+          </div>
+        ) : null}
 
         <div className="form-actions-bar">
           <Link className="ui-button ui-button--secondary" href={ar ? "/app/admin/clients" : "/app/admin/clients?lang=en"}>

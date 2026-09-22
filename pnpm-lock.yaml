@@ -138,6 +138,9 @@ importers:
       '@elhabak/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@elhabak/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       lucide-react:
         specifier: ^0.554.0
         version: 0.554.0(react@19.2.8)

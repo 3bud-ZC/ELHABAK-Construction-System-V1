@@ -35,9 +35,10 @@ export class DocumentsController {
     @Param("projectId") projectId: string,
     @Query("search") search?: string,
     @Query("category") category?: string,
-    @Query("status") status?: string
+    @Query("status") status?: string,
+    @Query("visibility") visibility?: string
   ) {
-    return this.documents.list(user, projectId, search, category, status);
+    return this.documents.list(user, projectId, search, category, status, visibility);
   }
 
   @Get(":documentId")

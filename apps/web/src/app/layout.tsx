@@ -24,9 +24,12 @@ const rubik = Rubik({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "ELHABAK — الحباك للاستشارات الهندسية",
+  title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
   description:
-    "الحباك للاستشارات الهندسية في سوهاج تقدم التصميم والتنفيذ والتشطيب والمقاولات العامة والتأثيث مع متابعة رقمية منظمة للمشروع.",
+    "شركة الحباك للمقاولات والاستشارات الهندسية تقدم التصميم المعماري، إدارة المشروعات، الإشراف على التنفيذ، المقاولات والتشطيبات، مع نظام رقمي لمتابعة تقدم المشروع.",
+  applicationName: "ELHABAK Construction Operations",
+  creator: "ELHABAK Construction",
+  category: "engineering and construction",
   alternates: {
     canonical: "/",
     languages: {
@@ -35,9 +38,9 @@ export const metadata: Metadata = {
     }
   },
   openGraph: {
-    title: "ELHABAK — الحباك للاستشارات الهندسية",
+    title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
     description:
-      "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية في سوهاج بإدارة هندسية واضحة ومتابعة رقمية منظمة.",
+      "شركة مقاولات واستشارات هندسية: تصميم معماري، إدارة مشروعات، إشراف على التنفيذ، وتشطيبات بمتابعة رقمية منظمة.",
     url: "/",
     siteName: "ELHABAK Construction",
     locale: "ar_EG",
@@ -54,9 +57,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ELHABAK — الحباك للاستشارات الهندسية",
+    title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
     description:
-      "Design, construction, finishing, general contracting, and furnishing with organized digital project follow-up.",
+      "Architectural design, engineering consultancy, construction management, site supervision, and contracting with digital project tracking.",
     images: ["/marketing/hero-delivery.webp"]
   }
 };

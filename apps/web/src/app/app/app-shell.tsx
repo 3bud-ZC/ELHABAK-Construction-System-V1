@@ -46,10 +46,11 @@ export function AppShell({ children }: AppShellProps) {
           productTag: "نظام تشغيل المشاريع",
           navPrimary: "التشغيل",
           navManagement: "الإدارة",
-          navSystem: "النظام",
+          navControl: "التحكم",
+          navSystem: "النظام والأدوات",
           account: "الحساب",
           dashboard: "لوحة التحكم",
-          users: "المستخدمون",
+          users: "الفريق",
           clients: "العملاء",
           projects: "المشاريع",
           worker: "تحديثات الموقع",
@@ -79,10 +80,11 @@ export function AppShell({ children }: AppShellProps) {
           productTag: "Project Operations System",
           navPrimary: "Operations",
           navManagement: "Management",
-          navSystem: "System",
+          navControl: "Control",
+          navSystem: "System / Tools",
           account: "Account",
           dashboard: "Dashboard",
-          users: "Users",
+          users: "Team",
           clients: "Clients",
           projects: "Projects",
           worker: "Site Updates",
@@ -326,14 +328,11 @@ export function AppShell({ children }: AppShellProps) {
                     <Wallet size={17} /> {labels.finance}
                   </Link>
                 )}
-                {(user.role === "ADMIN" || user.role === "ACCOUNTANT" || user.role === "ENGINEER") && (
-                  <Link
-                    className={isActive("/app/data") ? "active" : ""}
-                    href={href("/app/data")}
-                  >
-                    <Database size={17} /> {labels.dataOps}
-                  </Link>
-                )}
+              </div>
+            )}
+            {(user.role === "ADMIN" || user.role === "ACCOUNTANT" || user.role === "ENGINEER") && (
+              <div className="app-nav-group">
+                <span className="app-nav-label">{labels.navControl}</span>
                 <Link
                   className={isActive("/app/reports") ? "active" : ""}
                   href={href("/app/reports")}
@@ -342,12 +341,17 @@ export function AppShell({ children }: AppShellProps) {
                 </Link>
               </div>
             )}
-            <div className="app-nav-group">
-              <span className="app-nav-label">{labels.navSystem}</span>
-              <Link className={isActive("/app/search") ? "active" : ""} href={href("/app/search")}>
-                <Search size={17} /> {labels.search}
-              </Link>
-            </div>
+            {(user.role === "ADMIN" || user.role === "ACCOUNTANT" || user.role === "ENGINEER") && (
+              <div className="app-nav-group">
+                <span className="app-nav-label">{labels.navSystem}</span>
+                <Link
+                  className={isActive("/app/data") ? "active" : ""}
+                  href={href("/app/data")}
+                >
+                  <Database size={17} /> {labels.dataOps}
+                </Link>
+              </div>
+            )}
           </nav>
           <div className="app-sidebar-footer">
             <span className="app-nav-label app-account-label">{labels.account}</span>

@@ -7,7 +7,18 @@ export const documentInclude = {
   createdBy: { select: actorSelect }
 } satisfies Prisma.ProjectDocumentInclude;
 
+/**
+ * Bounded register include: the list only ever renders the latest version summary
+ * plus a version count, so it never ships the full immutable version history.
+ */
+export const documentListInclude = {
+  versions: { include: { uploadedBy: { select: actorSelect } }, orderBy: { versionNumber: "desc" }, take: 1 },
+  createdBy: { select: actorSelect },
+  _count: { select: { versions: true } }
+} satisfies Prisma.ProjectDocumentInclude;
+
 export type DocumentWithRelations = Prisma.ProjectDocumentGetPayload<{ include: typeof documentInclude }>;
+export type DocumentListRow = Prisma.ProjectDocumentGetPayload<{ include: typeof documentListInclude }>;
 
 export function versionCode(versionNumber: number) {
   return `V${String(versionNumber).padStart(2, "0")}`;
@@ -27,6 +38,31 @@ export function toDocumentResponse(document: DocumentWithRelations, viewerRole: 
     currentVersionNumber: document.currentVersionNumber,
     currentVersion: document.versions[0] ? toVersionResponse(document.versions[0], isClient) : null,
     versions: document.versions.map((version) => toVersionResponse(version, isClient)),
+    createdBy: {
+      id: document.createdBy.id,
+      displayName: document.createdBy.displayName,
+      role: document.createdBy.role
+    },
+    createdAt: document.createdAt.toISOString(),
+    updatedAt: document.updatedAt.toISOString()
+  };
+}
+
+/** Slim register row: identity + latest version summary + counts, no history arrays. */
+export function toDocumentSummaryResponse(document: DocumentListRow, viewerRole: string) {
+  const isClient = viewerRole === "CLIENT";
+  return {
+    id: document.id,
+    projectId: document.projectId,
+    reference: document.reference,
+    title: document.title,
+    description: document.description,
+    category: document.category,
+    status: document.status,
+    isClientVisible: document.isClientVisible,
+    currentVersionNumber: document.currentVersionNumber,
+    currentVersion: document.versions[0] ? toVersionResponse(document.versions[0], isClient) : null,
+    versionCount: document._count.versions,
     createdBy: {
       id: document.createdBy.id,
       displayName: document.createdBy.displayName,

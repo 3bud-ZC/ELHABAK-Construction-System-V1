@@ -21,7 +21,7 @@ import {
   uploadRequest,
   type DocumentCategory,
   type DocumentRecordStatus,
-  type ProjectDocumentRecord,
+  type ProjectDocumentSummary,
   type ProjectRecord
 } from "../../../lib/api";
 import { useCurrentUser } from "../../../lib/user-context";
@@ -87,31 +87,32 @@ export function DocumentsHub({ projectId }: { projectId: string }) {
 
 function InternalDocumentRegister({ projectId, locale }: { projectId: string; locale: "ar" | "en" }) {
   const ar = locale === "ar";
-  const [documents, setDocuments] = useState<ProjectDocumentRecord[]>([]);
+  const [documents, setDocuments] = useState<ProjectDocumentSummary[]>([]);
   const [metrics, setMetrics] = useState({ total: 0, shared: 0, archived: 0 });
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<DocumentCategory | "">("");
   const [status, setStatus] = useState<DocumentRecordStatus | "">("");
+  const [visibility, setVisibility] = useState<"" | "shared" | "internal">("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<ProjectDocumentRecord | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<ProjectDocumentSummary | null>(null);
 
   const labels = ar
     ? {
       title: "سجل المستندات", lead: "مركز التحكم بالمستندات العامة للمشروع - عقود، تصاريح، تقارير، ومراسلات.",
-      add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات", clear: "مسح المرشحات", results: "نتائج",
-      empty: "لا توجد مستندات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
+      add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات", allVisibility: "كل حالات المشاركة", sharedOnly: "مشترك مع العميل", internalOnly: "داخلي فقط", clear: "مسح المرشحات", results: "نتائج",
+      empty: "لا توجد مستندات مسجلة", emptyHint: "المستندات تحفظ ملفات المشروع المنضبطة بنسخ غير قابلة للتعديل. ابدأ بتسجيل أول مستند.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
       document: "المرجع والمستند", category: "الفئة", version: "النسخة", format: "الصيغة", visibility: "المشاركة", status: "الحالة", updated: "التحديث",
-      action: "الإجراء", open: "فتح المستند", preview: "معاينة", download: "تنزيل", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل..."
+      action: "الإجراء", open: "فتح المستند", preview: "معاينة", download: "تنزيل", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل...", versions: "نسخ"
     }
     : {
       title: "Document Register", lead: "Control center for general project records - contracts, permits, reports, and correspondence.",
-      add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses", clear: "Clear filters", results: "results",
-      empty: "No documents registered", emptyHint: "Register the first document for this project.", noResults: "No matching documents", noResultsHint: "Change search query or filter criteria.",
+      add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses", allVisibility: "All visibility", sharedOnly: "Client shared", internalOnly: "Internal only", clear: "Clear filters", results: "results",
+      empty: "No project documents yet", emptyHint: "Documents stores controlled project files with immutable versions. Register the first document.", noResults: "No matching documents", noResultsHint: "Change search query or filter criteria.",
       document: "Reference & Document", category: "Category", version: "Version", format: "Format", visibility: "Visibility", status: "Status", updated: "Updated",
-      action: "Action", open: "Open Document", preview: "Preview", download: "Download", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register..."
+      action: "Action", open: "Open Document", preview: "Preview", download: "Download", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register...", versions: "versions"
     };
 
   const load = useCallback(async () => {
@@ -119,12 +120,13 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
     if (query.trim()) params.set("search", query.trim());
     if (category) params.set("category", category);
     if (status) params.set("status", status);
+    if (visibility) params.set("visibility", visibility);
     const suffix = params.size ? `?${params.toString()}` : "";
     setLoading(true);
     try {
-      const result = await apiRequest<ProjectDocumentRecord[]>(`/projects/${projectId}/documents${suffix}`);
+      const result = await apiRequest<ProjectDocumentSummary[]>(`/projects/${projectId}/documents${suffix}`);
       setDocuments(result);
-      if (!query.trim() && !category && !status) {
+      if (!query.trim() && !category && !status && !visibility) {
         setMetrics({
           total: result.length,
           shared: result.filter((doc) => doc.isClientVisible).length,
@@ -137,7 +139,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
     } finally {
       setLoading(false);
     }
-  }, [category, projectId, query, status]);
+  }, [category, projectId, query, status, visibility]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 220);
@@ -145,7 +147,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
   }, [load]);
 
   async function refreshMetrics() {
-    const result = await apiRequest<ProjectDocumentRecord[]>(`/projects/${projectId}/documents`);
+    const result = await apiRequest<ProjectDocumentSummary[]>(`/projects/${projectId}/documents`);
     setMetrics({ total: result.length, shared: result.filter((doc) => doc.isClientVisible).length, archived: result.filter((doc) => doc.status === "ARCHIVED").length });
   }
 
@@ -153,7 +155,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
     return ar ? path : `${path}?lang=en`;
   }
 
-  const filtered = Boolean(query.trim() || category || status);
+  const filtered = Boolean(query.trim() || category || status || visibility);
 
   return (
     <>
@@ -193,14 +195,21 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
           </select>
         </label>
         <label className="design-filter">
-          <select value={status} onChange={(event) => setStatus(event.target.value as DocumentRecordStatus | "")}>
+          <select value={status} onChange={(event) => setStatus(event.target.value as DocumentRecordStatus | "")} aria-label={labels.status}>
             <option value="">{labels.allStatuses}</option>
             {DOCUMENT_STATUSES.map((item) => (
               <option key={item} value={item}>{documentStatusLabel(item, locale)}</option>
             ))}
           </select>
         </label>
-        {filtered && <button className="technical-register-toolbar__clear" type="button" onClick={() => { setQuery(""); setCategory(""); setStatus(""); }}><RotateCcw size={13} /> {labels.clear}</button>}
+        <label className="design-filter">
+          <select value={visibility} onChange={(event) => setVisibility(event.target.value as "" | "shared" | "internal")} aria-label={labels.visibility}>
+            <option value="">{labels.allVisibility}</option>
+            <option value="shared">{labels.sharedOnly}</option>
+            <option value="internal">{labels.internalOnly}</option>
+          </select>
+        </label>
+        {filtered && <button className="technical-register-toolbar__clear" type="button" onClick={() => { setQuery(""); setCategory(""); setStatus(""); setVisibility(""); }}><RotateCcw size={13} /> {labels.clear}</button>}
         <span className="technical-register-toolbar__result mono"><bdi>{documents.length}</bdi> {labels.results}</span>
       </div>
 
@@ -238,6 +247,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
                 <span className="finance-register__cell" data-label={labels.category}>{documentCategoryLabel(document.category, locale)}</span>
                 <span className="finance-register__cell finance-register__cell--amount" data-label={labels.version}>
                   <bdi className="revision-badge mono">{document.currentVersion?.versionCode ?? "—"}</bdi>
+                  {document.versionCount > 1 && <small className="finance-register__cell--muted"> ·{document.versionCount} {labels.versions}</small>}
                 </span>
                 <span className="finance-register__cell" data-label={labels.format}>{format}</span>
                 <span className="finance-register__cell" data-label={labels.visibility}>
@@ -300,7 +310,6 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
 
 function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { projectId: string; locale: "ar" | "en"; onClose: () => void; onCreated: () => void }) {
   const ar = locale === "ar";
-  const [reference, setReference] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<DocumentCategory>("REPORT");
   const [description, setDescription] = useState("");
@@ -314,16 +323,16 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
 
   const labels = ar
     ? {
-      heading: "تسجيل مستند جديد", info: "بيانات المستند", reference: "المرجع", title: "العنوان", category: "الفئة", description: "الوصف (اختياري)",
+      heading: "تسجيل مستند جديد", info: "بيانات المستند", title: "العنوان", category: "الفئة", description: "الوصف (اختياري)",
       visibility: "مشاركة مع العميل", visibilityHint: "بشكل افتراضي، المستندات الجديدة داخلية فقط.", file: "الملف الأول (النسخة الأولى)",
       drop: "اسحب الملف هنا أو اختر من جهازك", support: "PDF، PNG، JPG/JPEG، DOCX، أو XLSX", notes: "ملاحظة على النسخة (اختياري)",
-      save: "تسجيل المستند", close: "إغلاق", required: "أدخل المرجع والعنوان واختر ملفاً صالحاً.", uploading: "جاري الرفع"
+      save: "تسجيل المستند", close: "إغلاق", required: "أدخل العنوان واختر ملفاً صالحاً.", uploading: "جاري الرفع"
     }
     : {
-      heading: "Register Document", info: "Document information", reference: "Reference", title: "Title", category: "Category", description: "Description (optional)",
+      heading: "Register Document", info: "Document information", title: "Title", category: "Category", description: "Description (optional)",
       visibility: "Share with Client", visibilityHint: "New documents default to internal-only.", file: "First file (version 1)",
       drop: "Drop file here or choose from device", support: "PDF, PNG, JPG/JPEG, DOCX, or XLSX", notes: "Version note (optional)",
-      save: "Register Document", close: "Close", required: "Enter a reference, title, and choose a valid file.", uploading: "Uploading"
+      save: "Register Document", close: "Close", required: "Enter a title and choose a valid file.", uploading: "Uploading"
     };
 
   function choose(selected?: File) {
@@ -337,7 +346,7 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!reference.trim() || !title.trim() || !file) {
+    if (!title.trim() || !file) {
       setError(labels.required);
       return;
     }
@@ -345,7 +354,6 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
     setError("");
     setProgress(0);
     const body = new FormData();
-    body.set("reference", reference);
     body.set("title", title);
     body.set("category", category);
     body.set("description", description);
@@ -371,7 +379,11 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
         <form onSubmit={(event) => void submit(event)}>
           <fieldset disabled={uploading}>
             <legend>{labels.info}</legend>
-            <label className="ui-field">{labels.reference}<input value={reference} onChange={(event) => setReference(event.target.value)} maxLength={60} required autoFocus placeholder="DOC-001" /></label>
+            <label className="ui-field">
+              <span>{ar ? "المعرّف" : "System identifier"}</span>
+              <div className="generated-code-field__value mono">DOC-2026-XXXX</div>
+              <small>{ar ? "يتم إنشاؤه تلقائياً عند التسجيل" : "Generated automatically when registered"}</small>
+            </label>
             <label className="ui-field">
               {labels.category}
               <select value={category} onChange={(event) => setCategory(event.target.value as DocumentCategory)}>
@@ -422,7 +434,7 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
 
 function ClientDocuments({ projectId, locale }: { projectId: string; locale: "ar" | "en" }) {
   const ar = locale === "ar";
-  const [documents, setDocuments] = useState<ProjectDocumentRecord[]>([]);
+  const [documents, setDocuments] = useState<ProjectDocumentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -440,7 +452,7 @@ function ClientDocuments({ projectId, locale }: { projectId: string; locale: "ar
 
   useEffect(() => {
     let alive = true;
-    apiRequest<ProjectDocumentRecord[]>(`/projects/${projectId}/documents`)
+    apiRequest<ProjectDocumentSummary[]>(`/projects/${projectId}/documents`)
       .then((result) => {
         if (alive) setDocuments(result);
       })

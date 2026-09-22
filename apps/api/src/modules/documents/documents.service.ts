@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import type { DocumentCategory, DocumentRecordStatus, Prisma } from "@elhabak/database";
 import {
   addDocumentVersionSchema,
@@ -14,7 +14,7 @@ import { AuditService } from "../admin/audit.service";
 import { NotificationService } from "../notifications/notification.service";
 import { StorageService } from "../projects/storage.service";
 import { DocumentAccessService } from "./document-access.service";
-import { documentInclude, toDocumentResponse } from "./document-response";
+import { documentInclude, documentListInclude, toDocumentResponse, toDocumentSummaryResponse } from "./document-response";
 
 const categories: DocumentCategory[] = ["CONTRACT", "PERMIT", "REPORT", "CORRESPONDENCE", "HANDOVER", "OTHER"];
 const statuses: DocumentRecordStatus[] = ["ACTIVE", "ARCHIVED"];
@@ -29,10 +29,11 @@ export class DocumentsService {
     private readonly notifications: NotificationService
   ) {}
 
-  async list(user: RequestUser, projectId: string, search?: string, category?: string, status?: string) {
+  async list(user: RequestUser, projectId: string, search?: string, category?: string, status?: string, visibility?: string) {
     await this.access.assertCanRead(user, projectId);
     if (category && !categories.includes(category as DocumentCategory)) throw new BadRequestException("Invalid document category.");
     if (status && !statuses.includes(status as DocumentRecordStatus)) throw new BadRequestException("Invalid document status.");
+    if (visibility && visibility !== "shared" && visibility !== "internal") throw new BadRequestException("Invalid visibility filter.");
 
     const isClient = user.role === "CLIENT";
     const where: Prisma.ProjectDocumentWhereInput = {
@@ -43,6 +44,7 @@ export class DocumentsService {
     };
     if (!isClient && category) where.category = category as DocumentCategory;
     if (!isClient && status) where.status = status as DocumentRecordStatus;
+    if (!isClient && visibility) where.isClientVisible = visibility === "shared";
 
     const trimmed = search?.trim();
     if (trimmed) {
@@ -53,8 +55,10 @@ export class DocumentsService {
       ];
     }
 
-    const documents = await this.prisma.projectDocument.findMany({ where, include: documentInclude, orderBy: { updatedAt: "desc" } });
-    return documents.map((document) => toDocumentResponse(document, user.role));
+    // The register only needs the latest version summary plus a count - full
+    // immutable version history stays on the detail endpoint.
+    const documents = await this.prisma.projectDocument.findMany({ where, include: documentListInclude, orderBy: { updatedAt: "desc" } });
+    return documents.map((document) => toDocumentSummaryResponse(document, user.role));
   }
 
   async get(user: RequestUser, projectId: string, documentId: string) {
@@ -67,6 +71,7 @@ export class DocumentsService {
     await this.access.assertCanManage(user, projectId);
     if (!file) throw new BadRequestException("An initial document file is required.");
     const input = parseBody(createDocumentSchema, rawBody);
+    const reference = input.reference?.trim() || generateDocumentReference();
 
     // The storage path nests under the document id (projects/:id/documents/:documentId/v1),
     // so the id is generated up front and the file is written before the DB transaction -
@@ -82,7 +87,7 @@ export class DocumentsService {
           data: {
             id: documentId,
             projectId,
-            reference: input.reference.trim(),
+            reference,
             title: input.title.trim(),
             description: emptyToNull(input.description),
             category: input.category,
@@ -109,7 +114,7 @@ export class DocumentsService {
         })
       ]);
       persisted = true;
-      await this.audit.record(user, "documents.created", { documentId, reference: input.reference.trim() }, projectId);
+      await this.audit.record(user, "documents.created", { documentId, reference }, projectId);
 
       if (input.isClientVisible) {
         await this.notifyClientDocumentShared(projectId, documentId, input.title.trim(), user);
@@ -280,6 +285,12 @@ export class DocumentsService {
 function emptyToNull(value: string | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function generateDocumentReference(): string {
+  const year = new Date().getUTCFullYear();
+  const suffix = randomInt(36 ** 4).toString(36).toUpperCase().padStart(4, "0");
+  return `DOC-${year}-${suffix}`;
 }
 
 function isUniqueError(error: unknown) {

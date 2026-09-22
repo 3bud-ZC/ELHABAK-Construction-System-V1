@@ -25,6 +25,7 @@ export function NotificationsClient() {
   const [items, setItems] = useState<NotificationRecord[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
+  const [markingAll, setMarkingAll] = useState(false);
   const [error, setError] = useState("");
 
   function href(path: string) {
@@ -48,26 +49,38 @@ export function NotificationsClient() {
 
   useEffect(() => {
     const socket = getSocket();
-    const onNew = () => load(filter);
+    // The event already carries the full record - prepend it instead of refetching the list.
+    const onNew = (payload: { notification?: NotificationRecord }) => {
+      if (!payload.notification) return;
+      setItems((prev) => (prev.some((item) => item.id === payload.notification!.id) ? prev : [payload.notification!, ...prev]));
+    };
     socket.on("notification:new", onNew);
     return () => {
       socket.off("notification:new", onNew);
     };
-  }, [filter]);
+  }, []);
 
   function onSelect(notification: NotificationRecord) {
     if (!notification.readAt) {
       apiRequest(`/notifications/${notification.id}/read`, { method: "PATCH", body: "{}" }).catch(() => undefined);
-      setItems((prev) => prev.map((item) => (item.id === notification.id ? { ...item, readAt: new Date().toISOString() } : item)));
+      // In the Unread view a just-read row drops out; in All it dims in place.
+      setItems((prev) =>
+        filter === "unread"
+          ? prev.filter((item) => item.id !== notification.id)
+          : prev.map((item) => (item.id === notification.id ? { ...item, readAt: new Date().toISOString() } : item))
+      );
     }
     const destination = notificationDestination(notification);
     if (destination) router.push(href(destination));
   }
 
   function markAllRead() {
+    if (markingAll) return;
+    setMarkingAll(true);
     apiRequest<{ ok: true }>("/notifications/read-all", { method: "PATCH", body: "{}" })
       .then(() => load(filter))
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setMarkingAll(false));
   }
 
   const labels = useMemo(
@@ -139,7 +152,7 @@ export function NotificationsClient() {
             {labels.unread}
           </button>
         </div>
-        <button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={markAllRead}>
+        <button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={markAllRead} disabled={markingAll}>
           <CheckCheck size={14} /> {labels.markAll}
         </button>
         <Link className="notifications-back-link" href={href("/app")}>
@@ -167,8 +180,14 @@ export function NotificationsClient() {
                   className={`notifications-row${item.readAt ? "" : " notifications-row--unread"}`}
                   onClick={() => onSelect(item)}
                 >
-                  <span className="notifications-row__type">{notificationTypeLabel(item.type, locale)}</span>
-                  <span className="notifications-row__title">{item.title}</span>
+                  <span className="notifications-row__type">
+                    {!item.readAt && <i className="notification-unread-dot" aria-hidden="true" />}
+                    {notificationTypeLabel(item.type, locale)}
+                  </span>
+                  <span className="notifications-row__content">
+                    <span className="notifications-row__title">{item.title}</span>
+                    {item.body && <span className="notifications-row__body">{item.body}</span>}
+                  </span>
                   {item.project && (
                     <span className="notifications-row__project mono">{item.project.code ?? item.project.name}</span>
                   )}

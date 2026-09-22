@@ -7,7 +7,6 @@ import { Badge, EmptyState, LoadingState, MetricCard, ProgressBar } from "@elhab
 import {
   AlertTriangle,
   ArrowUpLeft,
-  Briefcase,
   Camera,
   CheckCircle2,
   Database,
@@ -34,9 +33,21 @@ import {
 } from "../../lib/api";
 import { useCurrentUser } from "../../lib/user-context";
 
+type AttentionDesign = {
+  id: string;
+  projectId: string;
+  projectName: string;
+  projectCode: string | null;
+  title: string;
+  discipline: string;
+  updatedAt: string;
+};
+
 type DashboardSummary = {
   activeProjects: number;
   clientCount: number;
+  pendingReviewCount: number;
+  overdueCount: number;
   projects: ProjectRecord[];
   recentUpdates: Array<{
     id: string;
@@ -54,15 +65,8 @@ type DashboardSummary = {
     projectName: string | null;
   }>;
   attention: {
-    pendingDesigns: Array<{
-      id: string;
-      projectId: string;
-      projectName: string;
-      projectCode: string | null;
-      title: string;
-      discipline: string;
-      updatedAt: string;
-    }>;
+    pendingDesigns: AttentionDesign[];
+    rejectedDesigns: AttentionDesign[];
     overdueProjects: Array<{
       id: string;
       code: string | null;
@@ -72,12 +76,12 @@ type DashboardSummary = {
       progress: number;
       status: ProjectStatus;
     }>;
-    recentDocuments: Array<{
+    setupIncomplete: Array<{
       id: string;
-      projectId: string;
-      projectName: string;
-      title: string;
-      updatedAt: string;
+      code: string | null;
+      name: string;
+      missingEngineer: boolean;
+      missingSchedule: boolean;
     }>;
   };
 };
@@ -121,6 +125,19 @@ export function AppDashboard() {
           noProjects: "لا توجد مشاريع في نطاق الوصول",
           noProjectsHint: "ستظهر المشاريع هنا فور توفر سجل مصرح به.",
           newProject: "إنشاء مشروع",
+          setupTitle: "ابدأ تشغيل النظام بخطوات واضحة",
+          setupLead: "أنشئ السجلات الأساسية أولاً، ثم انتقل إلى متابعة التنفيذ من مساحة المشروع.",
+          setupClient: "أضف أول عميل",
+          setupClientHint: "سجّل جهة الاتصال قبل ربطها بمشروع.",
+          setupProject: "أنشئ أول مشروع",
+          setupProjectHint: "سيتم إنشاء معرّف المشروع تلقائياً.",
+          setupFinance: "أضف سياق الميزانية",
+          setupFinanceHint: "أكمل البيانات المالية من داخل مساحة المشروع.",
+          setupSite: "ابدأ متابعة الموقع",
+          setupSiteHint: "بعد إنشاء المشروع، ارفع أول تحديث ميداني.",
+          setupDone: "جاهز",
+          setupNext: "ابدأ",
+          teamPath: "/app/admin/clients",
           activityTitle: "آخر النشاط التشغيلي",
           activityLead: "أحداث مسجلة من وحدات النظام.",
           updatesTitle: "آخر تحديثات الموقع",
@@ -150,11 +167,16 @@ export function AppDashboard() {
           attentionTitle: "يحتاج إلى متابعة",
           attentionLead: "قرارات عمل معلقة عبر المشاريع.",
           designReview: "تصميم بانتظار المراجعة",
+          designRejected: "تصميم مرفوض يحتاج مراجعة جديدة",
           overdue: "متأخر عن موعد التسليم",
-          newDoc: "مستند جديد مشترك",
+          setupIncomplete: "إعداد المشروع غير مكتمل",
+          missingEngineer: "بدون مهندس مسؤول",
+          missingSchedule: "بدون جدول زمني",
           openDesign: "مراجعة التصميم",
           openProject: "فتح المشروع",
-          openDocs: "المستندات",
+          fixSetup: "إكمال الإعداد",
+          pendingReviews: "مراجعات معلقة",
+          overdueShort: "تجاوز الموعد",
           allClear: "لا توجد بنود معلقة",
           allClearHint: "كل المشاريع تعمل ضمن النطاق المخطط.",
           dataOps: "عمليات البيانات"
@@ -186,6 +208,19 @@ export function AppDashboard() {
           noProjects: "No projects in your access scope",
           noProjectsHint: "Authorized projects will appear here when available.",
           newProject: "Create project",
+          setupTitle: "Start the system with a clear first run",
+          setupLead: "Create the core records first, then move into delivery from the project workspace.",
+          setupClient: "Add your first client",
+          setupClientHint: "Register the contact before linking a project.",
+          setupProject: "Create your first project",
+          setupProjectHint: "The project identifier is generated automatically.",
+          setupFinance: "Add budget context",
+          setupFinanceHint: "Complete financial context inside the project workspace.",
+          setupSite: "Start site follow-up",
+          setupSiteHint: "After creating a project, submit the first field update.",
+          setupDone: "Ready",
+          setupNext: "Start",
+          teamPath: "/app/admin/clients",
           activityTitle: "Latest operational activity",
           activityLead: "Events recorded across the system.",
           updatesTitle: "Latest site updates",
@@ -215,11 +250,16 @@ export function AppDashboard() {
           attentionTitle: "Needs attention",
           attentionLead: "Pending operational decisions across projects.",
           designReview: "Design awaiting review",
+          designRejected: "Rejected design needs a new revision",
           overdue: "Past target date",
-          newDoc: "New shared document",
+          setupIncomplete: "Project setup incomplete",
+          missingEngineer: "No engineer assigned",
+          missingSchedule: "No schedule configured",
           openDesign: "Review design",
           openProject: "Open project",
-          openDocs: "Documents",
+          fixSetup: "Complete setup",
+          pendingReviews: "Pending reviews",
+          overdueShort: "Past due",
           allClear: "Nothing pending",
           allClearHint: "All projects are running within the planned envelope.",
           dataOps: "Data Ops"
@@ -309,20 +349,48 @@ export function AppDashboard() {
             hint={labels.clientContext}
           />
           <MetricCard
-            icon={<Camera size={17} />}
-            tone="orange"
-            label={labels.updates}
-            value={<bdi>{dashboard.recentUpdates.length}</bdi>}
-            hint={labels.updateContext}
+            icon={<Ruler size={17} />}
+            tone={dashboard.pendingReviewCount > 0 ? "orange" : "success"}
+            label={labels.pendingReviews}
+            value={<bdi>{dashboard.pendingReviewCount}</bdi>}
+            hint={labels.designReview}
           />
           <MetricCard
-            icon={<Briefcase size={17} />}
-            tone="success"
-            label={labels.activity}
-            value={<bdi>{dashboard.recentActivity.length}</bdi>}
-            hint={labels.activityContext}
+            icon={<AlertTriangle size={17} />}
+            tone={dashboard.overdueCount > 0 ? "danger" : "success"}
+            label={labels.overdueShort}
+            value={<bdi>{dashboard.overdueCount}</bdi>}
+            hint={labels.overdue}
           />
         </div>
+      )}
+
+      {isAdmin && dashboard?.projects.length === 0 && (
+        <section className="dashboard-setup-guide" aria-labelledby="dashboard-setup-title">
+          <header className="dashboard-setup-guide__head">
+            <div>
+              <span className="dashboard-section-heading__eyebrow">{labels.quickEyebrow}</span>
+              <h2 id="dashboard-setup-title">{labels.setupTitle}</h2>
+              <p>{labels.setupLead}</p>
+            </div>
+            <span className="dashboard-setup-guide__state"><CheckCircle2 size={15} /> {labels.setupDone}</span>
+          </header>
+          <div className="dashboard-setup-guide__steps">
+            {[
+              { icon: <Users2 size={17} />, title: labels.setupClient, hint: labels.setupClientHint, path: "/app/admin/clients/new" },
+              { icon: <FolderKanban size={17} />, title: labels.setupProject, hint: labels.setupProjectHint, path: "/app/admin/projects/new" },
+              { icon: <WalletCards size={17} />, title: labels.setupFinance, hint: labels.setupFinanceHint, path: "/app/finance" },
+              { icon: <Camera size={17} />, title: labels.setupSite, hint: labels.setupSiteHint, path: "/app/admin/projects" }
+            ].map((step, index) => (
+              <Link className="dashboard-setup-step" href={href(step.path)} key={step.title}>
+                <span className="dashboard-setup-step__index"><bdi>{String(index + 1).padStart(2, "0")}</bdi></span>
+                <span className="dashboard-setup-step__icon">{step.icon}</span>
+                <span className="dashboard-setup-step__copy"><strong>{step.title}</strong><small>{step.hint}</small></span>
+                <span className="dashboard-setup-step__action">{labels.setupNext} <ArrowUpLeft size={14} /></span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {!loading && (
@@ -425,27 +493,19 @@ export function AppDashboard() {
                       <p>{labels.attentionLead}</p>
                     </div>
                     <strong className="dashboard-side-total mono">
-                      <bdi>{dashboard.attention.pendingDesigns.length + dashboard.attention.overdueProjects.length + dashboard.attention.recentDocuments.length}</bdi>
+                      <bdi>{dashboard.attention.pendingDesigns.length + dashboard.attention.rejectedDesigns.length + dashboard.attention.overdueProjects.length + dashboard.attention.setupIncomplete.length}</bdi>
                     </strong>
                   </header>
                   {dashboard.attention.pendingDesigns.length === 0 &&
+                  dashboard.attention.rejectedDesigns.length === 0 &&
                   dashboard.attention.overdueProjects.length === 0 &&
-                  dashboard.attention.recentDocuments.length === 0 ? (
-                    <EmptyState icon={<CheckCircle2 size={18} />} title={labels.allClear} description={labels.allClearHint} className="dashboard-empty-state" />
+                  dashboard.attention.setupIncomplete.length === 0 ? (
+                    <div className="dashboard-attention-clear" role="status">
+                      <CheckCircle2 size={17} />
+                      <div><strong>{labels.allClear}</strong><span>{labels.allClearHint}</span></div>
+                    </div>
                   ) : (
                     <div className="attention-list">
-                      {dashboard.attention.overdueProjects.map((project) => (
-                        <Link className="attention-row" href={href(`/app/projects/${project.id}`)} key={`overdue-${project.id}`}>
-                          <span className="attention-row__icon attention-row__icon--danger"><AlertTriangle size={16} /></span>
-                          <span className="attention-row__body">
-                            <strong>{project.name}</strong>
-                            <span>
-                              {labels.overdue}{project.targetDate ? <> · <bdi>{formatDate(project.targetDate, { day: "2-digit", month: "short" })}</bdi></> : null} · <bdi>{project.progress}%</bdi>
-                            </span>
-                          </span>
-                          <span className="attention-row__cta">{labels.openProject}</span>
-                        </Link>
-                      ))}
                       {dashboard.attention.pendingDesigns.map((design) => (
                         <Link className="attention-row" href={href(`/app/projects/${design.projectId}/design/${design.id}`)} key={`design-${design.id}`}>
                           <span className="attention-row__icon"><Ruler size={16} /></span>
@@ -458,16 +518,40 @@ export function AppDashboard() {
                           <span className="attention-row__cta">{labels.openDesign}</span>
                         </Link>
                       ))}
-                      {dashboard.attention.recentDocuments.map((document) => (
-                        <Link className="attention-row" href={href(`/app/projects/${document.projectId}/documents/${document.id}`)} key={`doc-${document.id}`}>
-                          <span className="attention-row__icon attention-row__icon--info"><FileText size={16} /></span>
+                      {dashboard.attention.rejectedDesigns.map((design) => (
+                        <Link className="attention-row" href={href(`/app/projects/${design.projectId}/design/${design.id}`)} key={`rejected-${design.id}`}>
+                          <span className="attention-row__icon attention-row__icon--danger"><Ruler size={16} /></span>
                           <span className="attention-row__body">
-                            <strong>{document.title}</strong>
+                            <strong>{design.title}</strong>
                             <span>
-                              {labels.newDoc} · {document.projectName} · <bdi>{formatDate(document.updatedAt, { day: "2-digit", month: "short" })}</bdi>
+                              {labels.designRejected} · {disciplineLabel(design.discipline as DesignDiscipline, locale)} · {design.projectName}
                             </span>
                           </span>
-                          <span className="attention-row__cta">{labels.openDocs}</span>
+                          <span className="attention-row__cta">{labels.openDesign}</span>
+                        </Link>
+                      ))}
+                      {dashboard.attention.overdueProjects.map((project) => (
+                        <Link className="attention-row" href={href(`/app/admin/projects/${project.id}`)} key={`overdue-${project.id}`}>
+                          <span className="attention-row__icon attention-row__icon--danger"><AlertTriangle size={16} /></span>
+                          <span className="attention-row__body">
+                            <strong>{project.name}</strong>
+                            <span>
+                              {labels.overdue}{project.targetDate ? <> · <bdi>{formatDate(project.targetDate, { day: "2-digit", month: "short" })}</bdi></> : null} · <bdi>{project.progress}%</bdi>
+                            </span>
+                          </span>
+                          <span className="attention-row__cta">{labels.openProject}</span>
+                        </Link>
+                      ))}
+                      {dashboard.attention.setupIncomplete.map((project) => (
+                        <Link className="attention-row" href={href(`/app/admin/projects/${project.id}`)} key={`setup-${project.id}`}>
+                          <span className="attention-row__icon attention-row__icon--info"><FolderKanban size={16} /></span>
+                          <span className="attention-row__body">
+                            <strong>{project.name}</strong>
+                            <span>
+                              {labels.setupIncomplete} · {[project.missingEngineer ? labels.missingEngineer : null, project.missingSchedule ? labels.missingSchedule : null].filter(Boolean).join(locale === "ar" ? "، " : ", ")}
+                            </span>
+                          </span>
+                          <span className="attention-row__cta">{labels.fixSetup}</span>
                         </Link>
                       ))}
                     </div>

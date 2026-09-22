@@ -151,7 +151,7 @@ const optionalDateSchema = z.string().trim().date().optional().or(z.literal(""))
 
 export const createProjectSchema = z.object({
   name: nonEmptyStringSchema,
-  code: z.string().trim().min(2).max(64),
+  code: z.string().trim().min(2).max(64).optional().or(z.literal("")),
   category: projectCategorySchema,
   clientId: z.string().trim().min(1),
   engineerId: z.string().trim().min(1),
@@ -310,7 +310,7 @@ export const updateCostLineItemSchema = z
   .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
 
 export const boqItemSchema = costLineItemSchema.extend({
-  code: z.string().trim().min(1).max(40),
+  code: z.string().trim().min(1).max(40).optional().or(z.literal("")),
   section: z.string().trim().max(120).optional().or(z.literal(""))
 });
 
@@ -402,7 +402,7 @@ const clientVisibleFormSchema = z.preprocess(
 );
 
 export const createDocumentSchema = z.object({
-  reference: z.string().trim().min(1).max(60),
+  reference: z.string().trim().min(1).max(60).optional().or(z.literal("")),
   title: nonEmptyStringSchema,
   description: z.string().trim().max(3000).optional().or(z.literal("")),
   category: documentCategorySchema,

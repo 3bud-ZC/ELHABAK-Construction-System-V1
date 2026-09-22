@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { randomInt } from "node:crypto";
 import type { ExpenseCategory } from "@elhabak/database";
 import {
   boqItemSchema,
@@ -60,7 +61,7 @@ export class FinanceService {
     await this.access.assertCanViewAny(user, projectId);
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
-      include: { client: { include: { user: true } }, engineer: true }
+      include: { client: { include: { user: true } }, engineer: true, financialProfile: true }
     });
     if (!project) throw new NotFoundException("Project not found.");
 
@@ -73,6 +74,10 @@ export class FinanceService {
       status: project.status,
       progress: project.progress,
       location: project.location,
+      currency: project.financialProfile?.currency ?? "EGP",
+      contractValue: project.financialProfile?.contractValueMinor === null || project.financialProfile?.contractValueMinor === undefined
+        ? null
+        : formatMoneyMajor(project.financialProfile.contractValueMinor),
       client: project.client ? { id: project.client.id, phone: project.client.phone, user: toRequestUser(project.client.user) } : null,
       engineer: project.engineer ? toRequestUser(project.engineer) : null
     };
@@ -83,21 +88,36 @@ export class FinanceService {
       throw new ForbiddenException("Finance access denied.");
     }
 
-    const projects = await this.prisma.project.findMany({
-      include: { client: { include: { user: true } } },
-      orderBy: { updatedAt: "desc" }
-    });
+    const [projects, paymentSums] = await Promise.all([
+      this.prisma.project.findMany({
+        include: { client: { include: { user: true } }, financialProfile: true },
+        orderBy: { updatedAt: "desc" }
+      }),
+      this.prisma.clientPayment.groupBy({
+        by: ["projectId"],
+        where: { status: "ACTIVE" },
+        _sum: { amountMinor: true }
+      })
+    ]);
+    const paidByProject = new Map(paymentSums.map((entry) => [entry.projectId, entry._sum.amountMinor ?? 0]));
 
-    return projects.map((project) => ({
-      id: project.id,
-      code: project.code,
-      name: project.name,
-      category: project.category,
-      phase: project.phase,
-      status: project.status,
-      progress: project.progress,
-      client: project.client ? { id: project.client.id, user: toRequestUser(project.client.user) } : null
-    }));
+    return projects.map((project) => {
+      const contractValueMinor = project.financialProfile?.contractValueMinor ?? null;
+      const paidMinor = paidByProject.get(project.id) ?? 0;
+      return {
+        id: project.id,
+        code: project.code,
+        name: project.name,
+        category: project.category,
+        phase: project.phase,
+        status: project.status,
+        progress: project.progress,
+        client: project.client ? { id: project.client.id, user: toRequestUser(project.client.user) } : null,
+        contractValue: contractValueMinor === null ? null : formatMoneyMajor(contractValueMinor),
+        clientPaymentsTotal: formatMoneyMajor(paidMinor),
+        outstandingBalance: contractValueMinor === null ? null : formatMoneyMajor(contractValueMinor - paidMinor)
+      };
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -161,7 +181,7 @@ export class FinanceService {
       currency,
       contractValue: contractValueMinor === null ? null : formatMoneyMajor(contractValueMinor),
       boqTotal: formatMoneyMajor(boqTotalMinor),
-      estimateTotal: formatMoneyMajor(estimateTotalMinor),
+      estimateTotal: currentEstimate ? formatMoneyMajor(estimateTotalMinor) : null,
       clientPaymentsTotal: formatMoneyMajor(clientPaymentsTotalMinor),
       outstandingBalance: outstandingBalanceMinor === null ? null : formatMoneyMajor(outstandingBalanceMinor),
       expensesTotal: formatMoneyMajor(expensesTotalMinor),
@@ -388,11 +408,12 @@ export class FinanceService {
     await this.access.assertCanManage(user, projectId);
     const input = parseBody(boqItemSchema, rawBody);
     const lineTotalMinor = computeLineTotalMinor(input.quantity, input.unitRate);
+    const code = input.code?.trim() || await this.generateBoqCode(projectId);
 
     const item = await this.prisma.bOQItem.create({
       data: {
         projectId,
-        code: input.code.trim(),
+        code,
         section: emptyToNull(input.section),
         description: input.description.trim(),
         unit: input.unit,
@@ -408,6 +429,12 @@ export class FinanceService {
 
     await this.audit.record(user, "finance.boq_item_created", { itemId: item.id, code: item.code }, projectId);
     return toBoqItemResponse(item);
+  }
+
+  private async generateBoqCode(projectId: string): Promise<string> {
+    const count = await this.prisma.bOQItem.count({ where: { projectId } });
+    const suffix = randomInt(36 ** 3).toString(36).toUpperCase().padStart(3, "0");
+    return `BOQ-${String(count + 1).padStart(3, "0")}-${suffix}`;
   }
 
   async updateBoqItem(user: RequestUser, projectId: string, itemId: string, rawBody: unknown) {

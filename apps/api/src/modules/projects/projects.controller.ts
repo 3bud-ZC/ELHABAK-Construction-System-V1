@@ -40,6 +40,11 @@ export class ProjectsController {
     return this.projectsService.getForUser(user, id);
   }
 
+  @Get(":id/overview")
+  getOverview(@CurrentUser() user: RequestUser, @Param("id") id: string) {
+    return this.projectsService.getOverview(user, id);
+  }
+
   @Patch(":id/progress")
   updateProgress(
     @CurrentUser() user: RequestUser,

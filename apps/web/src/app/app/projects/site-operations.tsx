@@ -16,6 +16,7 @@ import {
   Eye,
   EyeOff,
   Filter,
+  FolderOpen,
   Image as ImageIcon,
   Layers,
   Milestone,
@@ -37,6 +38,7 @@ import {
   roleLabel,
   siteUpdateTypeLabel,
   siteUpdateTypeTone,
+  uploadRequest,
   type ProjectPhase,
   type ProjectRecord,
   type SiteMediaRecord,
@@ -49,6 +51,32 @@ import { useCurrentUser } from "../../../lib/user-context";
 type SiteOperationsProps = {
   projectId: string;
 };
+
+// Mirrors the API contract: FilesInterceptor("media", 8) + mediaTypeFor() allowlist
+// (MIME + extension pairing) + MAX_UPLOAD_MB=25 per file.
+const MAX_MEDIA_FILES = 8;
+const MAX_FILE_MB = 25;
+const SITE_MEDIA_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".mp4", ".webm"];
+
+type PendingMedia = {
+  key: string;
+  file: File;
+  url: string;
+  kind: "image" | "video";
+};
+
+function mediaKindFor(file: File): "image" | "video" | null {
+  const extension = `.${(file.name.split(".").pop() ?? "").toLowerCase()}`;
+  if (!SITE_MEDIA_EXTENSIONS.includes(extension)) return null;
+  if (file.type.startsWith("image/") && [".jpg", ".jpeg", ".png", ".webp"].includes(extension)) return "image";
+  if (file.type.startsWith("video/") && [".mp4", ".webm"].includes(extension)) return "video";
+  return null;
+}
+
+function formatBytes(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
 
 function updateTypeIcon(type: SiteUpdateType) {
   if (type === "PROGRESS") return <TrendingUp size={15} />;
@@ -83,9 +111,13 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   const [reportNote, setReportNote] = useState("");
   const [reportProgressImpact, setReportProgressImpact] = useState<string>("");
   const [reportIsClientVisible, setReportIsClientVisible] = useState(true);
-  const [reportFiles, setReportFiles] = useState<File[]>([]);
+  const [reportMedia, setReportMedia] = useState<PendingMedia[]>([]);
+  const [reportMediaError, setReportMediaError] = useState("");
+  const [reportUploadPct, setReportUploadPct] = useState<number | null>(null);
   const [submittingReport, setSubmittingReport] = useState(false);
+  const reportInFlight = useRef(false);
   const reportFileInputRef = useRef<HTMLInputElement>(null);
+  const reportCameraInputRef = useRef<HTMLInputElement>(null);
 
   // Form states for Progress Update
   const [newProgress, setNewProgress] = useState<number>(0);
@@ -100,11 +132,16 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   // Worker quick upload form states
   const [workerType, setWorkerType] = useState<SiteUpdateType>("PROGRESS");
   const [workerNote, setWorkerNote] = useState("");
-  const [workerFiles, setWorkerFiles] = useState<File[]>([]);
+  const [workerMedia, setWorkerMedia] = useState<PendingMedia[]>([]);
+  const [workerMediaError, setWorkerMediaError] = useState("");
+  const [workerUploadPct, setWorkerUploadPct] = useState<number | null>(null);
   const [submittingWorkerUpdate, setSubmittingWorkerUpdate] = useState(false);
   const [showWorkerSheet, setShowWorkerSheet] = useState(false);
+  const workerInFlight = useRef(false);
   const workerFileInputRef = useRef<HTMLInputElement>(null);
+  const workerCameraInputRef = useRef<HTMLInputElement>(null);
   const workerSheetFileInputRef = useRef<HTMLInputElement>(null);
+  const workerSheetCameraInputRef = useRef<HTMLInputElement>(null);
 
   // Field draft persistence: workers lose connectivity mid-entry on site, so the
   // note/type survive a reload. Files cannot be persisted (browser restriction).
@@ -138,6 +175,9 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
   // Lightbox state
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxLoaded, setLightboxLoaded] = useState(false);
+  const lightboxCloseRef = useRef<HTMLButtonElement>(null);
+  const lightboxRestoreFocus = useRef<HTMLElement | null>(null);
 
   const labels = useMemo(() => {
     return ar
@@ -193,7 +233,27 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           clientNotice: "أنت تشاهد السجل الميداني المصرح لعملاء المشروع.",
           latestActivity: "آخر نشاط ميداني",
           noLatest: "لا يوجد نشاط بعد",
-          filesSelected: "ملفات محددة:"
+          filesSelected: "ملفات محددة:",
+          cameraCapture: "التقاط بالكاميرا",
+          browseFiles: "اختيار من المعرض / الملفات",
+          removeFile: "إزالة الملف",
+          mediaLimit: `الحد الأقصى ${MAX_MEDIA_FILES} ملفات لكل تحديث، وحتى ${MAX_FILE_MB}MB للملف الواحد.`,
+          rejectedType: "ملفات غير مدعومة (يُسمح بصور JPG/PNG/WebP وفيديو MP4/WebM فقط):",
+          rejectedSize: `ملفات تجاوزت حد ${MAX_FILE_MB}MB:`,
+          tooManyFiles: `تم تجاهل بعض الملفات — الحد الأقصى ${MAX_MEDIA_FILES} ملفات لكل تحديث.`,
+          uploadingMedia: "جاري رفع الوسائط...",
+          visibilityQuestion: "من يمكنه رؤية هذا التحديث؟",
+          visibleToClientOption: "مرئي للعميل",
+          internalOnlyOption: "داخلي — فريق المشروع فقط",
+          progressTargetLabel: "نسبة الإنجاز الجديدة للمشروع (%) — اختياري",
+          progressTargetHint: "اتركها فارغة لعدم تغيير النسبة.",
+          currentValue: "الحالية",
+          newValue: "الجديدة",
+          difference: "الفرق",
+          currentPhaseTag: "الحالية",
+          noChangeNeeded: "لا يوجد تغيير لحفظه",
+          photosLabel: "صور",
+          videosLabel: "مقاطع"
         }
       : {
           title: "Site Operations & Progress Management",
@@ -247,7 +307,27 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           clientNotice: "You are viewing approved site activity for your project.",
           latestActivity: "Latest field activity",
           noLatest: "No activity yet",
-          filesSelected: "Selected files:"
+          filesSelected: "Selected files:",
+          cameraCapture: "Capture with camera",
+          browseFiles: "Browse gallery / files",
+          removeFile: "Remove file",
+          mediaLimit: `Up to ${MAX_MEDIA_FILES} files per update, ${MAX_FILE_MB}MB each.`,
+          rejectedType: "Unsupported files (JPG/PNG/WebP images and MP4/WebM videos only):",
+          rejectedSize: `Files over the ${MAX_FILE_MB}MB limit:`,
+          tooManyFiles: `Some files were skipped — maximum ${MAX_MEDIA_FILES} files per update.`,
+          uploadingMedia: "Uploading media...",
+          visibilityQuestion: "Who can see this update?",
+          visibleToClientOption: "Visible to client",
+          internalOnlyOption: "Internal — project team only",
+          progressTargetLabel: "New project progress (%) — optional",
+          progressTargetHint: "Leave empty to keep progress unchanged.",
+          currentValue: "Current",
+          newValue: "New",
+          difference: "Difference",
+          currentPhaseTag: "Current",
+          noChangeNeeded: "Nothing to save",
+          photosLabel: "photos",
+          videosLabel: "videos"
         };
   }, [ar]);
 
@@ -308,6 +388,9 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
   const isWorker = user.role === "WORKER";
   const isClient = user.role === "CLIENT";
+  // Update counts come from the timeline (unbounded, already fetched) - not from
+  // project.siteUpdates, which is no longer part of the detail payload.
+  const siteUpdateEvents = useMemo(() => timelineEvents.filter((event) => event.kind === "SITE_UPDATE"), [timelineEvents]);
   const latestEvent = timelineEvents[0];
   const latestEventTime = latestEvent
     ? new Date(latestEvent.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" })
@@ -335,32 +418,121 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
     return items;
   }, [timelineEvents, projectId]);
 
-  // Lightbox photos only
-  const lightboxImages = useMemo(() => {
-    return allGalleryMedia.filter((item) => item.media.mediaType === "IMAGE");
-  }, [allGalleryMedia]);
+  // Pending media helpers - object URLs are created at selection time and revoked on
+  // remove/submit/unmount so previews never touch the server.
+  function addPendingFiles(
+    incoming: FileList | File[],
+    current: PendingMedia[],
+    apply: (next: PendingMedia[]) => void,
+    notify: (message: string) => void
+  ) {
+    const rejectedType: string[] = [];
+    const rejectedSize: string[] = [];
+    const next = [...current];
+    const seen = new Set(current.map((item) => `${item.file.name}|${item.file.size}|${item.file.lastModified}`));
+    let overflow = false;
 
-  // Keyboard navigation for Lightbox
+    for (const file of Array.from(incoming)) {
+      const signature = `${file.name}|${file.size}|${file.lastModified}`;
+      if (seen.has(signature)) continue;
+      const kind = mediaKindFor(file);
+      if (!kind) {
+        rejectedType.push(file.name);
+        continue;
+      }
+      if (file.size > MAX_FILE_MB * 1024 * 1024) {
+        rejectedSize.push(file.name);
+        continue;
+      }
+      if (next.length >= MAX_MEDIA_FILES) {
+        overflow = true;
+        break;
+      }
+      seen.add(signature);
+      next.push({ key: signature, file, url: URL.createObjectURL(file), kind });
+    }
+
+    apply(next);
+
+    const notices: string[] = [];
+    if (rejectedType.length) notices.push(`${labels.rejectedType} ${rejectedType.join(ar ? "، " : ", ")}`);
+    if (rejectedSize.length) notices.push(`${labels.rejectedSize} ${rejectedSize.join(ar ? "، " : ", ")}`);
+    if (overflow) notices.push(labels.tooManyFiles);
+    notify(notices.join(" "));
+  }
+
+  function removePendingMedia(key: string, current: PendingMedia[], apply: (next: PendingMedia[]) => void) {
+    const target = current.find((item) => item.key === key);
+    if (target) URL.revokeObjectURL(target.url);
+    apply(current.filter((item) => item.key !== key));
+  }
+
+  function clearPendingMedia(current: PendingMedia[]) {
+    current.forEach((item) => URL.revokeObjectURL(item.url));
+  }
+
+  // Revoke any still-held object URLs if the component unmounts mid-selection.
+  const pendingMediaRef = useRef<PendingMedia[]>([]);
+  useEffect(() => {
+    pendingMediaRef.current = [...reportMedia, ...workerMedia];
+  }, [reportMedia, workerMedia]);
+  useEffect(() => {
+    return () => {
+      pendingMediaRef.current.forEach((item) => URL.revokeObjectURL(item.url));
+    };
+  }, []);
+
+  // Lightbox items: all gallery media (images and videos) in timeline order.
+  const lightboxItems = allGalleryMedia;
+
+  function openLightbox(mediaId: string) {
+    const idx = lightboxItems.findIndex((li) => li.media.id === mediaId);
+    if (idx !== -1) {
+      lightboxRestoreFocus.current = document.activeElement as HTMLElement | null;
+      setLightboxLoaded(false);
+      setLightboxIndex(idx);
+    }
+  }
+
+  // Keyboard navigation + focus management for Lightbox
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (lightboxIndex === null) return;
       if (event.key === "Escape") {
         setLightboxIndex(null);
       } else if (event.key === "ArrowLeft") {
-        setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : lightboxImages.length - 1));
+        setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : lightboxItems.length - 1));
+        setLightboxLoaded(false);
       } else if (event.key === "ArrowRight") {
-        setLightboxIndex((prev) => (prev !== null && prev < lightboxImages.length - 1 ? prev + 1 : 0));
+        setLightboxIndex((prev) => (prev !== null && prev < lightboxItems.length - 1 ? prev + 1 : 0));
+        setLightboxLoaded(false);
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [lightboxIndex, lightboxImages.length]);
+  }, [lightboxIndex, lightboxItems.length]);
 
-  // Submit Field Report (Admin / Engineer)
+  // Focus trap entry + body scroll lock while the lightbox is open.
+  const lightboxOpen = lightboxIndex !== null;
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    lightboxCloseRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      lightboxRestoreFocus.current?.focus?.();
+    };
+  }, [lightboxOpen]);
+
+  // Submit Field Report (Admin / Engineer) - in-flight ref blocks double submits even
+  // across a slow network; note/files are preserved on failure for a clean retry.
   async function handleSubmitReport(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!project || reportFiles.length === 0) return;
+    if (!project || reportMedia.length === 0 || reportInFlight.current) return;
+    reportInFlight.current = true;
     setSubmittingReport(true);
+    setReportUploadPct(0);
     setError("");
     setSuccess("");
 
@@ -371,32 +543,36 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
       body.set("progressImpact", reportProgressImpact.trim());
     }
     body.set("isClientVisible", String(reportIsClientVisible));
-    reportFiles.forEach((file) => body.append("media", file));
+    reportMedia.forEach((item) => body.append("media", item.file));
 
     try {
-      await apiRequest(`/projects/${project.id}/site-updates`, {
-        method: "POST",
-        body
-      });
+      await uploadRequest(`/projects/${project.id}/site-updates`, body, setReportUploadPct);
+      clearPendingMedia(reportMedia);
       setShowReportModal(false);
       setReportNote("");
       setReportProgressImpact("");
-      setReportFiles([]);
+      setReportMedia([]);
+      setReportMediaError("");
       if (reportFileInputRef.current) reportFileInputRef.current.value = "";
+      if (reportCameraInputRef.current) reportCameraInputRef.current.value = "";
       setSuccess(labels.successReport);
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit field report.");
     } finally {
+      reportInFlight.current = false;
       setSubmittingReport(false);
+      setReportUploadPct(null);
     }
   }
 
   // Submit Worker Quick Upload
   async function handleSubmitWorker(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!project || workerFiles.length === 0) return;
+    if (!project || workerMedia.length === 0 || workerInFlight.current) return;
+    workerInFlight.current = true;
     setSubmittingWorkerUpdate(true);
+    setWorkerUploadPct(0);
     setError("");
     setSuccess("");
 
@@ -404,16 +580,15 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
     body.set("type", workerType);
     body.set("note", workerNote.trim());
     body.set("isClientVisible", "true");
-    workerFiles.forEach((file) => body.append("media", file));
+    workerMedia.forEach((item) => body.append("media", item.file));
 
     try {
-      await apiRequest(`/projects/${project.id}/site-updates`, {
-        method: "POST",
-        body
-      });
+      await uploadRequest(`/projects/${project.id}/site-updates`, body, setWorkerUploadPct);
+      clearPendingMedia(workerMedia);
       setWorkerNote("");
       setWorkerType("PROGRESS");
-      setWorkerFiles([]);
+      setWorkerMedia([]);
+      setWorkerMediaError("");
       setShowWorkerSheet(false);
       try {
         localStorage.removeItem(draftKey);
@@ -421,18 +596,95 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         /* non-fatal */
       }
       if (workerFileInputRef.current) workerFileInputRef.current.value = "";
+      if (workerCameraInputRef.current) workerCameraInputRef.current.value = "";
       if (workerSheetFileInputRef.current) workerSheetFileInputRef.current.value = "";
+      if (workerSheetCameraInputRef.current) workerSheetCameraInputRef.current.value = "";
       setSuccess(labels.successReport);
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit update.");
     } finally {
+      workerInFlight.current = false;
       setSubmittingWorkerUpdate(false);
+      setWorkerUploadPct(null);
     }
   }
 
+  // Shared selected-media preview grid: real thumbnails (object URLs), per-file
+  // remove, size/type — identical in the report modal and the worker form.
+  function mediaPreviewGrid(
+    items: PendingMedia[],
+    notice: string,
+    onRemove: (key: string) => void,
+    disabled: boolean
+  ) {
+    return (
+      <>
+        {notice && (
+          <p className="media-pick-notice" role="alert">{notice}</p>
+        )}
+        {items.length > 0 && (
+          <ul className="media-pick-grid" aria-label={labels.filesSelected}>
+            {items.map((item) => (
+              <li key={item.key} className="media-pick">
+                <div className="media-pick__thumb">
+                  {item.kind === "image" ? (
+                    <img src={item.url} alt={item.file.name} />
+                  ) : (
+                    <video src={item.url} muted preload="metadata" aria-label={item.file.name} />
+                  )}
+                  <span className="media-pick__kind">
+                    {item.kind === "image" ? <ImageIcon size={11} /> : <Video size={11} />}
+                  </span>
+                  <button
+                    type="button"
+                    className="media-pick__remove"
+                    onClick={() => onRemove(item.key)}
+                    disabled={disabled}
+                    aria-label={`${labels.removeFile}: ${item.file.name}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+                <div className="media-pick__meta">
+                  <span className="media-pick__name" title={item.file.name}>{item.file.name}</span>
+                  <span className="media-pick__size mono">{formatBytes(item.file.size)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </>
+    );
+  }
+
+  function uploadProgressBar(pct: number | null, count: number) {
+    if (pct === null) return null;
+    return (
+      <div className="media-upload-progress" role="status">
+        <div
+          className="media-upload-progress__track"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pct}
+        >
+          <span style={{ inlineSize: `${pct}%` }} />
+        </div>
+        <small>
+          {labels.uploadingMedia} {pct}% · {count} {count === 1 ? (ar ? "ملف" : "file") : (ar ? "ملفات" : "files")}
+        </small>
+      </div>
+    );
+  }
+
   // Shared worker quick-update fields — used by the inline card and the mobile sheet.
-  function workerFormFields(fileInputRef: React.RefObject<HTMLInputElement | null>) {
+  function workerFormFields(
+    fileInputRef: React.RefObject<HTMLInputElement | null>,
+    cameraInputRef: React.RefObject<HTMLInputElement | null>
+  ) {
+    const addFiles = (list: FileList | File[]) =>
+      addPendingFiles(list, workerMedia, setWorkerMedia, setWorkerMediaError);
     return (
       <>
         {/* Category Selector Pills */}
@@ -453,6 +705,48 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           </div>
         </div>
 
+        {/* Media sources: camera capture and gallery/files are separate controls — a
+            single input with capture="environment" forces camera-only on mobile and
+            blocks gallery multi-select. */}
+        <div className="worker-field">
+          <span className="worker-field-label">{labels.attachFiles}</span>
+          <div className="media-source-row">
+            <label className="worker-file-drop media-source">
+              <Camera size={20} />
+              <span>{labels.cameraCapture}</span>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*,video/*"
+                capture="environment"
+                onChange={(e) => {
+                  if (e.target.files?.length) addFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            <label className="worker-file-drop media-source">
+              <FolderOpen size={20} />
+              <span>{labels.browseFiles}</span>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={(e) => {
+                  if (e.target.files?.length) addFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+          <small className="worker-field-hint">{labels.mediaLimit}</small>
+          {mediaPreviewGrid(workerMedia, workerMediaError, (key) => {
+            removePendingMedia(key, workerMedia, setWorkerMedia);
+            setWorkerMediaError("");
+          }, submittingWorkerUpdate)}
+        </div>
+
         {/* Note */}
         <div className="worker-field">
           <label htmlFor="worker-note" className="worker-field-label">
@@ -468,41 +762,13 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           />
         </div>
 
-        {/* File Input */}
-        <div className="worker-field">
-          <span className="worker-field-label">{labels.attachFiles}</span>
-          <label className="worker-file-drop">
-            <Camera size={22} />
-            <span>{labels.chooseFiles}</span>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              capture="environment"
-              multiple
-              required
-              onChange={(e) => setWorkerFiles(Array.from(e.target.files ?? []))}
-            />
-          </label>
-          {workerFiles.length > 0 && (
-            <div className="worker-files-preview">
-              <small>{labels.filesSelected} {workerFiles.length}</small>
-              <div className="preview-chips">
-                {workerFiles.map((f) => (
-                  <span key={`${f.name}-${f.size}`} className="file-chip mono">
-                    {f.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        {uploadProgressBar(workerUploadPct, workerMedia.length)}
 
         {/* Submit Button */}
         <button
           type="submit"
           className="worker-submit-btn ui-button ui-button--primary"
-          disabled={submittingWorkerUpdate || workerFiles.length === 0}
+          disabled={submittingWorkerUpdate || workerMedia.length === 0}
         >
           {submittingWorkerUpdate ? (
             <>
@@ -675,12 +941,12 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         <div className="site-ops-card">
           <div className="site-ops-card__header">
             <span className="site-ops-card__tag"><Activity size={14} /> {labels.totalUpdates}</span>
-            <span className="mono site-ops-card__count">{project.siteUpdates.length}</span>
+            <span className="mono site-ops-card__count">{siteUpdateEvents.length}</span>
           </div>
           <div className="site-ops-card__body">
             <div className="site-ops-card__chips-row">
               {SITE_UPDATE_TYPES.map((t) => {
-                const count = project.siteUpdates.filter((u) => u.type === t).length;
+                const count = siteUpdateEvents.filter((u) => u.type === t).length;
                 if (count === 0) return null;
                 return (
                   <Badge key={t} tone={siteUpdateTypeTone(t)}>
@@ -737,7 +1003,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
             </div>
           </header>
           <form className="worker-upload-card__form" onSubmit={(e) => void handleSubmitWorker(e)}>
-            {workerFormFields(workerFileInputRef)}
+            {workerFormFields(workerFileInputRef, workerCameraInputRef)}
           </form>
         </section>
       )}
@@ -760,7 +1026,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           >
             <p className="worker-sheet-lead">{labels.workerPanelLead}</p>
             <form className="worker-upload-card__form" onSubmit={(e) => void handleSubmitWorker(e)}>
-              {workerFormFields(workerSheetFileInputRef)}
+              {workerFormFields(workerSheetFileInputRef, workerSheetCameraInputRef)}
             </form>
           </BottomSheet>
         </>
@@ -775,7 +1041,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
             onClick={() => {
               setReportNote("");
               setReportProgressImpact("");
-              setReportFiles([]);
+              setReportMediaError("");
               setReportIsClientVisible(true);
               setShowReportModal(true);
             }}
@@ -920,6 +1186,11 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                             {event.isClientVisible ? labels.clientVisibleBadge : labels.internalOnlyBadge}
                           </span>
                         )}
+                        {!isAudit && event.media && event.media.length > 0 && (
+                          <span className="media-count-chip">
+                            <ImageIcon size={12} /> {event.media.length}
+                          </span>
+                        )}
                       </div>
 
                       {/* Event Description / Note */}
@@ -935,12 +1206,15 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                             const fullUrl = mediaUrl(projectId, item.id);
                             return (
                               <figure
-                                className={`site-media-thumbnail ${isImage ? "clickable" : ""}`}
+                                className="site-media-thumbnail clickable"
                                 key={item.id}
-                                onClick={() => {
-                                  if (isImage) {
-                                    const idx = lightboxImages.findIndex((li) => li.media.id === item.id);
-                                    if (idx !== -1) setLightboxIndex(idx);
+                                onClick={() => openLightbox(item.id)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    openLightbox(item.id);
                                   }
                                 }}
                               >
@@ -953,13 +1227,13 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                                 ) : (
                                   <video
                                     src={fullUrl}
-                                    controls
                                     preload="metadata"
+                                    aria-label={item.originalFilename}
                                   />
                                 )}
                                 <figcaption className="media-caption">
                                   <span className="media-filename mono">{item.originalFilename}</span>
-                                  {isImage && <span className="media-zoom-hint"><Eye size={12} /></span>}
+                                  <span className="media-zoom-hint"><Eye size={12} /></span>
                                 </figcaption>
                               </figure>
                             );
@@ -994,10 +1268,13 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                   <article
                     className="gallery-item-card"
                     key={item.media.id}
-                    onClick={() => {
-                      if (isImage) {
-                        const imgIdx = lightboxImages.findIndex((li) => li.media.id === item.media.id);
-                        if (imgIdx !== -1) setLightboxIndex(imgIdx);
+                    onClick={() => openLightbox(item.media.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openLightbox(item.media.id);
                       }
                     }}
                   >
@@ -1005,7 +1282,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                       {isImage ? (
                         <img src={fullUrl} alt={item.media.originalFilename} loading="lazy" />
                       ) : (
-                        <video src={fullUrl} controls preload="metadata" />
+                        <video src={fullUrl} preload="metadata" aria-label={item.media.originalFilename} />
                       )}
                       <span className="gallery-type-badge">
                         {isImage ? <ImageIcon size={12} /> : <Video size={12} />}
@@ -1015,6 +1292,11 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                     <div className="gallery-item-meta">
                       <strong className="mono">{item.media.originalFilename}</strong>
                       <div className="gallery-sub-meta">
+                        {item.event.type && (
+                          <span className="gallery-type-tag">
+                            {updateTypeIcon(item.event.type)} {siteUpdateTypeLabel(item.event.type, locale)}
+                          </span>
+                        )}
                         <span>{item.event.actor?.displayName ?? "—"}</span>
                         <time className="mono">
                           {new Date(item.event.timestamp).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}
@@ -1031,7 +1313,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
       {/* Modal 1: New Field Report Dialog (Admin / Engineer) */}
       {showReportModal && (
-        <div className="modal-backdrop" onClick={() => setShowReportModal(false)}>
+        <div className="modal-backdrop" onClick={() => { if (!submittingReport) setShowReportModal(false); }}>
           <div className="site-modal-dialog" onClick={(e) => e.stopPropagation()}>
             <header className="site-modal-header">
               <h3>{labels.newReport}</h3>
@@ -1039,6 +1321,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 type="button"
                 className="site-modal-close"
                 onClick={() => setShowReportModal(false)}
+                disabled={submittingReport}
                 aria-label={labels.close}
               >
                 <X size={18} />
@@ -1062,30 +1345,48 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                   </select>
                 </div>
 
-                {/* Progress Impact */}
+                {/* Media: capture/browse first, preview grid second */}
                 <div className="ui-field">
-                  <label htmlFor="report-progress-impact">{labels.progressImpactLabel}</label>
-                  <input
-                    id="report-progress-impact"
-                    type="number"
-                    min={0}
-                    max={100}
-                    placeholder={labels.progressImpactPlaceholder}
-                    value={reportProgressImpact}
-                    onChange={(e) => setReportProgressImpact(e.target.value)}
-                  />
-                </div>
-
-                {/* Client Visibility */}
-                <div className="ui-field-checkbox">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={reportIsClientVisible}
-                      onChange={(e) => setReportIsClientVisible(e.target.checked)}
-                    />
-                    <span>{labels.clientVisibility}</span>
-                  </label>
+                  <span className="worker-field-label">{labels.attachFiles}</span>
+                  <div className="media-source-row">
+                    <label className="worker-file-drop media-source">
+                      <Camera size={20} />
+                      <span>{labels.cameraCapture}</span>
+                      <input
+                        ref={reportCameraInputRef}
+                        type="file"
+                        accept="image/*,video/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          if (e.target.files?.length) {
+                            addPendingFiles(e.target.files, reportMedia, setReportMedia, setReportMediaError);
+                          }
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    <label className="worker-file-drop media-source">
+                      <FolderOpen size={20} />
+                      <span>{labels.browseFiles}</span>
+                      <input
+                        ref={reportFileInputRef}
+                        type="file"
+                        accept="image/*,video/*"
+                        multiple
+                        onChange={(e) => {
+                          if (e.target.files?.length) {
+                            addPendingFiles(e.target.files, reportMedia, setReportMedia, setReportMediaError);
+                          }
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <small className="worker-field-hint">{labels.mediaLimit}</small>
+                  {mediaPreviewGrid(reportMedia, reportMediaError, (key) => {
+                    removePendingMedia(key, reportMedia, setReportMedia);
+                    setReportMediaError("");
+                  }, submittingReport)}
                 </div>
 
                 {/* Note */}
@@ -1100,27 +1401,54 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                   />
                 </div>
 
-                {/* Media Files */}
+                {/* Progress Impact: the API treats this as the resulting absolute
+                    progress value (0-100), not a delta - label it accordingly. */}
                 <div className="ui-field">
-                  <label>{labels.attachFiles}</label>
+                  <label htmlFor="report-progress-impact">{labels.progressTargetLabel}</label>
                   <input
-                    ref={reportFileInputRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    multiple
-                    required
-                    onChange={(e) => setReportFiles(Array.from(e.target.files ?? []))}
+                    id="report-progress-impact"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={100}
+                    step={1}
+                    placeholder={labels.progressImpactPlaceholder}
+                    value={reportProgressImpact}
+                    onChange={(e) => setReportProgressImpact(e.target.value)}
                   />
-                  {reportFiles.length > 0 && (
-                    <div className="preview-grid">
-                      {reportFiles.map((f) => (
-                        <span key={`${f.name}-${f.size}`} className="mono">
-                          {f.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <small className="worker-field-hint">
+                    {labels.progressTargetHint} {labels.currentValue}: <bdi className="mono">{project.progress}%</bdi>
+                  </small>
                 </div>
+
+                {/* Client Visibility: explicit two-option choice instead of a bare checkbox */}
+                <div className="ui-field">
+                  <span className="worker-field-label">{labels.visibilityQuestion}</span>
+                  <div className="visibility-choice" role="radiogroup" aria-label={labels.visibilityQuestion}>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={reportIsClientVisible}
+                      className={`visibility-choice__option ${reportIsClientVisible ? "active" : ""}`}
+                      onClick={() => setReportIsClientVisible(true)}
+                    >
+                      <Eye size={15} />
+                      <span>{labels.visibleToClientOption}</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={!reportIsClientVisible}
+                      className={`visibility-choice__option ${!reportIsClientVisible ? "active" : ""}`}
+                      onClick={() => setReportIsClientVisible(false)}
+                    >
+                      <EyeOff size={15} />
+                      <span>{labels.internalOnlyOption}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {uploadProgressBar(reportUploadPct, reportMedia.length)}
               </div>
 
               <footer className="site-modal-footer">
@@ -1128,13 +1456,14 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                   type="button"
                   className="ui-button ui-button--ghost"
                   onClick={() => setShowReportModal(false)}
+                  disabled={submittingReport}
                 >
                   {labels.cancel}
                 </button>
                 <button
                   type="submit"
                   className="ui-button ui-button--primary"
-                  disabled={submittingReport || reportFiles.length === 0}
+                  disabled={submittingReport || reportMedia.length === 0}
                 >
                   {submittingReport ? (
                     <>
@@ -1167,6 +1496,23 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
             </header>
             <form onSubmit={(e) => void handleSaveProgress(e)}>
               <div className="site-modal-body">
+                {/* Current → New → Difference so the operator sees exactly what changes */}
+                <div className="progress-delta-row">
+                  <div className="progress-delta-row__cell">
+                    <small>{labels.currentValue}</small>
+                    <strong className="mono"><bdi>{project.progress}%</bdi></strong>
+                  </div>
+                  <div className="progress-delta-row__cell progress-delta-row__cell--new">
+                    <small>{labels.newValue}</small>
+                    <strong className="mono"><bdi>{newProgress}%</bdi></strong>
+                  </div>
+                  <div className={`progress-delta-row__cell ${newProgress - project.progress === 0 ? "" : newProgress - project.progress > 0 ? "is-up" : "is-down"}`}>
+                    <small>{labels.difference}</small>
+                    <strong className="mono">
+                      <bdi>{newProgress - project.progress > 0 ? "+" : ""}{newProgress - project.progress}%</bdi>
+                    </strong>
+                  </div>
+                </div>
                 <div className="progress-slider-field">
                   <div className="progress-value-preview">
                     <span className="mono big-percent"><bdi>{newProgress}%</bdi></span>
@@ -1179,6 +1525,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                     value={newProgress}
                     onChange={(e) => setNewProgress(Number(e.target.value))}
                     className="site-progress-slider"
+                    aria-label={labels.progressModalTitle}
                   />
                 </div>
 
@@ -1205,7 +1552,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 <button
                   type="submit"
                   className="ui-button ui-button--primary"
-                  disabled={submittingProgress}
+                  disabled={submittingProgress || newProgress === project.progress}
+                  title={newProgress === project.progress ? labels.noChangeNeeded : undefined}
                 >
                   {submittingProgress ? (
                     <>
@@ -1238,11 +1586,11 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
             </header>
             <form onSubmit={(e) => void handleSavePhase(e)}>
               <div className="site-modal-body">
-                <div className="phase-select-grid">
+                <div className="phase-select-grid" role="radiogroup" aria-label={labels.phaseModalTitle}>
                   {LIFECYCLE_PHASES.map((p, idx) => (
                     <label
                       key={p}
-                      className={`phase-radio-card ${newPhase === p ? "selected" : ""}`}
+                      className={`phase-radio-card ${newPhase === p ? "selected" : ""} ${project.phase === p ? "current" : ""}`}
                     >
                       <input
                         type="radio"
@@ -1251,7 +1599,10 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                         checked={newPhase === p}
                         onChange={() => setNewPhase(p)}
                       />
-                      <span className="mono phase-step">PH-0{idx + 1}</span>
+                      <span className="mono phase-step">
+                        PH-0{idx + 1}
+                        {project.phase === p && <em className="phase-current-tag">{labels.currentPhaseTag}</em>}
+                      </span>
                       <strong className="phase-name">{phaseLabel(p, locale)}</strong>
                     </label>
                   ))}
@@ -1280,7 +1631,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 <button
                   type="submit"
                   className="ui-button ui-button--primary"
-                  disabled={submittingPhase}
+                  disabled={submittingPhase || newPhase === project.phase}
+                  title={newPhase === project.phase ? labels.noChangeNeeded : undefined}
                 >
                   {submittingPhase ? (
                     <>
@@ -1296,17 +1648,23 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         </div>
       )}
 
-      {/* Lightbox Modal */}
-      {lightboxIndex !== null && lightboxImages[lightboxIndex] && (
-        <div className="lightbox-overlay" onClick={() => setLightboxIndex(null)}>
+      {/* Lightbox Modal: images and videos, keyboard navigable, dialog semantics */}
+      {lightboxIndex !== null && lightboxItems[lightboxIndex] && (
+        <div
+          className="lightbox-overlay"
+          onClick={() => setLightboxIndex(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightboxItems[lightboxIndex].media.originalFilename}
+        >
           <div className="lightbox-container" onClick={(e) => e.stopPropagation()}>
             <header className="lightbox-header">
               <div className="lightbox-meta">
                 <span className="lightbox-title mono">
-                  {lightboxImages[lightboxIndex].media.originalFilename}
+                  {lightboxItems[lightboxIndex].media.originalFilename}
                 </span>
                 <span className="lightbox-counter mono">
-                  {lightboxIndex + 1} / {lightboxImages.length}
+                  {lightboxIndex + 1} / {lightboxItems.length}
                 </span>
               </div>
               <button
@@ -1314,6 +1672,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 className="lightbox-close-btn"
                 onClick={() => setLightboxIndex(null)}
                 aria-label={labels.close}
+                ref={lightboxCloseRef}
               >
                 <X size={20} />
               </button>
@@ -1323,31 +1682,47 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
               <button
                 type="button"
                 className="lightbox-nav-btn prev"
-                onClick={() =>
+                onClick={() => {
                   setLightboxIndex((prev) =>
-                    prev !== null && prev > 0 ? prev - 1 : lightboxImages.length - 1
-                  )
-                }
+                    prev !== null && prev > 0 ? prev - 1 : lightboxItems.length - 1
+                  );
+                  setLightboxLoaded(false);
+                }}
                 aria-label={labels.prev}
               >
                 {ar ? <ChevronRight size={28} /> : <ChevronLeft size={28} />}
               </button>
 
               <div className="lightbox-image-wrap">
-                <img
-                  src={mediaUrl(projectId, lightboxImages[lightboxIndex].media.id)}
-                  alt={lightboxImages[lightboxIndex].media.originalFilename}
-                />
+                {!lightboxLoaded && <span className="lightbox-loading" aria-hidden="true"><RefreshCw size={22} className="spin" /></span>}
+                {lightboxItems[lightboxIndex].media.mediaType === "IMAGE" ? (
+                  <img
+                    src={mediaUrl(projectId, lightboxItems[lightboxIndex].media.id)}
+                    alt={lightboxItems[lightboxIndex].media.originalFilename}
+                    onLoad={() => setLightboxLoaded(true)}
+                    className={lightboxLoaded ? "loaded" : ""}
+                  />
+                ) : (
+                  <video
+                    key={lightboxItems[lightboxIndex].media.id}
+                    src={mediaUrl(projectId, lightboxItems[lightboxIndex].media.id)}
+                    controls
+                    autoPlay
+                    onLoadedData={() => setLightboxLoaded(true)}
+                    className={lightboxLoaded ? "loaded" : ""}
+                  />
+                )}
               </div>
 
               <button
                 type="button"
                 className="lightbox-nav-btn next"
-                onClick={() =>
+                onClick={() => {
                   setLightboxIndex((prev) =>
-                    prev !== null && prev < lightboxImages.length - 1 ? prev + 1 : 0
-                  )
-                }
+                    prev !== null && prev < lightboxItems.length - 1 ? prev + 1 : 0
+                  );
+                  setLightboxLoaded(false);
+                }}
                 aria-label={labels.next}
               >
                 {ar ? <ChevronLeft size={28} /> : <ChevronRight size={28} />}
@@ -1356,13 +1731,19 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
             <footer className="lightbox-caption-bar">
               <div className="caption-text">
-                {lightboxImages[lightboxIndex].event.description && (
-                  <p>{lightboxImages[lightboxIndex].event.description}</p>
+                {lightboxItems[lightboxIndex].event.type && (
+                  <span className="lightbox-type-tag">
+                    {updateTypeIcon(lightboxItems[lightboxIndex].event.type)}
+                    {siteUpdateTypeLabel(lightboxItems[lightboxIndex].event.type, locale)}
+                  </span>
+                )}
+                {lightboxItems[lightboxIndex].event.description && (
+                  <p>{lightboxItems[lightboxIndex].event.description}</p>
                 )}
                 <div className="caption-sub">
-                  <span>{labels.by} {lightboxImages[lightboxIndex].event.actor?.displayName ?? "—"}</span>
+                  <span>{labels.by} {lightboxItems[lightboxIndex].event.actor?.displayName ?? "—"}</span>
                   <time className="mono">
-                    {new Date(lightboxImages[lightboxIndex].event.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US")}
+                    {new Date(lightboxItems[lightboxIndex].event.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US")}
                   </time>
                 </div>
               </div>

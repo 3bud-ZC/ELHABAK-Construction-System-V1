@@ -24,6 +24,7 @@ export function NotificationBell({ locale }: NotificationBellProps) {
   const [count, setCount] = useState(0);
   const [items, setItems] = useState<NotificationRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [markingAll, setMarkingAll] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   function href(path: string) {
@@ -40,7 +41,16 @@ export function NotificationBell({ locale }: NotificationBellProps) {
     refreshCount();
     const socket = getSocket();
 
-    const onNew = (payload: { unreadCount: number }) => setCount(payload.unreadCount);
+    const onNew = (payload: { notification?: NotificationRecord; unreadCount: number }) => {
+      setCount(payload.unreadCount);
+      if (payload.notification) {
+        setItems((prev) =>
+          loaded && !prev.some((item) => item.id === payload.notification!.id)
+            ? [payload.notification!, ...prev].slice(0, 8)
+            : prev
+        );
+      }
+    };
     const onUnreadCount = (payload: { unreadCount: number }) => setCount(payload.unreadCount);
     const onConnect = () => refreshCount();
 
@@ -53,18 +63,31 @@ export function NotificationBell({ locale }: NotificationBellProps) {
       socket.off("notification:unread_count", onUnreadCount);
       socket.off("connect", onConnect);
     };
-  }, []);
+  }, [loaded]);
 
   useEffect(() => {
     function onOutside(event: MouseEvent) {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
     }
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
+    document.addEventListener("keydown", onEscape);
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("keydown", onEscape);
+    };
   }, []);
 
   function toggle() {
     const next = !open;
+    if (next && rootRef.current) {
+      // Mobile panel is position:fixed - anchor it just below the bell wherever the
+      // (wrapping) topbar actually puts it, so it never escapes the viewport.
+      const rect = rootRef.current.getBoundingClientRect();
+      rootRef.current.style.setProperty("--bell-panel-top", `${Math.round(rect.bottom + 8)}px`);
+    }
     setOpen(next);
     if (next && !loaded) {
       apiRequest<NotificationRecord[]>("/notifications")
@@ -87,17 +110,20 @@ export function NotificationBell({ locale }: NotificationBellProps) {
   }
 
   function markAllRead() {
+    if (markingAll) return;
+    setMarkingAll(true);
     apiRequest<{ ok: true; unreadCount: number }>("/notifications/read-all", { method: "PATCH", body: "{}" })
       .then((result) => {
         setCount(result.unreadCount);
         setItems((prev) => prev.map((item) => ({ ...item, readAt: item.readAt ?? new Date().toISOString() })));
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setMarkingAll(false));
   }
 
   const labels = ar
-    ? { title: "الإشعارات", empty: "لا توجد إشعارات بعد", markAll: "تحديد الكل كمقروء", viewAll: "عرض جميع الإشعارات" }
-    : { title: "Notifications", empty: "No notifications yet", markAll: "Mark all as read", viewAll: "View all notifications" };
+    ? { title: "الإشعارات", unreadLabel: (n: number) => `الإشعارات، ${n} غير مقروءة`, empty: "لا توجد إشعارات بعد", markAll: "تحديد الكل كمقروء", viewAll: "عرض جميع الإشعارات" }
+    : { title: "Notifications", unreadLabel: (n: number) => `Notifications, ${n} unread`, empty: "No notifications yet", markAll: "Mark all as read", viewAll: "View all notifications" };
 
   return (
     <div className="notification-bell" ref={rootRef}>
@@ -105,8 +131,9 @@ export function NotificationBell({ locale }: NotificationBellProps) {
         type="button"
         className="notification-bell__trigger"
         onClick={toggle}
-        aria-label={labels.title}
+        aria-label={count > 0 ? labels.unreadLabel(count) : labels.title}
         aria-expanded={open}
+        aria-haspopup="menu"
       >
         <Bell size={18} />
         {count > 0 && <span className="notification-bell__badge">{count > 99 ? "99+" : count}</span>}
@@ -116,7 +143,7 @@ export function NotificationBell({ locale }: NotificationBellProps) {
           <div className="notification-panel__header">
             <strong>{labels.title}</strong>
             {count > 0 && (
-              <button type="button" className="notification-panel__mark-all" onClick={markAllRead}>
+              <button type="button" className="notification-panel__mark-all" onClick={markAllRead} disabled={markingAll}>
                 <CheckCheck size={14} /> {labels.markAll}
               </button>
             )}
@@ -131,7 +158,10 @@ export function NotificationBell({ locale }: NotificationBellProps) {
                 onClick={() => onSelect(item)}
               >
                 <span className="notification-panel__item-top">
-                  <span className="notification-panel__item-type">{notificationTypeLabel(item.type, locale)}</span>
+                  <span className="notification-panel__item-type">
+                    {!item.readAt && <i className="notification-unread-dot" aria-hidden="true" />}
+                    {notificationTypeLabel(item.type, locale)}
+                  </span>
                   <span className="notification-panel__item-time">{relativeTime(item.createdAt, locale)}</span>
                 </span>
                 <span className="notification-panel__item-title">{item.title}</span>

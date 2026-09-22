@@ -22,7 +22,7 @@ export const dictionary = {
     },
     home: {
       heroTag: "هندسة تصنع فرقاً",
-      heroTitle: "الحباك للاستشارات الهندسية",
+      heroTitle: "الحباك للمقاولات والاستشارات الهندسية",
       heroSubtitle:
         "تصميم وتنفيذ وتشطيب للمشروعات السكنية والتجارية بإدارة هندسية متكاملة ومتابعة رقمية دقيقة من المعاينة حتى التسليم.",
       primaryCta: "ابدأ مشروعك معنا",
@@ -49,7 +49,7 @@ export const dictionary = {
       aboutEyebrow: "عن الحباك",
       aboutTitle: "شريكك الهندسي من الفكرة إلى الواقع",
       aboutLead:
-        "الحباك للاستشارات الهندسية تقدم خدمات التصميم والتنفيذ والتشطيب بإدارة احترافية، نلتزم بالجودة والشفافية، ونبني شراكات طويلة الأمد مع عملائنا.",
+        "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) تقدم خدمات التصميم والتنفيذ والتشطيب بإدارة احترافية، نلتزم بالجودة والشفافية، ونبني شراكات طويلة الأمد مع عملائنا.",
       aboutCta: "استعرض خدماتنا",
       aboutBadgeTitle: "هندسة تبني مجتمعات أفضل",
       aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
@@ -102,10 +102,10 @@ export const dictionary = {
       contactPhoneLabel: "الهاتف المباشر",
       contactEmailLabel: "البريد الإلكتروني",
       contactAddressLabel: "المقر الرئيسي",
-      footerText: "الحباك للاستشارات الهندسية",
+      footerText: "الحباك للمقاولات والاستشارات الهندسية",
       footerTagline: "نبني اليوم ... لمستقبل أفضل",
       footerNav: "أقسام الموقع",
-      footerRights: "جميع الحقوق محفوظة © 2026 الحباك للاستشارات الهندسية"
+      footerRights: "جميع الحقوق محفوظة © 2026 الحباك للمقاولات والاستشارات الهندسية"
     },
     faq: [
       [
@@ -206,7 +206,7 @@ export const dictionary = {
       aboutEyebrow: "About ELHABAK",
       aboutTitle: "Your Engineering Partner from Idea to Reality",
       aboutLead:
-        "ELHABAK Engineering Consulting delivers design, execution, and finishing with professional management, committing to quality, transparency, and long-term client partnerships.",
+        "ELHABAK Construction (الحباك للمقاولات والاستشارات الهندسية) delivers design, execution, and finishing with professional management, committing to quality, transparency, and long-term client partnerships.",
       aboutCta: "Explore Our Services",
       aboutBadgeTitle: "Engineering Stronger Communities",
       aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
@@ -259,10 +259,10 @@ export const dictionary = {
       contactPhoneLabel: "Direct Phone",
       contactEmailLabel: "Email Address",
       contactAddressLabel: "Main Office",
-      footerText: "ELHABAK Engineering Consultancy",
+      footerText: "ELHABAK Construction",
       footerTagline: "Building Today ... For a Better Tomorrow",
       footerNav: "Site Navigation",
-      footerRights: "All rights reserved © 2026 ELHABAK Engineering Consultancy"
+      footerRights: "All rights reserved © 2026 ELHABAK Construction"
     },
     faq: [
       [

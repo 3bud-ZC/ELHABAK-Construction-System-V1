@@ -7,7 +7,19 @@ export const designInclude = {
   events: { include: { actor: { select: actorSelect } }, orderBy: { createdAt: "desc" } }
 } satisfies Prisma.DesignItemInclude;
 
+// Register rows only need the latest revision and aggregate counts — full
+// revision/event history stays on the detail endpoint.
+export const designListInclude = {
+  revisions: {
+    include: { uploader: { select: actorSelect } },
+    orderBy: { revisionNumber: "desc" },
+    take: 1
+  },
+  _count: { select: { revisions: true, events: true } }
+} satisfies Prisma.DesignItemInclude;
+
 export type DesignWithRelations = Prisma.DesignItemGetPayload<{ include: typeof designInclude }>;
+export type DesignListRow = Prisma.DesignItemGetPayload<{ include: typeof designListInclude }>;
 
 export function revisionCode(revisionNumber: number) {
   return `REV ${String(revisionNumber).padStart(2, "0")}`;
@@ -36,6 +48,23 @@ export function toDesignResponse(design: DesignWithRelations) {
       },
       createdAt: event.createdAt.toISOString()
     })),
+    createdAt: design.createdAt.toISOString(),
+    updatedAt: design.updatedAt.toISOString()
+  };
+}
+
+export function toDesignSummaryResponse(design: DesignListRow) {
+  return {
+    id: design.id,
+    projectId: design.projectId,
+    title: design.title,
+    description: design.description,
+    discipline: design.discipline,
+    status: design.status,
+    currentRevisionNumber: design.currentRevisionNumber,
+    currentRevision: design.revisions[0] ? toRevisionResponse(design.revisions[0]) : null,
+    revisionCount: design._count.revisions,
+    eventCount: design._count.events,
     createdAt: design.createdAt.toISOString(),
     updatedAt: design.updatedAt.toISOString()
   };

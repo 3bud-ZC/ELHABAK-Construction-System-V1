@@ -1,9 +1,11 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { randomInt } from "node:crypto";
 import type { Prisma, SiteUpdateType, UserRole } from "@elhabak/database";
 
 import {
   createProjectSchema,
   createSiteUpdateSchema,
+  formatMoneyMajor,
   updateProjectPhaseSchema,
   updateProjectProgressSchema,
   updateProjectSchema
@@ -14,7 +16,7 @@ import { parseBody } from "../../shared/zod";
 import { AuditService } from "../admin/audit.service";
 import { NotificationService } from "../notifications/notification.service";
 import { ProjectAccessService } from "./project-access.service";
-import { projectIncludeFor, toProjectResponse } from "./project-response";
+import { projectHeaderInclude, projectIncludeFor, toProjectResponse } from "./project-response";
 import { StorageService } from "./storage.service";
 
 @Injectable()
@@ -43,7 +45,7 @@ export class ProjectsService {
 
     const projects = await this.prisma.project.findMany({
       where,
-      include: projectIncludeFor("ADMIN"),
+      include: projectHeaderInclude(),
       orderBy: { updatedAt: "desc" }
     });
     return projects.map((p) => toProjectResponse(p, "ADMIN"));
@@ -51,11 +53,16 @@ export class ProjectsService {
 
 
   async dashboard() {
-    const [activeProjects, clientCount, projects, recentUpdates, recentActivity, pendingDesigns, overdueProjects, recentDocuments] = await Promise.all([
+    const overdueWhere: Prisma.ProjectWhereInput = {
+      targetDate: { lt: new Date() },
+      status: { notIn: ["COMPLETED", "CANCELLED"] }
+    };
+    const pendingDesignWhere: Prisma.DesignItemWhereInput = { status: "IN_REVIEW" };
+    const [activeProjects, clientCount, projects, recentUpdates, recentActivity, pendingDesigns, pendingReviewCount, rejectedDesigns, overdueProjects, overdueCount, setupIncomplete] = await Promise.all([
       this.prisma.project.count({ where: { status: "ACTIVE" } }),
       this.prisma.clientProfile.count(),
       this.prisma.project.findMany({
-        include: projectIncludeFor("ADMIN"),
+        include: projectHeaderInclude(),
         orderBy: { updatedAt: "desc" },
         take: 6
       }),
@@ -69,6 +76,9 @@ export class ProjectsService {
         take: 5
       }),
       this.prisma.auditLog.findMany({
+        // Operational feed: every chat message writes an audit row, which would flood
+        // the list with non-actionable noise - exclude them; keep admin/data/finance events.
+        where: { action: { notIn: ["chat.message_sent", "chat.voice_sent"] } },
         include: {
           actor: { select: { id: true, displayName: true } },
           project: { select: { id: true, name: true } }
@@ -76,33 +86,43 @@ export class ProjectsService {
         orderBy: { createdAt: "desc" },
         take: 8
       }),
-      // V6 Action Center: persisted work that needs an operational decision.
+      // Action Center: only persisted states that require an operational decision.
       this.prisma.designItem.findMany({
-        where: { status: "IN_REVIEW" },
+        where: pendingDesignWhere,
         include: { project: { select: { id: true, name: true, code: true } } },
         orderBy: { updatedAt: "asc" },
         take: 6
       }),
+      this.prisma.designItem.count({ where: pendingDesignWhere }),
+      this.prisma.designItem.findMany({
+        where: { status: "REJECTED" },
+        include: { project: { select: { id: true, name: true, code: true } } },
+        orderBy: { updatedAt: "asc" },
+        take: 4
+      }),
       this.prisma.project.findMany({
-        where: {
-          targetDate: { lt: new Date() },
-          status: { notIn: ["COMPLETED", "CANCELLED"] }
-        },
+        where: overdueWhere,
         select: { id: true, code: true, name: true, targetDate: true, phase: true, progress: true, status: true },
         orderBy: { targetDate: "asc" },
         take: 6
       }),
-      this.prisma.projectDocument.findMany({
-        where: { isClientVisible: true, status: "ACTIVE" },
-        include: { project: { select: { id: true, name: true } } },
-        orderBy: { updatedAt: "desc" },
-        take: 4
+      this.prisma.project.count({ where: overdueWhere }),
+      this.prisma.project.findMany({
+        where: {
+          status: "ACTIVE",
+          OR: [{ engineerId: null }, { startDate: null }, { targetDate: null }]
+        },
+        select: { id: true, code: true, name: true, engineerId: true, startDate: true, targetDate: true },
+        orderBy: { createdAt: "desc" },
+        take: 6
       })
     ]);
 
     return {
       activeProjects,
       clientCount,
+      pendingReviewCount,
+      overdueCount,
       projects: projects.map((p) => toProjectResponse(p, "ADMIN")),
       recentUpdates: recentUpdates.map((update) => ({
         id: update.id,
@@ -121,15 +141,8 @@ export class ProjectsService {
         projectName: item.project?.name ?? null
       })),
       attention: {
-        pendingDesigns: pendingDesigns.map((design) => ({
-          id: design.id,
-          projectId: design.projectId,
-          projectName: design.project.name,
-          projectCode: design.project.code,
-          title: design.title,
-          discipline: design.discipline,
-          updatedAt: design.updatedAt.toISOString()
-        })),
+        pendingDesigns: pendingDesigns.map(serializeAttentionDesign),
+        rejectedDesigns: rejectedDesigns.map(serializeAttentionDesign),
         overdueProjects: overdueProjects.map((project) => ({
           id: project.id,
           code: project.code,
@@ -139,12 +152,12 @@ export class ProjectsService {
           progress: project.progress,
           status: project.status
         })),
-        recentDocuments: recentDocuments.map((document) => ({
-          id: document.id,
-          projectId: document.projectId,
-          projectName: document.project.name,
-          title: document.title,
-          updatedAt: document.updatedAt.toISOString()
+        setupIncomplete: setupIncomplete.map((project) => ({
+          id: project.id,
+          code: project.code,
+          name: project.name,
+          missingEngineer: project.engineerId === null,
+          missingSchedule: project.startDate === null || project.targetDate === null
         }))
       }
     };
@@ -153,7 +166,7 @@ export class ProjectsService {
   async visibleList(user: RequestUser) {
     const projects = await this.prisma.project.findMany({
       where: this.access.projectWhereFor(user),
-      include: projectIncludeFor(user.role),
+      include: projectHeaderInclude(),
       orderBy: { updatedAt: "desc" }
     });
     return projects.map((p) => toProjectResponse(p, user.role));
@@ -161,11 +174,174 @@ export class ProjectsService {
 
   async getForUser(user: RequestUser, id: string) {
     await this.access.assertCanRead(user, id);
-    const project = await this.prisma.project.findUnique({ where: { id }, include: projectIncludeFor(user.role) });
+    const project = await this.prisma.project.findUnique({ where: { id }, include: projectHeaderInclude() });
     if (!project) {
       throw new NotFoundException("Project not found.");
     }
     return toProjectResponse(project, user.role);
+  }
+
+  /**
+   * Role-scoped operational landing payload for the project Overview. One bounded request
+   * returns only summary counts/latest rows - full module data stays behind the module
+   * endpoints. Each block mirrors the owning module's authorization exactly:
+   * designs/documents follow Design Hub / Documents V2 visibility, finance follows the
+   * client-safe summary fields only, and ACCOUNTANT (a finance-only role) is denied.
+   */
+  async getOverview(user: RequestUser, projectId: string) {
+    if (user.role === "ACCOUNTANT") {
+      throw new ForbiddenException("Project overview is outside the finance workspace.");
+    }
+    await this.access.assertCanRead(user, projectId);
+    const project = await this.prisma.project.findUnique({ where: { id: projectId }, include: projectHeaderInclude() });
+    if (!project) {
+      throw new NotFoundException("Project not found.");
+    }
+
+    const isClient = user.role === "CLIENT";
+    const canSeeDesigns = user.role === "ADMIN" || user.role === "ENGINEER" || isClient;
+    const canSeeDocuments = canSeeDesigns;
+    const canSeeFinance = user.role === "ADMIN" || isClient;
+    const siteVisibility = isClient ? { isClientVisible: true } : {};
+    const clientActivityActions = [
+      "project.created",
+      "project.phase_changed",
+      "project.progress_changed",
+      "design.submitted_for_review",
+      "design.client_approved",
+      "design.client_rejected"
+    ];
+
+    const [siteUpdateCount, recentSiteUpdates, designAgg, documentAgg, finance, chatUnread, recentActivity] = await Promise.all([
+      this.prisma.siteUpdate.count({ where: { projectId, ...siteVisibility } }),
+      this.prisma.siteUpdate.findMany({
+        where: { projectId, ...siteVisibility },
+        select: {
+          id: true,
+          type: true,
+          phase: true,
+          progressImpact: true,
+          isClientVisible: true,
+          note: true,
+          createdAt: true,
+          author: { select: { id: true, displayName: true, role: true } },
+          _count: { select: { media: true } }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 3
+      }),
+      canSeeDesigns
+        ? Promise.all([
+            this.prisma.designItem.groupBy({ by: ["status"], where: { projectId }, _count: { id: true } }),
+            this.prisma.designItem.findFirst({
+              where: { projectId },
+              select: { id: true, title: true, discipline: true, status: true, currentRevisionNumber: true, updatedAt: true },
+              orderBy: { updatedAt: "desc" }
+            })
+          ])
+        : Promise.resolve(null),
+      canSeeDocuments
+        ? Promise.all([
+            this.prisma.projectDocument.count({ where: { projectId, status: "ACTIVE", ...(isClient ? { isClientVisible: true } : {}) } }),
+            isClient
+              ? Promise.resolve(null)
+              : this.prisma.projectDocument.count({ where: { projectId, status: "ACTIVE", isClientVisible: true } })
+          ])
+        : Promise.resolve(null),
+      canSeeFinance
+        ? Promise.all([
+            this.prisma.projectFinancialProfile.findUnique({ where: { projectId }, select: { currency: true, contractValueMinor: true } }),
+            this.prisma.clientPayment.aggregate({ where: { projectId, status: "ACTIVE" }, _sum: { amountMinor: true } })
+          ])
+        : Promise.resolve(null),
+      (async () => {
+        const state = await this.prisma.projectChatReadState.findUnique({
+          where: { projectId_userId: { projectId, userId: user.id } },
+          select: { lastReadAt: true }
+        });
+        const lastReadAt = state?.lastReadAt ?? new Date(0);
+        return this.prisma.projectMessage.count({ where: { projectId, createdAt: { gt: lastReadAt } } });
+      })(),
+      this.prisma.auditLog.findMany({
+        where: {
+          projectId,
+          ...(isClient
+            ? { action: { in: clientActivityActions } }
+            : { action: { notIn: ["chat.message_sent", "chat.voice_sent"], not: { startsWith: "finance." } } })
+        },
+        select: { id: true, action: true, createdAt: true, actor: { select: { displayName: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 6
+      })
+    ]);
+
+    const serializeUpdate = (update: (typeof recentSiteUpdates)[number]) => ({
+      id: update.id,
+      type: update.type,
+      phase: update.phase,
+      progressImpact: update.progressImpact,
+      isClientVisible: update.isClientVisible,
+      note: update.note,
+      createdAt: update.createdAt.toISOString(),
+      author: update.author,
+      mediaCount: update._count.media
+    });
+
+    const designCounts = new Map<string, number>();
+    if (designAgg) for (const row of designAgg[0]) designCounts.set(row.status, row._count.id);
+    const financeProfile = finance?.[0] ?? null;
+    const paidMinor = finance?.[1]._sum.amountMinor ?? 0;
+    const contractMinor = financeProfile?.contractValueMinor ?? null;
+
+    return {
+      project: toProjectResponse(project, user.role),
+      setup: {
+        clientAssigned: project.client !== null,
+        engineerAssigned: project.engineer !== null,
+        scheduleConfigured: project.startDate !== null && project.targetDate !== null,
+        hasSiteUpdate: siteUpdateCount > 0
+      },
+      site: {
+        updateCount: siteUpdateCount,
+        recent: recentSiteUpdates.map(serializeUpdate)
+      },
+      design: designAgg
+        ? {
+            total: designAgg[0].reduce((sum, row) => sum + row._count.id, 0),
+            inReview: designCounts.get("IN_REVIEW") ?? 0,
+            rejected: designCounts.get("REJECTED") ?? 0,
+            latest: designAgg[1]
+              ? {
+                  id: designAgg[1].id,
+                  title: designAgg[1].title,
+                  discipline: designAgg[1].discipline,
+                  status: designAgg[1].status,
+                  currentRevisionNumber: designAgg[1].currentRevisionNumber,
+                  updatedAt: designAgg[1].updatedAt.toISOString()
+                }
+              : null
+          }
+        : null,
+      documents: documentAgg
+        ? { total: documentAgg[0], ...(documentAgg[1] !== null ? { clientVisible: documentAgg[1] } : {}) }
+        : null,
+      finance: finance
+        ? {
+            configured: financeProfile !== null,
+            currency: financeProfile?.currency ?? "EGP",
+            contractValue: contractMinor === null ? null : formatMoneyMajor(contractMinor),
+            paidAmount: formatMoneyMajor(paidMinor),
+            outstandingBalance: contractMinor === null ? null : formatMoneyMajor(contractMinor - paidMinor)
+          }
+        : null,
+      chat: { unreadCount: chatUnread },
+      recentActivity: recentActivity.map((item) => ({
+        id: item.id,
+        action: item.action,
+        actorName: item.actor?.displayName ?? null,
+        createdAt: item.createdAt.toISOString()
+      }))
+    };
   }
 
 
@@ -183,32 +359,38 @@ export class ProjectsService {
     await this.assertUserRole(input.engineerId, "ENGINEER");
     await this.assertWorkerIds(input.workerIds);
 
-    try {
-      const project = await this.prisma.project.create({
-        data: {
-          name: input.name.trim(),
-          code: input.code.trim().toUpperCase(),
-          category: input.category,
-          client: { connect: { id: input.clientId } },
-          engineer: { connect: { id: input.engineerId } },
-          location: emptyToNullValue(input.location),
-          startDate: parseDateValue(input.startDate),
-          targetDate: parseDateValue(input.targetDate),
-          phase: input.phase,
-          progress: input.progress,
-          status: input.status,
-          notes: emptyToNullValue(input.notes),
-          assignments: { create: input.workerIds.map((userId) => ({ user: { connect: { id: userId } } })) }
-        },
-        include: projectIncludeFor()
-      });
-      await this.audit.record(actorId, "project.created", { projectId: project.id, code: project.code ?? "" }, project.id);
-      if (input.engineerId) await this.audit.record(actorId, "project.engineer_assigned", { engineerId: input.engineerId }, project.id);
-      if (input.workerIds.length > 0) await this.audit.record(actorId, "project.worker_assigned", { workerIds: input.workerIds }, project.id);
-      return toProjectResponse(project);
-    } catch (error) {
-      handleProjectUnique(error);
+    const requestedCode = input.code?.trim().toUpperCase() || null;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const code = requestedCode ?? generateProjectCode();
+      try {
+        const project = await this.prisma.project.create({
+          data: {
+            name: input.name.trim(),
+            code,
+            category: input.category,
+            client: { connect: { id: input.clientId } },
+            engineer: { connect: { id: input.engineerId } },
+            location: emptyToNullValue(input.location),
+            startDate: parseDateValue(input.startDate),
+            targetDate: parseDateValue(input.targetDate),
+            phase: input.phase,
+            progress: input.progress,
+            status: input.status,
+            notes: emptyToNullValue(input.notes),
+            assignments: { create: input.workerIds.map((userId) => ({ user: { connect: { id: userId } } })) }
+          },
+          include: projectIncludeFor()
+        });
+        await this.audit.record(actorId, "project.created", { projectId: project.id, code: project.code ?? "" }, project.id);
+        if (input.engineerId) await this.audit.record(actorId, "project.engineer_assigned", { engineerId: input.engineerId }, project.id);
+        if (input.workerIds.length > 0) await this.audit.record(actorId, "project.worker_assigned", { workerIds: input.workerIds }, project.id);
+        return toProjectResponse(project);
+      } catch (error) {
+        if (isUniqueConstraintError(error) && requestedCode === null && attempt < 4) continue;
+        handleProjectUnique(error);
+      }
     }
+    throw new ConflictException("A unique project code could not be generated.");
   }
 
   async update(actorId: string, id: string, rawBody: unknown) {
@@ -284,7 +466,7 @@ export class ProjectsService {
     const updated = await this.prisma.project.update({
       where: { id: projectId },
       data: { progress: input.progress },
-      include: projectIncludeFor()
+      include: projectHeaderInclude()
     });
 
     await this.audit.record(
@@ -324,7 +506,7 @@ export class ProjectsService {
     const updated = await this.prisma.project.update({
       where: { id: projectId },
       data: { phase: input.phase },
-      include: projectIncludeFor()
+      include: projectHeaderInclude()
     });
 
     await this.audit.record(
@@ -612,11 +794,40 @@ function parseDateValue(value: string | undefined): Date | null {
   return new Date(`${value}T00:00:00.000Z`);
 }
 
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2002";
+}
+
+function serializeAttentionDesign(design: {
+  id: string;
+  projectId: string;
+  title: string;
+  discipline: string;
+  updatedAt: Date;
+  project: { id: string; name: string; code: string | null };
+}) {
+  return {
+    id: design.id,
+    projectId: design.projectId,
+    projectName: design.project.name,
+    projectCode: design.project.code,
+    title: design.title,
+    discipline: design.discipline,
+    updatedAt: design.updatedAt.toISOString()
+  };
+}
+
 function handleProjectUnique(error: unknown): never {
-  if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2002") {
+  if (isUniqueConstraintError(error)) {
     throw new ConflictException("Project code is already in use.");
   }
   throw error;
+}
+
+function generateProjectCode(): string {
+  const year = new Date().getUTCFullYear();
+  const suffix = randomInt(36 ** 4).toString(36).toUpperCase().padStart(4, "0");
+  return `PRJ-${year}-${suffix}`;
 }
 
 function getSiteUpdateTypeLabel(type: string): string {

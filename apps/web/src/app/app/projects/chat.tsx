@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { EmptyState, LoadingState } from "@elhabak/ui";
 import { ArrowDown, ArrowUp, Mic, Pause, Play, Send, Square, Trash2 } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   apiRequest,
   formatVoiceDuration,
   roleLabel,
+  uploadRequest,
   voiceNoteUrl,
   type ChatHistoryResponse,
   type ChatMessageRecord,
@@ -41,15 +42,21 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [showNewIndicator, setShowNewIndicator] = useState(false);
+  const [pendingNewCount, setPendingNewCount] = useState(0);
+  const [unreadBoundaryId, setUnreadBoundaryId] = useState<string | null>(null);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
 
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewMimeType, setPreviewMimeType] = useState<string>("audio/webm");
+  const [voiceUploadPct, setVoiceUploadPct] = useState<number | null>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
+  // Anchor restoration for "load older": captured before fetch, applied after React
+  // commits the prepended DOM (rAF alone races the commit and lands the user at the top).
+  const scrollRestoreRef = useRef<{ prevHeight: number; prevTop: number } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -67,6 +74,13 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
           send: "إرسال",
           loadOlder: "تحميل رسائل أقدم",
           newMessages: "رسائل جديدة",
+          unreadFromHere: "رسائل غير مقروءة من هنا",
+          uploading: "جاري الإرسال...",
+          play: "تشغيل",
+          pause: "إيقاف مؤقت",
+          voiceLoading: "جاري التحميل...",
+          voiceError: "تعذر تشغيل الرسالة الصوتية.",
+          seek: "شريط التقدم",
           recordStart: "تسجيل رسالة صوتية",
           recordStop: "إيقاف التسجيل",
           discard: "حذف",
@@ -87,6 +101,13 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
           send: "Send",
           loadOlder: "Load older messages",
           newMessages: "New messages",
+          unreadFromHere: "Unread messages from here",
+          uploading: "Sending...",
+          play: "Play",
+          pause: "Pause",
+          voiceLoading: "Loading...",
+          voiceError: "Could not play this voice note.",
+          seek: "Seek",
           recordStart: "Record a voice note",
           recordStop: "Stop recording",
           discard: "Discard",
@@ -108,29 +129,74 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
     node.scrollTo({ top: node.scrollHeight, behavior: smooth ? "smooth" : "auto" });
     isNearBottomRef.current = true;
     setShowNewIndicator(false);
+    setPendingNewCount(0);
   }, []);
 
   const markRead = useCallback(() => {
     apiRequest(`/projects/${projectId}/messages/read`, { method: "POST", body: "{}" }).catch(() => undefined);
   }, [projectId]);
 
+  const boundaryRef = useRef<string | null>(null);
+
   const loadInitial = useCallback(async () => {
     setLoading(true);
     try {
-      const [projectData, history] = await Promise.all([
+      const [projectData, history, readState] = await Promise.all([
         apiRequest<ProjectRecord>(`/projects/${projectId}`),
-        apiRequest<ChatHistoryResponse>(`/projects/${projectId}/messages?limit=30`)
+        apiRequest<ChatHistoryResponse>(`/projects/${projectId}/messages?limit=30`),
+        apiRequest<{ lastReadAt: string; unreadCount: number }>(`/projects/${projectId}/messages/read-state`).catch(() => null)
       ]);
       setProject(projectData);
       setMessages(history.messages);
       setNextCursor(history.nextCursor);
       setError("");
-      requestAnimationFrame(() => scrollToBottom(false));
+
+      // Reliable unread boundary from the server-side lastReadAt: when unread messages
+      // exist, land on the first unread message instead of forcing the latest page.
+      const lastReadAt = readState && readState.unreadCount > 0 ? new Date(readState.lastReadAt).getTime() : null;
+      const firstUnread = lastReadAt !== null ? history.messages.find((m) => new Date(m.createdAt).getTime() > lastReadAt) : undefined;
+      if (lastReadAt !== null && history.messages.length > 0 && (firstUnread || readState!.unreadCount >= history.messages.length)) {
+        const boundaryId = firstUnread?.id ?? history.messages[0]!.id;
+        boundaryRef.current = boundaryId;
+        setUnreadBoundaryId(boundaryId);
+        requestAnimationFrame(() => {
+          const node = listRef.current;
+          const target = node?.querySelector(`[data-message-id="${boundaryId}"]`);
+          if (node && target) {
+            node.scrollTop = (target as HTMLElement).offsetTop - node.clientHeight / 3;
+            isNearBottomRef.current = false;
+          } else {
+            scrollToBottom(false);
+          }
+        });
+      } else {
+        setUnreadBoundaryId(null);
+        requestAnimationFrame(() => scrollToBottom(false));
+      }
       markRead();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load project chat.");
     } finally {
       setLoading(false);
+    }
+  }, [projectId, scrollToBottom, markRead]);
+
+  // Reconnect reconciliation: fetch the latest page and merge by id without stealing
+  // scroll position or read-state from a user who scrolled into history.
+  const reconcile = useCallback(async () => {
+    try {
+      const history = await apiRequest<ChatHistoryResponse>(`/projects/${projectId}/messages?limit=30`);
+      setMessages((prev) => {
+        const known = new Set(prev.map((item) => item.id));
+        const missing = history.messages.filter((item) => !known.has(item.id));
+        return missing.length === 0 ? prev : [...prev, ...missing];
+      });
+      if (isNearBottomRef.current) {
+        requestAnimationFrame(() => scrollToBottom(false));
+        markRead();
+      }
+    } catch {
+      // REST stays authoritative; the next connect or manual refresh retries.
     }
   }, [projectId, scrollToBottom, markRead]);
 
@@ -152,12 +218,13 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
         markRead();
       } else {
         setShowNewIndicator(true);
+        setPendingNewCount((count) => count + 1);
       }
     }
 
     function onConnect() {
       joinProjectRoom(projectId);
-      void loadInitial();
+      void reconcile();
     }
 
     socket.on("chat:message", onMessage);
@@ -168,31 +235,43 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
       socket.off("connect", onConnect);
       leaveProjectRoom(projectId);
     };
-  }, [projectId]);
+  }, [projectId, reconcile, scrollToBottom, markRead]);
 
   function handleScroll() {
     const node = listRef.current;
     if (!node) return;
     const distance = node.scrollHeight - node.scrollTop - node.clientHeight;
     isNearBottomRef.current = distance < 120;
-    if (isNearBottomRef.current) setShowNewIndicator(false);
+    if (isNearBottomRef.current) {
+      setShowNewIndicator(false);
+      setPendingNewCount(0);
+    }
   }
+
+  // Runs synchronously after every committed message render - before paint - so a
+  // prepended page restores the user's exact reading position with no visible jump.
+  useLayoutEffect(() => {
+    const pending = scrollRestoreRef.current;
+    const node = listRef.current;
+    if (pending && node) {
+      node.scrollTop = node.scrollHeight - pending.prevHeight + pending.prevTop;
+      scrollRestoreRef.current = null;
+    }
+  }, [messages]);
 
   async function loadOlder() {
     if (!nextCursor || loadingOlder) return;
     setLoadingOlder(true);
     const node = listRef.current;
-    const previousHeight = node?.scrollHeight ?? 0;
+    if (node) scrollRestoreRef.current = { prevHeight: node.scrollHeight, prevTop: node.scrollTop };
     try {
       const history = await apiRequest<ChatHistoryResponse>(
         `/projects/${projectId}/messages?limit=30&cursor=${encodeURIComponent(nextCursor)}`
       );
       setMessages((prev) => [...history.messages, ...prev]);
       setNextCursor(history.nextCursor);
-      requestAnimationFrame(() => {
-        if (node) node.scrollTop = node.scrollHeight - previousHeight;
-      });
     } catch {
+      scrollRestoreRef.current = null;
       // Silent: the load-older control simply stays available for a retry.
     } finally {
       setLoadingOlder(false);
@@ -220,8 +299,9 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
       setText("");
       requestAnimationFrame(() => scrollToBottom(true));
       markRead();
-    } catch (err) {
-      setSendError(err instanceof Error ? err.message : labels.uploadFailed);
+    } catch {
+      // Localized generic error - raw API/socket messages are never surfaced.
+      setSendError(labels.uploadFailed);
     } finally {
       setSending(false);
     }
@@ -302,27 +382,28 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
 
   async function sendVoice() {
     const blob = recordedBlobRef.current;
-    if (!blob) return;
+    if (!blob || sending) return;
     setSending(true);
     setSendError("");
+    setVoiceUploadPct(0);
     try {
       const extension = previewMimeType.includes("ogg") ? "ogg" : "webm";
       const formData = new FormData();
       formData.append("type", "VOICE");
       formData.append("durationSeconds", String(Math.max(1, recordingSeconds)));
       formData.append("file", blob, `voice-note.${extension}`);
-      const message = await apiRequest<ChatMessageRecord>(`/projects/${projectId}/messages`, {
-        method: "POST",
-        body: formData
-      });
+      // Real XHR upload progress - no fabricated byte counts.
+      const message = await uploadRequest<ChatMessageRecord>(`/projects/${projectId}/messages`, formData, setVoiceUploadPct);
       setMessages((prev) => (prev.some((item) => item.id === message.id) ? prev : [...prev, message]));
       discardRecording();
       requestAnimationFrame(() => scrollToBottom(true));
       markRead();
-    } catch (err) {
-      setSendError(err instanceof Error ? err.message : labels.uploadFailed);
+    } catch {
+      // Recording is preserved in preview state so the user can retry the upload.
+      setSendError(labels.uploadFailed);
     } finally {
       setSending(false);
+      setVoiceUploadPct(null);
     }
   }
 
@@ -385,8 +466,10 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
             const previous = messages[index - 1];
             const showDateSeparator = !previous || !isSameDay(previous.createdAt, message.createdAt);
             const isOwn = message.author.id === user.id;
+            const isUnreadBoundary = unreadBoundaryId === message.id;
             return (
-              <div key={message.id}>
+              <div key={message.id} data-message-id={message.id}>
+                {isUnreadBoundary && <div className="chat-unread-divider" role="separator">{labels.unreadFromHere}</div>}
                 {showDateSeparator && <div className="chat-date-separator">{dateFormatter.format(new Date(message.createdAt))}</div>}
                 <div className={`chat-bubble-row${isOwn ? " chat-bubble-row--own" : ""}`}>
                   <div className={`chat-bubble${isOwn ? " chat-bubble--own" : ""}`}>
@@ -403,6 +486,7 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
                         projectId={projectId}
                         activeId={playingVoiceId}
                         onActivate={() => setPlayingVoiceId(message.id)}
+                        labels={{ play: labels.play, pause: labels.pause, loading: labels.voiceLoading, error: labels.voiceError, seek: labels.seek }}
                       />
                     )}
                   </div>
@@ -415,6 +499,7 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
         {showNewIndicator && (
           <button type="button" className="chat-new-indicator" onClick={() => scrollToBottom(true)}>
             <ArrowDown size={14} /> {labels.newMessages}
+            {pendingNewCount > 0 && <span className="chat-new-indicator__count mono">{pendingNewCount > 99 ? "99+" : pendingNewCount}</span>}
           </button>
         )}
 
@@ -437,8 +522,8 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
               <button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={discardRecording} disabled={sending}>
                 <Trash2 size={14} /> {labels.discard}
               </button>
-              <button type="button" className="ui-button ui-button--primary ui-button--sm" onClick={() => void sendVoice()} disabled={sending}>
-                <Send size={14} /> {labels.sendVoice}
+              <button type="button" className="ui-button ui-button--primary ui-button--sm" onClick={() => void sendVoice()} disabled={sending} aria-busy={sending}>
+                <Send size={14} /> {sending ? `${labels.uploading}${voiceUploadPct !== null ? ` ${voiceUploadPct}%` : ""}` : labels.sendVoice}
               </button>
             </div>
           )}
@@ -470,8 +555,9 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
                 className="ui-button ui-button--primary chat-composer__send"
                 onClick={() => void sendText()}
                 disabled={sending || text.trim().length === 0}
+                aria-busy={sending}
               >
-                <Send size={16} /> {labels.send}
+                <Send size={16} /> {sending ? labels.uploading : labels.send}
               </button>
             </div>
           )}
@@ -485,17 +571,20 @@ function VoiceBubble({
   message,
   projectId,
   activeId,
-  onActivate
+  onActivate,
+  labels
 }: {
   message: ChatMessageRecord;
   projectId: string;
   activeId: string | null;
   onActivate: () => void;
+  labels: { play: string; pause: string; loading: string; error: string; seek: string };
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [mediaState, setMediaState] = useState<"idle" | "loading" | "error">("idle");
   const duration = message.voice?.durationSeconds ?? 0;
 
   useEffect(() => {
@@ -506,38 +595,85 @@ function VoiceBubble({
 
   function toggle() {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || mediaState === "error") return;
     if (playing) {
       audio.pause();
     } else {
       onActivate();
-      void audio.play();
+      setMediaState("loading");
+      void audio.play().catch(() => setMediaState("error"));
     }
   }
 
-  function seek(event: MouseEvent<HTMLDivElement>) {
+  function seekToFraction(fraction: number) {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
+    audio.currentTime = Math.min(1, Math.max(0, fraction)) * audio.duration;
+  }
+
+  function seek(event: MouseEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
-    const fraction = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-    audio.currentTime = fraction * audio.duration;
+    if (rect.width === 0) return;
+    seekToFraction((event.clientX - rect.left) / rect.width);
+  }
+
+  function seekKey(event: KeyboardEvent<HTMLDivElement>) {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const step = (audio.duration || duration || 0) * 0.05;
+    if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      event.preventDefault();
+      audio.currentTime = Math.max(0, audio.currentTime - step);
+    } else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      event.preventDefault();
+      audio.currentTime = Math.min(audio.duration || duration, audio.currentTime + step);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      audio.currentTime = 0;
+    } else if (event.key === "End") {
+      event.preventDefault();
+      audio.currentTime = audio.duration || duration;
+    }
   }
 
   return (
     <div className="voice-message">
-      <button type="button" className="voice-message__toggle" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
-        {playing ? <Pause size={16} /> : <Play size={16} />}
+      <button
+        type="button"
+        className="voice-message__toggle"
+        onClick={toggle}
+        aria-label={playing ? labels.pause : labels.play}
+        aria-busy={mediaState === "loading"}
+        disabled={mediaState === "error"}
+      >
+        {mediaState === "loading" ? <span className="voice-message__spinner" aria-hidden="true" /> : playing ? <Pause size={16} /> : <Play size={16} />}
       </button>
-      <div className="voice-message__track" onClick={seek}>
+      <div
+        className="voice-message__track"
+        onClick={seek}
+        onKeyDown={seekKey}
+        role="slider"
+        tabIndex={0}
+        aria-label={labels.seek}
+        aria-valuemin={0}
+        aria-valuemax={Math.round(audioRef.current?.duration || duration)}
+        aria-valuenow={Math.round(currentTime)}
+        aria-valuetext={`${formatVoiceDuration(currentTime)} / ${formatVoiceDuration(duration)}`}
+      >
         <div className="voice-message__track-fill" style={{ width: `${progress * 100}%` }} />
       </div>
-      <span className="voice-message__duration mono">{formatVoiceDuration(playing || currentTime > 0 ? currentTime : duration)}</span>
+      <span className="voice-message__duration mono">
+        {mediaState === "error" ? labels.error : mediaState === "loading" && !playing ? labels.loading : formatVoiceDuration(playing || currentTime > 0 ? currentTime : duration)}
+      </span>
       <audio
         ref={audioRef}
         src={voiceNoteUrl(projectId, message.id)}
         preload="none"
-        onPlay={() => setPlaying(true)}
+        onPlay={() => { setPlaying(true); setMediaState("idle"); }}
         onPause={() => setPlaying(false)}
+        onWaiting={() => setMediaState("loading")}
+        onCanPlay={() => setMediaState("idle")}
+        onError={() => { setPlaying(false); setMediaState("error"); }}
         onEnded={() => {
           setPlaying(false);
           setProgress(0);

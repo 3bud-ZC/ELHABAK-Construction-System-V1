@@ -25,6 +25,7 @@ type PublicHeaderProps = {
   loginHref: string;
   homeHref?: string;
   alternateHref?: string;
+  navItems?: { href: string; label: string }[];
 };
 
 export function PublicHeader({
@@ -35,7 +36,8 @@ export function PublicHeader({
   whatsappUrl,
   loginHref,
   homeHref,
-  alternateHref
+  alternateHref,
+  navItems
 }: PublicHeaderProps) {
   const homeLink = homeHref ?? (locale === "ar" ? "/" : "/?lang=en");
   const alternateLink = alternateHref ?? (alternate === "ar" ? "/" : "/?lang=en");
@@ -44,7 +46,7 @@ export function PublicHeader({
   const drawerRef = useRef<HTMLDivElement>(null);
   const arrow = dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />;
 
-  const navItems = [
+  const items = navItems ?? [
     { href: "#about", label: labels.about },
     { href: "#services", label: labels.services },
     { href: "#process", label: labels.process },
@@ -109,7 +111,7 @@ export function PublicHeader({
           className="header-nav"
           aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main navigation"}
         >
-          {navItems.map((item) => (
+          {items.map((item) => (
             <a href={item.href} key={item.href} className="header-nav__link">
               {item.label}
             </a>
@@ -188,7 +190,7 @@ export function PublicHeader({
         </div>
 
         <nav className="mobile-drawer__nav" aria-label={locale === "ar" ? "روابط الأقسام" : "Section links"}>
-          {navItems.map((item, idx) => (
+          {items.map((item, idx) => (
             <a
               href={item.href}
               key={item.href}
