@@ -33,6 +33,8 @@ mkdir -p "$STAGE"
 
 git archive --format=tar --output="$SOURCE_TAR" HEAD
 tar -xf "$SOURCE_TAR" -C "$STAGE"
+# Git for Windows may materialize archived text with CRLF; shell entrypoints must remain executable on Linux.
+find "$STAGE" -type f -name '*.sh' -exec sed -i 's/\r$//' {} +
 ARCHIVE_SHA256="$(tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
   --exclude='./.release-meta.json' --exclude='./node_modules' --exclude='./.next' --exclude='./dist' \
   --exclude='./.turbo' --exclude='./coverage' --exclude='./.pnpm-store' --exclude='./storage' \
