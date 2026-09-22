@@ -46,7 +46,7 @@ test("public website has richer SEO, JSON-LD and accessible hero titles", () => 
   assert.match(page, /generateMetadata/);
   assert.match(page, /application\/ld\+json/);
   assert.match(page, /ProfessionalService/);
-  assert.match(page, /ELHABAK Construction \| Design, Construction & Finishing in Sohag/);
+  assert.match(page, /ELHABAK Construction \| Engineering & Construction in Egypt/);
   assert.match(page, /aria-label=\{t\.home\.heroTitle\}/);
 });
 
