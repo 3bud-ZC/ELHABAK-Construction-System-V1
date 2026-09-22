@@ -55,7 +55,7 @@ fi
 
 source_archive_sha256() {
   tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
-    --exclude='./.release-meta.json' --exclude='./node_modules' --exclude='./.next' --exclude='./dist' \
+    --exclude='./.release-meta.json' --exclude='./apps/web/next-env.d.ts' --exclude='./node_modules' --exclude='./.next' --exclude='./dist' \
     --exclude='./.turbo' --exclude='./coverage' --exclude='./.pnpm-store' --exclude='./storage' \
     --exclude='./test-results' --exclude='./storage-backups' --exclude='./backups' --exclude='*.tsbuildinfo' \
     --exclude='*.log' --exclude='.env' --exclude='.env.*' --exclude='.credentials.local' \
