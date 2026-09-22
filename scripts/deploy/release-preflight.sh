@@ -54,15 +54,15 @@ PY
 fi
 
 source_archive_sha256() {
-  tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \\
-    --exclude='./.release-meta.json' --exclude='./node_modules' --exclude='./.next' --exclude='./dist' \\
-    --exclude='./.turbo' --exclude='./coverage' --exclude='./.pnpm-store' --exclude='./storage' \\
-    --exclude='./test-results' --exclude='./storage-backups' --exclude='./backups' --exclude='*.tsbuildinfo' \\
-    --exclude='*.log' --exclude='.env' --exclude='.env.*' --exclude='.credentials.local' \\
-    --exclude='*.secret' --exclude='*.pem' --exclude='*.key' --exclude='id_rsa*' \\
-    --exclude='.codex-*-qa' --exclude='.codex-brand-preview' --exclude='.playwright-cli' \\
-    --exclude='.claude' --exclude='.vscode' --exclude='.idea' --exclude='create-qa-*' \\
-    --exclude='cleanup-qa*' --exclude='revoke-sessions*' --exclude='*.tar.gz' \\
+  tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+    --exclude='./.release-meta.json' --exclude='./node_modules' --exclude='./.next' --exclude='./dist' \
+    --exclude='./.turbo' --exclude='./coverage' --exclude='./.pnpm-store' --exclude='./storage' \
+    --exclude='./test-results' --exclude='./storage-backups' --exclude='./backups' --exclude='*.tsbuildinfo' \
+    --exclude='*.log' --exclude='.env' --exclude='.env.*' --exclude='.credentials.local' \
+    --exclude='*.secret' --exclude='*.pem' --exclude='*.key' --exclude='id_rsa*' \
+    --exclude='.codex-*-qa' --exclude='.codex-brand-preview' --exclude='.playwright-cli' \
+    --exclude='.claude' --exclude='.vscode' --exclude='.idea' --exclude='create-qa-*' \
+    --exclude='cleanup-qa*' --exclude='revoke-sessions*' --exclude='*.tar.gz' \
     -cf - -C "$1" . | sha256sum | awk '{print $1}'
 }
 if [ -f "$META" ] && [ "$(source_archive_sha256 "$REL")" = "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["archiveSha256"])' "$META")" ]; then
