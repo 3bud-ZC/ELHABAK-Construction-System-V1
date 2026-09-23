@@ -14663,4 +14663,18 @@ a.ui-button:focus-visible {
   .finance-summary-primary .metric-card:first-child {
     grid-column: 1 / -1;
   }
+
+  .project-workspace-page.chat-page {
+    height: calc(100dvh - 167px);
+    overflow: hidden;
+  }
+
+  .project-workspace-page.chat-page > .chat-shell {
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+
+  .project-workspace-page.chat-page .chat-message-list {
+    min-height: 0;
+  }
 }
