@@ -173,6 +173,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           "الحباك للمقاولات",
           "الحباك للاستشارات الهندسية"
         ],
+        sameAs: ["https://maps.app.goo.gl/apBRMCmUquZ6XYXv7"],
         url: `${siteUrl}/`,
         description: t.home.aboutLead,
         email: t.contact.email,
