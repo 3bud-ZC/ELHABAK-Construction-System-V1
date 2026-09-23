@@ -1099,6 +1099,13 @@
 - **Deployment**: canonical UX source deployed through the hardened flow at `/var/www/elhabak/releases/20260923-054717`; provenance metadata and archive checksum passed, PM2 API/web remained online, `/api/health` reported database connected and the deployed commit, homepage/login returned 200, and served client chunks contained no localhost references. No production business data was mutated.
 - **Result**: **ELHABAK PRODUCT UX V6 FULL VISUAL ACCEPTANCE PASS**.
 
+### 2026-09-23 — ELHABAK Branded Search Visibility & Entity Disambiguation
+- **Technical entity signals — COMPLETE**: production public routes return 200 and are indexable; canonicals, Arabic/English hreflang, robots, sitemap, SSR titles/H1s, descriptions, Open Graph, logo assets, and JSON-LD were verified. The homepage exposes one authoritative Organization at `https://elhabak.com/#organization` and one WebSite at `https://elhabak.com/#website`, with consistent `ELHABAK Construction` / `الحباك للمقاولات والاستشارات الهندسية` identity and no fabricated sameAs profiles.
+- **Canonical identity hardening**: public homepage H1 text now contains explicit semantic whitespace between the Arabic/English brand and construction descriptor; `siteUrl` now safely falls back to `https://elhabak.com` instead of a legacy Railway hostname. No authenticated product behavior changed.
+- **Observed external state**: search tooling did not show `elhabak.com` for the bare `elhabak` or `site:elhabak.com` queries in the observed result set. Results were dominated by unrelated personal profiles and other Elhabak-name entities. Longer company/service queries also did not reliably surface the official domain. This is an observed external state, not a ranking guarantee.
+- **External entity authority — OWNER ACTION REQUIRED**: no verified official ELHABAK Construction LinkedIn Company Page or Google Business Profile was found through the available search tooling. No sameAs URLs were added. Search Console access was unavailable.
+- **Result**: **BRANDED SEARCH TECHNICAL PASS — EXTERNAL AUTHORITY ACTION REQUIRED**.
+
 ### 2026-09-22 — Production Deployment Safety Hardening
 - **Root cause of the previous defect**: `.gitignore`/`.dockerignore` excluded env files, but the release tarball was built from the working tree with `tar` — untracked local files (`apps/api/.env` → dev DB, `apps/web/.env.local` → `localhost:4000` API base, `.credentials.local`) shipped in the package. `apps/web/.env.local` overrode the correct `.env` at Next build time, baking `localhost:4000` into the client bundle.
 - **Canonical deploy tooling added** (`scripts/deploy/`):
