@@ -331,12 +331,12 @@ export default async function HomePage({ searchParams }: PageProps) {
         <h1 aria-label={t.home.heroTitle}>
           {locale === "ar" ? (
             <>
-              <span className="hero-title__brand">الحباك</span>
+              <span className="hero-title__brand">الحباك</span>{" "}
               <span className="hero-title__line">للمقاولات والاستشارات الهندسية</span>
             </>
           ) : (
             <>
-              <span className="hero-title__brand">ELHABAK</span>
+              <span className="hero-title__brand">ELHABAK</span>{" "}
               <span className="hero-title__line hero-title__line--en">CONSTRUCTION</span>
             </>
           )}
