@@ -16,26 +16,14 @@ export function Lifecycle({ phase, locale }: LifecycleProps) {
 
   return (
     <section className="lifecycle-control" aria-label={statusLabels.title}>
-      <div className="lifecycle-pipeline__summary">
-        <div><span>{statusLabels.title}</span><strong>{phaseLabel(phase, locale)}</strong></div>
-        <bdi className="mono"><span>{String(currentIndex + 1).padStart(2, "0")}</span>/06</bdi>
-      </div>
-      <div className="lifecycle-pipeline__track" aria-hidden="true" />
-      <ol className="lifecycle">
+      <div className="delivery-path__heading"><strong>{statusLabels.title}</strong><span>{statusLabels.current}: {phaseLabel(phase, locale)}</span></div>
+      <ol className="delivery-path">
         {LIFECYCLE_PHASES.map((step, index) => {
           const state = index < currentIndex ? "done" : index === currentIndex ? "current" : "upcoming";
           return (
-            <li className={`lifecycle-step lifecycle-step--${state}`} key={step} aria-current={state === "current" ? "step" : undefined}>
-              <div className="lifecycle-step__indicator" aria-hidden="true">
-                <span className="lifecycle-step__node"><bdi>{String(index + 1).padStart(2, "0")}</bdi></span>
-              </div>
-              <div className="lifecycle-step__body">
-                <div className="lifecycle-step__meta">
-                  <span className="lifecycle-step__index"><bdi>{String(index + 1).padStart(2, "0")}</bdi></span>
-                  <span className="lifecycle-step__state-tag">{statusLabels[state]}</span>
-                </div>
-                <strong className="lifecycle-step__label">{phaseLabel(step, locale)}</strong>
-              </div>
+            <li className={`delivery-path__stage delivery-path__stage--${state}`} key={step} aria-current={state === "current" ? "step" : undefined}>
+              <div className="delivery-path__rail" aria-hidden="true"><span className="delivery-path__number" dir="ltr">{String(index + 1).padStart(2, "0")}</span></div>
+              <div className="delivery-path__info"><strong>{phaseLabel(step, locale)}</strong><small>{statusLabels[state]}</small></div>
             </li>
           );
         })}

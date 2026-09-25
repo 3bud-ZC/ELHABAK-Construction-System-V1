@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
-import { BriefcaseBusiness, CalendarDays, Clock3, Download, Filter, FolderKanban, MapPin, RotateCcw, TrendingUp } from "lucide-react";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarDays, Clock3, Download, Filter, FolderKanban, MapPin, RotateCcw, TrendingUp } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
   dataOpsExportUrl,
+  formatAppDate,
   phaseLabel,
   statusLabel,
   statusTone,
@@ -25,6 +26,7 @@ const categories: ProjectCategory[] = ["DESIGN", "CONSTRUCTION", "FINISHING", "G
 export function ProjectsClient() {
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
+  const ar = locale === "ar";
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ProjectStatus | "">("");
@@ -139,12 +141,7 @@ export function ProjectsClient() {
   }
 
   function formatDate(value: string | null) {
-    if (!value) return labels.noDate;
-    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    }).format(new Date(value));
+    return value ? formatAppDate(value, locale) : labels.noDate;
   }
 
   const clientOptions = useMemo(
@@ -255,26 +252,24 @@ export function ProjectsClient() {
             <div className="project-register-head" aria-hidden="true">
               <span>{labels.name}</span><span>{labels.client}</span><span>{labels.engineer}</span><span>{labels.location}</span><span>{labels.phase}</span><span>{labels.status}</span><span>{labels.progress}</span><span>{labels.schedule}</span><span />
             </div>
-            {visibleProjects.map((project, index) => (
-              <article className="project-register-row" key={project.id}>
+            {visibleProjects.map((project) => (
+              <article className="project-register-row project-record" key={project.id}>
                 <div className="project-register-cell project-register-cell--identity" data-label={labels.name}>
-                  <span className="project-register-row__index mono">{String(index + 1).padStart(2, "0")}</span>
-                  <div>
-                    <Link href={href(`/app/projects/${project.id}`)}><strong>{project.name}</strong></Link>
-                    <span className="project-code-tag mono"><bdi>{project.code ?? "—"}</bdi></span>
-                    <small>{categoryLabel(project.category, locale)}</small>
+                  <div className="project-record__identity">
+                    <Link href={href(`/app/projects/${project.id}`)}><strong dir="auto">{project.name}</strong></Link>
+                    <span className="project-record__secondary"><bdi className="project-code-tag mono" dir="ltr">{project.code ?? "—"}</bdi><span>{categoryLabel(project.category, locale)}</span></span>
                   </div>
                 </div>
-                <div className="project-register-cell" data-label={labels.client}><strong><bdi>{project.client?.user.displayName ?? "—"}</bdi></strong></div>
-                <div className="project-register-cell" data-label={labels.engineer}><strong><bdi>{project.engineer?.displayName ?? "—"}</bdi></strong></div>
-                <div className="project-register-cell project-register-cell--location" data-label={labels.location}><MapPin size={13} /><span>{project.location ?? "—"}</span></div>
-                <div className="project-register-cell" data-label={labels.phase}><Badge tone="navy">{phaseLabel(project.phase, locale)}</Badge></div>
-                <div className="project-register-cell" data-label={labels.status}><Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge></div>
+                <div className="project-register-cell project-record__person" data-label={labels.client}><strong dir="auto">{project.client?.user.displayName ?? "—"}</strong></div>
+                <div className="project-register-cell project-record__person" data-label={labels.engineer}><strong dir="auto">{project.engineer?.displayName ?? "—"}</strong></div>
+                <div className="project-register-cell project-register-cell--location" data-label={labels.location}><MapPin size={13} aria-hidden="true" /><span dir="auto">{project.location ?? "—"}</span></div>
+                <div className="project-register-cell project-record__phase" data-label={labels.phase}><span>{phaseLabel(project.phase, locale)}</span></div>
+                <div className="project-register-cell project-record__status" data-label={labels.status}><Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge></div>
                 <div className="project-register-cell project-register-cell--progress" data-label={labels.progress}>
-                  <div><strong className="mono"><bdi>{project.progress}%</bdi></strong><ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} /></div>
+                  <div><strong className="mono" dir="ltr">{project.progress}%</strong><ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} /></div>
                 </div>
-                <div className="project-register-cell project-register-cell--date" data-label={labels.schedule}><CalendarDays size={13} /><bdi>{formatDate(project.targetDate)}</bdi></div>
-                <div className="project-register-cell project-register-cell--action" data-label={labels.open}><Link className="project-register-open" href={href(`/app/projects/${project.id}`)} aria-label={`${labels.open}: ${project.name}`}>{labels.openShort}</Link></div>
+                <div className="project-register-cell project-register-cell--date" data-label={labels.schedule}><CalendarDays size={13} aria-hidden="true" /><time dateTime={project.targetDate ?? undefined} dir="auto">{formatDate(project.targetDate)}</time></div>
+                <div className="project-register-cell project-register-cell--action"><Link className="project-register-open" href={href(`/app/projects/${project.id}`)} aria-label={`${labels.open}: ${project.name}`}>{ar ? <ArrowLeft size={17} /> : <ArrowRight size={17} />}</Link></div>
               </article>
             ))}
           </div>

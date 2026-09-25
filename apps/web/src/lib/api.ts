@@ -546,6 +546,27 @@ export function financialStatusTone(status: FinancialRecordStatus): BadgeTone {
   return status === "VOID" ? "danger" : "success";
 }
 
+export function formatAppDate(value: string | Date, locale: "ar" | "en", withTime = false) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "—";
+  const language = locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB";
+  const parts = new Intl.DateTimeFormat(language, {
+    day: "numeric", month: "long", year: "numeric",
+    ...(withTime ? { hour: "numeric", minute: "2-digit", hour12: true } : {})
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
+  const dateText = `${part("day")} ${part("month")} ${part("year")}`;
+  return withTime ? `${dateText}${locale === "ar" ? "، " : ", "}${part("hour")}:${part("minute")} ${part("dayPeriod")}` : dateText;
+}
+
+export function formatAppTime(value: string | Date, locale: "ar" | "en") {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "—";
+  const parts = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("hour")}:${part("minute")} ${part("dayPeriod")}`;
+}
+
 export function formatMoney(decimalAmount: string, currency: string, locale: "ar" | "en") {
   const isNegative = decimalAmount.trim().startsWith("-");
   const numeric = Number(decimalAmount);

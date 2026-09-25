@@ -21,6 +21,7 @@ import {
 import {
   activityLabel,
   apiRequest,
+  formatAppDate,
   designStatusLabel,
   designStatusTone,
   phaseLabel,
@@ -98,10 +99,10 @@ export function ProjectPortal({ projectId }: PortalProps) {
   function href(path: string) { return locale === "ar" ? path : `${path}${path.includes("?") ? "&" : "?"}lang=en`; }
   function formatDate(value: string | null) {
     if (!value) return locale === "ar" ? "غير محدد" : "Not set";
-    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium" }).format(new Date(value));
+    return formatAppDate(value, locale);
   }
   function formatTimestamp(value: string) {
-    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+    return formatAppDate(value, locale, true);
   }
 
   if (loading) return <section className="app-page"><LoadingState label={labels.loadingLabel} /></section>;
@@ -204,7 +205,7 @@ export function ProjectPortal({ projectId }: PortalProps) {
         {showSetup && (
           <section className="project-setup-checklist" aria-labelledby="project-setup-title">
             <div className="project-setup-checklist__head">
-              <div><span className="section-kicker">SETUP / GUIDANCE</span><h2 id="project-setup-title">{labels.setup}</h2></div>
+              <div><span className="section-kicker">{locale === "ar" ? "جاهزية المشروع" : "Project setup"}</span><h2 id="project-setup-title">{labels.setup}</h2></div>
               <span><bdi>{setupItems.length - incompleteSetup.length}/{setupItems.length}</bdi></span>
             </div>
             <div className="project-setup-checklist__items">
@@ -219,14 +220,14 @@ export function ProjectPortal({ projectId }: PortalProps) {
         <div className="project-overview-v2">
           <section className="overview-lifecycle-section">
             <div className="overview-section-heading">
-              <div><span className="section-kicker">PROJECT / DELIVERY PATH</span><h2>{labels.lifecycle}</h2></div>
+              <div><span className="section-kicker">{locale === "ar" ? "مراحل التنفيذ" : "Delivery stages"}</span><h2>{labels.lifecycle}</h2></div>
             </div>
             <Lifecycle phase={project.phase} locale={locale} />
           </section>
 
           <section className="overview-modules-section" aria-labelledby="overview-modules-title">
             <div className="overview-section-heading">
-              <div><span className="section-kicker">PROJECT / MODULES</span><h2 id="overview-modules-title">{labels.modules}</h2><p>{labels.modulesLead}</p></div>
+              <div><span className="section-kicker">{locale === "ar" ? "متابعة المشروع" : "Project operations"}</span><h2 id="overview-modules-title">{labels.modules}</h2><p>{labels.modulesLead}</p></div>
             </div>
             <div className="overview-module-grid">
               {moduleCards.map((card) => (

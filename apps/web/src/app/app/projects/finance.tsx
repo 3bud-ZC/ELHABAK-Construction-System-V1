@@ -43,6 +43,7 @@ import {
   financialStatusTone,
   financeActionLabel,
   financeAttachmentUrl,
+  formatAppDate,
   formatMoney,
   type BoqItemRecord,
   type BoqListResponse,
@@ -158,7 +159,7 @@ function num(value: string | null | undefined, minFractionDigits = 0) {
 }
 
 function dateOnly(iso: string, locale: "ar" | "en") {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium" }).format(new Date(iso));
+  return formatAppDate(iso, locale);
 }
 
 function isOverpaid(outstanding: string | null) {
@@ -1969,7 +1970,7 @@ function HistoryPanel({ projectId, locale }: { projectId: string; locale: "ar" |
                   <strong>{event.actor?.displayName ?? (ar ? "النظام" : "System")}</strong>
                   {event.actor && <small>{roleLabel(event.actor.role as UserRole, locale)}</small>}
                 </div>
-                <time><bdi>{new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.createdAt))}</bdi></time>
+                <time><bdi>{formatAppDate(event.createdAt, locale, true)}</bdi></time>
               </div>
             );
           })}

@@ -12,6 +12,7 @@ import {
   disciplineLabel,
   documentCategoryLabel,
   documentStatusLabel,
+  formatAppDate,
   formatMoney,
   phaseLabel,
   reportPdfUrl,
@@ -129,12 +130,7 @@ export function ReportClient() {
       </section>
     );
   const p = report.project;
-  const date = (value: string | null) =>
-    value
-      ? new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-GB", { dateStyle: "medium" }).format(
-          new Date(value)
-        )
-      : "—";
+  const date = (value: string | null) => (value ? formatAppDate(value, locale) : "—");
   const financeRows = financeEntries(report, locale);
 
   return (

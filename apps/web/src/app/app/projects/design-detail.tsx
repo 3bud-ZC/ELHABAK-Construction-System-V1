@@ -10,6 +10,7 @@ import {
   apiRequest,
   designEventLabel,
   designFileUrl,
+  formatAppDate,
   designNextAction,
   designStatusLabel,
   designStatusTone,
@@ -52,7 +53,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     edit: "تعديل البيانات", save: "حفظ التعديلات", title: "عنوان التصميم", updated: "تم تحديث بيانات التصميم.", pdfFallback: "إذا لم تظهر المعاينة، نزّل الملف لفتحه.", fileMeta: "بيانات الملف",
     viewingOld: "تعاين مراجعة سابقة", latestIs: "الأحدث", backToLatest: "العودة للأحدث", revisionNote: "ملاحظة المراجعة",
     rejectionReason: "سبب رفض العميل", rejectedFollowUp: "ارفع مراجعة جديدة لمعالجة ملاحظات العميل.", commentOn: "تعليق على",
-    approveConfirm: "تأكيد اعتماد", rejectConfirm: "تأكيد رفض", decisionBy: "سُجّل القرار بواسطة", nextAction: "الإجراء التالي"
+    approveConfirm: "تأكيد اعتماد", rejectConfirm: "تأكيد رفض", decisionBy: "سُجّل القرار بواسطة", nextAction: "الإجراء التالي", conversation: "مناقشة المراجعة", noConversation: "لا توجد ملاحظات على هذه المراجعة بعد.", sending: "جاري الإرسال...", size: "الحجم"
   } : {
     loading: "Loading design detail...", back: "Design register", current: "Current revision", discipline: "Discipline", uploader: "Uploader", uploaded: "Uploaded",
     description: "Design description", file: "Revision file", preview: "File preview", download: "Download", revisionHistory: "Revision history", newest: "Newest",
@@ -63,7 +64,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     edit: "Edit details", save: "Save changes", title: "Design title", updated: "Design details updated.", pdfFallback: "If preview does not load, download the file to open it.", fileMeta: "File metadata",
     viewingOld: "You are viewing a historical revision", latestIs: "Latest", backToLatest: "Back to latest", revisionNote: "Revision note",
     rejectionReason: "Client rejection reason", rejectedFollowUp: "Upload a new revision to address the client's notes.", commentOn: "Comment on",
-    approveConfirm: "Confirm approval of", rejectConfirm: "Confirm rejection of", decisionBy: "Decision recorded by", nextAction: "Next action"
+    approveConfirm: "Confirm approval of", rejectConfirm: "Confirm rejection of", decisionBy: "Decision recorded by", nextAction: "Next action", conversation: "Revision discussion", noConversation: "No review comments on this revision yet.", sending: "Sending...", size: "Size"
   }, [ar]);
 
   const load = useCallback(async () => {
@@ -86,7 +87,8 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     try {
       const updated = await apiRequest<DesignRecord>(path, { method: "POST", body: JSON.stringify(body) });
       setDesign(updated); setSelectedRevisionId(updated.currentRevision.id); setSuccess(message); setDecision(null); setDecisionComment("");
-    } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Request failed."); }
+      return true;
+    } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Request failed."); return false; }
     finally { setMutating(false); }
   }
 
@@ -99,20 +101,20 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
   const rejectionEvent = design.currentRevision.status === "REJECTED"
     ? design.events.find((event) => event.action === "CLIENT_REJECTED" && event.revisionId === design.currentRevision.id)
     : undefined;
-  const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
+  const dateTime = (value: string) => formatAppDate(value, locale, true);
+  const comments = design.events.filter((event) => event.action === "COMMENT_ADDED" && event.revisionId === selected.id).slice().reverse();
 
   async function addComment(event: FormEvent) {
     event.preventDefault();
     if (!comment.trim()) return;
-    await mutate(`/projects/${projectId}/designs/${designId}/comments`, { revisionId: selected.id, comment }, labels.commentSaved);
-    setComment("");
+    if (await mutate(`/projects/${projectId}/designs/${designId}/comments`, { revisionId: selected.id, comment: comment.trim() }, labels.commentSaved)) setComment("");
   }
 
   return <section className="app-page project-workspace-page">
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />
     <div className="design-detail-heading technical-record-heading">
       <div className="design-detail-identity">
-        <span className="section-kicker">{ar ? "مراقبة المستندات الهندسية" : "ENGINEERING DOCUMENT CONTROL"} // <bdi className="mono">{selected.revisionCode}</bdi></span>
+        <span className="section-kicker">{ar ? "مراجعة التصميم" : "Design review"} · <bdi className="mono" dir="ltr">{selected.revisionCode}</bdi></span>
         <h2>{design.title}</h2>
         <div className="design-detail-badges">
           <Badge tone={designStatusTone(selected.status)}>{designStatusLabel(selected.status, locale)}</Badge>
@@ -173,24 +175,13 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
           {selected.notes && (
             <p className="design-revision-note"><small>{labels.revisionNote}</small><bdi>{selected.notes}</bdi></p>
           )}
-          <div className="drawing-titleblock">
-            <div className="drawing-titleblock__cell">
-              <span className="titleblock-label">{labels.file}</span>
-              <strong className="mono"><bdi>{selected.originalFilename}</bdi></strong>
-            </div>
-            <div className="drawing-titleblock__cell">
-              <span className="titleblock-label">{labels.discipline}</span>
-              <strong>{disciplineLabel(design.discipline, locale)}</strong>
-            </div>
-            <div className="drawing-titleblock__cell">
-              <span className="titleblock-label">{labels.current}</span>
-              <strong className="mono"><bdi>{selected.revisionCode}</bdi></strong>
-            </div>
-            <div className="drawing-titleblock__cell">
-              <span className="titleblock-label">{labels.fileMeta}</span>
-              <strong className="mono"><bdi>{selected.mimeType} · {formatFileSize(selected.fileSize, locale)}</bdi></strong>
-            </div>
-          </div>
+          <dl className="review-file-meta">
+            <div><dt>{labels.file}</dt><dd dir="auto" className="mono">{selected.originalFilename}</dd></div>
+            <div><dt>{labels.discipline}</dt><dd>{disciplineLabel(design.discipline, locale)}</dd></div>
+            <div><dt>{labels.uploader}</dt><dd dir="auto">{selected.uploader.displayName}</dd></div>
+            <div><dt>{labels.uploaded}</dt><dd>{dateTime(selected.createdAt)}</dd></div>
+            <div><dt>{labels.size}</dt><dd><bdi dir="ltr">{formatFileSize(selected.fileSize, locale)}</bdi></dd></div>
+          </dl>
         </section>
 
         {canDecide && (
@@ -234,19 +225,19 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
           </section>
         )}
 
-        <section className="workspace-panel">
-          <div className="workspace-panel__title">
-            <MessageSquare size={16} />
-            <h3>{labels.addComment}</h3>
+        <section className="workspace-panel review-conversation">
+          <div className="workspace-panel__title"><MessageSquare size={16} /><h3>{labels.conversation}</h3><bdi className="mono" dir="ltr">{selected.revisionCode}</bdi></div>
+          <div className="review-conversation__thread" aria-live="polite">
+            {comments.length === 0 && <p className="review-conversation__empty">{labels.noConversation}</p>}
+            {comments.map((entry) => <article className="review-comment" key={entry.id}>
+              <span className="review-comment__avatar" aria-hidden="true">{entry.actor.displayName.slice(0, 1)}</span>
+              <div className="review-comment__body"><div className="review-comment__header"><strong dir="auto">{entry.actor.displayName}</strong><span>{roleLabel(entry.actor.role, locale)}</span><time dateTime={entry.createdAt}>{dateTime(entry.createdAt)}</time></div><p dir="auto">{entry.comment}</p></div>
+            </article>)}
           </div>
-          <form className="comment-form" onSubmit={(event) => void addComment(event)}>
-            <span className="comment-form__target mono">{labels.commentOn} <bdi>{selected.revisionCode}</bdi></span>
-            <textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder={labels.commentPlaceholder} maxLength={2000} />
-            <div className="comment-form__footer">
-              <button className="ui-button ui-button--primary ui-button--sm" type="submit" disabled={mutating || !comment.trim()}>
-                <Send size={14} />{labels.addComment}
-              </button>
-            </div>
+          <form className="comment-form review-conversation__composer" onSubmit={(event) => void addComment(event)}>
+            <label htmlFor="design-review-comment" className="comment-form__target">{labels.commentOn} <bdi className="mono" dir="ltr">{selected.revisionCode}</bdi></label>
+            <textarea id="design-review-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder={labels.commentPlaceholder} maxLength={2000} disabled={mutating} rows={3} />
+            <div className="comment-form__footer"><span className="review-conversation__count" dir="ltr">{comment.length}/2000</span><button className="ui-button ui-button--primary ui-button--sm" type="submit" disabled={mutating || !comment.trim()} aria-busy={mutating}><Send size={14} />{mutating ? labels.sending : labels.addComment}</button></div>
           </form>
         </section>
       </main>
@@ -257,13 +248,8 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
             <FileText size={16} />
             <h3>{labels.current}</h3>
           </div>
-          <dl className="detail-list compact">
-            <div><dt>{labels.current}</dt><dd><bdi className="revision-badge mono">{design.currentRevision.revisionCode}</bdi></dd></div>
-            <div><dt>{labels.discipline}</dt><dd>{disciplineLabel(design.discipline, locale)}</dd></div>
-            <div><dt>{labels.uploader}</dt><dd>{selected.uploader.displayName}</dd></div>
-            <div><dt>{labels.uploaded}</dt><dd><bdi className="mono">{dateTime(selected.createdAt)}</bdi></dd></div>
-            <div><dt>{labels.description}</dt><dd>{design.description || "—"}</dd></div>
-          </dl>
+          <div className="review-state"><bdi className="revision-badge mono" dir="ltr">{design.currentRevision.revisionCode}</bdi><Badge tone={designStatusTone(design.currentRevision.status)}>{designStatusLabel(design.currentRevision.status, locale)}</Badge></div>
+          {design.description && <p className="review-description" dir="auto">{design.description}</p>}
           {canManage && design.currentRevision.status === "DRAFT" && (
             <SubmitRevisionButton labels={labels} revisionCode={design.currentRevision.revisionCode} disabled={mutating} onConfirm={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${design.currentRevision.id}/submit`, {}, labels.submitted)} />
           )}

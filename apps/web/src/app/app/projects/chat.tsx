@@ -8,6 +8,8 @@ import { ArrowDown, ArrowUp, Mic, Pause, Play, Send, Square, Trash2 } from "luci
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   apiRequest,
+  formatAppDate,
+  formatAppTime,
   formatVoiceDuration,
   roleLabel,
   uploadRequest,
@@ -415,14 +417,6 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
     };
   }, []);
 
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { day: "numeric", month: "long", year: "numeric" }),
-    [ar]
-  );
-  const timeFormatter = useMemo(
-    () => new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { hour: "numeric", minute: "2-digit" }),
-    [ar]
-  );
 
   if (loading) {
     return (
@@ -446,12 +440,9 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
       {error && <div className="form-error">{error}</div>}
 
       <div className="chat-shell">
-        <div className="chat-context-bar">
-          <div className="chat-context-bar__info">
-            <span className="section-kicker">{ar ? "قناة التواصل المباشر" : "Project Communication"}</span>
-            <strong>{project.name}</strong>
-          </div>
-          <span className="chat-context-bar__tag"><bdi className="mono">{project.code ?? "—"}</bdi> · {ar ? "قناة المشروع المعتمدة" : "Project Channel"}</span>
+        <div className="chat-context-bar chat-channel-header">
+          <div className="chat-context-bar__info"><strong>{ar ? "محادثة المشروع" : "Project conversation"}</strong><span>{ar ? "التواصل بين فريق المشروع والعميل" : "Communication between the project team and client"}</span></div>
+          <span className="chat-context-bar__tag"><bdi dir="ltr">{messages.length}</bdi> {ar ? "رسالة محملة" : "loaded messages"}</span>
         </div>
         <div className="chat-message-list" ref={listRef} onScroll={handleScroll}>
           {nextCursor && (
@@ -470,16 +461,16 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
             return (
               <div key={message.id} data-message-id={message.id}>
                 {isUnreadBoundary && <div className="chat-unread-divider" role="separator">{labels.unreadFromHere}</div>}
-                {showDateSeparator && <div className="chat-date-separator">{dateFormatter.format(new Date(message.createdAt))}</div>}
+                {showDateSeparator && <div className="chat-date-separator">{formatAppDate(message.createdAt, locale)}</div>}
                 <div className={`chat-bubble-row${isOwn ? " chat-bubble-row--own" : ""}`}>
                   <div className={`chat-bubble${isOwn ? " chat-bubble--own" : ""}`}>
                     <div className="chat-bubble__meta">
                       <strong>{isOwn ? labels.you : message.author.displayName}</strong>
                       <span className="chat-bubble__role">{roleLabel(message.author.role, locale)}</span>
-                      <span className="chat-bubble__time mono">{timeFormatter.format(new Date(message.createdAt))}</span>
+                      <time className="chat-bubble__time" dateTime={message.createdAt}>{formatAppTime(message.createdAt, locale)}</time>
                     </div>
                     {message.type === "TEXT" ? (
-                      <p className="chat-bubble__text">{message.text}</p>
+                      <p className="chat-bubble__text" dir="auto">{message.text}</p>
                     ) : (
                       <VoiceBubble
                         message={message}
@@ -532,6 +523,8 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
             <div className="chat-composer__row">
               <textarea
                 className="chat-composer__input"
+                aria-label={labels.placeholder}
+                dir="auto"
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 onKeyDown={onComposerKeyDown}

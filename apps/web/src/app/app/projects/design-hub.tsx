@@ -14,6 +14,7 @@ import {
   designStatusLabel,
   designStatusTone,
   disciplineLabel,
+  formatAppDate,
   formatFileSize,
   uploadRequest,
   type DesignDiscipline,
@@ -199,7 +200,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
             </div>
             <div className="design-register__cell design-register__meta-cell" data-label={labels.authorDate}>
               <strong>{design.currentRevision.uploader.displayName}</strong>
-              <time className="mono"><bdi>{new Date(design.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi></time>
+              <time className="mono"><bdi>{formatAppDate(design.updatedAt, locale)}</bdi></time>
             </div>
             <div className="design-register__action-cell">
               <Link className="project-register-open" href={href(`/app/projects/${projectId}/design/${design.id}`)} aria-label={`${labels.open}: ${design.title}`}>

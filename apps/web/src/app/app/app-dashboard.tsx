@@ -22,6 +22,7 @@ import {
   apiRequest,
   categoryLabel,
   disciplineLabel,
+  formatAppDate,
   LIFECYCLE_PHASES,
   phaseLabel,
   statusLabel,
@@ -294,12 +295,12 @@ export function AppDashboard() {
   }
 
   function formatDate(value: string | Date, options: Intl.DateTimeFormatOptions) {
-    const dateLocale = locale === "ar" ? "ar-EG-u-nu-latn" : "en-US";
+    const dateLocale = locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB";
     return new Intl.DateTimeFormat(dateLocale, options).format(new Date(value));
   }
 
   function formatTimestamp(value: string) {
-    return formatDate(value, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    return formatAppDate(value, locale, true);
   }
 
   const visibleProjects = dashboard?.projects ?? projects;

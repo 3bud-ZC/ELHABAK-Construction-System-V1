@@ -7,6 +7,7 @@ import { EmptyState, LoadingState } from "@elhabak/ui";
 import { Bell, CheckCheck } from "lucide-react";
 import {
   apiRequest,
+  formatAppDate,
   notificationDestination,
   notificationTypeLabel,
   relativeTime,
@@ -113,8 +114,6 @@ export function NotificationsClient() {
     [ar]
   );
 
-  const timeFormatter = new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
-
   // Group by calendar day: Today / Yesterday / Earlier for scannable review.
   const groups = useMemo(() => {
     const dayStart = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -192,7 +191,7 @@ export function NotificationsClient() {
                     <span className="notifications-row__project mono">{item.project.code ?? item.project.name}</span>
                   )}
                   <span className="notifications-row__time">
-                    {timeFormatter.format(new Date(item.createdAt))} · {relativeTime(item.createdAt, locale)}
+                    <bdi>{formatAppDate(item.createdAt, locale, true)}</bdi> · {relativeTime(item.createdAt, locale)}
                   </span>
                 </button>
               ))}

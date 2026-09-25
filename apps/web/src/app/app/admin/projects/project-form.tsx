@@ -8,6 +8,7 @@ import { Building2, Calendar, MapPin, UserRound, Users } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
+  formatAppDate,
   phaseLabel,
   roleLabel,
   statusLabel,
@@ -246,8 +247,6 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
     }));
   }
 
-  const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium" });
-
   return (
     <section className="app-page project-edit-page">
       <PageHeader
@@ -346,9 +345,9 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                     <Calendar size={14} /> {labels.dates}
                   </span>
                   <strong>
-                    {project.startDate ? dateFormatter.format(new Date(project.startDate)) : labels.noDates}
+                    {project.startDate ? formatAppDate(project.startDate, locale) : labels.noDates}
                     {" — "}
-                    {project.targetDate ? dateFormatter.format(new Date(project.targetDate)) : labels.noDates}
+                    {project.targetDate ? formatAppDate(project.targetDate, locale) : labels.noDates}
                   </strong>
                 </div>
               </div>
@@ -547,7 +546,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                         <span>{roleLabel(update.author.role, locale)}</span>
                       </span>
                     </div>
-                    <time>{new Date(update.createdAt).toLocaleString(locale === "ar" ? "ar-EG-u-nu-latn" : "en-US")}</time>
+                    <time><bdi>{formatAppDate(update.createdAt, locale, true)}</bdi></time>
                   </div>
                   <p>{update.note || "-"}</p>
                   <span>

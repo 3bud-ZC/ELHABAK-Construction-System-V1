@@ -19,7 +19,7 @@ import {
   UsersRound,
   X
 } from "lucide-react";
-import { apiRequest, dataOpsExportUrl, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
+import { apiRequest, dataOpsExportUrl, formatAppDate, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
 import { useCurrentUser } from "../../../../lib/user-context";
 
 const roles: UserRole[] = ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER"];
@@ -328,7 +328,7 @@ function statusOf(user: UserRecord): AccountStatus {
 
 function withLocale(path: string, ar: boolean) { return ar ? path : `${path}?lang=en`; }
 function formValue(data: FormData, key: string) { const value = data.get(key); return typeof value === "string" ? value : ""; }
-function formatDate(value: string, locale: string) { return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { dateStyle: "medium" }).format(new Date(value)); }
+function formatDate(value: string, locale: "ar" | "en") { return formatAppDate(value, locale); }
 
 /** Cryptographically secure temporary password: mixed classes, 16 chars, no ambiguous lookalikes. */
 function generateTemporaryPassword() {

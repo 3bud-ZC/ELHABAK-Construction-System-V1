@@ -33,6 +33,7 @@ import {
   LIFECYCLE_PHASES,
   SITE_UPDATE_TYPES,
   apiRequest,
+  formatAppDate,
   mediaUrl,
   phaseLabel,
   roleLabel,
@@ -393,7 +394,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   const siteUpdateEvents = useMemo(() => timelineEvents.filter((event) => event.kind === "SITE_UPDATE"), [timelineEvents]);
   const latestEvent = timelineEvents[0];
   const latestEventTime = latestEvent
-    ? new Date(latestEvent.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" })
+    ? formatAppDate(latestEvent.timestamp, locale, true)
     : labels.noLatest;
 
   // Gallery items flattened
@@ -1117,7 +1118,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 const isProjectCreated = event.kind === "PROJECT_CREATED";
 
                 return (
-                  <article className={`site-timeline-card ${event.kind.toLowerCase()}`} key={event.id}>
+                  <article className={`site-timeline-card field-activity ${event.kind.toLowerCase()}`} key={event.id}>
                     {/* Node marker on rail */}
                     <div className="site-timeline-node">
                       {isPhaseChange && <Milestone size={15} />}
@@ -1146,10 +1147,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                           </div>
                         </div>
                         <time className="site-timeline-time mono">
-                          <bdi>{new Date(event.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", {
-                            dateStyle: "medium",
-                            timeStyle: "short"
-                          })}</bdi>
+                          <bdi>{formatAppDate(event.timestamp, locale, true)}</bdi>
                         </time>
                       </div>
 
@@ -1200,23 +1198,17 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
                       {/* Event Media Attachments */}
                       {event.media && event.media.length > 0 && (
-                        <div className="site-timeline-media-grid">
+                        <div className={`site-timeline-media-grid ${event.media.length === 1 ? "site-timeline-media-grid--single" : ""}`}>
                           {event.media.map((item) => {
                             const isImage = item.mediaType === "IMAGE";
                             const fullUrl = mediaUrl(projectId, item.id);
                             return (
-                              <figure
+                              <button
+                                type="button"
                                 className="site-media-thumbnail clickable"
                                 key={item.id}
                                 onClick={() => openLightbox(item.id)}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
-                                    openLightbox(item.id);
-                                  }
-                                }}
+                                aria-label={`${ar ? "معاينة" : "Preview"}: ${item.originalFilename}`}
                               >
                                 {isImage ? (
                                   <img
@@ -1231,11 +1223,11 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                                     aria-label={item.originalFilename}
                                   />
                                 )}
-                                <figcaption className="media-caption">
-                                  <span className="media-filename mono">{item.originalFilename}</span>
+                                <span className="media-caption">
+                                  <span className="media-filename mono" dir="auto">{item.originalFilename}</span>
                                   <span className="media-zoom-hint"><Eye size={12} /></span>
-                                </figcaption>
-                              </figure>
+                                </span>
+                              </button>
                             );
                           })}
                         </div>
@@ -1299,7 +1291,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                         )}
                         <span>{item.event.actor?.displayName ?? "—"}</span>
                         <time className="mono">
-                          {new Date(item.event.timestamp).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}
+                          {formatAppDate(item.event.timestamp, locale)}
                         </time>
                       </div>
                     </div>
@@ -1743,7 +1735,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 <div className="caption-sub">
                   <span>{labels.by} {lightboxItems[lightboxIndex].event.actor?.displayName ?? "—"}</span>
                   <time className="mono">
-                    {new Date(lightboxItems[lightboxIndex].event.timestamp).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US")}
+                    {formatAppDate(lightboxItems[lightboxIndex].event.timestamp, locale, true)}
                   </time>
                 </div>
               </div>

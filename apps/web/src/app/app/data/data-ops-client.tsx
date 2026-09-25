@@ -17,6 +17,7 @@ import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
 import {
   apiRequest,
   dataOpsJobLabel,
+  formatAppDate,
   type DataOpsJob,
   type DataOpsOverview
 } from "../../../lib/api";
@@ -265,12 +266,7 @@ export function DataOpsClient() {
   }
 
   function formatTimestamp(value: string) {
-    return new Intl.DateTimeFormat(ar ? "ar-EG-u-nu-latn" : "en-US", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit"
-    }).format(new Date(value));
+    return formatAppDate(value, locale, true);
   }
 
   if (loading) {

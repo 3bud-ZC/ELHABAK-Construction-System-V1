@@ -13,6 +13,7 @@ import {
   documentCategoryLabel,
   documentFileUrl,
   documentFormatCode,
+  formatAppDate,
   documentStatusLabel,
   documentStatusTone,
   documentVisibilityLabel,
@@ -225,7 +226,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
         />
       )}
       {!loading && documents.length > 0 && (
-        <div className="finance-register technical-document-register" style={{ "--finance-cols": "minmax(220px,2fr) 120px 80px 70px 130px 90px minmax(120px,1fr) 90px" } as React.CSSProperties}>
+        <div className="finance-register technical-document-register document-control-register">
           <div className="finance-register__head">
             <span>{labels.document}</span>
             <span>{labels.category}</span>
@@ -239,10 +240,10 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
           {documents.map((document) => {
             const format = document.currentVersion ? documentFormatCode(document.currentVersion.mimeType, document.currentVersion.originalFilename) : "—";
             return (
-              <div className={`finance-register__row ${document.status === "ARCHIVED" ? "finance-void-row" : ""}`} key={document.id}>
-                <div className="finance-register__identity" data-label={labels.document}>
-                  <span className="mono" style={{ fontSize: "0.68rem", color: "var(--muted)" }}><bdi>{document.reference}</bdi></span>
-                  <strong>{document.title}</strong>
+              <div className={`finance-register__row document-control-register__row ${document.status === "ARCHIVED" ? "finance-void-row" : ""}`} key={document.id}>
+                <div className="finance-register__identity document-control-register__identity" data-label={labels.document}>
+                  <Link href={href(`/app/projects/${projectId}/documents/${document.id}`)}><strong dir="auto">{document.title}</strong></Link>
+                  <bdi className="mono document-control-register__reference" dir="ltr">{document.reference}</bdi>
                 </div>
                 <span className="finance-register__cell" data-label={labels.category}>{documentCategoryLabel(document.category, locale)}</span>
                 <span className="finance-register__cell finance-register__cell--amount" data-label={labels.version}>
@@ -257,7 +258,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
                   <Badge tone={documentStatusTone(document.status)}>{documentStatusLabel(document.status, locale)}</Badge>
                 </span>
                 <span className="finance-register__cell finance-register__cell--muted" data-label={labels.updated}>
-                  <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi>
+                  <bdi>{formatAppDate(document.updatedAt, locale)}</bdi>
                 </span>
                 <div className="finance-register__actions">
                   {document.currentVersion && (
@@ -500,7 +501,7 @@ function ClientDocuments({ projectId, locale }: { projectId: string; locale: "ar
                 <bdi className="revision-badge mono">{document.currentVersion?.versionCode ?? "—"}</bdi>
               </span>
               <span className="finance-register__cell finance-register__cell--muted" data-label={labels.updated}>
-                <bdi>{new Date(document.updatedAt).toLocaleDateString(ar ? "ar-EG-u-nu-latn" : "en-US")}</bdi>
+                <bdi>{formatAppDate(document.updatedAt, locale)}</bdi>
               </span>
               <div className="finance-register__actions">
                 <Link className="project-register-open" href={ar ? `/app/projects/${projectId}/documents/${document.id}` : `/app/projects/${projectId}/documents/${document.id}?lang=en`} aria-label={`${labels.preview}: ${document.title}`}>

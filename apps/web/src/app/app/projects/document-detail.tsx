@@ -11,6 +11,7 @@ import {
   documentCategoryLabel,
   documentFileUrl,
   documentFormatCode,
+  formatAppDate,
   documentStatusLabel,
   documentStatusTone,
   documentVisibilityLabel,
@@ -136,7 +137,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
   const selected = document.versions.find((version) => version.id === selectedVersionId) ?? document.currentVersion;
   const canManage = user.role === "ADMIN" || user.role === "ENGINEER";
   const viewingHistorical = Boolean(selected && document.currentVersion && selected.id !== document.currentVersion.id);
-  const dateTime = (value: string) => new Date(value).toLocaleString(ar ? "ar-EG-u-nu-latn" : "en-US", { dateStyle: "medium", timeStyle: "short" });
+  const dateTime = (value: string) => formatAppDate(value, locale, true);
 
   async function copyChecksum(value: string) {
     try {
@@ -154,7 +155,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
       <div className="design-detail-heading technical-record-heading technical-document-heading">
         <div className="design-detail-identity">
           <span className="section-kicker">
-            {ar ? "مراقبة المستندات" : "DOCUMENT CONTROL"} // <bdi className="mono">{document.reference}</bdi>
+            {ar ? "ضبط المستندات" : "Document control"} · <bdi className="mono" dir="ltr">{document.reference}</bdi>
           </span>
           <h2>{document.title}</h2>
           <div className="design-detail-badges">
@@ -231,24 +232,13 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
               <div className="cad-preview-frame">
                 <FilePreview projectId={projectId} documentId={documentId} version={selected} fallback={labels.pdfFallback} />
               </div>
-              <div className="drawing-titleblock">
-                <div className="drawing-titleblock__cell">
-                  <span className="titleblock-label">{labels.file}</span>
-                  <strong className="mono"><bdi>{selected.originalFilename}</bdi></strong>
-                </div>
-                <div className="drawing-titleblock__cell">
-                  <span className="titleblock-label">{labels.category}</span>
-                  <strong>{documentCategoryLabel(document.category, locale)}</strong>
-                </div>
-                <div className="drawing-titleblock__cell">
-                  <span className="titleblock-label">{labels.current}</span>
-                  <strong className="mono"><bdi>{selected.versionCode}</bdi></strong>
-                </div>
-                <div className="drawing-titleblock__cell">
-                  <span className="titleblock-label">{labels.fileMeta}</span>
-                  <strong className="mono"><bdi>{selected.mimeType} · {formatFileSize(selected.fileSize, locale)}</bdi></strong>
-                </div>
-              </div>
+              <dl className="review-file-meta">
+                <div><dt>{labels.file}</dt><dd dir="auto" className="mono">{selected.originalFilename}</dd></div>
+                <div><dt>{labels.category}</dt><dd>{documentCategoryLabel(document.category, locale)}</dd></div>
+                <div><dt>{labels.uploader}</dt><dd dir="auto">{selected.uploadedBy.displayName}</dd></div>
+                <div><dt>{labels.uploaded}</dt><dd>{dateTime(selected.createdAt)}</dd></div>
+                <div><dt>{labels.size}</dt><dd><bdi dir="ltr">{formatFileSize(selected.fileSize, locale)}</bdi></dd></div>
+              </dl>
               {selected.note && (
                 <div className="design-revision-note">
                   <small>{labels.note}</small>
@@ -307,13 +297,8 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
               <FileText size={16} />
               <h3>{labels.current}</h3>
             </div>
-            <dl className="detail-list compact">
-              <div><dt>{labels.current}</dt><dd><bdi className="revision-badge mono">{document.currentVersion?.versionCode ?? "—"}</bdi></dd></div>
-              <div><dt>{labels.category}</dt><dd>{documentCategoryLabel(document.category, locale)}</dd></div>
-              <div><dt>{labels.uploader}</dt><dd>{selected?.uploadedBy.displayName ?? "—"}</dd></div>
-              <div><dt>{labels.uploaded}</dt><dd><bdi className="mono">{selected ? dateTime(selected.createdAt) : "—"}</bdi></dd></div>
-              <div><dt>{labels.description}</dt><dd>{document.description || "—"}</dd></div>
-            </dl>
+            <div className="review-state"><bdi className="revision-badge mono" dir="ltr">{document.currentVersion?.versionCode ?? "—"}</bdi><Badge tone={documentStatusTone(document.status)}>{documentStatusLabel(document.status, locale)}</Badge></div>
+            {document.description && <p className="review-description" dir="auto">{document.description}</p>}
           </section>
 
           <section className="workspace-panel">
