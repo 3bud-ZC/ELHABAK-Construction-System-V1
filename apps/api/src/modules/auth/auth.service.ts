@@ -193,6 +193,21 @@ export class AuthService {
     return result.count;
   }
 
+  async changePassword(user: RequestUser, sessionId: string | undefined, currentPassword: string, newPassword: string) {
+    if (!sessionId) throw new UnauthorizedException("Authentication required.");
+    if (newPassword.length < 10 || newPassword.length > 128) throw new ForbiddenException("Password must be between 10 and 128 characters.");
+    const account = await this.prisma.user.findUnique({ where: { id: user.id } });
+    if (!account?.passwordHash || !(await compare(currentPassword, account.passwordHash))) {
+      throw new UnauthorizedException("Current password is incorrect.");
+    }
+    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: await this.hashPassword(newPassword) } });
+    await this.prisma.authSession.updateMany({
+      where: { userId: user.id, id: { not: sessionId }, revokedAt: null },
+      data: { revokedAt: new Date() }
+    });
+    return { ok: true as const };
+  }
+
   async logout(sessionId: string | undefined): Promise<void> {
     if (!sessionId) {
       return;

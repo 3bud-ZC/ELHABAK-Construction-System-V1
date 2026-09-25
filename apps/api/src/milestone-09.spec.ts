@@ -263,24 +263,17 @@ describe("Milestone 09 Reports, PDF, and Search", () => {
     expect(JSON.stringify(response.body)).not.toContain("M09 internal site secret");
     expect(response.body.documents).toHaveLength(1);
     expect(JSON.stringify(response.body)).not.toContain("M09 Internal Document Secret");
-    expect(response.body.finance).toEqual({
-      scope: "CLIENT_SAFE",
-      currency: "EGP",
-      contractValue: "100000.00",
-      paidAmount: "25000.00",
-      outstandingBalance: "75000.00"
-    });
+    expect(response.body.finance).toBeNull();
     expect(response.body.activity).toHaveLength(1);
     expect(JSON.stringify(response.body)).not.toContain("expense");
   });
 
-  it("restricts Engineer reports to assigned projects and preserves BOQ-only finance scope", async () => {
+  it("restricts Engineer reports to assigned projects and excludes finance", async () => {
     const own = await request(app.getHttpServer())
       .get(`/reports/projects/${projectId}`)
       .set("Cookie", engineerCookie)
       .expect(200);
-    expect(own.body.finance.scope).toBe("BOQ");
-    expect(own.body.finance).not.toHaveProperty("expensesTotal");
+    expect(own.body.finance).toBeNull();
     await request(app.getHttpServer())
       .get(`/reports/projects/${otherProjectId}`)
       .set("Cookie", engineerCookie)

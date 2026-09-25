@@ -163,7 +163,7 @@ export function ProjectPortal({ projectId }: PortalProps) {
             </>
         }
         : null,
-      overview.finance !== null
+      user.role === "ADMIN" && overview.finance !== null
         ? {
           id: "finance",
           icon: <Wallet size={16} />,

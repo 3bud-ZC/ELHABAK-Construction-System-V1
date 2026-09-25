@@ -146,15 +146,8 @@ export class FinanceService {
   }
 
   async getSummary(user: RequestUser, projectId: string) {
-    if (user.role === "CLIENT") {
-      await this.access.assertCanViewClientSummary(user, projectId);
-      return this.buildClientSummary(projectId);
-    }
-    if (user.role === "ADMIN" || user.role === "ACCOUNTANT") {
-      await this.access.assertCanManage(user, projectId);
-      return this.buildFullSummary(projectId);
-    }
-    throw new ForbiddenException("Finance access denied.");
+    await this.access.assertCanManage(user, projectId);
+    return this.buildFullSummary(projectId);
   }
 
   private async buildFullSummary(projectId: string) {

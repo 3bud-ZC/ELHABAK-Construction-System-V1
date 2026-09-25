@@ -201,7 +201,7 @@ export class ProjectsService {
     const isClient = user.role === "CLIENT";
     const canSeeDesigns = user.role === "ADMIN" || user.role === "ENGINEER" || isClient;
     const canSeeDocuments = canSeeDesigns;
-    const canSeeFinance = user.role === "ADMIN" || isClient;
+    const canSeeFinance = user.role === "ADMIN";
     const siteVisibility = isClient ? { isClientVisible: true } : {};
     const clientActivityActions = [
       "project.created",

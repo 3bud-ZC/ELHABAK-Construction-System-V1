@@ -56,6 +56,7 @@ export type ClientRecord = {
   lastProjectActivityAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  generatedCredentials?: { email: string; temporaryPassword: string };
 };
 
 export type ProjectRecord = {

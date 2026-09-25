@@ -128,12 +128,12 @@ export const resetUserPasswordSchema = z.object({
 });
 
 export const createClientSchema = z.object({
-  email: emailSchema,
+  email: emailSchema.optional().or(z.literal("")),
   displayName: nonEmptyStringSchema,
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
   isActive: z.boolean().default(true),
-  temporaryPassword: z.string().min(10).max(128)
+  temporaryPassword: z.string().min(10).max(128).optional().or(z.literal(""))
 });
 
 export const updateClientSchema = z

@@ -58,7 +58,12 @@ export class AdminUsersService {
     const trimmedSearch = search?.trim();
     const where: Prisma.UserWhereInput = {};
 
-    if (role) where.role = role;
+    if (role) {
+      if (role === "CLIENT") throw new ForbiddenException("Client accounts are managed from Clients.");
+      where.role = role;
+    } else {
+      where.role = { in: ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER"] };
+    }
     if (status === "ACTIVE") Object.assign(where, { isActive: true, archivedAt: null });
     if (status === "SUSPENDED") Object.assign(where, { isActive: false, archivedAt: null });
     if (status === "ARCHIVED") where.archivedAt = { not: null };
@@ -83,6 +88,7 @@ export class AdminUsersService {
 
   async create(actorId: string, rawBody: unknown) {
     const input = parseBody(createUserSchema, rawBody);
+    if (input.role === "CLIENT") throw new ForbiddenException("Client accounts are managed from Clients.");
     const passwordHash = await this.authService.hashPassword(input.temporaryPassword);
 
     try {
@@ -121,7 +127,10 @@ export class AdminUsersService {
     const data: Prisma.UserUpdateInput = {};
     if (input.email !== undefined) data.email = normalizeEmail(input.email);
     if (input.displayName !== undefined) data.displayName = input.displayName.trim();
-    if (input.role !== undefined) data.role = input.role;
+    if (input.role !== undefined) {
+      if (input.role === "CLIENT") throw new ForbiddenException("Client accounts are managed from Clients.");
+      data.role = input.role;
+    }
     if (input.isActive !== undefined) data.isActive = input.isActive;
     if (input.temporaryPassword !== undefined) data.passwordHash = await this.authService.hashPassword(input.temporaryPassword);
 

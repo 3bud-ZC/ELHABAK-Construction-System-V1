@@ -233,7 +233,7 @@ describe("Dashboard + Overview V2", () => {
       expect(res.body.chat).toBeTruthy();
     });
 
-    it("filters every block for the owning Client - visible site/docs only, client-safe finance, whitelisted activity", async () => {
+    it("filters every block for the owning Client - visible site/docs only and whitelisted activity", async () => {
       const res = await request(app.getHttpServer()).get(`/projects/${projectId}/overview`).set("Cookie", clientCookie).expect(200);
       const body = res.body;
       // Internal site update is invisible to the client.
@@ -242,11 +242,7 @@ describe("Dashboard + Overview V2", () => {
       // Only the shared ACTIVE document counts; internal + archived do not.
       expect(body.documents.total).toBe(1);
       expect(body.documents.clientVisible).toBeUndefined();
-      // Client-safe finance trio only.
-      expect(body.finance.contractValue).toBe("10000.00");
-      expect(body.finance.paidAmount).toBe("2500.00");
-      expect(body.finance).not.toHaveProperty("expensesTotal");
-      expect(body.finance).not.toHaveProperty("boqTotal");
+      expect(body.finance).toBeNull();
       // Activity feed is whitelisted to client-safe actions.
       const actions = body.recentActivity.map((e: { action: string }) => e.action);
       for (const action of actions) {

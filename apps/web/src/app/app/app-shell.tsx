@@ -74,6 +74,7 @@ export function AppShell({ children }: AppShellProps) {
           returnToAdmin: "العودة لحساب المدير",
           returning: "جاري العودة...",
           dataOps: "عمليات البيانات",
+          settings: "إعدادات الحساب",
           menu: "القائمة"
         }
         : {
@@ -108,6 +109,7 @@ export function AppShell({ children }: AppShellProps) {
           returnToAdmin: "Return to Admin",
           returning: "Returning...",
           dataOps: "Data Ops",
+          settings: "Account settings",
           menu: "Menu"
         },
     [locale]
@@ -362,6 +364,7 @@ export function AppShell({ children }: AppShellProps) {
                 <span>{roleLabel(user.role, locale)}</span>
               </span>
             </div>
+            <Link className="app-sidebar-settings" href={href("/app/settings")}><UserRoundCog size={15} /> {labels.settings}</Link>
             <button className="app-sidebar-logout" type="button" onClick={() => void logout()}>
               <LogOut size={15} /> {labels.logout}
             </button>

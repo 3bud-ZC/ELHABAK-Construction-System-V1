@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nes
 import type { Response } from "express";
 import { serialize } from "cookie";
 import { loginSchema } from "@elhabak/validation";
+import { z } from "zod";
 import { AuthService } from "./auth.service";
 import { AuthGuard } from "./auth.guard";
 import { CurrentUser } from "./current-user.decorator";
@@ -45,6 +46,14 @@ export class AuthController {
   @Get("me")
   me(@CurrentUser() user: RequestUser): AuthResponse {
     return { user };
+  }
+
+  @UseGuards(AuthGuard)
+  @Post("password/change")
+  @HttpCode(200)
+  changePassword(@CurrentUser() user: RequestUser, @Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    const input = z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(10).max(128) }).parse(body);
+    return this.authService.changePassword(user, request.sessionId, input.currentPassword, input.newPassword);
   }
 
   @UseGuards(AuthGuard)

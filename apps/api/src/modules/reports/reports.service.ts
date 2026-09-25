@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { formatMoneyMajor, formatQuantityMajor } from "@elhabak/validation";
+import { formatMoneyMajor } from "@elhabak/validation";
 import type { Prisma } from "@elhabak/database";
 import { PrismaService } from "../../shared/prisma.service";
 import type { RequestUser } from "../../shared/http.types";
@@ -207,83 +207,28 @@ export class ReportsService {
   }
 
   private async getFinance(user: RequestUser, projectId: string) {
-    if (user.role === "ENGINEER") {
-      const items = await this.prisma.bOQItem.findMany({
-        where: { projectId },
-        select: {
-          id: true,
-          code: true,
-          section: true,
-          description: true,
-          unit: true,
-          quantityMilli: true,
-          unitRateMinor: true,
-          lineTotalMinor: true
-        },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
-      });
-      return {
-        scope: "BOQ",
-        currency: "EGP",
-        boqTotal: formatMoneyMajor(items.reduce((sum, item) => sum + item.lineTotalMinor, 0)),
-        items: items.map((item) => ({
-          id: item.id,
-          code: item.code,
-          section: item.section,
-          description: item.description,
-          unit: item.unit,
-          quantity: formatQuantityMajor(item.quantityMilli),
-          unitRate: formatMoneyMajor(item.unitRateMinor),
-          lineTotal: formatMoneyMajor(item.lineTotalMinor)
-        }))
-      };
-    }
-    if (user.role !== "ADMIN" && user.role !== "ACCOUNTANT" && user.role !== "CLIENT") return null;
+    if (user.role !== "ADMIN" && user.role !== "ACCOUNTANT") return null;
 
     const [profile, boq, payments, expenses, contractors, estimate] = await Promise.all([
       this.prisma.projectFinancialProfile.findUnique({ where: { projectId } }),
       this.prisma.bOQItem.aggregate({ where: { projectId }, _sum: { lineTotalMinor: true } }),
-      this.prisma.clientPayment.aggregate({
-        where: { projectId, status: "ACTIVE" },
-        _sum: { amountMinor: true }
-      }),
-      user.role === "CLIENT"
-        ? Promise.resolve(null)
-        : this.prisma.expense.aggregate({
-            where: { projectId, status: "ACTIVE" },
-            _sum: { amountMinor: true }
-          }),
-      user.role === "CLIENT"
-        ? Promise.resolve(null)
-        : this.prisma.contractorPayment.aggregate({
-            where: { projectId, status: "ACTIVE" },
-            _sum: { amountMinor: true }
-          }),
-      user.role === "CLIENT"
-        ? Promise.resolve(null)
-        : this.prisma.costEstimate.findFirst({
-            where: { projectId, isCurrent: true },
-            select: { items: { select: { lineTotalMinor: true } } }
-          })
+      this.prisma.clientPayment.aggregate({ where: { projectId, status: "ACTIVE" }, _sum: { amountMinor: true } }),
+      this.prisma.expense.aggregate({ where: { projectId, status: "ACTIVE" }, _sum: { amountMinor: true } }),
+      this.prisma.contractorPayment.aggregate({ where: { projectId, status: "ACTIVE" }, _sum: { amountMinor: true } }),
+      this.prisma.costEstimate.findFirst({ where: { projectId, isCurrent: true }, select: { items: { select: { lineTotalMinor: true } } } })
     ]);
     const contract = profile?.contractValueMinor ?? null;
     const paid = payments._sum.amountMinor ?? 0;
-    const base = {
-      scope: user.role === "CLIENT" ? "CLIENT_SAFE" : "FULL_KPI",
+    const expenseTotal = expenses._sum.amountMinor ?? 0;
+    const contractorTotal = contractors._sum.amountMinor ?? 0;
+    return {
+      scope: "FULL_KPI",
       currency: profile?.currency ?? "EGP",
       contractValue: contract === null ? null : formatMoneyMajor(contract),
       paidAmount: formatMoneyMajor(paid),
-      outstandingBalance: contract === null ? null : formatMoneyMajor(contract - paid)
-    };
-    if (user.role === "CLIENT") return base;
-    const expenseTotal = expenses?._sum.amountMinor ?? 0;
-    const contractorTotal = contractors?._sum.amountMinor ?? 0;
-    return {
-      ...base,
+      outstandingBalance: contract === null ? null : formatMoneyMajor(contract - paid),
       boqTotal: formatMoneyMajor(boq._sum.lineTotalMinor ?? 0),
-      estimateTotal: formatMoneyMajor(
-        estimate?.items.reduce((sum, item) => sum + item.lineTotalMinor, 0) ?? 0
-      ),
+      estimateTotal: formatMoneyMajor(estimate?.items.reduce((sum, item) => sum + item.lineTotalMinor, 0) ?? 0),
       expensesTotal: formatMoneyMajor(expenseTotal),
       contractorPaymentsTotal: formatMoneyMajor(contractorTotal),
       committedCostTotal: formatMoneyMajor(expenseTotal + contractorTotal)

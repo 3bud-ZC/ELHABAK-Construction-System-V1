@@ -114,7 +114,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       ? [{ id: "design" as const, label: labels.design, href: `${base}/design`, icon: Pencil }]
       : []),
     ...(role === "ACCOUNTANT" ? [] : [{ id: "site" as const, label: labels.site, href: `${base}/site-activity`, icon: Activity }]),
-    ...(role === "ADMIN" || role === "ACCOUNTANT" || role === "ENGINEER" || role === "CLIENT"
+    ...(role === "ADMIN" || role === "ACCOUNTANT"
       ? [{ id: "finance" as const, label: labels.finance, href: `${base}/finance`, icon: Wallet }]
       : []),
     ...(role === "ADMIN" || role === "ENGINEER" || role === "CLIENT"

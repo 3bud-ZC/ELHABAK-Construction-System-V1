@@ -22,7 +22,7 @@ import {
 import { apiRequest, dataOpsExportUrl, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
 import { useCurrentUser } from "../../../../lib/user-context";
 
-const roles: UserRole[] = ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER", "CLIENT"];
+const roles: UserRole[] = ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER"];
 type AccountStatus = "ACTIVE" | "SUSPENDED" | "ARCHIVED";
 type Mode = "list" | "create" | "edit";
 type ActionKind = "activate" | "suspend" | "restore" | "archive" | "delete" | "reset" | "impersonate";

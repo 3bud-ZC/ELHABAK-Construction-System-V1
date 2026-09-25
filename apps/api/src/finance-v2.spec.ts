@@ -120,7 +120,7 @@ describe("Finance V2 - cost control productivity surface", () => {
     expect(formatMoneyMajor(computeLineTotalMinor(12345678, 12345678))).toBe("1524157652.80");
   });
 
-  it("exposes currency and contract value in the finance context for authorized roles", async () => {
+  it("exposes finance context only to Admin and Accountant", async () => {
     const server = app.getHttpServer();
     const context = await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", adminCookie).expect(200);
     expect(context.body.currency).toBe("EGP");
@@ -132,9 +132,7 @@ describe("Finance V2 - cost control productivity surface", () => {
       .expect(200);
     const after = await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", accountantCookie).expect(200);
     expect(after.body.contractValue).toBe("1000000.00");
-    // Client-safe: the client sees its own contract context but never internal cost data.
-    const clientContext = await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", clientCookie).expect(200);
-    expect(clientContext.body.contractValue).toBe("1000000.00");
+    await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", clientCookie).expect(403);
   });
 
   it("returns estimateTotal:null when no current estimate exists, then the real total once created", async () => {

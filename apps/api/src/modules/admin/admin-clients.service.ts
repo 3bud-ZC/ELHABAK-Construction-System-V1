@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { randomBytes } from "node:crypto";
 import type { Prisma, UserRole } from "@elhabak/database";
 import { createClientSchema, updateClientSchema } from "@elhabak/validation";
 import { AuthService, normalizeEmail, toRequestUser } from "../auth/auth.service";
@@ -79,14 +80,17 @@ export class AdminClientsService {
 
   async create(actorId: string, rawBody: unknown) {
     const input = parseBody(createClientSchema, rawBody);
-    const passwordHash = await this.authService.hashPassword(input.temporaryPassword);
+    const displayName = input.displayName.trim();
+    const generatedPassword = input.temporaryPassword?.trim() || generateTemporaryPassword();
+    const baseEmail = input.email?.trim() ? normalizeEmail(input.email) : await this.nextGeneratedEmail(displayName);
+    const passwordHash = await this.authService.hashPassword(generatedPassword);
 
     try {
       const data: Prisma.ClientProfileCreateInput = {
         user: {
           create: {
-            email: normalizeEmail(input.email),
-            displayName: input.displayName.trim(),
+            email: baseEmail,
+            displayName,
             role: "CLIENT",
             isActive: input.isActive,
             passwordHash
@@ -96,13 +100,8 @@ export class AdminClientsService {
 
       const phone = emptyToNull(input.phone);
       const notes = emptyToNull(input.notes);
-
-      if (phone !== undefined) {
-        data.phone = phone;
-      }
-      if (notes !== undefined) {
-        data.notes = notes;
-      }
+      if (phone !== undefined) data.phone = phone;
+      if (notes !== undefined) data.notes = notes;
 
       const client = await this.prisma.clientProfile.create({
         data,
@@ -112,13 +111,28 @@ export class AdminClientsService {
       await this.audit.record(actorId, "client.created", {
         clientId: client.id,
         userId: client.userId,
-        isActive: client.user.isActive
+        isActive: client.user.isActive,
+        generatedLogin: !input.email?.trim()
       });
 
-      return toClientResponse(client);
+      return {
+        ...toClientResponse(client),
+        generatedCredentials: { email: client.user.email, temporaryPassword: generatedPassword }
+      };
     } catch (error) {
       handleUniqueEmail(error);
     }
+  }
+
+  private async nextGeneratedEmail(displayName: string) {
+    const base = `${toLoginSlug(displayName)}@elhabak.com`;
+    let candidate = base;
+    for (let suffix = 2; suffix < 1000; suffix += 1) {
+      const exists = await this.prisma.user.findUnique({ where: { email: candidate }, select: { id: true } });
+      if (!exists) return candidate;
+      candidate = `${toLoginSlug(displayName)}.${suffix}@elhabak.com`;
+    }
+    throw new ConflictException("Unable to generate a unique client login identifier.");
   }
 
   async update(actorId: string, id: string, rawBody: unknown) {
@@ -241,6 +255,26 @@ function emptyToNull(value: string | undefined): string | null | undefined {
 
   const trimmed = value.trim();
   return trimmed.length === 0 ? null : trimmed;
+}
+
+function generateTemporaryPassword() {
+  return `Ehb-${randomBytes(9).toString("base64url")}`;
+}
+
+function toLoginSlug(value: string) {
+  const arabic = value
+    .replace(/[أإآ]/g, "ا")
+    .replace(/[ى]/g, "ي")
+    .replace(/[ة]/g, "ه")
+    .replace(/[ؤ]/g, "و")
+    .replace(/[ئ]/g, "ي");
+  const transliterated = arabic
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .toLowerCase();
+  return transliterated || `client-${randomBytes(4).toString("hex")}`;
 }
 
 function handleUniqueEmail(error: unknown): never {

@@ -327,15 +327,8 @@ describe("Milestone 06 Financial Architecture and Cost Engineering", () => {
     // Overpayment must surface as a negative balance, never silently clamped to zero.
     expect(overpaidSummary.body.outstandingBalance).toBe("-200.30");
 
-    const clientSummary = await request(server).get(`/projects/${projectId}/finance/summary`).set("Cookie", clientCookie).expect(200);
-    expect(clientSummary.body.paidAmount).toBe("1200.30");
-    expect(clientSummary.body.outstandingBalance).toBe("-200.30");
-    expect(clientSummary.body.boqTotal).toBeUndefined();
-    expect(clientSummary.body.expensesTotal).toBeUndefined();
-
-    const clientPayments = await request(server).get(`/projects/${projectId}/finance/client-payments`).set("Cookie", clientCookie).expect(200);
-    expect(clientPayments.body.length).toBe(3);
-    expect(clientPayments.body[0].createdBy).toBeUndefined();
+    await request(server).get(`/projects/${projectId}/finance/summary`).set("Cookie", clientCookie).expect(403);
+    await request(server).get(`/projects/${projectId}/finance/client-payments`).set("Cookie", clientCookie).expect(403);
 
     // A Client from an unrelated project cannot see this project's payments at all.
     await request(server).get(`/projects/${projectId}/finance/client-payments`).set("Cookie", otherClientCookie).expect(403);
@@ -344,7 +337,7 @@ describe("Milestone 06 Financial Architecture and Cost Engineering", () => {
     await request(server)
       .get(`/projects/${projectId}/finance/client-payments/${second.body.id}/attachments/${attachmentId}/file`)
       .set("Cookie", clientCookie)
-      .expect(200);
+      .expect(403);
     await request(server)
       .get(`/projects/${projectId}/finance/client-payments/${second.body.id}/attachments/${attachmentId}/file`)
       .set("Cookie", otherClientCookie)
@@ -409,13 +402,13 @@ describe("Milestone 06 Financial Architecture and Cost Engineering", () => {
     await request(server).get(`/projects/${projectId}/finance/history`).set("Cookie", engineerCookie).expect(403);
   });
 
-  it("provides a lightweight finance project context for every authorized role and denies Worker entirely", async () => {
+  it("provides finance project context only to Admin and Accountant", async () => {
     const server = app.getHttpServer();
 
     await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", adminCookie).expect(200);
     await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", accountantCookie).expect(200);
-    await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", engineerCookie).expect(200);
-    await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", clientCookie).expect(200);
+    await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", engineerCookie).expect(403);
+    await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", clientCookie).expect(403);
     await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", workerCookie).expect(403);
     await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", otherEngineerCookie).expect(403);
     await request(server).get(`/projects/${projectId}/finance/context`).set("Cookie", otherClientCookie).expect(403);

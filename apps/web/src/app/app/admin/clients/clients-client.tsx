@@ -37,7 +37,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           empty: "لا يوجد عملاء مطابقون",
           emptyHint: "جرّب بحثاً مختلفاً أو أنشئ عميلاً جديداً.",
           name: "اسم العميل",
-          email: "البريد الإلكتروني",
+          email: "معرّف الدخول",
           phone: "الهاتف",
           notes: "ملاحظات",
           active: "الحساب نشط",
@@ -45,6 +45,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           statusInactive: "غير نشط",
           password: "كلمة مرور مؤقتة",
           passwordHint: "اتركه فارغاً للإبقاء على كلمة المرور الحالية.",
+          generatedCredentials: "بيانات الدخول التي تظهر مرة واحدة",
           save: "حفظ",
           saved: "تم الحفظ.",
           status: "الحالة",
@@ -68,7 +69,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           empty: "No matching clients",
           emptyHint: "Try a different search or create a new client.",
           name: "Client name",
-          email: "Email",
+          email: "Login identifier",
           phone: "Phone",
           notes: "Notes",
           active: "Account active",
@@ -76,6 +77,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           statusInactive: "Inactive",
           password: "Temporary password",
           passwordHint: "Leave blank to keep the current password.",
+          generatedCredentials: "One-time generated credentials",
           save: "Save",
           saved: "Saved.",
           status: "Status",
@@ -123,8 +125,9 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
       phone: formValue(data, "phone"),
       notes: formValue(data, "notes"),
       isActive: data.get("isActive") === "on",
-      temporaryPassword: formValue(data, "temporaryPassword")
+      temporaryPassword: mode === "edit" ? formValue(data, "temporaryPassword") : undefined
     };
+    if (mode === "create") delete (body as Partial<typeof body>).email;
 
     if (mode === "edit" && !body.temporaryPassword) {
       delete (body as Partial<typeof body>).temporaryPassword;
@@ -244,10 +247,10 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
               <span>{labels.name} <strong className="required-star">*</strong></span>
               <input name="displayName" required autoComplete="off" defaultValue={record?.user.displayName ?? ""} placeholder={ar ? "اسم العميل أو الجهة" : "Client or Organization Name"} />
             </label>
-            <label className="ui-field">
-              <span>{labels.email} <strong className="required-star">*</strong></span>
-              <input name="email" type="email" required autoComplete="off" defaultValue={record?.user.email ?? ""} placeholder="client@example.com" />
-            </label>
+            {mode === "edit" ? <label className="ui-field">
+              <span>{labels.email}</span>
+              <input name="email" type="email" autoComplete="off" defaultValue={record?.user.email ?? ""} />
+            </label> : <div className="ui-field field-hint"><span>{labels.email}</span><p>{ar ? "سيتم إنشاء معرّف دخول فريد تلقائياً تحت @elhabak.com." : "A unique @elhabak.com login identifier will be generated automatically."}</p></div>}
             <label className="ui-field">
               <span>{labels.phone}</span>
               <input name="phone" autoComplete="off" defaultValue={record?.phone ?? ""} placeholder="01xxxxxxxxx" />
@@ -267,11 +270,11 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
             <h4>{ar ? "حساب الدخول والملاحظات" : "Login Account & Notes"}</h4>
           </div>
           <div className="form-grid">
-            <label className="ui-field full-span">
-              <span>{labels.password} {mode === "create" && <strong className="required-star">*</strong>}</span>
-              <input name="temporaryPassword" type="password" autoComplete="new-password" required={mode === "create"} minLength={10} placeholder={mode === "create" ? (ar ? "كلمة مرور مؤقتة لحساب العميل (١٠ أحرف على الأقل)" : "Temporary password for client account (min 10 characters)") : (ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password")} />
-              {mode === "edit" && <span className="field-hint">{labels.passwordHint}</span>}
-            </label>
+            {mode === "edit" ? <label className="ui-field full-span">
+              <span>{labels.password}</span>
+              <input name="temporaryPassword" type="password" autoComplete="new-password" minLength={10} placeholder={ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password"} />
+              <span className="field-hint">{labels.passwordHint}</span>
+            </label> : <div className="ui-field full-span field-hint"><span>{labels.password}</span><p>{ar ? "سيتم إنشاء كلمة مرور عشوائية آمنة وإظهارها مرة واحدة بعد الحفظ." : "A secure random temporary password will be generated and shown once after saving."}</p></div>}
             <label className="ui-field full-span">
               <span>{labels.notes}</span>
               <textarea name="notes" defaultValue={record?.notes ?? ""} placeholder={ar ? "ملاحظات إضافية حول العميل ونطاق المشاريع..." : "Optional notes regarding client requirements..."} />
@@ -284,8 +287,9 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         {mode === "create" && record ? (
           <div className="client-create-next-step">
             <div>
-              <strong>{record.user.displayName}</strong>
-              <span>{record.user.email}</span>
+              <strong>{labels.generatedCredentials}</strong>
+              <span className="mono">{record.generatedCredentials?.email ?? record.user.email}</span>
+              <span className="mono">{record.generatedCredentials?.temporaryPassword ?? "—"}</span>
             </div>
             <Link
               className="ui-button ui-button--primary ui-button--sm"
