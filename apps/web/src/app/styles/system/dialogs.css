@@ -1,0 +1,393 @@
+/*
+ * System · dialogs & sheets.
+ *   desktop/tablet: centred modal, bounded width, fixed header, scrolling
+ *                   body, sticky action footer
+ *   phone:          full-screen dialog — fixed header (safe-area top),
+ *                   scrolling form body, sticky Save/Cancel footer with
+ *                   safe-area bottom padding. Save is always reachable.
+ * Covers every dialog family in the product: .design-dialog (design,
+ * documents, finance), .site-modal-dialog (site operations), .account-dialog
+ * (team), and the @elhabak/ui Modal/Drawer/BottomSheet overlays.
+ */
+@layer system {
+  .modal-backdrop,
+  .account-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-dialog);
+    display: grid;
+    place-items: center;
+    padding: var(--space-6);
+    overflow: hidden;
+    background: rgba(11, 19, 43, 0.56);
+    backdrop-filter: none;
+  }
+
+  .design-dialog,
+  .site-modal-dialog,
+  .account-dialog,
+  .ui-modal {
+    display: flex;
+    flex-direction: column;
+    width: min(720px, 100%);
+    max-height: calc(100dvh - 48px);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--white);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .design-dialog--compact,
+  .site-modal-dialog,
+  .account-dialog {
+    width: min(560px, 100%);
+  }
+
+  /* header */
+  .design-dialog > header,
+  .site-modal-header,
+  .ui-modal__header {
+    position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 60px;
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text-strong);
+  }
+
+  .design-dialog > header span {
+    display: block;
+    color: var(--orange);
+    font-size: var(--fs-caption);
+    font-weight: 800;
+  }
+
+  .design-dialog > header h2,
+  .site-modal-header h3,
+  .ui-modal__header h2 {
+    margin: 0;
+    color: var(--text-strong);
+    font-size: var(--fs-title-sm);
+  }
+
+  .design-dialog > header .icon-button,
+  .site-modal-close {
+    border-color: var(--border);
+    background: var(--white);
+    color: var(--navy);
+  }
+
+  .site-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height);
+    height: var(--control-height);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+
+  /* scrolling body: the form itself scrolls, the footer sticks to its end */
+  .design-dialog > form,
+  .site-modal-dialog > form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: 0;
+    padding: var(--space-5) var(--space-5) 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .design-dialog > p,
+  .design-dialog > div:not(.inline-confirm) {
+    padding-inline: var(--space-5);
+  }
+
+  .design-dialog fieldset {
+    gap: var(--space-4);
+  }
+
+  .site-modal-body {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+  }
+
+  .ui-modal__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--space-5);
+    overflow-y: auto;
+  }
+
+  /* sticky action footer */
+  .design-dialog form > footer,
+  .design-dialog > footer,
+  .site-modal-footer,
+  .ui-modal__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin: auto calc(var(--space-5) * -1) 0;
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  .design-dialog > footer,
+  .ui-modal__footer {
+    margin: 0;
+  }
+
+  .account-dialog {
+    padding: var(--space-6);
+    overflow-y: auto;
+  }
+
+  /* @elhabak/ui overlays */
+  .ui-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-dialog);
+  }
+
+  .ui-overlay__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(11, 19, 43, 0.5);
+  }
+
+  .ui-bottom-sheet {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  .ui-bottom-sheet__footer,
+  .ui-drawer__footer {
+    padding-bottom: calc(var(--space-3) + var(--safe-bottom));
+  }
+
+  /* --------------------------- full-screen viewer --------------------------- */
+  .fullscreen-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-dialog);
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--navy-deep);
+    color: var(--white);
+  }
+
+  .fullscreen-viewer__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: calc(56px + var(--safe-top));
+    padding: calc(var(--space-2) + var(--safe-top)) var(--space-3) var(--space-2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .fullscreen-viewer__title {
+    display: grid;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .fullscreen-viewer__title strong {
+    overflow: hidden;
+    font-size: var(--fs-body-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fullscreen-viewer__title span {
+    color: rgba(255, 255, 255, 0.64);
+    font-size: var(--fs-caption);
+  }
+
+  .fullscreen-viewer__actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .fullscreen-viewer__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-bottom: var(--safe-bottom);
+    overflow: auto;
+    background: #1c2233;
+  }
+
+  .fullscreen-viewer__body .file-preview {
+    height: 100%;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .fullscreen-viewer__body .file-preview--image {
+    display: grid;
+    place-items: center;
+  }
+
+  .fullscreen-viewer__body .file-preview--image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .fullscreen-viewer__body .file-preview--pdf iframe {
+    width: 100%;
+    height: calc(100% - 44px);
+    min-height: 0;
+    border: 0;
+    background: var(--white);
+  }
+
+  .fullscreen-viewer__body .file-preview--pdf p {
+    margin: 0;
+    padding: var(--space-3);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: var(--fs-caption);
+    text-align: center;
+  }
+
+  /* ------------------------------ preview launcher ------------------------------ */
+  .preview-launcher {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--surface-soft);
+  }
+
+  .preview-launcher__icon {
+    display: inline-grid;
+    width: 48px;
+    height: 56px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--navy);
+  }
+
+  .preview-launcher__copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .preview-launcher__copy strong {
+    overflow-wrap: anywhere;
+    color: var(--text-strong);
+    font-size: var(--fs-body-sm);
+  }
+
+  .preview-launcher__copy span {
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  .preview-launcher__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-column: 1 / -1;
+    gap: var(--space-2);
+  }
+
+  /* ------------------------------ phone ------------------------------ */
+  @media (max-width: 767.98px) {
+    .modal-backdrop,
+    .account-dialog-backdrop {
+      place-items: stretch;
+      padding: 0;
+    }
+
+    .design-dialog,
+    .design-dialog--compact,
+    .site-modal-dialog,
+    .ui-modal {
+      width: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .design-dialog > header,
+    .site-modal-header,
+    .ui-modal__header {
+      min-height: calc(56px + var(--safe-top));
+      padding: calc(var(--space-2) + var(--safe-top)) var(--space-4) var(--space-2);
+    }
+
+    .design-dialog > form,
+    .site-modal-dialog > form {
+      padding: var(--space-4) var(--space-4) 0;
+    }
+
+    .design-dialog > p,
+    .design-dialog > div:not(.inline-confirm) {
+      padding-inline: var(--space-4);
+    }
+
+    .design-dialog fieldset {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .design-dialog fieldset > *,
+    .site-modal-body > * {
+      grid-column: 1 / -1 !important;
+    }
+
+    .design-dialog form > footer,
+    .design-dialog > footer,
+    .site-modal-footer,
+    .ui-modal__footer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      margin-inline: calc(var(--space-4) * -1);
+      padding: var(--space-3) var(--space-4) calc(var(--space-3) + var(--safe-bottom));
+      box-shadow: 0 -6px 16px rgba(11, 19, 43, 0.06);
+    }
+
+    .design-dialog > footer,
+    .ui-modal__footer {
+      margin: auto 0 0;
+    }
+
+    /* Primary action sits at the reading end (right in RTL). */
+    .design-dialog form > footer > .ui-button--primary,
+    .design-dialog form > footer > .ui-button--accent,
+    .site-modal-footer > .ui-button--primary {
+      order: -1;
+    }
+
+    .account-dialog {
+      align-self: end;
+      width: 100%;
+      max-height: 92dvh;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: var(--space-5) var(--space-4) calc(var(--space-5) + var(--safe-bottom));
+    }
+  }
+}

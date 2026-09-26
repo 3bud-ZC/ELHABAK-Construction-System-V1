@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, PreviewDrawer } from "@elhabak/ui";
-import { Archive, Eye, FilePlus2, FileStack, Filter, FolderOpen, RotateCcw, Search, Share2, UploadCloud, X } from "lucide-react";
+import { Badge, EmptyState, LoadingState, MetricCard, PreviewDrawer, AdaptiveFilters, type FilterChip } from "@elhabak/ui";
+import { Archive, Eye, FilePlus2, FileStack, FolderOpen, Share2, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   DOCUMENT_CATEGORIES,
@@ -25,6 +25,7 @@ import {
   type ProjectDocumentSummary,
   type ProjectRecord
 } from "../../../lib/api";
+import { filterLabels } from "../../../lib/adaptive";
 import { useCurrentUser } from "../../../lib/user-context";
 
 export function DocumentsHub({ projectId }: { projectId: string }) {
@@ -160,20 +161,17 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
 
   return (
     <>
-      <div className="design-hub-heading technical-register-header">
-        <div>
+      <header className="module-heading">
+        <div className="module-heading__copy">
           <span className="section-kicker">{ar ? "مركز المستندات والوثائق" : "Document Management"}</span>
-          <h2>{labels.title}</h2>
+          <h1>{labels.title}</h1>
           <p>{labels.lead}</p>
         </div>
-        <div className="technical-register-header__action">
-          <span className="technical-register-header__count mono"><bdi>{documents.length}</bdi> {labels.results}</span>
-          <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
-            <FilePlus2 size={16} />
-            {labels.add}
-          </button>
-        </div>
-      </div>
+        <button className="ui-button ui-button--primary" type="button" onClick={() => setShowCreate(true)}>
+          <FilePlus2 size={18} />
+          {labels.add}
+        </button>
+      </header>
 
       <div className="metric-grid technical-kpi-strip">
         <MetricCard icon={<FileStack size={18} />} tone="navy" label={labels.total} value={metrics.total} />
@@ -181,38 +179,45 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
         <MetricCard icon={<Archive size={18} />} tone="neutral" label={labels.archived} value={metrics.archived} />
       </div>
 
-      <div className="design-toolbar technical-register-toolbar">
-        <label className="design-search">
-          <Search size={15} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
-        </label>
-        <label className="design-filter">
-          <Filter size={14} />
-          <select value={category} onChange={(event) => setCategory(event.target.value as DocumentCategory | "")}>
+      <AdaptiveFilters
+        className="register-filters register-filters--standalone"
+        labels={filterLabels(locale)}
+        onClear={() => { setQuery(""); setCategory(""); setStatus(""); setVisibility(""); }}
+        chips={[
+          category && { key: "category", label: documentCategoryLabel(category, locale), onRemove: () => setCategory("") },
+          status && { key: "status", label: documentStatusLabel(status, locale), onRemove: () => setStatus("") },
+          visibility && { key: "visibility", label: visibility === "shared" ? labels.sharedOnly : labels.internalOnly, onRemove: () => setVisibility("") }
+        ].filter(Boolean) as FilterChip[]}
+        search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>}
+        meta={<span><bdi>{documents.length}</bdi> {labels.results}</span>}
+      >
+        <label className="adaptive-filter-field">
+          <span className="adaptive-filter-field__label">{labels.category}</span>
+          <select className="filter-select" value={category} onChange={(event) => setCategory(event.target.value as DocumentCategory | "")} aria-label={labels.category}>
             <option value="">{labels.allCategories}</option>
             {DOCUMENT_CATEGORIES.map((item) => (
               <option key={item} value={item}>{documentCategoryLabel(item, locale)}</option>
             ))}
           </select>
         </label>
-        <label className="design-filter">
-          <select value={status} onChange={(event) => setStatus(event.target.value as DocumentRecordStatus | "")} aria-label={labels.status}>
+        <label className="adaptive-filter-field">
+          <span className="adaptive-filter-field__label">{labels.status}</span>
+          <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as DocumentRecordStatus | "")} aria-label={labels.status}>
             <option value="">{labels.allStatuses}</option>
             {DOCUMENT_STATUSES.map((item) => (
               <option key={item} value={item}>{documentStatusLabel(item, locale)}</option>
             ))}
           </select>
         </label>
-        <label className="design-filter">
-          <select value={visibility} onChange={(event) => setVisibility(event.target.value as "" | "shared" | "internal")} aria-label={labels.visibility}>
+        <label className="adaptive-filter-field">
+          <span className="adaptive-filter-field__label">{labels.visibility}</span>
+          <select className="filter-select" value={visibility} onChange={(event) => setVisibility(event.target.value as "" | "shared" | "internal")} aria-label={labels.visibility}>
             <option value="">{labels.allVisibility}</option>
             <option value="shared">{labels.sharedOnly}</option>
             <option value="internal">{labels.internalOnly}</option>
           </select>
         </label>
-        {filtered && <button className="technical-register-toolbar__clear" type="button" onClick={() => { setQuery(""); setCategory(""); setStatus(""); setVisibility(""); }}><RotateCcw size={13} /> {labels.clear}</button>}
-        <span className="technical-register-toolbar__result mono"><bdi>{documents.length}</bdi> {labels.results}</span>
-      </div>
+      </AdaptiveFilters>
 
       {error && <div className="form-error">{error}</div>}
       {success && <div className="form-success">{success}</div>}
@@ -222,7 +227,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
           icon={<FolderOpen size={21} />}
           title={filtered ? labels.noResults : labels.empty}
           description={filtered ? labels.noResultsHint : labels.emptyHint}
-          action={!filtered ? <button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowCreate(true)}>{labels.add}</button> : undefined}
+          action={!filtered ? <button className="ui-button ui-button--primary ui-button--sm" type="button" onClick={() => setShowCreate(true)}>{labels.add}</button> : undefined}
         />
       )}
       {!loading && documents.length > 0 && (
@@ -426,7 +431,7 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
           {uploading && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
           <footer>
             <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={uploading}>{labels.close}</button>
-            <button className="ui-button ui-button--accent" type="submit" disabled={uploading}>{labels.save}</button>
+            <button className="ui-button ui-button--primary" type="submit" disabled={uploading}>{labels.save}</button>
           </footer>
         </form>
       </section>

@@ -1,0 +1,159 @@
+/*
+ * ELHABAK design tokens — the single source of truth for the authenticated
+ * product and login. Unlayered on purpose: every cascade layer reads these.
+ *
+ * Breakpoints (documented here; CSS custom properties cannot be used inside
+ * media queries):
+ *   phone      < 768px   bottom nav, full-screen dialogs, record cards
+ *   tablet     768–1099  drawer nav, compact topbar, two-column where useful
+ *   laptop    1100–1439  fixed sidebar, registers
+ *   desktop   ≥ 1440     fixed sidebar, content max-widths applied
+ */
+:root {
+  /* Brand */
+  --navy: #16234b;
+  --navy-deep: #0b132b;
+  --navy-soft: #233468;
+  --navy-mid: #2f447f;
+  --navy-wash: rgba(22, 35, 75, 0.06);
+  --orange: #e87625;
+  --orange-hover: #d66518;
+  --orange-soft: #fad7bd;
+  --orange-wash: rgba(232, 118, 37, 0.1);
+  --orange-glow: rgba(232, 118, 37, 0.22);
+  --white: #ffffff;
+
+  /* Surfaces */
+  --canvas: #f4f6fa;
+  --canvas-tint: #eaeff5;
+  --card: #ffffff;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-sunken: #f1f4f8;
+
+  /* Borders */
+  --border: #d6deea;
+  --border-soft: #e7edf5;
+  --border-strong: #b7c3d4;
+
+  /* Text */
+  --text: #0f172a;
+  --text-strong: #0b132b;
+  --text-soft: #27374d;
+  --muted: #56677f;
+  --muted-soft: #7b8aa1;
+
+  /* Semantic */
+  --success: #0b7a4f;
+  --success-wash: rgba(13, 138, 88, 0.1);
+  --warning: #b45309;
+  --warning-wash: rgba(217, 119, 6, 0.11);
+  --info: #1f69c9;
+  --info-wash: rgba(31, 105, 201, 0.1);
+  --danger: #c62828;
+  --danger-wash: rgba(220, 38, 38, 0.09);
+
+  /* Elevation — border-first system, shadows stay light */
+  --shadow-xs: 0 1px 2px rgba(11, 19, 43, 0.04);
+  --shadow-sm: 0 1px 3px rgba(11, 19, 43, 0.06);
+  --shadow-md: 0 4px 14px rgba(11, 19, 43, 0.08);
+  --shadow-lg: 0 12px 32px rgba(11, 19, 43, 0.12);
+  --shadow-xl: 0 20px 52px rgba(11, 19, 43, 0.16);
+
+  /* Radius — 4 technical · 6 controls · 8 surfaces · 10 dialogs (max) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 999px;
+
+  /* Spacing (4px grid) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --gutter: clamp(1rem, 2.4vw, 2rem);
+
+  /* Typography scale — nothing in the product renders below 12px */
+  --fs-caption: 0.75rem; /* 12 — meta, table heads, captions */
+  --fs-label: 0.8125rem; /* 13 — labels, secondary text */
+  --fs-body-sm: 0.875rem; /* 14 — dense body, controls */
+  --fs-body: 0.9375rem; /* 15 — body */
+  --fs-body-lg: 1rem; /* 16 — emphasised body, mobile inputs */
+  --fs-title-sm: 1.125rem; /* 18 — panel titles */
+  --fs-title: 1.25rem; /* 20 — section titles */
+  --fs-title-lg: 1.5rem; /* 24 — page titles (mobile) */
+  --fs-display: clamp(1.5rem, 1.1rem + 1.2vw, 1.875rem); /* 24→30 page titles */
+  --lh-tight: 1.25;
+  --lh-snug: 1.4;
+  --lh-body: 1.6;
+  --fw-regular: 400;
+  --fw-medium: 700;
+  --fw-bold: 800;
+  --font-mono: "SFMono-Regular", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  /* legacy aliases */
+  --text-xs: var(--fs-caption);
+  --text-sm: var(--fs-label);
+  --text-md: var(--fs-body-sm);
+
+  /* Icons */
+  --icon-inline: 16px;
+  --icon-button: 18px;
+  --icon-section: 20px;
+  --icon-mobile: 24px;
+
+  /* Controls */
+  --control-height: 40px;
+  --control-height-sm: 34px;
+  --control-height-touch: 44px;
+  --touch-target: 44px;
+  --table-row-height: 60px;
+
+  /* Shell */
+  --sidebar-width: 232px;
+  --topbar-height: 56px;
+  --topbar-height-mobile: 56px;
+  --bottom-nav-height: 62px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --content-max: 1480px;
+  --content-max-form: 1080px;
+  --content-max-reading: 880px;
+
+  /* Layering */
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-topbar: 40;
+  --z-bottom-nav: 50;
+  --z-drawer: 70;
+  --z-overlay: 80;
+  --z-dialog: 90;
+  --z-toast: 100;
+
+  /* Focus */
+  --focus-ring: 0 0 0 3px rgba(232, 118, 37, 0.32);
+  --focus-outline: 2px solid var(--orange);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+
+  --blueprint-grid: none;
+  --blueprint-grid-light: none;
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+  }
+}

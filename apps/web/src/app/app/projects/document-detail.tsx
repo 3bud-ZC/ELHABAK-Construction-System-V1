@@ -2,9 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Badge, EmptyState, LoadingState } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, useIsPhone } from "@elhabak/ui";
 import { Archive, ArchiveRestore, Check, Copy, Download, Eye, EyeOff, FileClock, FileText, Pencil, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
+import { PreviewLauncher } from "../../../components/preview-launcher";
 import {
   apiRequest,
   documentActionLabel,
@@ -41,6 +42,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
   const user = useCurrentUser();
+  const isPhone = useIsPhone();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [document, setDocument] = useState<ProjectDocumentRecord | null>(null);
   const [history, setHistory] = useState<HistoryEvent[]>([]);
@@ -218,7 +220,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
       <div className="design-detail-layout technical-record-layout">
         <main className="design-preview-column technical-preview-column">
           {selected && (
-            <section className="workspace-panel design-file-panel technical-file-panel document-preview-workbench">
+            <section className="workspace-panel design-file-panel technical-file-panel document-preview-workbench review-slot--file">
               <div className="workspace-panel__title">
                 <div className="workspace-panel__title-left">
                   <FileText size={16} />
@@ -229,9 +231,20 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
                   <Download size={14} />{labels.download} ({formatFileSize(selected.fileSize, locale)})
                 </a>
               </div>
-              <div className="cad-preview-frame">
-                <FilePreview projectId={projectId} documentId={documentId} version={selected} fallback={labels.pdfFallback} />
-              </div>
+              {isPhone ? (
+                <PreviewLauncher
+                  title={selected.originalFilename}
+                  meta={<><bdi className="mono" dir="ltr">{selected.versionCode}</bdi> · <bdi dir="ltr">{documentFormatCode(selected.mimeType, selected.originalFilename)} · {formatFileSize(selected.fileSize, locale)}</bdi></>}
+                  downloadHref={documentFileUrl(projectId, documentId, selected.id, true)}
+                  labels={{ open: ar ? "فتح المعاينة" : "Open preview", download: labels.download, close: ar ? "إغلاق المعاينة" : "Close preview" }}
+                >
+                  <FilePreview projectId={projectId} documentId={documentId} version={selected} fallback={labels.pdfFallback} />
+                </PreviewLauncher>
+              ) : (
+                <div className="cad-preview-frame">
+                  <FilePreview projectId={projectId} documentId={documentId} version={selected} fallback={labels.pdfFallback} />
+                </div>
+              )}
               <dl className="review-file-meta">
                 <div><dt>{labels.file}</dt><dd dir="auto" className="mono">{selected.originalFilename}</dd></div>
                 <div><dt>{labels.category}</dt><dd>{documentCategoryLabel(document.category, locale)}</dd></div>
@@ -264,7 +277,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
           )}
 
           {canManage && (
-            <section className="workspace-panel">
+            <section className="workspace-panel review-slot--audit">
               <div className="workspace-panel__title">
                 <FileClock size={16} />
                 <h3>{labels.activity}</h3>
@@ -292,7 +305,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
         </main>
 
         <aside className="design-detail-sidebar technical-control-sidebar">
-          <section className="workspace-panel">
+          <section className="workspace-panel review-slot--state">
             <div className="workspace-panel__title">
               <FileText size={16} />
               <h3>{labels.current}</h3>
@@ -301,7 +314,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
             {document.description && <p className="review-description" dir="auto">{document.description}</p>}
           </section>
 
-          <section className="workspace-panel">
+          <section className="workspace-panel review-slot--history">
             <div className="workspace-panel__title">
               <FileClock size={16} />
               <h3>{labels.versionHistory}</h3>
@@ -467,7 +480,7 @@ function VersionUploadDialog({ projectId, document, locale, onClose, onUpdated }
           {uploading && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
           <footer>
             <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={uploading}>{labels.close}</button>
-            <button className="ui-button ui-button--accent" type="submit" disabled={uploading}>{labels.save}</button>
+            <button className="ui-button ui-button--primary" type="submit" disabled={uploading}>{labels.save}</button>
           </footer>
         </form>
       </section>

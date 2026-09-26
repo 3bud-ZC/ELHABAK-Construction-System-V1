@@ -1,3 +1,5 @@
+/* Public website — `public` cascade layer (see globals.css for layer order). */
+@layer public {
 /* ==========================================================================
    ELHABAK CONSTRUCTION SYSTEM — PUBLIC WEBSITE V6
    Architectural Studio & Digital Project Platform
@@ -2593,4 +2595,6 @@ a {
     padding: 1rem;
     gap: 0.85rem;
   }
+}
+
 }

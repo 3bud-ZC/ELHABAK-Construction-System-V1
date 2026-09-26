@@ -1,0 +1,537 @@
+/*
+ * System · shell — one app frame across devices.
+ *   ≥1100px  fixed sidebar (right in Arabic, left in English) + utility topbar
+ *   768–1099 off-canvas drawer + compact topbar with search
+ *   <768     compact topbar + 5-destination bottom navigation + drawer "Menu"
+ */
+@layer system {
+  .app-shell {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    background: var(--canvas);
+  }
+
+  /* ------------------------------ sidebar ------------------------------ */
+  .app-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    padding: var(--space-4) var(--space-3);
+    gap: 0;
+    background: var(--navy-deep);
+    background-image: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 62%);
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+    color: rgba(255, 255, 255, 0.86);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  }
+
+  .app-brand-block {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2) var(--space-4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .app-logo img {
+    width: 132px;
+    height: auto;
+  }
+
+  .app-brand-meta {
+    display: grid;
+    gap: 2px;
+  }
+
+  .app-brand-code {
+    color: var(--orange);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .app-product-tag {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--fs-label);
+    font-weight: 700;
+  }
+
+  .app-nav {
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    align-content: start;
+    flex: 1;
+  }
+
+  .app-nav-group {
+    display: grid;
+    gap: 2px;
+  }
+
+  .app-nav-label {
+    padding-inline: var(--space-3);
+    margin-bottom: var(--space-1);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+  }
+
+  .app-nav a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 40px;
+    padding-inline: var(--space-3);
+    border: 0;
+    border-radius: var(--radius-md);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+
+  .app-nav a svg {
+    flex: 0 0 auto;
+    width: var(--icon-button);
+    height: var(--icon-button);
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .app-nav a:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--white);
+  }
+
+  .app-nav a.active {
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: none;
+    color: var(--white);
+  }
+
+  .app-nav a.active::before {
+    content: "";
+    position: absolute;
+    inset-block: 8px;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: var(--radius-pill);
+    background: var(--orange);
+  }
+
+  .app-nav a.active svg {
+    color: var(--orange);
+  }
+
+  .app-sidebar-footer {
+    display: grid;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .app-user-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .app-user-avatar {
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--orange);
+    color: var(--white);
+    font-size: var(--fs-label);
+    font-weight: 800;
+  }
+
+  .app-user-meta {
+    display: grid;
+    min-width: 0;
+  }
+
+  .app-user-meta strong {
+    overflow: hidden;
+    color: var(--white);
+    font-size: var(--fs-body-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-user-meta span {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--fs-caption);
+  }
+
+  .app-sidebar-settings,
+  .app-sidebar-logout {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding-inline: var(--space-3);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: var(--fs-label);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .app-sidebar-settings:hover,
+  .app-sidebar-logout:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--white);
+  }
+
+  .app-sidebar-logout {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* ------------------------------- topbar ------------------------------- */
+  .app-main {
+    min-width: 0;
+  }
+
+  .app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-topbar);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--topbar-height);
+    padding: var(--safe-top) var(--gutter) 0;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: saturate(1.2) blur(8px);
+    box-shadow: none;
+  }
+
+  .app-breadcrumb {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--muted);
+    font-size: var(--fs-label);
+    font-weight: 700;
+  }
+
+  .app-breadcrumb__current {
+    color: var(--text-strong);
+  }
+
+  .app-global-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 1 380px;
+    min-width: 0;
+    height: 38px;
+    padding-inline: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-soft);
+    color: var(--muted);
+  }
+
+  .app-global-search:focus-within {
+    border-color: var(--navy);
+    background: var(--white);
+    box-shadow: var(--focus-ring);
+  }
+
+  .app-global-search input {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: var(--fs-body-sm);
+    box-shadow: none !important;
+  }
+
+  .app-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+  }
+
+  .app-actions .lang-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 38px;
+    padding-inline: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--navy);
+    font-size: var(--fs-label);
+    font-weight: 800;
+    box-shadow: none;
+  }
+
+  .app-actions .lang-link:hover {
+    border-color: var(--navy);
+    background: var(--white);
+    color: var(--navy);
+  }
+
+  .app-mobile-toggle,
+  .app-mobile-close {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--navy);
+    cursor: pointer;
+  }
+
+  .app-mobile-close {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: transparent;
+    color: var(--white);
+    align-self: flex-end;
+  }
+
+  .impersonation-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-2) var(--gutter);
+    background: var(--orange-wash);
+    border-bottom: 1px solid var(--orange-soft);
+    color: var(--text-strong);
+    font-size: var(--fs-label);
+  }
+
+  .impersonation-banner button {
+    min-height: 36px;
+    padding-inline: var(--space-3);
+    border: 1px solid var(--navy);
+    border-radius: var(--radius-md);
+    background: var(--navy);
+    color: var(--white);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* --------------------------- page container --------------------------- */
+  .app-page {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding: var(--space-6) var(--gutter) var(--space-10);
+  }
+
+  /* Forms and reading surfaces do not stretch across wide screens. */
+  .app-page:has(> .admin-form-layout),
+  .app-page.project-form-page,
+  .app-page.settings-page,
+  .app-page.account-settings-page {
+    max-width: var(--content-max-form);
+  }
+
+  /* ---------------------------- bottom nav ---------------------------- */
+  .app-bottom-nav {
+    display: none;
+  }
+
+  /* ------------------------ drawer (tablet + phone) ------------------------ */
+  @media (max-width: 1099.98px) {
+    .app-shell {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .app-main {
+      grid-column: 1;
+    }
+
+    .app-mobile-toggle,
+    .app-mobile-close {
+      display: inline-flex;
+    }
+
+    .app-sidebar {
+      position: fixed;
+      inset-block: 0;
+      inset-inline-start: 0;
+      z-index: var(--z-drawer);
+      width: min(86vw, 304px);
+      height: 100dvh;
+      padding: calc(var(--space-3) + var(--safe-top)) var(--space-3) calc(var(--space-4) + var(--safe-bottom));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      transform: translateX(100%);
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform var(--dur) var(--ease), visibility var(--dur) var(--ease);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .app-shell[dir="ltr"] .app-sidebar {
+      transform: translateX(-100%);
+    }
+
+    .app-shell .app-sidebar.app-sidebar--open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .app-mobile-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: calc(var(--z-drawer) - 1);
+      border: 0;
+      padding: 0;
+      background: rgba(11, 19, 43, 0.5);
+      cursor: pointer;
+    }
+
+    .app-global-search {
+      flex-basis: 300px;
+    }
+  }
+
+  /* -------------------------------- phone -------------------------------- */
+  @media (max-width: 767.98px) {
+    .app-topbar {
+      gap: var(--space-2);
+      min-height: calc(var(--topbar-height-mobile) + var(--safe-top));
+      padding-inline: var(--space-3);
+      flex-wrap: nowrap;
+    }
+
+    /* Search lives in the bottom navigation on phones; the topbar carries
+       only identity (current page) and the two utilities. */
+    .app-global-search {
+      display: none;
+    }
+
+    .app-breadcrumb {
+      font-size: var(--fs-body);
+    }
+
+    .app-breadcrumb > span:not(:last-child) {
+      display: none;
+    }
+
+    .app-breadcrumb__sep {
+      display: none;
+    }
+
+    .app-breadcrumb__current {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .app-actions .lang-link {
+      height: 40px;
+      padding-inline: var(--space-2);
+      font-size: var(--fs-label);
+    }
+
+    .app-main {
+      padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+    }
+
+    .app-page {
+      padding: var(--space-4) var(--space-4) var(--space-8);
+    }
+
+    .app-bottom-nav {
+      position: fixed;
+      inset-inline: 0;
+      bottom: 0;
+      z-index: var(--z-bottom-nav);
+      display: flex;
+      align-items: stretch;
+      min-height: calc(var(--bottom-nav-height) + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--navy-deep);
+      box-shadow: 0 -6px 18px rgba(11, 19, 43, 0.12);
+    }
+
+    .app-bottom-nav a,
+    .app-bottom-nav button {
+      position: relative;
+      display: flex;
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: var(--bottom-nav-height);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: var(--space-1) 2px;
+      border: 0;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.64);
+      font-size: var(--fs-caption);
+      font-weight: 700;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+
+    .app-bottom-nav a span,
+    .app-bottom-nav button span {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .app-bottom-nav svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .app-bottom-nav a.active,
+    .app-bottom-nav button.active {
+      color: var(--white);
+    }
+
+    .app-bottom-nav a.active svg,
+    .app-bottom-nav button.active svg {
+      color: var(--orange);
+    }
+
+    .app-bottom-nav a.active::before,
+    .app-bottom-nav button.active::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      inset-inline: 30%;
+      height: 3px;
+      border-radius: 0 0 3px 3px;
+      background: var(--orange);
+    }
+  }
+}

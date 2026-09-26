@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, ProgressBar } from "@elhabak/ui";
+import { useEffect, useRef } from "react";
+import { AdaptiveDisclosure, Badge, ProgressBar } from "@elhabak/ui";
 import { Activity, ArrowRight, Building2, CalendarDays, CalendarRange, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
@@ -69,7 +70,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       start: "البدء",
       target: "التسليم المستهدف",
       back: "كل المشاريع",
-      fieldActions: "إجراءات ميدانية سريعة"
+      details: "تفاصيل المشروع"
     }
     : {
       phase: "Current phase",
@@ -94,7 +95,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       start: "Start",
       target: "Target delivery",
       back: "All projects",
-      fieldActions: "Quick field actions"
+      details: "Project details"
     };
 
   function href(path: string) {
@@ -125,119 +126,82 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       : [])
   ];
 
-  const nav = (
-    <nav
-      className="project-workspace-nav project-control-nav"
-      aria-label={ar ? "أقسام مساحة العمل" : "Workspace sections"}
-    >
-      {sections.map((section) => {
-        const Icon = section.icon;
-        return (
-          <Link
-            className={active === section.id ? "active" : ""}
-            href={href(section.href)}
-            key={section.id}
-            aria-current={active === section.id ? "page" : undefined}
-          >
-            <Icon size={16} /> {section.label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
+  const railRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    // Keep the active module visible inside the horizontally-scrolling rail.
+    const current = railRef.current?.querySelector<HTMLElement>("[aria-current='page']");
+    current?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [active]);
 
-  // Submodule pages get the compact sticky context bar - full operational context
-  // (identity, phase, progress, module nav) in one dense strip instead of the tall header.
-  if (active !== "overview") {
-    return (
-      <div className="project-context-bar project-control-bar">
-        <div className="project-context-bar__identity">
-          <Link
-            className="project-context-bar__back"
-            href={href(role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}
-            aria-label={labels.back}
-            title={labels.back}
-          >
-            <ArrowRight size={16} />
-          </Link>
-          <div className="project-context-bar__name">
-            <strong dir="auto">{project.name}</strong>
-            <small className="mono" dir="ltr">{project.code ?? labels.project}</small>
-          </div>
-        </div>
-        <div className="project-context-bar__phase">
-          <CalendarRange size={15} aria-hidden="true" />
-          <span>
-            <small>
-              <bdi className="mono">{String(currentPhaseIndex + 1).padStart(2, "0")}/06</bdi> · {labels.phase}
-            </small>
-            <strong>{phaseLabel(project.phase, locale)}</strong>
+  const isOverview = active === "overview";
+  const TitleTag = isOverview ? "h1" : "p";
+  const detailsSummary = [project.client?.user.displayName, project.location].filter(Boolean).join(" · ");
+
+  return (
+    <header className={`project-context${isOverview ? " project-context--overview" : " project-context--module"}`}>
+      <div className="project-context__top">
+        <Link
+          className="project-context__back"
+          href={href(role === "ADMIN" ? "/app/admin/projects" : "/app/projects")}
+          aria-label={labels.back}
+          title={labels.back}
+        >
+          <ArrowRight size={18} />
+        </Link>
+        <div className="project-context__identity">
+          <span className="project-context__meta">
+            <bdi className="mono" dir="ltr">{project.code ?? labels.project}</bdi>
+            <span aria-hidden="true">·</span>
+            <span>{categoryLabel(project.category, locale)}</span>
           </span>
-          <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
+          <TitleTag className="project-context__name" dir="auto">{project.name}</TitleTag>
         </div>
-        <div className="project-context-bar__progress">
-          <ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} />
-          <strong><bdi>{project.progress}%</bdi></strong>
-        </div>
-        <dl className="project-context-bar__facts">
-          <div><dt>{labels.client}</dt><dd dir="auto">{project.client?.user.displayName ?? labels.unset}</dd></div>
-          <div><dt>{labels.engineer}</dt><dd dir="auto">{project.engineer?.displayName ?? labels.unset}</dd></div>
-          <div><dt>{labels.location}</dt><dd dir="auto">{project.location ?? labels.unset}</dd></div>
-          <div><dt>{labels.target}</dt><dd><bdi>{formatDate(project.targetDate)}</bdi></dd></div>
-        </dl>
-        {nav}
         {role === "ADMIN" && (
-          <Link
-            className="ui-icon-button"
-            href={href(`/app/admin/projects/${project.id}`)}
-            aria-label={labels.edit}
-            title={labels.edit}
-          >
-            <Pencil size={15} />
+          <Link className="project-context__edit ui-button ui-button--secondary ui-button--sm" href={href(`/app/admin/projects/${project.id}`)} aria-label={labels.edit} title={labels.edit}>
+            <Pencil size={16} /> <span>{labels.edit}</span>
           </Link>
         )}
       </div>
-    );
-  }
 
-  return (
-    <div className="project-workspace-container">
-      <header className="project-command-header project-command-header--v5 project-control-header">
-        <div className="project-control-header__top">
-          <div className="project-control-header__identity">
-            <div className="project-control-header__meta">
-              <Link href={href(role === "ADMIN" ? "/app/admin/projects" : "/app/projects")} className="project-control-header__back" aria-label={labels.back}><ArrowRight size={16} /></Link>
-              <bdi className="mono" dir="ltr">{project.code ?? "—"}</bdi>
-              <span>{categoryLabel(project.category, locale)}</span>
-            </div>
-            <h1 dir="auto">{project.name}</h1>
-            <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
-          </div>
-          <div className="project-control-header__position">
-            <div className="project-control-header__phase"><span className="mono" dir="ltr">{String(currentPhaseIndex + 1).padStart(2, "0")}/06</span><div><small>{labels.phase}</small><strong>{phaseLabel(project.phase, locale)}</strong></div></div>
-            <div className="project-control-header__progress"><div><small>{labels.progress}</small><strong dir="ltr">{project.progress}%</strong></div><ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} /></div>
-          </div>
-        </div>
-        <dl className="project-control-header__facts">
-          <div><UsersRound size={14} aria-hidden="true" /><dt>{labels.client}</dt><dd dir="auto">{project.client?.user.displayName ?? labels.unset}</dd></div>
-          <div><UserRound size={14} aria-hidden="true" /><dt>{labels.engineer}</dt><dd dir="auto">{project.engineer?.displayName ?? labels.unset}</dd></div>
-          <div><MapPin size={14} aria-hidden="true" /><dt>{labels.location}</dt><dd dir="auto">{project.location ?? labels.unset}</dd></div>
-          <div><CalendarDays size={14} aria-hidden="true" /><dt>{labels.target}</dt><dd>{formatDate(project.targetDate)}</dd></div>
-          {project.workers?.length ? <div><Building2 size={14} aria-hidden="true" /><dt>{labels.team}</dt><dd dir="auto">{team}</dd></div> : null}
+      <div className="project-context__state">
+        <span className="project-context__phase">
+          <CalendarRange size={16} aria-hidden="true" />
+          <bdi className="mono" dir="ltr">{String(currentPhaseIndex + 1).padStart(2, "0")}/06</bdi>
+          <span className="project-context__phase-label"><small>{labels.phase}</small><strong>{phaseLabel(project.phase, locale)}</strong></span>
+        </span>
+        <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
+        <span className="project-context__progress">
+          <small>{labels.progress}</small>
+          <ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} aria-label={labels.progress} />
+          <strong dir="ltr">{project.progress}%</strong>
+        </span>
+      </div>
+
+      <AdaptiveDisclosure className="project-context__details" label={labels.details} summary={detailsSummary || undefined}>
+        <dl className="project-context__facts">
+          <div><UsersRound size={16} aria-hidden="true" /><dt>{labels.client}</dt><dd dir="auto">{project.client?.user.displayName ?? labels.unset}</dd></div>
+          <div><UserRound size={16} aria-hidden="true" /><dt>{labels.engineer}</dt><dd dir="auto">{project.engineer?.displayName ?? labels.unset}</dd></div>
+          <div><MapPin size={16} aria-hidden="true" /><dt>{labels.location}</dt><dd dir="auto">{project.location ?? labels.unset}</dd></div>
+          <div><CalendarDays size={16} aria-hidden="true" /><dt>{labels.target}</dt><dd><bdi>{formatDate(project.targetDate)}</bdi></dd></div>
+          {project.workers?.length ? <div><Building2 size={16} aria-hidden="true" /><dt>{labels.team}</dt><dd dir="auto">{team}</dd></div> : null}
         </dl>
-        <div className="project-control-header__navigation">{nav}{role === "ADMIN" && <Link className="ui-icon-button" href={href(`/app/admin/projects/${project.id}`)} aria-label={labels.edit}><Pencil size={15} /></Link>}</div>
-      </header>
-      {(role === "ENGINEER" || role === "WORKER") && (
-        <div className="project-mobile-actions">
-          <span className="project-mobile-actions__label">{labels.fieldActions}</span>
-          <div>
-            {sections.filter((section) => section.id === "site" || section.id === "design" || section.id === "documents" || section.id === "chat").map((section) => {
-              const Icon = section.icon;
-              return <Link href={href(section.href)} key={section.id}><Icon size={15} /> {section.label}</Link>;
-            })}
-          </div>
-        </div>
-      )}
-    </div>
+      </AdaptiveDisclosure>
+
+      <nav ref={railRef} className="project-context__nav" aria-label={labels.modules}>
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <Link
+              className={active === section.id ? "active" : ""}
+              href={href(section.href)}
+              key={section.id}
+              aria-current={active === section.id ? "page" : undefined}
+            >
+              <Icon size={18} aria-hidden="true" /> <span>{section.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </header>
   );
 }

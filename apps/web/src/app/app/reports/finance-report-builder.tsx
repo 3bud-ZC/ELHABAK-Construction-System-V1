@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Badge, LoadingState, OperationsStagePath } from "@elhabak/ui";
+import { Badge, LoadingState, AdaptiveDisclosure } from "@elhabak/ui";
 import { Download, FileSpreadsheet, Play, Search } from "lucide-react";
 import {
   apiRequest,
@@ -255,155 +255,152 @@ export function FinanceReportBuilder({ locale }: { locale: "ar" | "en" }) {
         </div>
       </header>
 
-      <div className="finance-builder__controls">
-        <OperationsStagePath
-          className="finance-builder__steps"
-          stages={[
-            labels.stepScope,
-            labels.stepDates,
-            labels.stepSections,
-            labels.stepDetail,
-            labels.stepOutput,
-            labels.stepGenerate
-          ].map((label, index) => ({
-            code: String(index + 1).padStart(2, "0"),
-            label,
-            state: index === 0 ? "current" : "upcoming"
-          }))}
-        />
-
-        <div className="finance-builder__group">
-          <span className="finance-builder__label">{labels.scope}</span>
-          <div className="finance-scope-bar finance-scope-bar--inline" role="group">
-            {(
-              [
-                ["all", labels.all],
-                ["selected", labels.selected],
-                ["one", labels.one]
-              ] as Array<[ScopeMode, string]>
-            ).map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                className={`finance-scope-bar__option${scopeMode === mode ? " active" : ""}`}
-                onClick={() => {
-                  setScopeMode(mode);
-                  if (mode === "one") setSelectedIds((current) => current.slice(0, 1));
-                  if (mode === "all") setSelectedIds([]);
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {scopeMode !== "all" && (
-          <div className="finance-scope-picker finance-scope-picker--inline">
-            <label className="global-search-field finance-scope-picker__search">
-              <Search size={16} aria-hidden="true" />
-              <input
-                value={pickerQuery}
-                onChange={(event) => setPickerQuery(event.target.value)}
-                placeholder={labels.pick}
-                aria-label={labels.pick}
-              />
-            </label>
-            <div className="finance-scope-picker__list">
-              {filteredPicker.map((project) => {
-                const on = selectedIds.includes(project.id);
-                return (
-                  <label className={`finance-scope-pick${on ? " finance-scope-pick--on" : ""}`} key={project.id}>
+      <ol className="report-steps">
+        <li className="report-step">
+          <AdaptiveDisclosure defaultOpen label={<><span className="report-step__index">01</span>{labels.stepScope}</>} summary={scopeMode === "all" ? labels.all : `${selectedIds.length} · ${scopeMode === "one" ? labels.one : labels.selected}`}>
+            <div className="report-step__head"><span className="report-step__index">01</span><strong>{labels.stepScope}</strong></div>
+            <div className="report-step__body">
+              <div className="ui-segmented report-step__segmented" role="group" aria-label={labels.scope}>
+                {(
+                  [
+                    ["all", labels.all],
+                    ["selected", labels.selected],
+                    ["one", labels.one]
+                  ] as Array<[ScopeMode, string]>
+                ).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={scopeMode === mode}
+                    className={`ui-segmented__option${scopeMode === mode ? " ui-segmented__option--active" : ""}`}
+                    onClick={() => {
+                      setScopeMode(mode);
+                      if (mode === "one") setSelectedIds((current) => current.slice(0, 1));
+                      if (mode === "all") setSelectedIds([]);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {scopeMode !== "all" && (
+                <div className="finance-scope-picker finance-scope-picker--inline">
+                  <label className="global-search-field finance-scope-picker__search">
+                    <Search size={16} aria-hidden="true" />
                     <input
-                      type={scopeMode === "one" ? "radio" : "checkbox"}
-                      name="report-scope"
-                      checked={on}
-                      onChange={() => toggleProject(project.id)}
+                      value={pickerQuery}
+                      onChange={(event) => setPickerQuery(event.target.value)}
+                      placeholder={labels.pick}
+                      aria-label={labels.pick}
                     />
-                    <span className="finance-scope-pick__body">
-                      <strong>{project.name}</strong>
-                      <span>
-                        <bdi className="mono">{project.code ?? "—"}</bdi>
-                        {project.clientName ? ` · ${project.clientName}` : ""}
-                      </span>
-                    </span>
                   </label>
-                );
-              })}
+                  <div className="finance-scope-picker__list">
+                    {filteredPicker.map((project) => {
+                      const on = selectedIds.includes(project.id);
+                      return (
+                        <label className={`finance-scope-pick${on ? " finance-scope-pick--on" : ""}`} key={project.id}>
+                          <input
+                            type={scopeMode === "one" ? "radio" : "checkbox"}
+                            name="report-scope"
+                            checked={on}
+                            onChange={() => toggleProject(project.id)}
+                          />
+                          <span className="finance-scope-pick__body">
+                            <strong>{project.name}</strong>
+                            <span>
+                              <bdi className="mono">{project.code ?? "—"}</bdi>
+                              {project.clientName ? ` · ${project.clientName}` : ""}
+                            </span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          </AdaptiveDisclosure>
+        </li>
 
-        <div className="finance-builder__group">
-          <span className="finance-builder__label">{labels.sections}</span>
-          <div className="finance-builder__sections">
-            {FINANCE_REPORT_SECTIONS.map((section) => (
-              <label key={section} className={`dataops-chip finance-builder__chip${sections.has(section) ? " finance-builder__chip--on" : ""}`}>
-                <input type="checkbox" checked={sections.has(section)} onChange={() => toggleSection(section)} />
-                {SECTION_META[section][locale]}
-              </label>
-            ))}
-          </div>
-        </div>
+        <li className="report-step">
+          <AdaptiveDisclosure label={<><span className="report-step__index">02</span>{labels.stepDates}</>} summary={from || to ? <bdi dir="ltr">{from || "…"} → {to || "…"}</bdi> : undefined}>
+            <div className="report-step__head"><span className="report-step__index">02</span><strong>{labels.stepDates}</strong></div>
+            <div className="report-step__body report-step__dates">
+              <label className="ui-field"><span>{labels.from}</span><input type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></label>
+              <label className="ui-field"><span>{labels.to}</span><input type="date" value={to} onChange={(event) => setTo(event.target.value)} /></label>
+            </div>
+          </AdaptiveDisclosure>
+        </li>
 
-        <div className="finance-builder__row">
-          <div className="finance-builder__group">
-            <span className="finance-builder__label">{labels.mode}</span>
-            <div className="finance-scope-bar finance-scope-bar--inline" role="group">
-              {(
-                [
-                  ["detailed", labels.detailed],
-                  ["summary", labels.summary]
-                ] as Array<["detailed" | "summary", string]>
-              ).map(([mode, label]) => (
-                <button
-                  key={mode}
-                  type="button"
-                  className={`finance-scope-bar__option${detail === mode ? " active" : ""}`}
-                  onClick={() => setDetail(mode)}
-                >
-                  {label}
-                </button>
+        <li className="report-step report-step--wide">
+          <AdaptiveDisclosure label={<><span className="report-step__index">03</span>{labels.stepSections}</>} summary={<bdi>{sections.size}/{FINANCE_REPORT_SECTIONS.length}</bdi>}>
+            <div className="report-step__head"><span className="report-step__index">03</span><strong>{labels.stepSections}</strong><small><bdi>{sections.size}/{FINANCE_REPORT_SECTIONS.length}</bdi></small></div>
+            <div className="report-step__body report-checklist" role="group" aria-label={labels.sections}>
+              {FINANCE_REPORT_SECTIONS.map((section) => (
+                <label key={section} className={`report-check${sections.has(section) ? " is-on" : ""}`}>
+                  <input type="checkbox" checked={sections.has(section)} onChange={() => toggleSection(section)} />
+                  <span>{SECTION_META[section][locale]}</span>
+                </label>
               ))}
             </div>
-          </div>
-          <div className="finance-builder__group">
-            <span className="finance-builder__label">{labels.period}</span>
-            <div className="finance-builder__dates">
-              <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} aria-label={labels.from} />
-              <input type="date" value={to} onChange={(event) => setTo(event.target.value)} aria-label={labels.to} />
-            </div>
-          </div>
-        </div>
+          </AdaptiveDisclosure>
+        </li>
 
-        <div className="finance-builder__actions">
-          <button type="button" className="ui-button ui-button--primary" onClick={() => void run()} disabled={busy}>
-            <Play size={15} /> {busy ? labels.running : labels.run}
-          </button>
-          <a
-            className="ui-button ui-button--secondary ui-button--sm"
-            href={financeReportPdfUrl(scopeIds, { ...queryOptions, lang: locale })}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Download size={14} /> {ar ? labels.pdfAr : labels.pdfEn}
-          </a>
-          <a
-            className="ui-button ui-button--secondary ui-button--sm"
-            href={financeReportPdfUrl(scopeIds, { ...queryOptions, lang: ar ? "en" : "ar" })}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Download size={14} /> {ar ? labels.pdfEn : labels.pdfAr}
-          </a>
-          <a className="ui-button ui-button--secondary ui-button--sm" href={financeReportExportUrl(scopeIds, { from, to, format: "xlsx", dataset: "summary" })}>
-            <FileSpreadsheet size={14} /> {labels.xlsx}
-          </a>
-          <a className="ui-button ui-button--secondary ui-button--sm" href={financeReportExportUrl(scopeIds, { from, to, format: "csv", dataset: "ledger" })}>
-            <FileSpreadsheet size={14} /> {labels.csv}
-          </a>
-        </div>
-      </div>
+        <li className="report-step">
+          <AdaptiveDisclosure label={<><span className="report-step__index">04</span>{labels.stepDetail}</>} summary={detail === "detailed" ? labels.detailed : labels.summary}>
+            <div className="report-step__head"><span className="report-step__index">04</span><strong>{labels.stepDetail}</strong></div>
+            <div className="report-step__body">
+              <div className="ui-segmented report-step__segmented" role="group" aria-label={labels.mode}>
+                {(
+                  [
+                    ["detailed", labels.detailed],
+                    ["summary", labels.summary]
+                  ] as Array<["detailed" | "summary", string]>
+                ).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={detail === mode}
+                    className={`ui-segmented__option${detail === mode ? " ui-segmented__option--active" : ""}`}
+                    onClick={() => setDetail(mode)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </AdaptiveDisclosure>
+        </li>
+
+        <li className="report-step">
+          <AdaptiveDisclosure label={<><span className="report-step__index">05</span>{labels.stepOutput}</>} summary="PDF · Excel · CSV">
+            <div className="report-step__head"><span className="report-step__index">05</span><strong>{labels.stepOutput}</strong></div>
+            <div className="report-step__body report-outputs">
+              <a className="report-output" href={financeReportPdfUrl(scopeIds, { ...queryOptions, lang: locale })} target="_blank" rel="noreferrer">
+                <Download size={18} /> {ar ? labels.pdfAr : labels.pdfEn}
+              </a>
+              <a className="report-output" href={financeReportPdfUrl(scopeIds, { ...queryOptions, lang: ar ? "en" : "ar" })} target="_blank" rel="noreferrer">
+                <Download size={18} /> {ar ? labels.pdfEn : labels.pdfAr}
+              </a>
+              <a className="report-output" href={financeReportExportUrl(scopeIds, { from, to, format: "xlsx", dataset: "summary" })}>
+                <FileSpreadsheet size={18} /> {labels.xlsx}
+              </a>
+              <a className="report-output" href={financeReportExportUrl(scopeIds, { from, to, format: "csv", dataset: "ledger" })}>
+                <FileSpreadsheet size={18} /> {labels.csv}
+              </a>
+            </div>
+          </AdaptiveDisclosure>
+        </li>
+
+        <li className="report-step report-step--generate">
+          <div className="report-step__head report-step__head--always"><span className="report-step__index">06</span><strong>{labels.stepGenerate}</strong></div>
+          <div className="report-step__body">
+            <button type="button" className="ui-button ui-button--primary report-generate" onClick={() => void run()} disabled={busy}>
+              <Play size={18} /> {busy ? labels.running : labels.run}
+            </button>
+          </div>
+        </li>
+      </ol>
 
       {error && (
         <div className="form-error" role="alert">

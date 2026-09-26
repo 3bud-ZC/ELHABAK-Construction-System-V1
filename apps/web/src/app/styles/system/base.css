@@ -1,0 +1,109 @@
+/*
+ * System · base — typography rhythm, focus, bidi and motion defaults for the
+ * authenticated product. Element rules are scoped to the app shell / login so
+ * the public website keeps its own typography.
+ */
+@layer system {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .app-shell,
+  .app-loading {
+    font-size: var(--fs-body-sm);
+    line-height: var(--lh-body);
+    color: var(--text);
+  }
+
+  .app-shell :where(h1, h2, h3, h4) {
+    color: var(--text-strong);
+    line-height: var(--lh-tight);
+    font-weight: var(--fw-bold);
+  }
+
+  .app-shell :where(p) {
+    line-height: var(--lh-body);
+  }
+
+  .app-shell :where(small) {
+    font-size: var(--fs-caption);
+  }
+
+  /* Technical identifiers never reorder inside Arabic lines. */
+  .app-shell :where(.mono, code, kbd, samp) {
+    font-family: var(--font-mono);
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Latin names/identifiers auto-detected as LTR still align with the
+     surrounding Arabic layout instead of jumping to the far edge. */
+  :where(.app-shell[dir="rtl"]) :where([dir="auto"]) {
+    text-align: right;
+  }
+
+  :where(.app-shell[dir="ltr"]) :where([dir="auto"]) {
+    text-align: left;
+  }
+
+  .app-shell :where(time, bdi) {
+    unicode-bidi: isolate;
+  }
+
+  .app-shell :where(input, select, textarea, button) {
+    font-family: inherit;
+  }
+
+  /* Visible, consistent keyboard focus across every control. */
+  .app-shell :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: 2px;
+  }
+
+  .app-shell :where(input, select, textarea):focus-visible {
+    outline: none;
+    border-color: var(--navy) !important;
+    box-shadow: var(--focus-ring);
+  }
+
+  .sr-only,
+  .ops-sr-only {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Phones: comfortable reading size, 16px inputs (prevents iOS focus zoom),
+     44px touch targets for every interactive control. */
+  @media (max-width: 767.98px) {
+    .app-shell {
+      font-size: var(--fs-body);
+    }
+
+    .app-shell :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea) {
+      font-size: var(--fs-body-lg) !important;
+    }
+
+    .app-shell :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select) {
+      min-height: var(--control-height-touch);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-shell *,
+    .app-shell *::before,
+    .app-shell *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

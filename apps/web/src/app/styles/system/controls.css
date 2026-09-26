@@ -1,0 +1,438 @@
+/*
+ * System · controls — buttons, fields, badges, progress, tabs, chips.
+ * Action hierarchy:
+ *   primary   navy filled  — the default operational action
+ *   accent    orange       — key workflow emphasis only (submit for review,
+ *                            upload new revision/version)
+ *   secondary white+border · ghost/text · danger red (destructive only)
+ */
+@layer system {
+  /* ------------------------------- buttons ------------------------------- */
+  .ui-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    padding: 0 var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: var(--fs-body-sm);
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+
+  .ui-button svg {
+    flex: 0 0 auto;
+    width: var(--icon-button);
+    height: var(--icon-button);
+  }
+
+  .ui-button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .ui-button:active {
+    transform: translateY(1px);
+  }
+
+  .ui-button:disabled,
+  .ui-button[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .ui-button--sm {
+    min-height: var(--control-height-sm);
+    padding-inline: var(--space-3);
+    font-size: var(--fs-label);
+  }
+
+  .ui-button--sm svg {
+    width: var(--icon-inline);
+    height: var(--icon-inline);
+  }
+
+  .ui-button--primary {
+    border-color: var(--navy);
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  .ui-button--primary:hover {
+    border-color: var(--navy-deep);
+    background: var(--navy-deep);
+    color: var(--white);
+  }
+
+  .ui-button--accent {
+    border-color: var(--orange);
+    background: var(--orange);
+    color: var(--white);
+  }
+
+  .ui-button--accent:hover {
+    border-color: var(--orange-hover);
+    background: var(--orange-hover);
+    color: var(--white);
+  }
+
+  .ui-button--secondary {
+    border-color: var(--border-strong);
+    background: var(--white);
+    color: var(--navy);
+  }
+
+  .ui-button--secondary:hover {
+    border-color: var(--navy);
+    background: var(--white);
+    color: var(--navy);
+  }
+
+  /* Tertiary: text action with a quiet hover surface. */
+  .ui-button--ghost {
+    border-color: transparent;
+    background: transparent;
+    color: var(--navy);
+  }
+
+  .ui-button--ghost:hover {
+    border-color: var(--border);
+    background: var(--surface-soft);
+    color: var(--navy);
+  }
+
+  .project-created-banner .ui-button--ghost {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--white);
+  }
+
+  .ui-button--success {
+    border-color: var(--success);
+    background: var(--success);
+    color: var(--white);
+  }
+
+  .ui-button--danger {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: var(--white);
+  }
+
+  .ui-button.full-width {
+    width: 100%;
+  }
+
+  .icon-button,
+  .ui-icon-button,
+  .adaptive-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height);
+    height: var(--control-height);
+    flex: 0 0 auto;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--navy);
+    cursor: pointer;
+  }
+
+  .icon-button:hover,
+  .ui-icon-button:hover,
+  .adaptive-icon-button:hover {
+    border-color: var(--navy);
+  }
+
+  /* Password reveal toggle sits inside its input (login, forced change). */
+  .password-input {
+    position: relative;
+    display: block;
+  }
+
+  .password-input input {
+    padding-inline-end: 3rem;
+  }
+
+  .password-input .icon-button {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 4px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    background: transparent;
+    transform: translateY(-50%);
+  }
+
+  .adaptive-icon-button--inverse {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: var(--white);
+  }
+
+  /* -------------------------------- fields -------------------------------- */
+  .ui-field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    color: var(--text-soft);
+    font-size: var(--fs-label);
+    font-weight: 700;
+  }
+
+  .app-shell :where(.ui-field, .form-field, .form-grid label, .design-dialog label) :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea),
+  .app-shell .search-input,
+  .app-shell .filter-select {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--control-height);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background-color: var(--white);
+    color: var(--text);
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    box-shadow: none;
+  }
+
+  .app-shell :where(.ui-field, .form-field, .form-grid label, .design-dialog label) textarea {
+    min-height: 96px;
+    padding-block: var(--space-2);
+    line-height: var(--lh-body);
+    resize: vertical;
+  }
+
+  .app-shell :where(input, select, textarea):disabled {
+    background-color: var(--surface-sunken);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .app-shell :where(input, select, textarea)::placeholder {
+    color: var(--muted-soft);
+    opacity: 1;
+  }
+
+  .app-shell :where(input[type="checkbox"], input[type="radio"]) {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--navy);
+  }
+
+  .form-error {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid rgba(198, 40, 40, 0.28);
+    border-inline-start: 3px solid var(--danger);
+    border-radius: var(--radius-md);
+    background: var(--danger-wash);
+    color: var(--danger);
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+  }
+
+  .form-success {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid rgba(11, 122, 79, 0.28);
+    border-inline-start: 3px solid var(--success);
+    border-radius: var(--radius-md);
+    background: var(--success-wash);
+    color: var(--success);
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+  }
+
+  /* -------------------------------- badges -------------------------------- */
+  .ui-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 24px;
+    padding: 0 var(--space-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-caption);
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .ui-badge::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* -------------------------------- progress ------------------------------- */
+  .progress-track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+  }
+
+  .progress-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  /* --------------------------------- tabs --------------------------------- */
+  .ui-tabs {
+    display: flex;
+    gap: var(--space-1);
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ui-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ui-tabs__tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+    min-height: var(--control-height);
+    padding: 0 var(--space-3);
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .ui-tabs__tab--active {
+    color: var(--navy);
+  }
+
+  .ui-tabs__tab--active::after {
+    content: "";
+    position: absolute;
+    inset-inline: var(--space-2);
+    bottom: -1px;
+    height: 2px;
+    background: var(--orange);
+  }
+
+  .ui-segmented {
+    display: inline-flex;
+    max-width: 100%;
+    padding: 3px;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
+  }
+
+  .ui-segmented__option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--muted);
+    font-size: var(--fs-label);
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .ui-segmented__option--active {
+    background: var(--white);
+    color: var(--navy);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* --------------------------------- chips -------------------------------- */
+  .adaptive-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 32px;
+    padding: 0 var(--space-2) 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    color: var(--navy);
+    font-size: var(--fs-label);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .adaptive-chip__x {
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--surface-sunken);
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .adaptive-chip--clear {
+    padding-inline: var(--space-3);
+    border-style: dashed;
+    color: var(--muted);
+  }
+
+  /* ------------------------------- phones -------------------------------- */
+  @media (max-width: 767.98px) {
+    .ui-button {
+      min-height: var(--control-height-touch);
+      font-size: var(--fs-body-sm);
+    }
+
+    .ui-button--sm {
+      min-height: 40px;
+    }
+
+    .icon-button,
+    .ui-icon-button,
+    .adaptive-icon-button {
+      width: var(--touch-target);
+      height: var(--touch-target);
+    }
+
+    .ui-tabs__tab,
+    .ui-segmented__option {
+      min-height: 40px;
+    }
+
+    /* Chip-style toggles and tab buttons keep a 40px+ touch height. */
+    .report-section-chip,
+    .notifications-tabs button,
+    .notifications-filter button {
+      min-height: 40px;
+    }
+
+    .notifications-back-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+    }
+  }
+}

@@ -1,0 +1,2 @@
+/* Cascade layer order — must be the first stylesheet the bundler emits. */
+@layer legacy, public, system;

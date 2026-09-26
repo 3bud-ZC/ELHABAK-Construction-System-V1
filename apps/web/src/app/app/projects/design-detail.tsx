@@ -2,9 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Badge, LoadingState, OperationsPanel } from "@elhabak/ui";
+import { Badge, LoadingState, OperationsPanel, useIsPhone } from "@elhabak/ui";
 import { Check, Download, FileClock, FileText, MessageSquare, Pencil, Send, UploadCloud, X, XCircle } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
+import { PreviewLauncher } from "../../../components/preview-launcher";
 import {
   DESIGN_DISCIPLINES,
   apiRequest,
@@ -30,6 +31,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
   const user = useCurrentUser();
+  const isPhone = useIsPhone();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [design, setDesign] = useState<DesignRecord | null>(null);
   const [selectedRevisionId, setSelectedRevisionId] = useState("");
@@ -50,7 +52,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     cancel: "إلغاء", confirm: "تأكيد", approve: "اعتماد", reject: "رفض", approvalTitle: "قرار العميل", approvalLead: "راجع الملف والبيانات قبل تسجيل القرار النهائي.",
     commentOptional: "تعليق (اختياري عند الاعتماد)", rejectionRequired: "سبب الرفض مطلوب", addComment: "إضافة تعليق", commentPlaceholder: "اكتب تعليقاً مرتبطاً بهذه المراجعة...",
     commentSaved: "تمت إضافة التعليق.", approved: "تم اعتماد المراجعة وتسجيل القرار.", rejected: "تم رفض المراجعة وحفظ التعليق.", submitted: "تم إرسال المراجعة للعميل.",
-    edit: "تعديل البيانات", save: "حفظ التعديلات", title: "عنوان التصميم", updated: "تم تحديث بيانات التصميم.", pdfFallback: "إذا لم تظهر المعاينة، نزّل الملف لفتحه.", fileMeta: "بيانات الملف",
+    edit: "تعديل البيانات", save: "حفظ التعديلات", title: "عنوان التصميم", updated: "تم تحديث بيانات التصميم.", pdfFallback: "إذا لم تظهر المعاينة، نزّل الملف لفتحه.", openPreview: "فتح المعاينة", closePreview: "إغلاق المعاينة", fileMeta: "بيانات الملف",
     viewingOld: "تعاين مراجعة سابقة", latestIs: "الأحدث", backToLatest: "العودة للأحدث", revisionNote: "ملاحظة المراجعة",
     rejectionReason: "سبب رفض العميل", rejectedFollowUp: "ارفع مراجعة جديدة لمعالجة ملاحظات العميل.", commentOn: "تعليق على",
     approveConfirm: "تأكيد اعتماد", rejectConfirm: "تأكيد رفض", decisionBy: "سُجّل القرار بواسطة", nextAction: "الإجراء التالي", conversation: "مناقشة المراجعة", noConversation: "لا توجد ملاحظات على هذه المراجعة بعد.", sending: "جاري الإرسال...", size: "الحجم"
@@ -61,7 +63,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
     cancel: "Cancel", confirm: "Confirm", approve: "Approve", reject: "Reject", approvalTitle: "Client decision", approvalLead: "Inspect the file and metadata before recording a final decision.",
     commentOptional: "Comment (optional for approval)", rejectionRequired: "Rejection reason is required", addComment: "Add comment", commentPlaceholder: "Write a comment linked to this revision...",
     commentSaved: "Comment added.", approved: "Revision approved and decision recorded.", rejected: "Revision rejected and comment preserved.", submitted: "Revision submitted to client.",
-    edit: "Edit details", save: "Save changes", title: "Design title", updated: "Design details updated.", pdfFallback: "If preview does not load, download the file to open it.", fileMeta: "File metadata",
+    edit: "Edit details", save: "Save changes", title: "Design title", updated: "Design details updated.", pdfFallback: "If preview does not load, download the file to open it.", openPreview: "Open preview", closePreview: "Close preview", fileMeta: "File metadata",
     viewingOld: "You are viewing a historical revision", latestIs: "Latest", backToLatest: "Back to latest", revisionNote: "Revision note",
     rejectionReason: "Client rejection reason", rejectedFollowUp: "Upload a new revision to address the client's notes.", commentOn: "Comment on",
     approveConfirm: "Confirm approval of", rejectConfirm: "Confirm rejection of", decisionBy: "Decision recorded by", nextAction: "Next action", conversation: "Revision discussion", noConversation: "No review comments on this revision yet.", sending: "Sending...", size: "Size"
@@ -158,7 +160,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
 
     <div className="design-detail-layout technical-record-layout">
       <main className="design-preview-column technical-preview-column">
-        <section className="workspace-panel design-file-panel technical-file-panel">
+        <section className="workspace-panel design-file-panel technical-file-panel review-slot--file">
           <div className="workspace-panel__title">
             <div className="workspace-panel__title-left">
               <FileText size={16} />
@@ -169,9 +171,20 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
               <Download size={14} />{labels.download} ({formatFileSize(selected.fileSize, locale)})
             </a>
           </div>
-          <div className="cad-preview-frame">
-            <FilePreview projectId={projectId} designId={designId} revision={selected} fallback={labels.pdfFallback} />
-          </div>
+          {isPhone ? (
+            <PreviewLauncher
+              title={selected.originalFilename}
+              meta={<><bdi className="mono" dir="ltr">{selected.revisionCode}</bdi> · <bdi dir="ltr">{selected.mimeType === "application/pdf" ? "PDF" : "IMG"} · {formatFileSize(selected.fileSize, locale)}</bdi></>}
+              downloadHref={designFileUrl(projectId, designId, selected.id, true)}
+              labels={{ open: labels.openPreview, download: labels.download, close: labels.closePreview }}
+            >
+              <FilePreview projectId={projectId} designId={designId} revision={selected} fallback={labels.pdfFallback} />
+            </PreviewLauncher>
+          ) : (
+            <div className="cad-preview-frame">
+              <FilePreview projectId={projectId} designId={designId} revision={selected} fallback={labels.pdfFallback} />
+            </div>
+          )}
           {selected.notes && (
             <p className="design-revision-note"><small>{labels.revisionNote}</small><bdi>{selected.notes}</bdi></p>
           )}
@@ -185,7 +198,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
         </section>
 
         {canDecide && (
-          <section className="approval-panel">
+          <section className="approval-panel review-slot--decision">
             <div className="approval-panel__head">
               <span className="approval-panel__icon"><FileClock size={20} /></span>
               <div>
@@ -225,7 +238,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
           </section>
         )}
 
-        <section className="workspace-panel review-conversation">
+        <section className="workspace-panel review-conversation review-slot--comments">
           <div className="workspace-panel__title"><MessageSquare size={16} /><h3>{labels.conversation}</h3><bdi className="mono" dir="ltr">{selected.revisionCode}</bdi></div>
           <div className="review-conversation__thread" aria-live="polite">
             {comments.length === 0 && <p className="review-conversation__empty">{labels.noConversation}</p>}
@@ -244,7 +257,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
 
       <aside className="design-detail-sidebar technical-control-sidebar">
         <OperationsPanel
-          className="workspace-panel design-review-state-panel"
+          className="workspace-panel design-review-state-panel review-slot--state"
           eyebrow={ar ? "حالة المراجعة" : "REVIEW STATE"}
           title={labels.current}
           description={<><bdi className="mono" dir="ltr">{design.currentRevision.revisionCode}</bdi> · {designNextAction(design.status, user.role, locale)}</>}
@@ -256,7 +269,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
           )}
         </OperationsPanel>
 
-        <section className="workspace-panel">
+        <section className="workspace-panel review-slot--history">
           <div className="workspace-panel__title">
             <FileClock size={16} />
             <h3>{labels.revisionHistory}</h3>
@@ -276,7 +289,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
           </div>
         </section>
 
-        <section className="workspace-panel">
+        <section className="workspace-panel review-slot--audit">
           <div className="workspace-panel__title">
             <FileClock size={16} />
             <h3>{labels.activity}</h3>

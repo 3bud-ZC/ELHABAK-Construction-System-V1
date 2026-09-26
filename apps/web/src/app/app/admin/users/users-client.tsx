@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, OperationsPanel, PageHeader } from "@elhabak/ui";
+import { AdaptiveFilters, Badge, EmptyState, LoadingState, OperationsGrid, OperationsHeader, OperationsMetric, OperationsPanel, OperationsSurface, PageHeader, Register, RegisterCell, RegisterRow, type FilterChip } from "@elhabak/ui";
 import {
   Archive,
   Download,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { apiRequest, dataOpsExportUrl, formatAppDate, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
 import { useCurrentUser } from "../../../../lib/user-context";
+import { filterLabels } from "../../../../lib/adaptive";
 
 const roles: UserRole[] = ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER"];
 type AccountStatus = "ACTIVE" | "SUSPENDED" | "ARCHIVED";
@@ -175,22 +176,22 @@ export function UsersClient({ mode, id }: UsersClientProps) {
   if (mode === "list") {
     return (
       <section className="app-page users-console">
-        <div className="admin-command-strip">
-          <div>
-            <span className="section-kicker">{ar ? "إدارة الفريق والصلاحيات" : "User & Access Management"}</span>
-            <strong>{labels.title}</strong>
-            <span className="admin-command-strip__subtitle">{labels.lead}</span>
-          </div>
-          <div className="admin-command-strip__actions">
-            <a className="ui-button ui-button--ghost ui-button--sm" href={dataOpsExportUrl("users", "xlsx")}>
-              <Download size={14} /> {labels.export}
-            </a>
-            <Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>
-          </div>
-        </div>
+        <OperationsHeader
+          eyebrow={ar ? "إدارة الفريق والصلاحيات" : "User & Access Management"}
+          title={labels.title}
+          description={labels.lead}
+          actions={
+            <>
+              <a className="ui-button ui-button--ghost" href={dataOpsExportUrl("users", "xlsx")}>
+                <Download size={18} /> {labels.export}
+              </a>
+              <Link className="ui-button ui-button--primary" href={withLocale("/app/admin/users/new", ar)}>{labels.create}</Link>
+            </>
+          }
+        />
 
         {!loading ? (
-          <OperationsPanel className="team-account-ledger" eyebrow={ar ? "دورة حياة الحسابات" : "ACCOUNT LIFECYCLE"}>
+          <OperationsPanel className="team-account-ledger" aria-label={ar ? "دورة حياة الحسابات" : "Account lifecycle"}>
             <OperationsGrid columns="repeat(4, minmax(150px, 1fr))">
               <OperationsMetric tone="navy" label={labels.total} value={<bdi>{users.length}</bdi>} />
               <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{activeCount}</bdi>} />
@@ -211,48 +212,65 @@ export function UsersClient({ mode, id }: UsersClientProps) {
           </div>
         </div>
 
-        <div className="console-surface">
-          <div className="table-toolbar users-toolbar">
-            <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} aria-label={labels.search} />
-            <select className="filter-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as UserRole | "ALL")} aria-label={labels.filterRole}>
-              <option value="ALL">{labels.allRoles}</option>
-              {roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}
-            </select>
-            <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AccountStatus | "ALL")} aria-label={labels.filterStatus}>
-              <option value="ALL">{labels.allStatuses}</option>
-              <option value="ACTIVE">{labels.active}</option>
-              <option value="SUSPENDED">{labels.suspended}</option>
-              <option value="ARCHIVED">{labels.archived}</option>
-            </select>
-            {!loading && <span className="table-toolbar__count"><bdi>{visibleUsers.length}</bdi> {ar ? "مستخدم" : "users"}</span>}
-          </div>
+        <OperationsSurface>
+          <AdaptiveFilters
+            className="register-filters"
+            labels={filterLabels(locale)}
+            onClear={() => { setRoleFilter("ALL"); setStatusFilter("ALL"); }}
+            chips={[
+              roleFilter !== "ALL" && { key: "role", label: roleLabel(roleFilter, locale), onRemove: () => setRoleFilter("ALL") },
+              statusFilter !== "ALL" && { key: "status", label: statusFilter === "ACTIVE" ? labels.active : statusFilter === "SUSPENDED" ? labels.suspended : labels.archived, onRemove: () => setStatusFilter("ALL") }
+            ].filter(Boolean) as FilterChip[]}
+            search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} /></label>}
+            meta={!loading ? <span><bdi>{visibleUsers.length}</bdi> {ar ? "مستخدم" : "users"}</span> : undefined}
+          >
+            <label className="adaptive-filter-field">
+              <span className="adaptive-filter-field__label">{labels.role}</span>
+              <select className="filter-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as UserRole | "ALL")} aria-label={labels.filterRole}>
+                <option value="ALL">{labels.allRoles}</option>
+                {roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}
+              </select>
+            </label>
+            <label className="adaptive-filter-field">
+              <span className="adaptive-filter-field__label">{labels.status}</span>
+              <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AccountStatus | "ALL")} aria-label={labels.filterStatus}>
+                <option value="ALL">{labels.allStatuses}</option>
+                <option value="ACTIVE">{labels.active}</option>
+                <option value="SUSPENDED">{labels.suspended}</option>
+                <option value="ARCHIVED">{labels.archived}</option>
+              </select>
+            </label>
+          </AdaptiveFilters>
           {error ? <div className="form-error" role="alert">{error}</div> : null}
           {success ? <div className="form-success" role="status">{success}</div> : null}
           {loading || actionBusy && !pending ? <LoadingState label={labels.loadingLabel} /> : null}
           {!loading && visibleUsers.length === 0 ? <EmptyState icon={<UsersRound size={20} />} title={labels.empty} description={labels.emptyHint} /> : null}
           {!loading && visibleUsers.length > 0 ? (
-            <div className="data-table users-table admin-register">
-              <div className="data-table-head user-row">
-                <span>{labels.name}</span><span>{labels.role}</span><span>{labels.status}</span><span>{labels.created}</span><span>{labels.actions}</span>
-              </div>
+            <Register
+              className="ops-register--accounts"
+              columns="minmax(240px,2.2fr) minmax(120px,1fr) 120px minmax(120px,1fr) 64px"
+              head={<><span>{labels.name}</span><span>{labels.role}</span><span>{labels.status}</span><span>{labels.created}</span><span>{labels.actions}</span></>}
+            >
               {visibleUsers.map((user) => (
-                <div className={`data-row user-row ${statusOf(user) === "ARCHIVED" ? "admin-row--archived" : statusOf(user) === "SUSPENDED" ? "admin-row--suspended" : ""}`} key={user.id}>
-                  <div data-label={labels.name} className="admin-register__identity">
-                    <Link className="user-name-link" href={withLocale(`/app/admin/users/${user.id}`, ar)}><strong>{user.displayName}</strong></Link>
-                    <span className="admin-register__email mono">{user.email}</span>
-                  </div>
-                  <div data-label={labels.role}><Badge tone="navy">{roleLabel(user.role, locale)}</Badge></div>
-                  <div data-label={labels.status}><StatusBadge status={statusOf(user)} labels={labels} /></div>
-                  <div data-label={labels.created}><span className="mono">{formatDate(user.createdAt, locale)}</span></div>
-                  <div className="user-actions" data-label={labels.actions}>
-                    <button className="user-actions__trigger" type="button" aria-label={`${labels.actions}: ${user.displayName}`} aria-expanded={openMenu === user.id} onClick={(event) => { event.stopPropagation(); setOpenMenu(openMenu === user.id ? null : user.id); }}><MoreHorizontal size={19} /></button>
+                <RegisterRow className={statusOf(user) === "ARCHIVED" ? "admin-row--archived" : statusOf(user) === "SUSPENDED" ? "admin-row--suspended" : ""} key={user.id}>
+                  <RegisterCell className="ops-register__cell--identity" label={labels.name}>
+                    <div className="project-record__identity">
+                      <Link href={withLocale(`/app/admin/users/${user.id}`, ar)}><strong dir="auto">{user.displayName}</strong></Link>
+                      <bdi className="project-code-tag mono account-login-id" dir="ltr">{user.email}</bdi>
+                    </div>
+                  </RegisterCell>
+                  <RegisterCell label={labels.role}><Badge tone="navy">{roleLabel(user.role, locale)}</Badge></RegisterCell>
+                  <RegisterCell label={labels.status}><StatusBadge status={statusOf(user)} labels={labels} /></RegisterCell>
+                  <RegisterCell label={labels.created}><time>{formatDate(user.createdAt, locale)}</time></RegisterCell>
+                  <RegisterCell className="ops-register__cell--action user-actions">
+                    <button className="user-actions__trigger" type="button" aria-label={`${labels.actions}: ${user.displayName}`} aria-expanded={openMenu === user.id} aria-haspopup="menu" onClick={(event) => { event.stopPropagation(); setOpenMenu(openMenu === user.id ? null : user.id); }}><MoreHorizontal size={20} /><span className="register-open-label">{labels.actions}</span></button>
                     {openMenu === user.id ? <ActionMenu user={user} currentUserId={currentUser.id} labels={labels} ar={ar} onAction={(kind) => void openAction(kind, user)} /> : null}
-                  </div>
-                </div>
+                  </RegisterCell>
+                </RegisterRow>
               ))}
-            </div>
+            </Register>
           ) : null}
-        </div>
+        </OperationsSurface>
         {pending ? <ActionDialog pending={pending} labels={labels} ar={ar} busy={actionBusy} confirmationText={confirmationText} temporaryPassword={temporaryPassword} onConfirmationText={setConfirmationText} onTemporaryPassword={setTemporaryPassword} onClose={() => setPending(null)} onConfirm={() => void confirmAction()} /> : null}
       </section>
     );
@@ -267,13 +285,12 @@ export function UsersClient({ mode, id }: UsersClientProps) {
       <form key={record?.id ?? mode} className="admin-form admin-form--elevated" onSubmit={(event) => void submit(event)}>
         <div className="form-section"><div className="form-section__header"><span className="form-section__index">01</span><h4>{labels.basic}</h4></div><div className="form-grid">
           <label className="ui-field"><span>{labels.name} <strong className="required-star">*</strong></span><input name="displayName" required defaultValue={record?.displayName ?? ""} placeholder={labels.fullName} /></label>
-          <label className="ui-field"><span>{labels.email} <strong className="required-star">*</strong></span><input name="email" type="email" required defaultValue={record?.email ?? ""} placeholder="user@elhabak.eg" /></label>
+          <label className="ui-field"><span>{labels.email} <strong className="required-star">*</strong></span><input name="email" type="email" dir="ltr" required defaultValue={record?.email ?? ""} placeholder="user@elhabak.eg" /></label>
         </div></div>
         <div className="form-section"><div className="form-section__header"><span className="form-section__index">02</span><h4>{labels.roleSection}</h4></div><div className="form-grid">
-          <label className="ui-field"><span>{labels.role} <strong className="required-star">*</strong></span>{mode === "create" ? <select name="role" value={formRole} onChange={(event) => setFormRole(event.target.value as UserRole)}>{roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}</select> : <select name="role" defaultValue={record?.role ?? "ENGINEER"}>{roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}</select>}</label>
+          <label className="ui-field"><span>{labels.role} <strong className="required-star">*</strong></span>{mode === "create" ? <select name="role" value={formRole} onChange={(event) => setFormRole(event.target.value as UserRole)} aria-describedby="role-capability">{roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}</select> : <select name="role" defaultValue={record?.role ?? "ENGINEER"}>{roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}</select>}{mode === "create" ? <small className="field-help" id="role-capability">{roleCapability(formRole, ar)}</small> : null}</label>
           {mode === "create" ? <div className="field-group-center"><label className="check-field check-field--toggle"><input name="isActive" type="checkbox" defaultChecked /><span>{labels.active}</span></label></div> : <div className="field-hint account-form-note">{labels.separateActions}</div>}
         </div>
-        {mode === "create" ? <p className="field-hint role-capability-hint"><strong>{roleLabel(formRole, locale)}:</strong> {roleCapability(formRole, ar)}</p> : null}
         </div>
         {mode === "create" ? <div className="form-section"><div className="form-section__header"><span className="form-section__index">03</span><h4>{labels.credentials}</h4></div><div className="form-grid"><label className="ui-field full-span"><span>{labels.password} <strong className="required-star">*</strong></span><div className="password-generate-row"><input name="temporaryPassword" type="text" required minLength={10} autoComplete="new-password" value={generatedPassword} onChange={(event) => setGeneratedPassword(event.target.value)} placeholder={labels.passwordCreateHint} /><button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={() => setGeneratedPassword(generateTemporaryPassword())}><KeyRound size={14} /> {labels.generatePassword}</button></div><span className="field-hint">{labels.generateHint}</span></label></div></div> : null}
         {error ? <p className="form-error">{error}</p> : null}{success ? <p className="form-success">{success}</p> : null}

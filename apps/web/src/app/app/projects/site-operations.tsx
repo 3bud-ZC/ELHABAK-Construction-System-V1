@@ -15,7 +15,6 @@ import {
   ClipboardCheck,
   Eye,
   EyeOff,
-  Filter,
   FolderOpen,
   Image as ImageIcon,
   Layers,
@@ -864,127 +863,50 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
       {/* Workspace Header Bar */}
       <ProjectWorkspace project={project} locale={locale} role={user.role} active="site" />
 
-      <div className="site-ops-command-strip">
-        <div>
+      <header className="module-heading">
+        <div className="module-heading__copy">
           <span className="section-kicker">{ar ? "سجل العمليات الميدانية" : "Field Operations Log"}</span>
           <h1>{labels.title}</h1>
           <p>{labels.lead}</p>
         </div>
-        <div className="site-ops-command-strip__latest">
+        <div className="module-heading__meta">
           <span>{labels.latestActivity}</span>
-          <strong className="mono"><bdi>{latestEventTime}</bdi></strong>
+          <strong><bdi>{latestEventTime}</bdi></strong>
         </div>
-      </div>
+      </header>
 
       {/* Notifications */}
       {error && <div className="form-error" role="alert">{error}</div>}
       {success && <div className="form-success" role="status">{success}</div>}
 
-      {/* Operations KPI Summary Grid */}
-      <div className="site-ops-summary-grid">
-        {/* Card 1: Phase */}
-        <div className="site-ops-card">
-          <div className="site-ops-card__header">
-            <span className="site-ops-card__tag"><Milestone size={14} /> {labels.currentPhase}</span>
-            {canManageProgressAndPhase && (
-              <button
-                type="button"
-                className="site-ops-card__action-btn"
-                onClick={() => {
-                  setNewPhase(project.phase);
-                  setPhaseNote("");
-                  setShowPhaseModal(true);
-                }}
-              >
-                {labels.changePhase}
-              </button>
-            )}
-          </div>
-          <div className="site-ops-card__body">
-            <div className="site-ops-card__value-row">
-              <strong className="site-ops-card__phase-title">{phaseLabel(project.phase, locale)}</strong>
-            </div>
-            <div className="site-ops-card__meta">
-              <span className="mono">PHASE-{LIFECYCLE_PHASES.indexOf(project.phase) + 1}/6</span>
-            </div>
-          </div>
+      {/* Field status strip: phase · progress · updates · media */}
+      <section className="site-status-strip" aria-label={labels.title}>
+        <div className="site-status-strip__cell">
+          <span className="site-status-strip__label"><Milestone size={16} aria-hidden="true" /> {labels.currentPhase}</span>
+          <strong>{phaseLabel(project.phase, locale)}</strong>
+          <small className="mono" dir="ltr">PHASE {LIFECYCLE_PHASES.indexOf(project.phase) + 1}/6</small>
         </div>
-
-        {/* Card 2: Official Progress */}
-        <div className="site-ops-card">
-          <div className="site-ops-card__header">
-            <span className="site-ops-card__tag"><TrendingUp size={14} /> {labels.officialProgress}</span>
-            {canManageProgressAndPhase && (
-              <button
-                type="button"
-                className="site-ops-card__action-btn"
-                onClick={() => {
-                  setNewProgress(project.progress);
-                  setProgressNote("");
-                  setShowProgressModal(true);
-                }}
-              >
-                {labels.updateProgress}
-              </button>
-            )}
-          </div>
-          <div className="site-ops-card__body">
-            <div className="site-ops-card__value-row">
-              <span className="site-ops-card__big-number mono"><bdi>{project.progress}%</bdi></span>
-            </div>
-            <div className="site-ops-card__progress-track">
-              <ProgressBar value={project.progress} />
-            </div>
-          </div>
+        <div className="site-status-strip__cell">
+          <span className="site-status-strip__label"><TrendingUp size={16} aria-hidden="true" /> {labels.officialProgress}</span>
+          <strong dir="ltr">{project.progress}%</strong>
+          <ProgressBar value={project.progress} aria-label={labels.officialProgress} />
         </div>
-
-        {/* Card 3: Total Updates & Breakdown */}
-        <div className="site-ops-card">
-          <div className="site-ops-card__header">
-            <span className="site-ops-card__tag"><Activity size={14} /> {labels.totalUpdates}</span>
-            <span className="mono site-ops-card__count">{siteUpdateEvents.length}</span>
-          </div>
-          <div className="site-ops-card__body">
-            <div className="site-ops-card__chips-row">
-              {SITE_UPDATE_TYPES.map((t) => {
-                const count = siteUpdateEvents.filter((u) => u.type === t).length;
-                if (count === 0) return null;
-                return (
-                  <Badge key={t} tone={siteUpdateTypeTone(t)}>
-                    {siteUpdateTypeLabel(t, locale)}: {count}
-                  </Badge>
-                );
-              })}
-            </div>
-          </div>
+        <div className="site-status-strip__cell">
+          <span className="site-status-strip__label"><Activity size={16} aria-hidden="true" /> {labels.totalUpdates}</span>
+          <strong dir="ltr">{siteUpdateEvents.length}</strong>
+          <span className="site-status-strip__chips">
+            {SITE_UPDATE_TYPES.map((t) => {
+              const count = siteUpdateEvents.filter((u) => u.type === t).length;
+              if (count === 0) return null;
+              return <Badge key={t} tone={siteUpdateTypeTone(t)}>{siteUpdateTypeLabel(t, locale)}: {count}</Badge>;
+            })}
+          </span>
         </div>
-
-        {/* Card 4: Media Assets & View Toggle */}
-        <div className="site-ops-card">
-          <div className="site-ops-card__header">
-            <span className="site-ops-card__tag"><ImageIcon size={14} /> {labels.mediaAssets}</span>
-            <span className="mono site-ops-card__count">{allGalleryMedia.length}</span>
-          </div>
-          <div className="site-ops-card__body">
-            <div className="site-ops-card__view-toggle">
-              <button
-                type="button"
-                className={`view-toggle-btn ${viewMode === "timeline" ? "active" : ""}`}
-                onClick={() => setViewMode("timeline")}
-              >
-                <Activity size={13} /> {labels.timelineView}
-              </button>
-              <button
-                type="button"
-                className={`view-toggle-btn ${viewMode === "gallery" ? "active" : ""}`}
-                onClick={() => setViewMode("gallery")}
-              >
-                <ImageIcon size={13} /> {labels.galleryView}
-              </button>
-            </div>
-          </div>
+        <div className="site-status-strip__cell">
+          <span className="site-status-strip__label"><ImageIcon size={16} aria-hidden="true" /> {labels.mediaAssets}</span>
+          <strong dir="ltr">{allGalleryMedia.length}</strong>
         </div>
-      </div>
+      </section>
 
       {/* Client Notice */}
       {isClient && (
@@ -1038,6 +960,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         <div className="site-ops-action-bar">
           <button
             type="button"
+            data-qa="site-add-report"
             className="ui-button ui-button--primary"
             onClick={() => {
               setReportNote("");
@@ -1074,29 +997,46 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         </div>
       )}
 
-      {/* Filter Bar */}
+      {/* Filter Bar: type filter rail + timeline/gallery view */}
       <div className="site-ops-filter-bar">
-        <div className="filter-group">
-          <Filter size={15} />
-          <div className="filter-pills">
+        <div className="filter-pills" role="group" aria-label={labels.allTypes}>
+          <button
+            type="button"
+            className={`filter-pill ${selectedTypeFilter === "ALL" ? "active" : ""}`}
+            aria-pressed={selectedTypeFilter === "ALL"}
+            onClick={() => setSelectedTypeFilter("ALL")}
+          >
+            {labels.allTypes}
+          </button>
+          {SITE_UPDATE_TYPES.map((t) => (
             <button
+              key={t}
               type="button"
-              className={`filter-pill ${selectedTypeFilter === "ALL" ? "active" : ""}`}
-              onClick={() => setSelectedTypeFilter("ALL")}
+              className={`filter-pill ${selectedTypeFilter === t ? "active" : ""}`}
+              aria-pressed={selectedTypeFilter === t}
+              onClick={() => setSelectedTypeFilter(t)}
             >
-              {labels.allTypes}
+              {siteUpdateTypeLabel(t, locale)}
             </button>
-            {SITE_UPDATE_TYPES.map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`filter-pill ${selectedTypeFilter === t ? "active" : ""}`}
-                onClick={() => setSelectedTypeFilter(t)}
-              >
-                {siteUpdateTypeLabel(t, locale)}
-              </button>
-            ))}
-          </div>
+          ))}
+        </div>
+        <div className="ui-segmented site-view-toggle" role="group" aria-label={labels.mediaAssets}>
+          <button
+            type="button"
+            className={`ui-segmented__option${viewMode === "timeline" ? " ui-segmented__option--active" : ""}`}
+            aria-pressed={viewMode === "timeline"}
+            onClick={() => setViewMode("timeline")}
+          >
+            <Activity size={16} /> {labels.timelineView}
+          </button>
+          <button
+            type="button"
+            className={`ui-segmented__option${viewMode === "gallery" ? " ui-segmented__option--active" : ""}`}
+            aria-pressed={viewMode === "gallery"}
+            onClick={() => setViewMode("gallery")}
+          >
+            <ImageIcon size={16} /> {labels.galleryView}
+          </button>
         </div>
       </div>
 
@@ -1446,7 +1386,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
               <footer className="site-modal-footer">
                 <button
                   type="button"
-                  className="ui-button ui-button--ghost"
+                  className="ui-button ui-button--secondary"
                   onClick={() => setShowReportModal(false)}
                   disabled={submittingReport}
                 >
@@ -1536,7 +1476,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
               <footer className="site-modal-footer">
                 <button
                   type="button"
-                  className="ui-button ui-button--ghost"
+                  className="ui-button ui-button--secondary"
                   onClick={() => setShowProgressModal(false)}
                 >
                   {labels.cancel}
@@ -1615,7 +1555,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
               <footer className="site-modal-footer">
                 <button
                   type="button"
-                  className="ui-button ui-button--ghost"
+                  className="ui-button ui-button--secondary"
                   onClick={() => setShowPhaseModal(false)}
                 >
                   {labels.cancel}

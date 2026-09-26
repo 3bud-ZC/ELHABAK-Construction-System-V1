@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Badge, EmptyState, LoadingState } from "@elhabak/ui";
-import { FilePlus2, Filter, RotateCcw, Search, UploadCloud, X } from "lucide-react";
+import { Badge, EmptyState, LoadingState, AdaptiveFilters, type FilterChip } from "@elhabak/ui";
+import { FilePlus2, UploadCloud, X } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
   DESIGN_DISCIPLINES,
@@ -22,6 +22,7 @@ import {
   type DesignSummaryRecord,
   type ProjectRecord
 } from "../../../lib/api";
+import { filterLabels } from "../../../lib/adaptive";
 import { useCurrentUser } from "../../../lib/user-context";
 
 function disciplineShortCode(d: DesignDiscipline): string {
@@ -122,17 +123,14 @@ export function DesignHub({ projectId }: { projectId: string }) {
   return <section className="app-page project-workspace-page">
     <ProjectWorkspace project={project} locale={locale} role={user.role} active="design" />
 
-    <div className="design-hub-heading technical-register-header">
-      <div>
+    <header className="module-heading">
+      <div className="module-heading__copy">
         <span className="section-kicker">{ar ? "المخططات والتصاميم الهندسية" : "Engineering Submittals & Drawings"}</span>
-        <h2>{labels.title}</h2>
+        <h1>{labels.title}</h1>
         <p>{labels.lead}</p>
       </div>
-      <div className="technical-register-header__action">
-        <span className="technical-register-header__count mono"><bdi>{designs.length}</bdi> {labels.results}</span>
-        {canManage && <button className="ui-button ui-button--accent" type="button" onClick={() => setShowUpload(true)}><FilePlus2 size={16} />{labels.upload}</button>}
-      </div>
-    </div>
+      {canManage && <button className="ui-button ui-button--primary" type="button" data-qa="design-upload" onClick={() => setShowUpload(true)}><FilePlus2 size={18} />{labels.upload}</button>}
+    </header>
 
     <div className="design-kpi-strip">
       <span><small>{labels.total}</small><strong><bdi>{metrics.total}</bdi></strong></span>
@@ -143,18 +141,25 @@ export function DesignHub({ projectId }: { projectId: string }) {
       {user.role === "CLIENT" && metrics.pending > 0 && <p>{labels.pendingHint}</p>}
     </div>
 
-    <div className="design-toolbar technical-register-toolbar">
-      <label className="design-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>
-      <label className="design-filter"><Filter size={14} /><select value={status} onChange={(event) => setStatus(event.target.value as DesignStatus | "")}><option value="">{labels.allStatuses}</option>{DESIGN_STATUSES.map((item) => <option key={item} value={item}>{designStatusLabel(item, locale)}</option>)}</select></label>
-      <label className="design-filter"><select value={discipline} onChange={(event) => setDiscipline(event.target.value as DesignDiscipline | "")}><option value="">{labels.allDisciplines}</option>{DESIGN_DISCIPLINES.map((item) => <option key={item} value={item}>{disciplineLabel(item, locale)}</option>)}</select></label>
-      {filtered && <button className="technical-register-toolbar__clear" type="button" onClick={() => { setQuery(""); setStatus(""); setDiscipline(""); }}><RotateCcw size={13} /> {labels.clear}</button>}
-      <span className="technical-register-toolbar__result mono"><bdi>{designs.length}</bdi> {labels.results}</span>
-    </div>
+    <AdaptiveFilters
+      className="register-filters register-filters--standalone"
+      labels={filterLabels(locale)}
+      onClear={() => { setQuery(""); setStatus(""); setDiscipline(""); }}
+      chips={[
+        status && { key: "status", label: designStatusLabel(status, locale), onRemove: () => setStatus("") },
+        discipline && { key: "discipline", label: disciplineLabel(discipline, locale), onRemove: () => setDiscipline("") }
+      ].filter(Boolean) as FilterChip[]}
+      search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>}
+      meta={<span><bdi>{designs.length}</bdi> {labels.results}</span>}
+    >
+      <label className="adaptive-filter-field"><span className="adaptive-filter-field__label">{labels.status}</span><select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as DesignStatus | "")} aria-label={labels.status}><option value="">{labels.allStatuses}</option>{DESIGN_STATUSES.map((item) => <option key={item} value={item}>{designStatusLabel(item, locale)}</option>)}</select></label>
+      <label className="adaptive-filter-field"><span className="adaptive-filter-field__label">{labels.discipline}</span><select className="filter-select" value={discipline} onChange={(event) => setDiscipline(event.target.value as DesignDiscipline | "")} aria-label={labels.discipline}><option value="">{labels.allDisciplines}</option>{DESIGN_DISCIPLINES.map((item) => <option key={item} value={item}>{disciplineLabel(item, locale)}</option>)}</select></label>
+    </AdaptiveFilters>
 
     {error && <div className="form-error">{error}</div>}
     {success && <div className="form-success">{success}</div>}
     {loading && <DesignRegisterSkeleton />}
-    {!loading && designs.length === 0 && <EmptyState icon={<FilePlus2 size={21} />} title={filtered ? labels.noResults : labels.empty} description={filtered ? labels.noResultsHint : labels.emptyHint} action={!filtered && canManage ? <button className="ui-button ui-button--accent ui-button--sm" type="button" onClick={() => setShowUpload(true)}>{labels.upload}</button> : undefined} />}
+    {!loading && designs.length === 0 && <EmptyState icon={<FilePlus2 size={21} />} title={filtered ? labels.noResults : labels.empty} description={filtered ? labels.noResultsHint : labels.emptyHint} action={!filtered && canManage ? <button className="ui-button ui-button--primary ui-button--sm" type="button" onClick={() => setShowUpload(true)}>{labels.upload}</button> : undefined} />}
     {!loading && designs.length > 0 && <div className="design-register technical-register">
       <div className="design-register__head">
         <span>{labels.design}</span>

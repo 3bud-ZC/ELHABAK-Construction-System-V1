@@ -318,19 +318,15 @@ export function AppDashboard() {
 
   return (
     <section className="app-page dashboard-page">
-      <header className="dashboard-command-intro">
-        <div className="dashboard-command-intro__copy">
-          <div className="dashboard-command-intro__eyebrow">
-            <span>{labels.eyebrow}</span>
-          </div>
-          <span className="dashboard-command-intro__welcome">{labels.welcome}, <bdi>{user.displayName}</bdi></span>
+      <header className="dashboard-head">
+        <div className="dashboard-head__copy">
+          <span className="dashboard-head__eyebrow">{labels.eyebrow}</span>
           <h1>{labels.title}</h1>
-          <p>{isAdmin ? labels.adminLead : labels.portalLead}</p>
+          <p>{labels.welcome}{locale === "ar" ? "، " : ", "}<bdi>{user.displayName}</bdi> — {isAdmin ? labels.adminLead : labels.portalLead}</p>
         </div>
-        <div className="dashboard-command-intro__meta">
-          <span className="dashboard-command-intro__meta-label">{labels.liveContext}</span>
+        <div className="dashboard-head__meta">
           <strong><bdi>{formatDate(new Date(), { weekday: "long", day: "numeric", month: "long" })}</bdi></strong>
-          <span className="dashboard-command-intro__system"><i aria-hidden="true" />{labels.systemReady}</span>
+          <span className="dashboard-head__system"><i aria-hidden="true" />{labels.systemReady}</span>
         </div>
       </header>
 
@@ -338,12 +334,7 @@ export function AppDashboard() {
       {error && <div className="form-error">{error}</div>}
 
       {dashboard && (
-        <OperationsPanel
-          className="dashboard-ops-ledger"
-          eyebrow={arLabel(locale, "مؤشرات تشغيلية", "Operational position")}
-          title={arLabel(locale, "حالة المحفظة الآن", "Portfolio state right now")}
-          description={arLabel(locale, "أرقام مختصرة موجهة للعمل: أين توجد المشاريع، وما الذي يتطلب قراراً.", "Action-oriented figures: where projects stand and what needs a decision.")}
-        >
+        <OperationsPanel className="dashboard-ops-ledger" aria-label={arLabel(locale, "حالة المحفظة الآن", "Portfolio state right now")}>
           <OperationsGrid columns="1.2fr 1fr 1fr 1fr">
             <OperationsMetric tone="navy" label={labels.active} value={<bdi>{dashboard.activeProjects}</bdi>} hint={labels.activeContext} />
             <OperationsMetric tone="neutral" label={labels.clients} value={<bdi>{dashboard.clientCount}</bdi>} hint={labels.clientContext} />

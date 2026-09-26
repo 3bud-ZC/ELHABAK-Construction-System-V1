@@ -75,6 +75,7 @@ export function AppShell({ children }: AppShellProps) {
           returnToAdmin: "العودة لحساب المدير",
           returning: "جاري العودة...",
           dataOps: "عمليات البيانات",
+          dataOpsShort: "البيانات",
           settings: "إعدادات الحساب",
           menu: "القائمة"
         }
@@ -110,6 +111,7 @@ export function AppShell({ children }: AppShellProps) {
           returnToAdmin: "Return to Admin",
           returning: "Returning...",
           dataOps: "Data Ops",
+          dataOpsShort: "Data",
           settings: "Account settings",
           menu: "Menu"
         },
@@ -134,6 +136,7 @@ export function AppShell({ children }: AppShellProps) {
     else if (section === "search") return [labels.search];
     else if (section === "notifications") return [labels.notifications];
     else if (section === "data") return [labels.dataOps];
+    else if (section === "settings") return [labels.settings];
     else return [labels.dashboard];
     let sawId = false;
     for (const seg of rest.slice(i)) {
@@ -470,7 +473,7 @@ export function AppShell({ children }: AppShellProps) {
           {user.role === "ADMIN" ? (
             <Link className={isActive("/app/data") ? "active" : ""} href={href("/app/data")}>
               <Database size={19} />
-              <span>{labels.dataOps}</span>
+              <span>{labels.dataOpsShort}</span>
             </Link>
           ) : (
             <Link

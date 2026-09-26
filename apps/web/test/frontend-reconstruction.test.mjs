@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -14,7 +14,11 @@ const notifications = source("app/app/notifications/notifications-client.tsx");
 const search = source("app/app/search/search-client.tsx");
 const clients = source("app/app/admin/clients/clients-client.tsx");
 const projectForm = source("app/app/admin/projects/project-form.tsx");
-const css = source("app/globals.css");
+const entry = source("app/globals.css");
+const systemDir = new URL("../src/app/styles/system/", import.meta.url);
+const systemCss = readdirSync(systemDir).map((file) => readFileSync(new URL(file, systemDir), "utf8")).join("\n");
+const legacyCss = source("app/styles/legacy.css");
+const tokensCss = source("app/styles/tokens.css");
 
 test("remaining reconstruction surfaces expose final composition markers", () => {
   assert.match(site, /site-activity-record/);
@@ -32,14 +36,41 @@ test("remaining reconstruction surfaces expose final composition markers", () =>
   assert.match(projectForm, /project-form-system/);
 });
 
-test("final reconstruction CSS covers dense mobile-safe professional layouts", () => {
-  assert.match(css, /\.site-activity-record/);
-  assert.match(css, /\.boq-register--qs/);
-  assert.match(css, /\.document-preview-workbench/);
-  assert.match(css, /\.document-version-ledger/);
-  assert.match(css, /\.chat-communication-workspace/);
-  assert.match(css, /\.notification-destination/);
-  assert.match(css, /\.search-result__type/);
-  assert.match(css, /\.credential-reveal/);
-  assert.match(css, /\.project-form-system/);
+test("stylesheet architecture: layered cascade with the adaptive system last", () => {
+  assert.match(source("app/styles/layers.css"), /@layer legacy, public, system;/);
+  const imports = [...entry.matchAll(/@import "([^"]+)";/g)].map((match) => match[1]);
+  assert.deepEqual(imports.slice(0, 3), ["./styles/layers.css", "./styles/tokens.css", "./styles/legacy.css"]);
+  assert.ok(imports.slice(3).every((path) => path.startsWith("./styles/system/")));
+  assert.match(legacyCss, /@layer legacy \{/);
+  assert.match(source("app/public-home.css"), /@layer public \{/);
+  for (const token of ["--fs-caption", "--radius-xl", "--control-height-touch", "--bottom-nav-height", "--z-dialog", "safe-area-inset-bottom"]) {
+    assert.ok(tokensCss.includes(token), token);
+  }
+});
+
+test("adaptive system covers filters, dialogs, previews, registers and sticky actions", () => {
+  for (const selector of [
+    ".adaptive-filters__panel",
+    ".adaptive-chip",
+    ".action-menu__list",
+    ".fullscreen-viewer",
+    ".preview-launcher",
+    ".ops-register__row",
+    ".finance-register__row",
+    ".report-table-wrap--cards",
+    ".project-form-actions",
+    ".project-context__nav",
+    ".credential-reveal",
+    ".project-form-system",
+    ".review-slot--state",
+    "100dvh"
+  ]) {
+    assert.ok(systemCss.includes(selector), selector);
+  }
+});
+
+test("no rendered text is sized below 12px in the product stylesheets", () => {
+  const literals = [...(legacyCss + systemCss).matchAll(/font(?:-size)?:\s*(?:\d{3}\s+)?([\d.]+)(rem|px)\b/g)];
+  const tooSmall = literals.filter(([, value, unit]) => (unit === "rem" ? Number(value) * 16 : Number(value)) < 12);
+  assert.deepEqual(tooSmall.map((match) => match[0]), []);
 });

@@ -1,0 +1,346 @@
+/*
+ * System · register — ONE responsive data pattern.
+ *   desktop/tablet: dense register (grid rows under a sticky column head)
+ *   phone:          record cards — identity → status → key facts →
+ *                   progress/financial metric → actions
+ * Markup: Register / RegisterRow / RegisterCell from @elhabak/ui. Cells carry
+ * role classes (--identity, --status, --progress, --action …) that decide
+ * their slot in the phone card.
+ */
+@layer system {
+  .ops-register {
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--white);
+  }
+
+  .ops-register__head {
+    position: sticky;
+    top: var(--topbar-height);
+    z-index: 2;
+    display: grid;
+    grid-template-columns: var(--ops-register-cols);
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 40px;
+    padding: 0 var(--space-5);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-soft);
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    font-weight: 800;
+  }
+
+  .ops-register__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--ops-register-cols);
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--table-row-height);
+    padding: var(--space-3) var(--space-5);
+    border: 0;
+    border-bottom: 1px solid var(--border-soft);
+    border-radius: 0;
+    background: var(--white);
+    box-shadow: none;
+    transition: background var(--dur-fast) ease;
+  }
+
+  .ops-register__row:last-child {
+    border-bottom: 0;
+  }
+
+  .ops-register__row:hover {
+    background: var(--surface-soft);
+  }
+
+  .ops-register__row::before {
+    content: "";
+    position: absolute;
+    inset-block: 10px;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    transition: background var(--dur-fast) ease;
+  }
+
+  .ops-register__row:hover::before {
+    background: var(--orange);
+  }
+
+  .ops-register__cell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    color: var(--text-soft);
+    font-size: var(--fs-body-sm);
+  }
+
+  .ops-register__cell::before {
+    content: none !important;
+  }
+
+  .ops-register__cell > svg {
+    flex: 0 0 auto;
+    color: var(--muted-soft);
+  }
+
+  .ops-register__cell strong {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-strong);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ops-register__mobile-label {
+    display: none;
+  }
+
+  /* identity cell */
+  .project-record__identity {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .project-record__identity a strong {
+    display: block;
+    color: var(--text-strong);
+    font-size: var(--fs-body);
+    font-weight: 800;
+    white-space: normal;
+  }
+
+  .project-record__identity a:hover strong {
+    color: var(--navy-mid);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .project-record__secondary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  .project-code-tag {
+    color: var(--navy-mid);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+  }
+
+  .project-register-cell--progress > div {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .ops-register__cell--action {
+    justify-content: flex-end;
+  }
+
+  .account-login-id {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-row--suspended .project-record__identity strong,
+  .admin-row--archived .project-record__identity strong {
+    color: var(--muted);
+  }
+
+  .project-register-cell--progress strong {
+    font-size: var(--fs-label);
+  }
+
+  .project-register-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--navy);
+  }
+
+  .project-register-open:hover {
+    border-color: var(--navy);
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  /* Visible text for the Open action on phones only; desktop links carry an
+     aria-label, so the label is removed from layout (no absolute box that
+     could escape a scrolling register). */
+  .register-open-label {
+    display: none;
+  }
+
+  /* ------------------------ tablet: tighter columns ------------------------ */
+  @media (min-width: 1024px) and (max-width: 1439.98px) {
+    .ops-register__head,
+    .ops-register__row {
+      gap: var(--space-3);
+      padding-inline: var(--space-4);
+    }
+
+    /* Location and target date fold into the identity cell's fact line
+       (.project-record__facts) so the register keeps every value. */
+    .ops-register--projects {
+      --ops-register-cols: minmax(190px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(96px, 0.9fr) 92px minmax(100px, 0.9fr) 40px !important;
+    }
+
+    .ops-register--projects .ops-register__head > span:nth-child(4),
+    .ops-register--projects .ops-register__head > span:nth-child(8),
+    .ops-register--projects .project-register-cell--location,
+    .ops-register--projects .project-register-cell--date {
+      display: none;
+    }
+
+    .ops-register--projects .project-record__facts {
+      display: flex;
+    }
+  }
+
+  .project-record__facts {
+    display: none;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  /* ------------------- tablet portrait + phone: record cards ------------------- */
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .ops-register {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+
+  @media (max-width: 1023.98px) {
+    .ops-register {
+      display: grid;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--surface-soft);
+    }
+
+    .ops-register__head {
+      display: none;
+    }
+
+    .ops-register__row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: var(--space-3) var(--space-4);
+      min-height: 0;
+      padding: var(--space-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+
+    .ops-register__row:last-child {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ops-register__row::before {
+      inset-block: var(--space-4);
+      background: var(--border-strong);
+    }
+
+    .ops-register__cell {
+      display: grid;
+      align-content: start;
+      gap: 2px;
+      font-size: var(--fs-body-sm);
+    }
+
+    .ops-register__cell > svg {
+      display: none;
+    }
+
+    .ops-register__cell strong,
+    .ops-register__cell > span,
+    .ops-register__cell > time {
+      overflow: visible;
+      white-space: normal;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
+    }
+
+    .ops-register__mobile-label {
+      display: block;
+      color: var(--muted);
+      font-size: var(--fs-caption);
+      font-weight: 700;
+    }
+
+    .ops-register__cell--identity,
+    .ops-register__cell.project-register-cell--identity {
+      grid-column: 1 / -1;
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .ops-register__cell--identity > .ops-register__mobile-label {
+      display: none;
+    }
+
+    .project-record__identity a strong {
+      font-size: var(--fs-body-lg);
+    }
+
+    .project-register-cell--progress,
+    .project-register-cell--action,
+    .ops-register__cell--action,
+    .ops-register__cell--wide {
+      grid-column: 1 / -1;
+    }
+
+    .ops-register__cell--action {
+      order: 99;
+      display: flex;
+    }
+
+    .project-register-cell--progress > div {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    /* card order: identity, phase|status, client|engineer, location|date,
+       progress, open */
+    .ops-register--projects .project-register-cell--identity { order: 0; }
+    .ops-register--projects .project-record__phase { order: 1; }
+    .ops-register--projects .project-record__status { order: 2; }
+    .ops-register--projects .project-record__person { order: 3; }
+    .ops-register--projects .project-register-cell--location { order: 4; }
+    .ops-register--projects .project-register-cell--date { order: 5; }
+    .ops-register--projects .project-register-cell--progress { order: 6; }
+    .ops-register--projects .project-register-cell--action { order: 7; }
+
+    .project-register-open {
+      width: 100%;
+      height: var(--control-height-touch);
+      border-color: var(--border-strong);
+      font-size: var(--fs-body-sm);
+      font-weight: 800;
+    }
+
+    .register-open-label {
+      display: inline;
+    }
+  }
+}

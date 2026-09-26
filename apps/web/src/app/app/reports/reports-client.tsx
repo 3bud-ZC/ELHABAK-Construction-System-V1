@@ -121,7 +121,7 @@ export function ReportsClient() {
         </nav>
       )}
 
-      <OperationsPanel
+      {tab === "projects" && <OperationsPanel
         className="reports-category-workspace"
         eyebrow={ar ? "تصنيف التقارير" : "REPORT CATEGORIES"}
         title={ar ? "مساحة عمل التقارير" : "Reporting workspace"}
@@ -129,12 +129,12 @@ export function ReportsClient() {
       >
         <OperationsGrid columns="repeat(5, minmax(140px, 1fr))">
           <OperationsMetric tone={tab === "projects" ? "navy" : "neutral"} label={labels.projectReports} value={<bdi>{projects.length}</bdi>} hint={labels.projectsLead} />
-          {canFinance && <OperationsMetric tone={tab === "finance" ? "navy" : "neutral"} label={labels.financeReport} value={ar ? "محفظة" : "Portfolio"} hint={labels.financeLead} />}
+          {canFinance && <OperationsMetric tone="neutral" label={labels.financeReport} value={ar ? "محفظة" : "Portfolio"} hint={labels.financeLead} />}
           <OperationsMetric tone="neutral" label={labels.siteOps} value={ar ? "ميداني" : "Field"} />
           <OperationsMetric tone="neutral" label={labels.designReviews} value={ar ? "اعتماد" : "Reviews"} />
           <OperationsMetric tone="neutral" label={labels.documents} value={ar ? "تحكم" : "Control"} />
         </OperationsGrid>
-      </OperationsPanel>
+      </OperationsPanel>}
 
       {tab === "finance" && canFinance && <FinanceReportBuilder locale={locale} />}
 

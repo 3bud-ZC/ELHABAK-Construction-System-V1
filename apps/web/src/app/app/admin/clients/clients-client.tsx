@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, OperationsPanel, PageHeader } from "@elhabak/ui";
-import { Check, Copy, Download, KeyRound, UploadCloud, UserRoundCog } from "lucide-react";
+import { AdaptiveFilters, Badge, EmptyState, LoadingState, OperationsGrid, OperationsHeader, OperationsMetric, OperationsPanel, OperationsSurface, PageHeader, Register, RegisterCell, RegisterRow } from "@elhabak/ui";
+import { ArrowLeft, ArrowRight, Check, Copy, Download, KeyRound, UploadCloud, UserRoundCog } from "lucide-react";
 import { accountStatusTone, apiRequest, dataOpsExportUrl, type ClientRecord } from "../../../../lib/api";
+import { filterLabels } from "../../../../lib/adaptive";
 
 type Mode = "list" | "create" | "edit";
 
@@ -161,26 +162,26 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
   if (mode === "list") {
     return (
       <section className="app-page clients-console">
-        <div className="admin-command-strip">
-          <div>
-            <span className="section-kicker">{ar ? "إدارة حسابات العملاء" : "Client Account Management"}</span>
-            <strong>{labels.title}</strong>
-            <span className="admin-command-strip__subtitle">{labels.lead}</span>
-          </div>
-          <div className="admin-command-strip__actions">
-            <a className="ui-button ui-button--ghost ui-button--sm" href={dataOpsExportUrl("clients", "xlsx")}>
-              <Download size={14} /> {labels.export}
-            </a>
-            <Link className="ui-button ui-button--secondary" href={ar ? "/app/data" : "/app/data?lang=en"}>
-              <UploadCloud size={15} /> {labels.import}
-            </Link>
-            <Link className="ui-button ui-button--primary" href={ar ? "/app/admin/clients/new" : "/app/admin/clients/new?lang=en"}>
-              {labels.create}
-            </Link>
-          </div>
-        </div>
+        <OperationsHeader
+          eyebrow={ar ? "إدارة حسابات العملاء" : "Client Account Management"}
+          title={labels.title}
+          description={labels.lead}
+          actions={
+            <>
+              <a className="ui-button ui-button--ghost" href={dataOpsExportUrl("clients", "xlsx")}>
+                <Download size={18} /> {labels.export}
+              </a>
+              <Link className="ui-button ui-button--secondary" href={ar ? "/app/data" : "/app/data?lang=en"}>
+                <UploadCloud size={18} /> {labels.import}
+              </Link>
+              <Link className="ui-button ui-button--primary" href={ar ? "/app/admin/clients/new" : "/app/admin/clients/new?lang=en"}>
+                {labels.create}
+              </Link>
+            </>
+          }
+        />
         {!loading && (
-          <OperationsPanel className="client-account-ledger" eyebrow={ar ? "حالة الوصول" : "ACCESS STATE"}>
+          <OperationsPanel className="client-account-ledger" aria-label={ar ? "حالة الوصول" : "Access state"}>
             <OperationsGrid columns="repeat(4, minmax(150px, 1fr))">
               <OperationsMetric tone="navy" label={labels.total} value={<bdi>{clients.length}</bdi>} />
               <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{activeCount}</bdi>} />
@@ -189,51 +190,59 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
             </OperationsGrid>
           </OperationsPanel>
         )}
-        <div className="console-surface">
-          <div className="table-toolbar">
-            <input className="search-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} />
-            {!loading && <span className="table-toolbar__count"><bdi>{clients.length}</bdi> {ar ? "عميل" : "clients"}</span>}
-          </div>
+        <OperationsSurface>
+          <AdaptiveFilters
+            className="register-filters"
+            labels={filterLabels(locale)}
+            search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} /></label>}
+            meta={!loading ? <span><bdi>{clients.length}</bdi> {ar ? "عميل" : "clients"}</span> : undefined}
+          />
           {error ? <div className="form-error">{error}</div> : null}
           {loading ? <LoadingState label={labels.loadingLabel} /> : null}
           {!loading && clients.length === 0 ? (
             <EmptyState icon={<UserRoundCog size={20} />} title={labels.empty} description={labels.emptyHint} />
           ) : null}
           {!loading && clients.length > 0 ? (
-            <div className="data-table data-table--clients admin-register">
-              <div className="data-table-head client-row">
-                <span>{labels.name}</span>
-                <span>{labels.phone}</span>
-                <span>{labels.projects}</span>
-                <span>{labels.status}</span>
-              </div>
-              {clients.map((client) => (
-                <Link className={`data-row client-row ${!client.user.isActive ? "admin-row--suspended" : ""}`} href={ar ? `/app/admin/clients/${client.id}` : `/app/admin/clients/${client.id}?lang=en`} key={client.id}>
-                  <div data-label={labels.name} className="admin-register__identity">
-                    <strong>{client.user.displayName}</strong>
-                    <span className="admin-register__email mono">{client.user.email}</span>
-                  </div>
-                  <div data-label={labels.phone}>
-                    <span className="mono">{client.phone ?? "—"}</span>
-                  </div>
-                  <div data-label={labels.projects}>
-                    <span className="mono">
-                      <bdi>{client.projectCount ?? 0}</bdi>
-                      {typeof client.activeProjectCount === "number" && client.activeProjectCount > 0
-                        ? ` · ${client.activeProjectCount} ${ar ? "نشط" : "active"}`
-                        : ""}
-                    </span>
-                  </div>
-                  <div data-label={labels.status}>
-                    <Badge tone={accountStatusTone(client.user.isActive)}>
-                      {client.user.isActive ? labels.statusActive : labels.statusInactive}
-                    </Badge>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <Register
+              className="ops-register--accounts"
+              columns="minmax(240px,2.2fr) minmax(140px,1fr) minmax(120px,.9fr) 120px 120px"
+              head={<><span>{labels.name}</span><span>{labels.phone}</span><span>{labels.projects}</span><span>{labels.status}</span><span /></>}
+            >
+              {clients.map((client) => {
+                const clientHref = ar ? `/app/admin/clients/${client.id}` : `/app/admin/clients/${client.id}?lang=en`;
+                return (
+                  <RegisterRow className={!client.user.isActive ? "admin-row--suspended" : ""} key={client.id}>
+                    <RegisterCell className="ops-register__cell--identity" label={labels.name}>
+                      <div className="project-record__identity">
+                        <Link href={clientHref}><strong dir="auto">{client.user.displayName}</strong></Link>
+                        <bdi className="project-code-tag mono account-login-id" dir="ltr">{client.user.email}</bdi>
+                      </div>
+                    </RegisterCell>
+                    <RegisterCell label={labels.phone}><bdi className="mono" dir="ltr">{client.phone ?? "—"}</bdi></RegisterCell>
+                    <RegisterCell label={labels.projects}>
+                      <span>
+                        <bdi>{client.projectCount ?? 0}</bdi>
+                        {typeof client.activeProjectCount === "number" && client.activeProjectCount > 0
+                          ? <> · <bdi>{client.activeProjectCount}</bdi> {ar ? "نشط" : "active"}</>
+                          : null}
+                      </span>
+                    </RegisterCell>
+                    <RegisterCell label={labels.status}>
+                      <Badge tone={accountStatusTone(client.user.isActive)}>
+                        {client.user.isActive ? labels.statusActive : labels.statusInactive}
+                      </Badge>
+                    </RegisterCell>
+                    <RegisterCell className="ops-register__cell--action">
+                      <Link className="project-register-open" href={clientHref} aria-label={`${labels.edit}: ${client.user.displayName}`}>
+                        <span className="register-open-label">{labels.edit}</span>{ar ? <ArrowLeft size={18} /> : <ArrowRight size={18} />}
+                      </Link>
+                    </RegisterCell>
+                  </RegisterRow>
+                );
+              })}
+            </Register>
           ) : null}
-        </div>
+        </OperationsSurface>
       </section>
     );
   }
@@ -253,43 +262,76 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         <div className="form-section">
           <div className="form-section__header">
             <span className="form-section__index">01</span>
-            <h4>{ar ? "بيانات العميل والتواصل" : "Client & Contact Details"}</h4>
+            <h4>{ar ? "هوية العميل" : "Client identity"}</h4>
           </div>
           <div className="form-grid">
-            <label className="ui-field">
+            <label className="ui-field full-span">
               <span>{labels.name} <strong className="required-star">*</strong></span>
               <input name="displayName" required autoComplete="off" defaultValue={record?.user.displayName ?? ""} placeholder={ar ? "اسم العميل أو الجهة" : "Client or Organization Name"} />
             </label>
-            {mode === "edit" ? <label className="ui-field">
-              <span>{labels.email}</span>
-              <input name="email" type="email" autoComplete="off" defaultValue={record?.user.email ?? ""} />
-            </label> : <div className="ui-field field-hint"><span>{labels.email}</span><p>{ar ? "سيتم إنشاء معرّف دخول فريد تلقائياً تحت @elhabak.com." : "A unique @elhabak.com login identifier will be generated automatically."}</p></div>}
-            <label className="ui-field">
-              <span>{labels.phone}</span>
-              <input name="phone" autoComplete="off" defaultValue={record?.phone ?? ""} placeholder="01xxxxxxxxx" />
-            </label>
-            <div className="field-group-center">
-              <label className="check-field check-field--toggle">
-                <input name="isActive" type="checkbox" defaultChecked={record?.user.isActive ?? true} />
-                <span>{labels.active}</span>
-              </label>
-            </div>
           </div>
         </div>
 
         <div className="form-section">
           <div className="form-section__header">
             <span className="form-section__index">02</span>
-            <h4>{ar ? "حساب الدخول والملاحظات" : "Login Account & Notes"}</h4>
+            <h4>{ar ? "التواصل" : "Contact"}</h4>
           </div>
           <div className="form-grid">
-            {mode === "edit" ? <label className="ui-field full-span">
-              <span>{labels.password}</span>
-              <input name="temporaryPassword" type="password" autoComplete="new-password" minLength={10} placeholder={ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password"} />
-              <span className="field-hint">{labels.passwordHint}</span>
-            </label> : <div className="ui-field full-span field-hint"><span>{labels.password}</span><p>{ar ? "سيتم إنشاء كلمة مرور عشوائية آمنة وإظهارها مرة واحدة بعد الحفظ." : "A secure random temporary password will be generated and shown once after saving."}</p></div>}
+            <label className="ui-field">
+              <span>{labels.phone}</span>
+              <input name="phone" type="tel" inputMode="tel" dir="ltr" autoComplete="off" defaultValue={record?.phone ?? ""} placeholder="01xxxxxxxxx" />
+            </label>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <div className="form-section__header">
+            <span className="form-section__index">03</span>
+            <h4>{ar ? "حساب الدخول" : "Login account"}</h4>
+          </div>
+          <div className="form-grid">
+            {mode === "edit" ? (
+              <label className="ui-field">
+                <span>{labels.email}</span>
+                <input name="email" type="email" dir="ltr" autoComplete="off" defaultValue={record?.user.email ?? ""} />
+              </label>
+            ) : (
+              <div className="ui-field">
+                <span>{labels.email}</span>
+                <div className="generated-id"><bdi>…@elhabak.com</bdi></div>
+                <small className="field-help">{ar ? "يُنشأ معرّف دخول فريد تلقائياً عند الحفظ." : "A unique login identifier is generated automatically on save."}</small>
+              </div>
+            )}
+            <div className="field-group-center">
+              <label className="check-field check-field--toggle">
+                <input name="isActive" type="checkbox" defaultChecked={record?.user.isActive ?? true} />
+                <span>{labels.active}</span>
+              </label>
+            </div>
+            {mode === "edit" ? (
+              <label className="ui-field full-span">
+                <span>{labels.password}</span>
+                <input name="temporaryPassword" type="password" autoComplete="new-password" minLength={10} placeholder={ar ? "اترك فارغاً للاحتفاظ بكلمة المرور الحالية" : "Leave blank to keep current password"} />
+                <small className="field-help">{labels.passwordHint}</small>
+              </label>
+            ) : (
+              <div className="ui-field full-span field-hint">
+                <span>{labels.password}</span>
+                <p>{ar ? "سيتم إنشاء كلمة مرور عشوائية آمنة وإظهارها مرة واحدة بعد الحفظ." : "A secure random temporary password will be generated and shown once after saving."}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="form-section">
+          <div className="form-section__header">
+            <span className="form-section__index">04</span>
+            <h4>{labels.notes}</h4>
+          </div>
+          <div className="form-grid">
             <label className="ui-field full-span">
-              <span>{labels.notes}</span>
+              <span className="sr-only">{labels.notes}</span>
               <textarea name="notes" defaultValue={record?.notes ?? ""} placeholder={ar ? "ملاحظات إضافية حول العميل ونطاق المشاريع..." : "Optional notes regarding client requirements..."} />
             </label>
           </div>

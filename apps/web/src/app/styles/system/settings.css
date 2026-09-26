@@ -1,0 +1,150 @@
+/*
+ * Account settings — identity + security side by side on desktop, stacked on
+ * phones. Login identifiers wrap safely as isolated LTR runs.
+ */
+@layer system {
+  .settings-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-5);
+  }
+
+  .settings-card {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    overflow: clip;
+  }
+
+  .settings-card__head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .settings-card__head > div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .settings-card__head h2 {
+    margin: 0;
+    font-size: var(--fs-title-sm);
+  }
+
+  .settings-card__head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--fs-label);
+  }
+
+  .settings-card__icon {
+    display: inline-grid;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  .settings-card__icon--accent {
+    background: var(--orange);
+  }
+
+  .settings-facts {
+    display: grid;
+    margin: 0;
+  }
+
+  .settings-facts > div {
+    display: grid;
+    grid-template-columns: minmax(120px, 34%) minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .settings-facts > div:last-child {
+    border-bottom: 0;
+  }
+
+  .settings-facts dt {
+    color: var(--muted);
+    font-size: var(--fs-label);
+    font-weight: 700;
+  }
+
+  .settings-facts dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--text-strong);
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .settings-login-id {
+    font-size: var(--fs-body-sm);
+    word-break: break-all;
+  }
+
+  .settings-role-code {
+    margin-inline-start: var(--space-2);
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+  }
+
+  .settings-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--success) !important;
+  }
+
+  .settings-state--warning {
+    color: var(--warning) !important;
+  }
+
+  .settings-password__form {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-5);
+  }
+
+  .settings-password__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 1023.98px) {
+    .settings-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .settings-card__head,
+    .settings-password__form {
+      padding: var(--space-4);
+    }
+
+    .settings-facts > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+      padding: var(--space-3) var(--space-4);
+    }
+
+    .settings-password__actions .ui-button {
+      width: 100%;
+    }
+  }
+}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, PageHeader, AdaptiveDisclosure } from "@elhabak/ui";
 import { Building2, Calendar, MapPin, UserRound, Users } from "lucide-react";
 import {
   apiRequest,
@@ -287,7 +287,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
       {!loading && (
         <>
           {project && (
-            <>
+            <AdaptiveDisclosure className="project-edit-summary" label={locale === "ar" ? "ملخص المشروع الحالي" : "Current project summary"} summary={<bdi>{project.progress}%</bdi>}>
               <div className="overview-header">
                 <div className="overview-header__top">
                   <div>
@@ -351,7 +351,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </strong>
                 </div>
               </div>
-            </>
+            </AdaptiveDisclosure>
           )}
 
           <form className="form-panels project-form-panels project-form-system" onSubmit={(event) => void submit(event)}>
@@ -487,6 +487,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </div>
 
             <aside className="project-form-rail">
+              <AdaptiveDisclosure className="project-form-preview" label={locale === "ar" ? "معاينة المشروع" : "Project preview"} summary={<bdi>{form.code || "PRJ-XXXX"}</bdi>}>
               <div className="project-form-summary">
                 <span className="project-form-summary__kicker">{labels.record}</span>
                 <strong className="project-form-summary__name">{form.name || labels.name}</strong>
@@ -519,6 +520,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                 </div>
                 <p className="project-form-summary__hint">{labels.recordHint}</p>
               </div>
+              </AdaptiveDisclosure>
               <div className="form-actions-bar project-form-actions">
                 <Link className="ui-button ui-button--secondary" href={locale === "ar" ? "/app/admin/projects" : "/app/admin/projects?lang=en"}>
                   {labels.back}

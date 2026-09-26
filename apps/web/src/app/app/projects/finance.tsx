@@ -109,22 +109,16 @@ export function Finance({ projectId }: { projectId: string }) {
   return (
     <section className="app-page project-workspace-page finance-workspace-page">
       <ProjectWorkspace project={context} locale={locale} role={user.role} active="finance" />
-      <div className="finance-command-strip">
-        <div>
-          <span className="section-kicker">{locale === "ar" ? "المتابعة المالية للمشروع" : "Project Cost Control"}</span>
-          <strong>{context.name} <bdi className="mono finance-command-strip__code">{context.code ?? "—"}</bdi></strong>
-        </div>
-        <div className="finance-command-strip__meta">
-          {context.client && <span>{locale === "ar" ? "العميل" : "Client"}: <bdi>{context.client.user.displayName}</bdi></span>}
-          <span>{locale === "ar" ? "العملة" : "Currency"}: <bdi>{context.currency}</bdi></span>
-          {user.role !== "ENGINEER" && (
-            <span>
-              {locale === "ar" ? "العقد" : "Contract"}:{" "}
-              <bdi>{context.contractValue !== null ? money(context.contractValue, context.currency, locale) : (locale === "ar" ? "غير محدد" : "Not set")}</bdi>
-            </span>
-          )}
-        </div>
-      </div>
+      <dl className="finance-context-strip" aria-label={locale === "ar" ? "المتابعة المالية للمشروع" : "Project cost control"}>
+        <div><dt>{locale === "ar" ? "العملة" : "Currency"}</dt><dd><bdi dir="ltr">{context.currency}</bdi></dd></div>
+        {user.role !== "ENGINEER" && (
+          <div>
+            <dt>{locale === "ar" ? "قيمة العقد" : "Contract value"}</dt>
+            <dd><bdi>{context.contractValue !== null ? money(context.contractValue, context.currency, locale) : (locale === "ar" ? "غير محدد" : "Not set")}</bdi></dd>
+          </div>
+        )}
+        {context.client && <div><dt>{locale === "ar" ? "العميل" : "Client"}</dt><dd><bdi>{context.client.user.displayName}</bdi></dd></div>}
+      </dl>
       {user.role === "ADMIN" || user.role === "ACCOUNTANT" ? (
         <AdminFinancePanels projectId={projectId} locale={locale} />
       ) : user.role === "ENGINEER" ? (
@@ -293,7 +287,7 @@ function SummaryPanel({
           <h2>{labels.title}</h2>
           <p>{labels.lead}</p>
         </div>
-        <button className="ui-button ui-button--accent" type="button" onClick={() => setShowContractDialog(true)}>
+        <button className="ui-button ui-button--primary" type="button" onClick={() => setShowContractDialog(true)}>
           <Pencil size={16} /> {labels.setContract}
         </button>
       </div>
@@ -413,7 +407,7 @@ function ContractValueDialog({
           </fieldset>
           {error && <div className="form-error">{error}</div>}
           <footer>
-            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+            <button className="ui-button ui-button--primary" type="submit" disabled={saving}>{labels.save}</button>
           </footer>
         </form>
       </section>
@@ -509,12 +503,12 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
         {current ? (
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button className="ui-button ui-button--secondary" type="button" onClick={() => setConfirmVersion(true)}>{labels.newVersion}</button>
-            <button className="ui-button ui-button--accent" type="button" onClick={() => setShowItemDialog({})}>
+            <button className="ui-button ui-button--primary" type="button" onClick={() => setShowItemDialog({})}>
               <Plus size={16} /> {labels.addItem}
             </button>
           </div>
         ) : (
-          <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
+          <button className="ui-button ui-button--primary" type="button" onClick={() => setShowCreate(true)}>
             <Plus size={16} /> {labels.create}
           </button>
         )}
@@ -608,7 +602,7 @@ function EstimatePanel({ projectId, locale }: { projectId: string; locale: "ar" 
             <p className="finance-version-confirm">{labels.versionBody(current.version, current.version + 1)}</p>
             <footer className="finance-dialog-actions">
               <button className="ui-button" type="button" onClick={() => setConfirmVersion(false)} disabled={versionSaving}>{labels.cancel}</button>
-              <button className="ui-button ui-button--accent" type="button" onClick={() => void newVersion()} disabled={versionSaving}>{labels.versionConfirm}</button>
+              <button className="ui-button ui-button--primary" type="button" onClick={() => void newVersion()} disabled={versionSaving}>{labels.versionConfirm}</button>
             </footer>
           </section>
         </div>
@@ -663,7 +657,7 @@ function CreateEstimateDialog({
             <label className="ui-field full-span">{labels.description}<textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={3000} /></label>
           </fieldset>
           {error && <div className="form-error">{error}</div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button></footer>
+          <footer><button className="ui-button ui-button--primary" type="submit" disabled={saving}>{labels.save}</button></footer>
         </form>
       </section>
     </div>
@@ -847,7 +841,7 @@ function LineItemDialog({
             {!editing && (
               <button className="ui-button" type="button" disabled={saving} onClick={(event) => void submit(event, true)}>{labels.saveAdd}</button>
             )}
-            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+            <button className="ui-button ui-button--primary" type="submit" disabled={saving}>{labels.save}</button>
           </footer>
         </form>
       </section>
@@ -964,7 +958,7 @@ function BoqPanel({
           <p>{labels.lead}</p>
         </div>
         {!readOnly && (
-          <button className="ui-button ui-button--accent" type="button" onClick={() => setShowDialog({})}>
+          <button className="ui-button ui-button--primary" type="button" onClick={() => setShowDialog({})}>
             <Plus size={16} /> {labels.addItem}
           </button>
         )}
@@ -1155,7 +1149,7 @@ function ExpensesPanel({
           <h2>{labels.title}</h2>
           <p>{labels.lead}</p>
         </div>
-        <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
+        <button className="ui-button ui-button--primary" type="button" onClick={() => setShowCreate(true)}>
           <Plus size={16} /> {labels.add}
         </button>
       </div>
@@ -1344,7 +1338,7 @@ function ExpenseDialog({ projectId, locale, onClose, onCreated }: { projectId: s
           {saving && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
           <footer>
             <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={saving}>{labels.close}</button>
-            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+            <button className="ui-button ui-button--primary" type="submit" disabled={saving}>{labels.save}</button>
           </footer>
         </form>
       </section>
@@ -1405,7 +1399,7 @@ function VoidDialog({
             <p className="finance-void-note">{labels.keepNote}</p>
           </fieldset>
           {error && <div className="form-error" role="alert">{error}</div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving || reason.trim() === ""}>{labels.confirm}</button></footer>
+          <footer><button className="ui-button ui-button--primary" type="submit" disabled={saving || reason.trim() === ""}>{labels.confirm}</button></footer>
         </form>
       </section>
     </div>
@@ -1488,7 +1482,7 @@ function ClientPaymentsPanel({
             </a>
           )}
           {!readOnly && (
-            <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
+            <button className="ui-button ui-button--primary" type="button" onClick={() => setShowCreate(true)}>
               <Plus size={16} /> {labels.add}
             </button>
           )}
@@ -1664,7 +1658,7 @@ function ClientPaymentDialog({ projectId, locale, onClose, onCreated }: { projec
           {saving && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
           <footer>
             <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={saving}>{labels.close}</button>
-            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+            <button className="ui-button ui-button--primary" type="submit" disabled={saving}>{labels.save}</button>
           </footer>
         </form>
       </section>
@@ -1733,7 +1727,7 @@ function ContractorPaymentsPanel({
           <h2>{labels.title}</h2>
           <p>{labels.lead}</p>
         </div>
-        <button className="ui-button ui-button--accent" type="button" onClick={() => setShowCreate(true)}>
+        <button className="ui-button ui-button--primary" type="button" onClick={() => setShowCreate(true)}>
           <Plus size={16} /> {labels.add}
         </button>
       </div>
@@ -1919,7 +1913,7 @@ function ContractorPaymentDialog({ projectId, locale, onClose, onCreated }: { pr
           {saving && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
           <footer>
             <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={saving}>{labels.close}</button>
-            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+            <button className="ui-button ui-button--primary" type="submit" disabled={saving}>{labels.save}</button>
           </footer>
         </form>
       </section>

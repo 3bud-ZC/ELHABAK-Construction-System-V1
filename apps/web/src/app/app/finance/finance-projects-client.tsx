@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ActionMenu, AdaptiveFilters, type FilterChip } from "@elhabak/ui";
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,6 +37,7 @@ import {
   type FinanceActivityResponse,
   type FinancePortfolio
 } from "../../../lib/api";
+import { filterLabels, menuCloseLabel } from "../../../lib/adaptive";
 
 type ScopeMode = "all" | "selected" | "one";
 type Panel = "projects" | "ledger";
@@ -288,9 +289,24 @@ export function FinanceProjectsClient() {
         title={labels.title}
         description={labels.lead}
         actions={
-          <Link className="ui-button ui-button--secondary" href={href("/app/reports?builder=finance")}>
-            <FileText size={15} /> {labels.reportBuilder}
-          </Link>
+          <>
+            {portfolio && portfolio.projectCount > 0 && (
+              <ActionMenu
+                label={ar ? "تصدير" : "Export"}
+                icon={<Download size={18} />}
+                closeLabel={menuCloseLabel(locale)}
+                items={[
+                  { key: "pdf", label: ar ? "تقرير PDF عربي" : "PDF report", icon: <Download size={18} />, href: financeReportPdfUrl(scopeProjectIds, { lang: locale }) },
+                  { key: "pdf-alt", label: labels.pdfEn, icon: <Download size={18} />, href: financeReportPdfUrl(scopeProjectIds, { lang: ar ? "en" : "ar" }) },
+                  { key: "xlsx", label: labels.exportSummary, icon: <FileSpreadsheet size={18} />, href: financeReportExportUrl(scopeProjectIds, { format: "xlsx", dataset: "summary" }) },
+                  { key: "csv", label: labels.exportLedger, icon: <FileSpreadsheet size={18} />, href: financeReportExportUrl(scopeProjectIds, { format: "csv", dataset: "ledger" }) }
+                ]}
+              />
+            )}
+            <Link className="ui-button ui-button--secondary" href={href("/app/reports?builder=finance")}>
+              <FileText size={18} /> {labels.reportBuilder}
+            </Link>
+          </>
         }
       />
 
@@ -382,21 +398,6 @@ export function FinanceProjectsClient() {
             <MetricCard icon={<FileText size={18} />} tone="info" label={labels.collectionPct} value={pct(portfolio.totals.collectionPercent)} />
           </div>
 
-          <div className="finance-portfolio-actions">
-            <a className="ui-button ui-button--secondary ui-button--sm" href={financeReportPdfUrl(scopeProjectIds, { lang: locale })} target="_blank" rel="noreferrer">
-              <Download size={14} /> {ar ? "PDF عربي" : "PDF"}
-            </a>
-            <a className="ui-button ui-button--secondary ui-button--sm" href={financeReportPdfUrl(scopeProjectIds, { lang: ar ? "en" : "ar" })} target="_blank" rel="noreferrer">
-              <Download size={14} /> {labels.pdfEn}
-            </a>
-            <a className="ui-button ui-button--secondary ui-button--sm" href={financeReportExportUrl(scopeProjectIds, { format: "xlsx", dataset: "summary" })}>
-              <FileSpreadsheet size={14} /> {labels.exportSummary}
-            </a>
-            <a className="ui-button ui-button--secondary ui-button--sm" href={financeReportExportUrl(scopeProjectIds, { format: "csv", dataset: "ledger" })}>
-              <FileSpreadsheet size={14} /> {labels.exportLedger}
-            </a>
-          </div>
-
           <nav className="finance-subtabs finance-module-tabs" aria-label={ar ? "أقسام المركز المالي" : "Finance center sections"}>
             <button type="button" className={panel === "projects" ? "active" : ""} onClick={() => setPanel("projects")}>
               {labels.projectsTab}
@@ -407,7 +408,7 @@ export function FinanceProjectsClient() {
           </nav>
 
           {panel === "projects" && (
-            <div className="report-table-wrap finance-portfolio-table">
+            <div className="report-table-wrap finance-portfolio-table report-table-wrap--cards">
               <table className="report-table">
                 <thead>
                   <tr>
@@ -426,25 +427,25 @@ export function FinanceProjectsClient() {
                 <tbody>
                   {portfolio.projects.map((project) => (
                     <tr key={project.id}>
-                      <td>
+                      <td className="report-cell--identity">
                         <div className="finance-table-project">
                           <strong>{project.name}</strong>
                           <bdi className="mono">{project.code ?? "—"}</bdi>
                         </div>
                       </td>
-                      <td>{project.clientName ?? "—"}</td>
-                      <td>
+                      <td data-label={labels.client}>{project.clientName ?? "—"}</td>
+                      <td data-label={labels.status}>
                         <Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge>
                       </td>
-                      <td className="num"><bdi className="mono">{money(project.summary.contractValue)}</bdi></td>
-                      <td className="num"><bdi className="mono">{money(project.summary.clientPaymentsTotal)}</bdi></td>
-                      <td className="num"><bdi className="mono">{money(project.summary.outstandingBalance)}</bdi></td>
-                      <td className="num"><bdi className="mono">{money(project.summary.committedCostTotal)}</bdi></td>
-                      <td className="num"><bdi className="mono">{money(project.summary.netCashPosition)}</bdi></td>
-                      <td className="num"><bdi>{pct(project.summary.collectionPercent)}</bdi></td>
-                      <td>
-                        <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}/finance`)}>
-                          {arrow}
+                      <td className="num" data-label={labels.contract}><bdi className="mono">{money(project.summary.contractValue)}</bdi></td>
+                      <td className="num" data-label={labels.collections}><bdi className="mono">{money(project.summary.clientPaymentsTotal)}</bdi></td>
+                      <td className="num" data-label={labels.outstanding}><bdi className="mono">{money(project.summary.outstandingBalance)}</bdi></td>
+                      <td className="num" data-label={labels.committed}><bdi className="mono">{money(project.summary.committedCostTotal)}</bdi></td>
+                      <td className="num" data-label={labels.netCash}><bdi className="mono">{money(project.summary.netCashPosition)}</bdi></td>
+                      <td className="num" data-label={labels.collectionPct}><bdi>{pct(project.summary.collectionPercent)}</bdi></td>
+                      <td className="report-cell--action">
+                        <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}/finance`)} aria-label={`${labels.open}: ${project.name}`}>
+                          <span className="register-open-label">{labels.open}</span> {arrow}
                         </Link>
                       </td>
                     </tr>
@@ -456,7 +457,19 @@ export function FinanceProjectsClient() {
 
           {panel === "ledger" && (
             <div className="finance-ledger">
-              <div className="finance-ledger-filters">
+              <AdaptiveFilters
+                className="register-filters register-filters--standalone finance-ledger-filters"
+                labels={filterLabels(locale)}
+                onClear={() => setFilters({ kind: "", status: "", category: "", method: "", vendor: "", from: "", to: "" })}
+                chips={[
+                  filters.kind && { key: "kind", label: financeActivityKindLabel(filters.kind as Parameters<typeof financeActivityKindLabel>[0], locale), onRemove: () => setFilters({ ...filters, kind: "" }) },
+                  filters.status && { key: "status", label: financialStatusLabel(filters.status as Parameters<typeof financialStatusLabel>[0], locale), onRemove: () => setFilters({ ...filters, status: "" }) },
+                  filters.category && { key: "category", label: expenseCategoryLabel(filters.category as Parameters<typeof expenseCategoryLabel>[0], locale), onRemove: () => setFilters({ ...filters, category: "" }) },
+                  filters.method && { key: "method", label: paymentMethodLabel(filters.method as Parameters<typeof paymentMethodLabel>[0], locale), onRemove: () => setFilters({ ...filters, method: "" }) },
+                  filters.vendor && { key: "vendor", label: filters.vendor, onRemove: () => setFilters({ ...filters, vendor: "" }) },
+                  (filters.from || filters.to) && { key: "dates", label: `${filters.from || "…"} → ${filters.to || "…"}`, onRemove: () => setFilters({ ...filters, from: "", to: "" }) }
+                ].filter(Boolean) as FilterChip[]}
+              >
                 <select value={filters.kind} onChange={(event) => setFilters({ ...filters, kind: event.target.value })} aria-label={labels.type}>
                   <option value="">{labels.allKinds}</option>
                   <option value="CLIENT_PAYMENT">{ar ? "تحصيلات العملاء" : "Client payments"}</option>
@@ -498,14 +511,14 @@ export function FinanceProjectsClient() {
                 >
                   {labels.reset}
                 </button>
-              </div>
+              </AdaptiveFilters>
               {ledger?.truncated && <p className="finance-ledger__notice">{labels.truncated}</p>}
               {ledgerLoading ? (
                 <LoadingState label={labels.loading} />
               ) : !ledger || ledger.count === 0 ? (
                 <EmptyState icon={<Wallet size={18} />} title={labels.empty} />
               ) : (
-                <div className="report-table-wrap">
+                <div className="report-table-wrap report-table-wrap--cards">
                   <table className="report-table">
                     <thead>
                       <tr>
@@ -522,19 +535,19 @@ export function FinanceProjectsClient() {
                     <tbody>
                       {ledger.rows.map((row) => (
                         <tr key={`${row.kind}-${row.id}`}>
-                          <td><Badge tone={financeActivityKindTone(row.kind)}>{financeActivityKindLabel(row.kind, locale)}</Badge></td>
-                          <td>
+                          <td className="report-cell--identity"><Badge tone={financeActivityKindTone(row.kind)}>{financeActivityKindLabel(row.kind, locale)}</Badge></td>
+                          <td data-label={labels.project}>
                             <div className="finance-table-project">
                               <strong>{row.project?.name ?? "—"}</strong>
                               <bdi className="mono">{row.project?.code ?? ""}</bdi>
                             </div>
                           </td>
-                          <td><bdi>{formatAppDate(row.date, locale)}</bdi></td>
-                          <td>{row.party ?? "—"}</td>
-                          <td>{row.category ? expenseCategoryLabel(row.category, locale) : "—"}</td>
-                          <td>{row.method ? paymentMethodLabel(row.method, locale) : "—"}</td>
-                          <td className="num"><bdi className="mono">{formatMoney(row.amount, row.currency, locale)}</bdi></td>
-                          <td><Badge tone={financialStatusTone(row.status)}>{financialStatusLabel(row.status, locale)}</Badge></td>
+                          <td data-label={labels.date}><bdi>{formatAppDate(row.date, locale)}</bdi></td>
+                          <td data-label={labels.party}>{row.party ?? "—"}</td>
+                          <td data-label={labels.category}>{row.category ? expenseCategoryLabel(row.category, locale) : "—"}</td>
+                          <td data-label={labels.method}>{row.method ? paymentMethodLabel(row.method, locale) : "—"}</td>
+                          <td className="num report-cell--amount" data-label={labels.amount}><bdi className="mono">{formatMoney(row.amount, row.currency, locale)}</bdi></td>
+                          <td data-label={labels.status}><Badge tone={financialStatusTone(row.status)}>{financialStatusLabel(row.status, locale)}</Badge></td>
                         </tr>
                       ))}
                     </tbody>

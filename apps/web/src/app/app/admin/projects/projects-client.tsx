@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, OperationsHeader, OperationsSurface, OperationsToolbar, ProgressBar, Register, RegisterCell, RegisterRow } from "@elhabak/ui";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarDays, Clock3, Download, Filter, FolderKanban, MapPin, Plus, RotateCcw, TrendingUp } from "lucide-react";
+import { AdaptiveFilters, Badge, EmptyState, LoadingState, MetricCard, OperationsHeader, OperationsSurface, ProgressBar, Register, RegisterCell, RegisterRow, type FilterChip } from "@elhabak/ui";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarDays, Clock3, Download, FolderKanban, MapPin, Plus, RotateCcw, TrendingUp } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
@@ -19,6 +19,7 @@ import {
   type ProjectRecord,
   type ProjectStatus
 } from "../../../../lib/api";
+import { filterLabels } from "../../../../lib/adaptive";
 
 const statuses: ProjectStatus[] = ["PLANNED", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"];
 const categories: ProjectCategory[] = ["DESIGN", "CONSTRUCTION", "FINISHING", "GENERAL_CONTRACTING", "FURNITURE", "MIXED"];
@@ -60,6 +61,7 @@ export function ProjectsClient() {
           client: "العميل",
           engineer: "المهندس المسؤول",
           location: "الموقع",
+          category: "الفئة",
           phase: "المرحلة الحالية",
           status: "الحالة",
           progress: "الإنجاز",
@@ -94,6 +96,7 @@ export function ProjectsClient() {
           client: "Client",
           engineer: "Responsible engineer",
           location: "Location",
+          category: "Category",
           phase: "Current phase",
           status: "Status",
           progress: "Progress",
@@ -171,6 +174,13 @@ export function ProjectsClient() {
     [visibleProjects]
   );
   const hasFilters = Boolean(query || status || phase || category || clientId || engineerId);
+  const filterChips: FilterChip[] = [
+    status && { key: "status", label: statusLabel(status, locale), onRemove: () => setStatus("") },
+    phase && { key: "phase", label: phaseLabel(phase, locale), onRemove: () => setPhase("") },
+    category && { key: "category", label: categoryLabel(category, locale), onRemove: () => setCategory("") },
+    clientId && { key: "client", label: clientOptions.find(([id]) => id === clientId)?.[1] ?? labels.client, onRemove: () => setClientId("") },
+    engineerId && { key: "engineer", label: engineerOptions.find(([id]) => id === engineerId)?.[1] ?? labels.engineer, onRemove: () => setEngineerId("") }
+  ].filter(Boolean) as FilterChip[];
 
   function clearFilters() {
     setQuery("");
@@ -205,42 +215,63 @@ export function ProjectsClient() {
       )}
 
       <OperationsSurface className="project-register-surface">
-        <OperationsToolbar className="project-register-toolbar">
-          <label className="project-register-search">
-            <span className="sr-only">{labels.search}</span>
-            <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
-          </label>
-          <div className="project-register-filters">
-            <span className="project-register-filter-label"><Filter size={14} /> {locale === "ar" ? "تصفية السجل" : "Filter register"}</span>
-            <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus | "")}>
+        <AdaptiveFilters
+          className="register-filters"
+          labels={filterLabels(locale)}
+          chips={filterChips}
+          onClear={clearFilters}
+          search={
+            <label className="register-search">
+              <span className="sr-only">{labels.search}</span>
+              <input className="search-input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
+            </label>
+          }
+          meta={
+            <>
+              <span><bdi>{visibleProjects.length}</bdi> {visibleProjects.length === 1 ? labels.result : labels.results}</span>
+              <a className="register-toolbar-link" href={dataOpsExportUrl("projects", "xlsx")} title={labels.export}>
+                <Download size={16} /> {labels.export}
+              </a>
+              {hasFilters && <button type="button" className="register-toolbar-link" onClick={clearFilters}><RotateCcw size={16} /> {labels.clear}</button>}
+            </>
+          }
+        >
+          <label className="adaptive-filter-field">
+            <span className="adaptive-filter-field__label">{labels.status}</span>
+            <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as ProjectStatus | "")} aria-label={labels.status}>
               <option value="">{labels.allStatuses}</option>
               {statuses.map((item) => <option value={item} key={item}>{statusLabel(item, locale)}</option>)}
             </select>
-            <select className="filter-select" value={phase} onChange={(event) => setPhase(event.target.value as ProjectPhase | "")}>
+          </label>
+          <label className="adaptive-filter-field">
+            <span className="adaptive-filter-field__label">{labels.phase}</span>
+            <select className="filter-select" value={phase} onChange={(event) => setPhase(event.target.value as ProjectPhase | "")} aria-label={labels.phase}>
               <option value="">{labels.allPhases}</option>
               {LIFECYCLE_PHASES.map((item) => <option value={item} key={item}>{phaseLabel(item, locale)}</option>)}
             </select>
-            <select className="filter-select" value={category} onChange={(event) => setCategory(event.target.value as ProjectCategory | "")}>
+          </label>
+          <label className="adaptive-filter-field">
+            <span className="adaptive-filter-field__label">{labels.category}</span>
+            <select className="filter-select" value={category} onChange={(event) => setCategory(event.target.value as ProjectCategory | "")} aria-label={labels.category}>
               <option value="">{labels.allCategories}</option>
               {categories.map((item) => <option value={item} key={item}>{categoryLabel(item, locale)}</option>)}
             </select>
-            {clientOptions.length > 0 && <select className="filter-select" value={clientId} onChange={(event) => setClientId(event.target.value)}>
+          </label>
+          {clientOptions.length > 0 && <label className="adaptive-filter-field">
+            <span className="adaptive-filter-field__label">{labels.client}</span>
+            <select className="filter-select" value={clientId} onChange={(event) => setClientId(event.target.value)} aria-label={labels.client}>
               <option value="">{labels.allClients}</option>
               {clientOptions.map(([id, name]) => <option value={id} key={id}>{name}</option>)}
-            </select>}
-            {engineerOptions.length > 0 && <select className="filter-select" value={engineerId} onChange={(event) => setEngineerId(event.target.value)}>
+            </select>
+          </label>}
+          {engineerOptions.length > 0 && <label className="adaptive-filter-field">
+            <span className="adaptive-filter-field__label">{labels.engineer}</span>
+            <select className="filter-select" value={engineerId} onChange={(event) => setEngineerId(event.target.value)} aria-label={labels.engineer}>
               <option value="">{labels.allEngineers}</option>
               {engineerOptions.map(([id, name]) => <option value={id} key={id}>{name}</option>)}
-            </select>}
-          </div>
-          <div className="project-register-toolbar__meta">
-            <span><bdi>{visibleProjects.length}</bdi> {visibleProjects.length === 1 ? labels.result : labels.results}</span>
-            <a className="project-register-clear" href={dataOpsExportUrl("projects", "xlsx")} title={labels.export}>
-              <Download size={13} /> {labels.export}
-            </a>
-            {hasFilters && <button type="button" className="project-register-clear" onClick={clearFilters}><RotateCcw size={13} /> {labels.clear}</button>}
-          </div>
-        </OperationsToolbar>
+            </select>
+          </label>}
+        </AdaptiveFilters>
 
         {error && <div className="form-error project-register-message">{error}</div>}
         {loading && <LoadingState label={labels.loadingLabel} />}
@@ -251,7 +282,7 @@ export function ProjectsClient() {
         {!loading && visibleProjects.length > 0 && (
           <Register
             className="project-register ops-register--projects"
-            columns="minmax(230px,1.8fr) minmax(120px,.9fr) minmax(120px,.9fr) minmax(115px,.8fr) minmax(120px,.85fr) 96px minmax(128px,.9fr) minmax(128px,.9fr) 52px"
+            columns="minmax(200px,2fr) minmax(108px,1fr) minmax(108px,1fr) minmax(96px,.9fr) minmax(100px,.9fr) 92px minmax(108px,1fr) minmax(112px,.9fr) 40px"
             head={<><span>{labels.name}</span><span>{labels.client}</span><span>{labels.engineer}</span><span>{labels.location}</span><span>{labels.phase}</span><span>{labels.status}</span><span>{labels.progress}</span><span>{labels.schedule}</span><span /></>}
           >
             {visibleProjects.map((project) => (
@@ -260,6 +291,7 @@ export function ProjectsClient() {
                   <div className="project-record__identity">
                     <Link href={href(`/app/projects/${project.id}`)}><strong dir="auto">{project.name}</strong></Link>
                     <span className="project-record__secondary"><bdi className="project-code-tag mono" dir="ltr">{project.code ?? "—"}</bdi><span>{categoryLabel(project.category, locale)}</span></span>
+                    <span className="project-record__facts"><span dir="auto">{project.location ?? "—"}</span><span>·</span><time dateTime={project.targetDate ?? undefined}>{formatDate(project.targetDate)}</time></span>
                   </div>
                 </RegisterCell>
                 <RegisterCell className="project-register-cell project-record__person" label={labels.client}><strong dir="auto">{project.client?.user.displayName ?? "—"}</strong></RegisterCell>
@@ -271,7 +303,7 @@ export function ProjectsClient() {
                   <div><strong className="mono" dir="ltr">{project.progress}%</strong><ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} /></div>
                 </RegisterCell>
                 <RegisterCell className="project-register-cell project-register-cell--date" label={labels.schedule}><CalendarDays size={13} aria-hidden="true" /><time dateTime={project.targetDate ?? undefined} dir="auto">{formatDate(project.targetDate)}</time></RegisterCell>
-                <RegisterCell className="project-register-cell project-register-cell--action"><Link className="project-register-open" href={href(`/app/projects/${project.id}`)} aria-label={`${labels.open}: ${project.name}`}>{ar ? <ArrowLeft size={17} /> : <ArrowRight size={17} />}</Link></RegisterCell>
+                <RegisterCell className="project-register-cell project-register-cell--action"><Link className="project-register-open" href={href(`/app/projects/${project.id}`)} aria-label={`${labels.open}: ${project.name}`}><span className="register-open-label">{labels.open}</span>{ar ? <ArrowLeft size={18} /> : <ArrowRight size={18} />}</Link></RegisterCell>
               </RegisterRow>
             ))}
           </Register>
