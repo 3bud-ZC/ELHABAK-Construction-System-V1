@@ -11,6 +11,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/coverage/**",
       "**/.codex-brand-preview/**",
+      "**/.codex-final-qa/**",
       "pnpm-lock.yaml"
     ]
   },

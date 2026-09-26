@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, PageHeader, ProgressBar } from "@elhabak/ui";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarDays, Clock3, Download, Filter, FolderKanban, MapPin, RotateCcw, TrendingUp } from "lucide-react";
+import { Badge, EmptyState, LoadingState, MetricCard, OperationsHeader, OperationsSurface, OperationsToolbar, ProgressBar, Register, RegisterCell, RegisterRow } from "@elhabak/ui";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarDays, Clock3, Download, Filter, FolderKanban, MapPin, Plus, RotateCcw, TrendingUp } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
@@ -183,13 +183,14 @@ export function ProjectsClient() {
 
   return (
     <section className="app-page projects-register-page">
-      <PageHeader
-        eyebrow={<span className="page-header__eyebrow-code">{labels.eyebrow}</span>}
+      <OperationsHeader
+        eyebrow={labels.eyebrow}
         title={labels.title}
         description={labels.lead}
+        meta={<span><bdi>{visibleProjects.length}</bdi> {visibleProjects.length === 1 ? labels.result : labels.results}</span>}
         actions={
           <Link className="ui-button ui-button--primary" href={href("/app/admin/projects/new")}>
-            {labels.create}
+            <Plus size={16} /> {labels.create}
           </Link>
         }
       />
@@ -203,8 +204,8 @@ export function ProjectsClient() {
         </div>
       )}
 
-      <section className="project-register-surface">
-        <div className="project-register-toolbar">
+      <OperationsSurface className="project-register-surface">
+        <OperationsToolbar className="project-register-toolbar">
           <label className="project-register-search">
             <span className="sr-only">{labels.search}</span>
             <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} />
@@ -239,7 +240,7 @@ export function ProjectsClient() {
             </a>
             {hasFilters && <button type="button" className="project-register-clear" onClick={clearFilters}><RotateCcw size={13} /> {labels.clear}</button>}
           </div>
-        </div>
+        </OperationsToolbar>
 
         {error && <div className="form-error project-register-message">{error}</div>}
         {loading && <LoadingState label={labels.loadingLabel} />}
@@ -248,33 +249,34 @@ export function ProjectsClient() {
         )}
 
         {!loading && visibleProjects.length > 0 && (
-          <div className="project-register">
-            <div className="project-register-head" aria-hidden="true">
-              <span>{labels.name}</span><span>{labels.client}</span><span>{labels.engineer}</span><span>{labels.location}</span><span>{labels.phase}</span><span>{labels.status}</span><span>{labels.progress}</span><span>{labels.schedule}</span><span />
-            </div>
+          <Register
+            className="project-register ops-register--projects"
+            columns="minmax(230px,1.8fr) minmax(120px,.9fr) minmax(120px,.9fr) minmax(115px,.8fr) minmax(120px,.85fr) 96px minmax(128px,.9fr) minmax(128px,.9fr) 52px"
+            head={<><span>{labels.name}</span><span>{labels.client}</span><span>{labels.engineer}</span><span>{labels.location}</span><span>{labels.phase}</span><span>{labels.status}</span><span>{labels.progress}</span><span>{labels.schedule}</span><span /></>}
+          >
             {visibleProjects.map((project) => (
-              <article className="project-register-row project-record" key={project.id}>
-                <div className="project-register-cell project-register-cell--identity" data-label={labels.name}>
+              <RegisterRow className="project-register-row project-record" key={project.id}>
+                <RegisterCell className="project-register-cell project-register-cell--identity ops-register__cell--identity" label={labels.name}>
                   <div className="project-record__identity">
                     <Link href={href(`/app/projects/${project.id}`)}><strong dir="auto">{project.name}</strong></Link>
                     <span className="project-record__secondary"><bdi className="project-code-tag mono" dir="ltr">{project.code ?? "—"}</bdi><span>{categoryLabel(project.category, locale)}</span></span>
                   </div>
-                </div>
-                <div className="project-register-cell project-record__person" data-label={labels.client}><strong dir="auto">{project.client?.user.displayName ?? "—"}</strong></div>
-                <div className="project-register-cell project-record__person" data-label={labels.engineer}><strong dir="auto">{project.engineer?.displayName ?? "—"}</strong></div>
-                <div className="project-register-cell project-register-cell--location" data-label={labels.location}><MapPin size={13} aria-hidden="true" /><span dir="auto">{project.location ?? "—"}</span></div>
-                <div className="project-register-cell project-record__phase" data-label={labels.phase}><span>{phaseLabel(project.phase, locale)}</span></div>
-                <div className="project-register-cell project-record__status" data-label={labels.status}><Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge></div>
-                <div className="project-register-cell project-register-cell--progress" data-label={labels.progress}>
+                </RegisterCell>
+                <RegisterCell className="project-register-cell project-record__person" label={labels.client}><strong dir="auto">{project.client?.user.displayName ?? "—"}</strong></RegisterCell>
+                <RegisterCell className="project-register-cell project-record__person" label={labels.engineer}><strong dir="auto">{project.engineer?.displayName ?? "—"}</strong></RegisterCell>
+                <RegisterCell className="project-register-cell project-register-cell--location" label={labels.location}><MapPin size={13} aria-hidden="true" /><span dir="auto">{project.location ?? "—"}</span></RegisterCell>
+                <RegisterCell className="project-register-cell project-record__phase" label={labels.phase}><span>{phaseLabel(project.phase, locale)}</span></RegisterCell>
+                <RegisterCell className="project-register-cell project-record__status" label={labels.status}><Badge tone={statusTone(project.status)}>{statusLabel(project.status, locale)}</Badge></RegisterCell>
+                <RegisterCell className="project-register-cell project-register-cell--progress" label={labels.progress}>
                   <div><strong className="mono" dir="ltr">{project.progress}%</strong><ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} /></div>
-                </div>
-                <div className="project-register-cell project-register-cell--date" data-label={labels.schedule}><CalendarDays size={13} aria-hidden="true" /><time dateTime={project.targetDate ?? undefined} dir="auto">{formatDate(project.targetDate)}</time></div>
-                <div className="project-register-cell project-register-cell--action"><Link className="project-register-open" href={href(`/app/projects/${project.id}`)} aria-label={`${labels.open}: ${project.name}`}>{ar ? <ArrowLeft size={17} /> : <ArrowRight size={17} />}</Link></div>
-              </article>
+                </RegisterCell>
+                <RegisterCell className="project-register-cell project-register-cell--date" label={labels.schedule}><CalendarDays size={13} aria-hidden="true" /><time dateTime={project.targetDate ?? undefined} dir="auto">{formatDate(project.targetDate)}</time></RegisterCell>
+                <RegisterCell className="project-register-cell project-register-cell--action"><Link className="project-register-open" href={href(`/app/projects/${project.id}`)} aria-label={`${labels.open}: ${project.name}`}>{ar ? <ArrowLeft size={17} /> : <ArrowRight size={17} />}</Link></RegisterCell>
+              </RegisterRow>
             ))}
-          </div>
+          </Register>
         )}
-      </section>
+      </OperationsSurface>
     </section>
   );
 }

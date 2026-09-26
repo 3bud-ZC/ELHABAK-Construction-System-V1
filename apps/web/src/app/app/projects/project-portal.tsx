@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, OperationsHeader, OperationsSurface, ProgressBar, Register, RegisterCell, RegisterRow } from "@elhabak/ui";
 import {
   Activity,
   ArrowUpLeft,
@@ -49,7 +49,7 @@ export function ProjectPortal({ projectId }: PortalProps) {
 
   const labels = useMemo(() => locale === "ar" ? {
     title: "مشاريعي", workerTitle: "تحديثات الموقع", lead: "المشاريع المصرح لك بالوصول إليها.", workerLead: "اختر مشروعاً لرفع تحديث ميداني جديد.",
-    empty: "لا توجد مشاريع مخصصة لك", emptyHint: "سيظهر هنا أي مشروع يتم تعيينك عليه.", brief: "ملاحظات تشغيلية", briefLead: "ملاحظات التشغيل المسجلة على المشروع.", dates: "الجدول الزمني", team: "فريق التسليم",
+    empty: "لا توجد مشاريع مخصصة لك", emptyHint: "سيظهر هنا أي مشروع يتم تعيينك عليه.", brief: "ملاحظات تشغيلية", briefLead: "ملاحظات التشغيل المسجلة على المشروع.", dates: "الجدول الزمني", team: "فريق التسليم", progress: "الإنجاز",
     noNotes: "لا توجد ملاحظات مسجلة.", note: "ملاحظة", files: "مرفقات", setup: "قائمة إعداد المشروع", clientReady: "العميل معين", engineerReady: "المهندس معين", scheduleReady: "الجدول الزمني مضبوط", siteReady: "أول تحديث ميداني", openSite: "فتح نشاط الموقع", loadingLabel: "جاري تحميل مساحة المشروع...", start: "تاريخ البدء", target: "التسليم المستهدف", category: "فئة المشروع", phase: "مرحلة العمل", workers: "الفريق الميداني", none: "غير معين", lifecycle: "مسار المشروع", lifecycleLead: "المراحل الستة للتسليم الهندسي.", current: "الحالة الحالية",
     modules: "وحدات المشروع", modulesLead: "الحالة الحالية لكل وحدة تشغيل ومسار الدخول إليها.", openModule: "فتح", designModule: "التصميمات", siteModule: "نشاط الموقع", docsModule: "المستندات", financeModule: "الشؤون المالية", chatModule: "الدردشة",
     designEmpty: "لا توجد تصميمات بعد", designLatest: "أحدث تصميم", designReviewPending: "بانتظار مراجعة العميل", designRejectedCount: "مرفوضة تحتاج مراجعة", designCount: "تصميم",
@@ -61,7 +61,7 @@ export function ProjectPortal({ projectId }: PortalProps) {
     overdueBadge: "تجاوز موعد التسليم المستهدف", retry: "إعادة المحاولة", loadFailed: "تعذر تحميل مساحة المشروع."
   } : {
     title: "My Projects", workerTitle: "Site Updates", lead: "Projects you are authorized to access.", workerLead: "Choose a project to upload a new field update.",
-    empty: "No assigned projects", emptyHint: "Any project you are assigned to will appear here.", brief: "Operating notes", briefLead: "Notes recorded on this project.", dates: "Schedule", team: "Delivery team",
+    empty: "No assigned projects", emptyHint: "Any project you are assigned to will appear here.", brief: "Operating notes", briefLead: "Notes recorded on this project.", dates: "Schedule", team: "Delivery team", progress: "Progress",
     noNotes: "No project notes recorded.", note: "Note", files: "attachments", setup: "Project setup checklist", clientReady: "Client assigned", engineerReady: "Engineer assigned", scheduleReady: "Schedule configured", siteReady: "First site update", openSite: "Open site activity", loadingLabel: "Loading project workspace...", start: "Start date", target: "Target delivery", category: "Project category", phase: "Work phase", workers: "Field team", none: "Unassigned", lifecycle: "Project delivery path", lifecycleLead: "The six canonical engineering delivery stages.", current: "Current state",
     modules: "Project modules", modulesLead: "Current state of each operations module and its entry point.", openModule: "Open", designModule: "Design Hub", siteModule: "Site Activity", docsModule: "Documents", financeModule: "Finance", chatModule: "Chat",
     designEmpty: "No designs yet", designLatest: "Latest design", designReviewPending: "awaiting client review", designRejectedCount: "rejected awaiting revision", designCount: "designs",
@@ -281,14 +281,39 @@ export function ProjectPortal({ projectId }: PortalProps) {
   }
 
   return <section className="app-page">
-    <PageHeader title={isWorker ? labels.workerTitle : labels.title} description={isWorker ? labels.workerLead : labels.lead} />
+    <OperationsHeader
+      eyebrow={isWorker ? (locale === "ar" ? "تحديثات ميدانية" : "Field updates") : (locale === "ar" ? "المشاريع المصرح بها" : "Authorized projects")}
+      title={isWorker ? labels.workerTitle : labels.title}
+      description={isWorker ? labels.workerLead : labels.lead}
+      meta={<span><bdi>{projects.length}</bdi> {locale === "ar" ? "مشروع" : "projects"}</span>}
+    />
     {error && <div className="form-error">{error}</div>}
     {projects.length === 0 && <EmptyState icon={<FolderKanban size={20} />} title={labels.empty} description={labels.emptyHint} />}
-    {projects.length > 0 && <div className="data-table">{projects.map((item) => <Link className="mini-project-row" href={href(`/app/projects/${item.id}${isWorker ? "/site-activity" : ""}`)} key={item.id}>
-      <div className="mini-project-row__id"><strong>{item.name}</strong><bdi className="mono">{item.code}</bdi></div>
-      <div className="mini-project-row__phase">{phaseLabel(item.phase, locale)}</div>
-      <div className="mini-project-row__progress"><div className="progress-track"><span style={{ width: `${item.progress}%` }} /></div><strong><bdi>{item.progress}%</bdi></strong></div>
-      <Badge tone={statusTone(item.status)}>{statusLabel(item.status, locale)}</Badge>
-    </Link>)}</div>}
+    {projects.length > 0 && (
+      <OperationsSurface>
+        <Register
+          className="assigned-project-register"
+          columns="minmax(260px,1.8fr) minmax(150px,.9fr) minmax(160px,1fr) minmax(110px,.7fr) 56px"
+          head={<><span>{locale === "ar" ? "المشروع" : "Project"}</span><span>{labels.phase}</span><span>{labels.progress}</span><span>{labels.current}</span><span /></>}
+        >
+          {projects.map((item) => (
+            <RegisterRow className="assigned-project-register__row" key={item.id}>
+              <RegisterCell className="ops-register__cell--identity" label={locale === "ar" ? "المشروع" : "Project"}>
+                <Link href={href(`/app/projects/${item.id}${isWorker ? "/site-activity" : ""}`)}>
+                  <strong dir="auto">{item.name}</strong>
+                  <bdi className="mono" dir="ltr">{item.code}</bdi>
+                </Link>
+              </RegisterCell>
+              <RegisterCell label={labels.phase}>{phaseLabel(item.phase, locale)}</RegisterCell>
+              <RegisterCell label={labels.progress}>
+                <span className="ops-progress-cell"><ProgressBar value={item.progress} tone={item.progress >= 70 ? "success" : "orange"} /><strong className="mono" dir="ltr">{item.progress}%</strong></span>
+              </RegisterCell>
+              <RegisterCell label={labels.current}><Badge tone={statusTone(item.status)}>{statusLabel(item.status, locale)}</Badge></RegisterCell>
+              <RegisterCell className="ops-register__cell--action"><Link className="project-register-open" href={href(`/app/projects/${item.id}${isWorker ? "/site-activity" : ""}`)} aria-label={`${labels.openModule}: ${item.name}`}><ArrowUpLeft size={15} /></Link></RegisterCell>
+            </RegisterRow>
+          ))}
+        </Register>
+      </OperationsSurface>
+    )}
   </section>;
 }
