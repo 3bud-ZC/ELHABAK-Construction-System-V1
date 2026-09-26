@@ -36,6 +36,7 @@ export type UserRecord = {
   displayName: string;
   role: UserRole;
   isActive: boolean;
+  mustChangePassword?: boolean;
   status?: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
   archivedAt?: string | null;
   impersonation?: {
@@ -1129,8 +1130,233 @@ export type SearchResult = {
   href: string;
 };
 
-export function reportPdfUrl(projectId: string, locale: "ar" | "en") {
-  return `${apiBaseUrl}/reports/projects/${projectId}/pdf?lang=${locale}`;
+export function reportPdfUrl(projectId: string, locale: "ar" | "en", sections?: string[]) {
+  const suffix = sections?.length ? `&sections=${encodeURIComponent(sections.join(","))}` : "";
+  return `${apiBaseUrl}/reports/projects/${projectId}/pdf?lang=${locale}${suffix}`;
+}
+
+// ---------------------------------------------------------------------------
+// Company Finance Control Center (Admin/Accountant only — enforced server-side)
+// ---------------------------------------------------------------------------
+
+export type FinanceScopeKind = "ALL" | "SELECTED" | "ONE";
+
+/** Canonical portfolio totals — every value computed server-side in minor units. */
+export type FinancePortfolioSummary = {
+  contractValue: string | null;
+  boqTotal: string;
+  estimateTotal: string | null;
+  clientPaymentsTotal: string;
+  outstandingBalance: string | null;
+  expensesTotal: string;
+  contractorPaymentsTotal: string;
+  committedCostTotal: string;
+  cashInTotal: string;
+  cashOutTotal: string;
+  netCashPosition: string;
+  collectionPercent: number | null;
+  costVsContractPercent: number | null;
+};
+
+export type FinancePortfolioProject = {
+  id: string;
+  code: string | null;
+  name: string;
+  status: ProjectStatus;
+  phase: ProjectPhase;
+  progress: number;
+  category: ProjectCategory;
+  clientName: string | null;
+  summary: FinancePortfolioSummary;
+};
+
+export type FinancePortfolio = {
+  generatedAt: string;
+  scope: FinanceScopeKind;
+  filters: { from: string | null; to: string | null };
+  currency: string;
+  projectCount: number;
+  totals: FinancePortfolioSummary;
+  projects: FinancePortfolioProject[];
+};
+
+export type FinanceActivityKind = "EXPENSE" | "CLIENT_PAYMENT" | "CONTRACTOR_PAYMENT";
+
+export type FinanceActivityRow = {
+  id: string;
+  kind: FinanceActivityKind;
+  project: { id: string; code: string | null; name: string; clientName: string | null } | null;
+  date: string;
+  label: string | null;
+  party: string | null;
+  category: ExpenseCategory | null;
+  method: PaymentMethod | null;
+  reference: string | null;
+  amount: string;
+  currency: string;
+  status: FinancialRecordStatus;
+  voidReason: string | null;
+};
+
+export type FinanceActivityResponse = {
+  generatedAt: string;
+  scope: FinanceScopeKind;
+  filters: {
+    from: string | null;
+    to: string | null;
+    kind: string;
+    status: string;
+    category: string | null;
+    method: string | null;
+    vendor: string | null;
+  };
+  truncated: boolean;
+  count: number;
+  rows: FinanceActivityRow[];
+};
+
+export const FINANCE_REPORT_SECTIONS = [
+  "executive",
+  "contract",
+  "collections",
+  "outstanding",
+  "boq",
+  "estimates",
+  "expenses",
+  "contractorPayments",
+  "cost",
+  "activity"
+] as const;
+
+export type FinanceReportSection = (typeof FINANCE_REPORT_SECTIONS)[number];
+
+export type FinanceReportProject = {
+  project: {
+    id: string;
+    code: string | null;
+    name: string;
+    status: ProjectStatus;
+    phase: ProjectPhase;
+    progress: number;
+    category: ProjectCategory;
+    clientName: string | null;
+  };
+  summary: FinancePortfolioSummary;
+  sections: {
+    boq?: {
+      sectionTotals: Array<{ section: string | null; total: string }>;
+      items?: BoqItemRecord[];
+    };
+    estimates?: Array<{
+      id: string;
+      title: string;
+      version: number;
+      isCurrent: boolean;
+      total: string;
+      createdBy: string;
+      createdAt: string;
+      items?: CostEstimateItemRecord[];
+    }>;
+    expenses?: {
+      byCategory: Array<{ category: ExpenseCategory; total: string }>;
+      rows?: ExpenseRecord[];
+    };
+    collections?: { rows?: ClientPaymentRecord[]; count?: number; total?: string };
+    contractorPayments?: { rows?: ContractorPaymentRecord[]; count?: number; total?: string };
+    activity?: Array<{ id: string; action: string; actorName: string | null; createdAt: string }>;
+  };
+};
+
+export type FinanceReport = {
+  generatedAt: string;
+  scope: FinanceScopeKind;
+  detail: "DETAILED" | "SUMMARY";
+  sections: FinanceReportSection[];
+  filters: { from: string | null; to: string | null };
+  currency: string;
+  projectCount: number;
+  totals: FinancePortfolioSummary;
+  projects: FinanceReportProject[];
+};
+
+export function financeScopeQuery(projectIds: string[], from = "", to = "") {
+  const params = new URLSearchParams();
+  if (projectIds.length) params.set("projectIds", projectIds.join(","));
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+export function financePortfolioUrl(projectIds: string[], from = "", to = "") {
+  return `/finance/portfolio${financeScopeQuery(projectIds, from, to)}`;
+}
+
+export function financeActivityUrl(
+  projectIds: string[],
+  filters: { from?: string; to?: string; kind?: string; status?: string; category?: string; method?: string; vendor?: string }
+) {
+  const params = new URLSearchParams();
+  if (projectIds.length) params.set("projectIds", projectIds.join(","));
+  for (const [key, value] of Object.entries(filters)) {
+    if (value) params.set(key, value);
+  }
+  const query = params.toString();
+  return `/finance/portfolio/activity${query ? `?${query}` : ""}`;
+}
+
+export function financeReportUrl(
+  projectIds: string[],
+  options: { from?: string; to?: string; sections?: string[]; detail?: "detailed" | "summary" }
+) {
+  const params = new URLSearchParams();
+  if (projectIds.length) params.set("projectIds", projectIds.join(","));
+  if (options.from) params.set("from", options.from);
+  if (options.to) params.set("to", options.to);
+  if (options.sections?.length) params.set("sections", options.sections.join(","));
+  if (options.detail) params.set("detail", options.detail);
+  const query = params.toString();
+  return `/finance/report${query ? `?${query}` : ""}`;
+}
+
+export function financeReportPdfUrl(
+  projectIds: string[],
+  options: { from?: string; to?: string; sections?: string[]; detail?: "detailed" | "summary"; lang: "ar" | "en" }
+) {
+  const params = new URLSearchParams();
+  if (projectIds.length) params.set("projectIds", projectIds.join(","));
+  if (options.from) params.set("from", options.from);
+  if (options.to) params.set("to", options.to);
+  if (options.sections?.length) params.set("sections", options.sections.join(","));
+  if (options.detail) params.set("detail", options.detail);
+  params.set("lang", options.lang);
+  return `${apiBaseUrl}/finance/report/pdf?${params.toString()}`;
+}
+
+export function financeReportExportUrl(
+  projectIds: string[],
+  options: { from?: string; to?: string; format: "csv" | "xlsx"; dataset: "summary" | "ledger" }
+) {
+  const params = new URLSearchParams();
+  if (projectIds.length) params.set("projectIds", projectIds.join(","));
+  if (options.from) params.set("from", options.from);
+  if (options.to) params.set("to", options.to);
+  params.set("format", options.format);
+  params.set("dataset", options.dataset);
+  return `${apiBaseUrl}/finance/report/export?${params.toString()}`;
+}
+
+export function financeActivityKindLabel(kind: FinanceActivityKind, locale: "ar" | "en") {
+  const labels: Record<FinanceActivityKind, { ar: string; en: string }> = {
+    EXPENSE: { ar: "مصروف داخلي", en: "Expense" },
+    CLIENT_PAYMENT: { ar: "تحصيل من عميل", en: "Client payment" },
+    CONTRACTOR_PAYMENT: { ar: "دفعة لمقاول", en: "Contractor payment" }
+  };
+  return labels[kind][locale];
+}
+
+export function financeActivityKindTone(kind: FinanceActivityKind): BadgeTone {
+  return kind === "CLIENT_PAYMENT" ? "success" : kind === "EXPENSE" ? "orange" : "info";
 }
 
 export function formatFileSize(bytes: number, locale: "ar" | "en") {

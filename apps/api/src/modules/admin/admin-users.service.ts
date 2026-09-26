@@ -98,7 +98,8 @@ export class AdminUsersService {
           displayName: input.displayName.trim(),
           role: input.role,
           isActive: input.isActive,
-          passwordHash
+          passwordHash,
+          mustChangePassword: true
         },
         select: userResponseSelect
       });
@@ -132,7 +133,10 @@ export class AdminUsersService {
       data.role = input.role;
     }
     if (input.isActive !== undefined) data.isActive = input.isActive;
-    if (input.temporaryPassword !== undefined) data.passwordHash = await this.authService.hashPassword(input.temporaryPassword);
+    if (input.temporaryPassword !== undefined) {
+      data.passwordHash = await this.authService.hashPassword(input.temporaryPassword);
+      data.mustChangePassword = true;
+    }
 
     try {
       const user = await this.prisma.user.update({ where: { id }, data, select: userResponseSelect });
@@ -213,7 +217,7 @@ export class AdminUsersService {
     if (existing.archivedAt) throw new ConflictException("Restore the archived account before resetting its password.");
 
     const passwordHash = await this.authService.hashPassword(input.temporaryPassword);
-    await this.prisma.user.update({ where: { id }, data: { passwordHash } });
+    await this.prisma.user.update({ where: { id }, data: { passwordHash, mustChangePassword: true } });
     const sessionsRevoked = await this.revokeSessions(id);
     await this.audit.record(actorId, "user.password_reset", { targetUserId: id, sessionsRevoked });
     return { ok: true };

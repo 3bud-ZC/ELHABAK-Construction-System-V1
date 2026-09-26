@@ -151,7 +151,7 @@ describe("Milestone 08 Project Communication & Realtime Collaboration", () => {
   }
 
   function toRequestUser(user: { id: string; email: string; displayName: string; role: RequestUser["role"]; isActive: boolean }): RequestUser {
-    return { id: user.id, email: user.email, displayName: user.displayName, role: user.role, isActive: user.isActive };
+    return { id: user.id, email: user.email, displayName: user.displayName, role: user.role, isActive: user.isActive, mustChangePassword: false };
   }
 
   const validWebm = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3]), Buffer.from("fake-but-signed-webm-audio-payload")]);

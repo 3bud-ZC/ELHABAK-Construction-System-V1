@@ -420,6 +420,9 @@ export function DataOpsClient() {
                           {typeof job.metadata?.fileName === "string" && job.metadata.fileName
                             ? ` · ${job.metadata.fileName}`
                             : ""}
+                          {failedJob && typeof job.metadata?.reason === "string" && job.metadata.reason
+                            ? ` — ${job.metadata.reason}`
+                            : ""}
                         </span>
                       </div>
                       {counts ? <span className="jobs-register__counts">{counts}</span> : <span className="jobs-register__counts" />}

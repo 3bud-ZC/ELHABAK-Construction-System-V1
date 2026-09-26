@@ -93,7 +93,8 @@ export class AdminClientsService {
             displayName,
             role: "CLIENT",
             isActive: input.isActive,
-            passwordHash
+            passwordHash,
+            mustChangePassword: true
           }
         }
       };
@@ -162,6 +163,7 @@ export class AdminClientsService {
     }
     if (input.temporaryPassword !== undefined) {
       userData.passwordHash = await this.authService.hashPassword(input.temporaryPassword);
+      userData.mustChangePassword = true;
     }
 
     try {

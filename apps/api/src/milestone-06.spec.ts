@@ -238,8 +238,8 @@ describe("Milestone 06 Financial Architecture and Cost Engineering", () => {
     const structureTotal = list.body.sectionTotals.find((entry: { section: string | null }) => entry.section === "Structure");
     expect(structureTotal).toBeDefined();
 
-    // Engineer (assigned) can read but never mutate the BOQ register.
-    await request(server).get(`/projects/${projectId}/finance/boq`).set("Cookie", engineerCookie).expect(200);
+    // Engineer has no Finance access at all - reads and mutations are denied alike.
+    await request(server).get(`/projects/${projectId}/finance/boq`).set("Cookie", engineerCookie).expect(403);
     await request(server).delete(`/projects/${projectId}/finance/boq/${created.body.id}`).set("Cookie", engineerCookie).expect(403);
     await request(server).delete(`/projects/${projectId}/finance/boq/${created.body.id}`).set("Cookie", accountantCookie).expect(200);
     await request(server).delete(`/projects/${projectId}/finance/boq/${precise.body.id}`).set("Cookie", accountantCookie).expect(200);

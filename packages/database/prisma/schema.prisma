@@ -169,6 +169,7 @@ model User {
   displayName  String
   role         UserRole
   passwordHash String?
+  mustChangePassword Boolean        @default(false)
   isActive     Boolean             @default(true)
   archivedAt   DateTime?
   clientProfile ClientProfile?

@@ -7,6 +7,7 @@ export type RequestUser = {
   displayName: string;
   role: UserRole;
   isActive: boolean;
+  mustChangePassword: boolean;
   impersonation?: {
     actorId: string;
     actorDisplayName: string;

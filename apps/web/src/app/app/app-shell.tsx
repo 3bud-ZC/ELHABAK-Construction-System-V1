@@ -22,6 +22,7 @@ import { type FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
 import { UserContext } from "../../lib/user-context";
 import { NotificationBell } from "../../components/notification-bell";
+import { ForcePasswordChange } from "./force-password-change";
 
 type AppShellProps = {
   children: ReactNode;
@@ -238,6 +239,15 @@ export function AppShell({ children }: AppShellProps) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  if (user.mustChangePassword) {
+    return (
+      <ForcePasswordChange
+        locale={locale}
+        onDone={() => setUser({ ...user, mustChangePassword: false })}
+      />
+    );
+  }
 
   return (
     <UserContext.Provider value={user}>

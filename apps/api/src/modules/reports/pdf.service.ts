@@ -3,8 +3,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import puppeteer, { type Browser } from "puppeteer-core";
 import type { ReportsService } from "./reports.service";
+import type { FinancePortfolioService } from "../finance/finance-portfolio.service";
 
 type ReportData = Awaited<ReturnType<ReportsService["getProjectReport"]>>;
+type FinanceReportData = Awaited<ReturnType<FinancePortfolioService["buildReport"]>>;
 type Locale = "ar" | "en";
 
 @Injectable()
@@ -25,6 +27,28 @@ export class PdfService implements OnApplicationShutdown {
         headerTemplate: "<span></span>",
         footerTemplate: `<div style="width:100%;font:9px Arial;color:#667085;padding:0 14mm;display:flex;justify-content:space-between;direction:${locale === "ar" ? "rtl" : "ltr"}"><span>ELHABAK CONSTRUCTION</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`,
         margin: { top: "12mm", right: "12mm", bottom: "16mm", left: "12mm" }
+      });
+      return Buffer.from(bytes);
+    } finally {
+      await page.close();
+    }
+  }
+
+  async renderFinanceReport(report: FinanceReportData, locale: Locale) {
+    const browser = await this.getBrowser();
+    const page = await browser.newPage();
+    try {
+      await page.setContent(this.financeHtml(report, locale), { waitUntil: "load" });
+      await page.emulateMediaType("print");
+      const bytes = await page.pdf({
+        format: "A4",
+        landscape: true,
+        printBackground: true,
+        preferCSSPageSize: true,
+        displayHeaderFooter: true,
+        headerTemplate: "<span></span>",
+        footerTemplate: `<div style="width:100%;font:9px Arial;color:#667085;padding:0 14mm;display:flex;justify-content:space-between;direction:${locale === "ar" ? "rtl" : "ltr"}"><span>ELHABAK CONSTRUCTION</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`,
+        margin: { top: "12mm", right: "10mm", bottom: "16mm", left: "10mm" }
       });
       return Buffer.from(bytes);
     } finally {
@@ -246,6 +270,292 @@ ${report.activity
       }
 <footer>ELHABAK CONSTRUCTION — ${ar ? "الحباك للاستشارات الهندسية" : "Engineering Consultancy"}</footer></body></html>`;
   }
+
+  private financeHtml(report: FinanceReportData, locale: Locale) {
+    const ar = locale === "ar";
+    const L = ar
+      ? {
+          report: "التقرير المالي",
+          generated: "تاريخ الإصدار",
+          scope: "النطاق",
+          allScope: "جميع المشاريع",
+          oneScope: "مشروع واحد",
+          selectedScope: "مشاريع محددة",
+          period: "الفترة",
+          allTime: "كل الفترات",
+          detail: "نمط التقرير",
+          detailed: "تفصيلي",
+          summarized: "تلخيصي",
+          projects: "المشاريع",
+          executive: "الملخص المالي التنفيذي",
+          contractValue: "القيمة التعاقدية",
+          collections: "تحصيلات العملاء",
+          outstanding: "الأرصدة المستحقة",
+          boq: "جدول الكميات",
+          estimates: "المقايسات التقريبية",
+          expenses: "المصروفات الداخلية",
+          contractorPayments: "دفعات المقاولين",
+          cost: "ملخص التكلفة",
+          activity: "سجل الحركة المالية",
+          committed: "التكلفة المسجلة",
+          cashIn: "النقد الوارد",
+          cashOut: "النقد الصادر",
+          netCash: "صافي النقدية",
+          collectionPct: "نسبة التحصيل",
+          costPct: "التكلفة/العقد",
+          code: "الكود",
+          name: "المشروع",
+          client: "العميل",
+          status: "الحالة",
+          date: "التاريخ",
+          party: "الجهة",
+          description: "البيان",
+          category: "الفئة",
+          method: "الطريقة",
+          amount: "المبلغ",
+          reference: "المرجع",
+          section: "القسم",
+          total: "الإجمالي",
+          version: "الإصدار",
+          current: "حالية",
+          finalized: "مرحّلة",
+          title: "العنوان",
+          count: "العدد",
+          noData: "لا توجد بيانات مسجلة لهذا القسم.",
+          portfolioBreakdown: "التوزيع حسب المشروع"
+        }
+      : {
+          report: "Financial Report",
+          generated: "Generated",
+          scope: "Scope",
+          allScope: "All projects",
+          oneScope: "Single project",
+          selectedScope: "Selected projects",
+          period: "Period",
+          allTime: "All time",
+          detail: "Report mode",
+          detailed: "Detailed",
+          summarized: "Summary",
+          projects: "Projects",
+          executive: "Executive Financial Summary",
+          contractValue: "Contract Value",
+          collections: "Client Collections",
+          outstanding: "Outstanding Balances",
+          boq: "Bill of Quantities",
+          estimates: "Preliminary Estimates",
+          expenses: "Internal Expenses",
+          contractorPayments: "Contractor Payments",
+          cost: "Cost Summary",
+          activity: "Financial Activity",
+          committed: "Committed Cost",
+          cashIn: "Cash In",
+          cashOut: "Cash Out",
+          netCash: "Net Cash Position",
+          collectionPct: "Collection %",
+          costPct: "Cost/Contract %",
+          code: "Code",
+          name: "Project",
+          client: "Client",
+          status: "Status",
+          date: "Date",
+          party: "Party",
+          description: "Description",
+          category: "Category",
+          method: "Method",
+          amount: "Amount",
+          reference: "Reference",
+          section: "Section",
+          total: "Total",
+          version: "Version",
+          current: "current",
+          finalized: "final",
+          title: "Title",
+          count: "Count",
+          noData: "No persisted data is available for this section.",
+          portfolioBreakdown: "Per-Project Breakdown"
+        };
+
+    const fontRegular = readBase64(require.resolve("@fontsource/almarai/files/almarai-arabic-400-normal.woff2"));
+    const fontBold = readBase64(require.resolve("@fontsource/almarai/files/almarai-arabic-700-normal.woff2"));
+    const logo = readBase64(findBrandAsset());
+    const currency = report.currency;
+    const money = (value: string | null | undefined) => (value === null || value === undefined ? "—" : `${e(value)} ${e(currency)}`);
+    const pct = (value: number | null | undefined) => (value === null || value === undefined ? "—" : `${value}%`);
+    const scopeLabel = report.scope === "ALL" ? L.allScope : report.scope === "ONE" ? L.oneScope : L.selectedScope;
+    const period = report.filters.from || report.filters.to
+      ? `${report.filters.from ?? "…"} ← ${report.filters.to ?? "…"}`
+      : L.allTime;
+    const kpi = (label: string, value: string) =>
+      `<div class="finance-card"><b>${e(label)}</b><strong class="ltr">${e(value)}</strong></div>`;
+
+    const sectionSet = new Set(report.sections);
+    const wants = (key: string) => sectionSet.has(key as never);
+
+    const executiveCards = [
+      kpi(L.contractValue, money(report.totals.contractValue)),
+      kpi(L.collections, money(report.totals.clientPaymentsTotal)),
+      kpi(L.outstanding, money(report.totals.outstandingBalance)),
+      kpi(L.boq, money(report.totals.boqTotal)),
+      kpi(L.estimates, money(report.totals.estimateTotal)),
+      kpi(L.expenses, money(report.totals.expensesTotal)),
+      kpi(L.contractorPayments, money(report.totals.contractorPaymentsTotal)),
+      kpi(L.committed, money(report.totals.committedCostTotal)),
+      kpi(L.cashIn, money(report.totals.cashInTotal)),
+      kpi(L.cashOut, money(report.totals.cashOutTotal)),
+      kpi(L.netCash, money(report.totals.netCashPosition)),
+      kpi(L.collectionPct, pct(report.totals.collectionPercent)),
+      kpi(L.costPct, pct(report.totals.costVsContractPercent))
+    ].join("");
+
+    const breakdownTable = report.projects.length
+      ? table(
+          [L.name, L.code, L.status, L.contractValue, L.collections, L.outstanding, L.committed, L.netCash],
+          report.projects.map((entry) => [
+            entry.project.name,
+            entry.project.code ?? "—",
+            entry.project.status,
+            money(entry.summary.contractValue),
+            money(entry.summary.clientPaymentsTotal),
+            money(entry.summary.outstandingBalance),
+            money(entry.summary.committedCostTotal),
+            money(entry.summary.netCashPosition)
+          ]),
+          L.noData
+        )
+      : "";
+
+    const projectBlocks = report.projects
+      .map((entry) => {
+        const sections = entry.sections as Record<string, unknown>;
+        const parts: string[] = [];
+        parts.push(
+          `<section class="allow-break project-band"><h2>${e(entry.project.name)} <span class="ltr" style="font-weight:400">${e(entry.project.code ?? "")}</span></h2>
+<div class="identity"><div><b>${e(L.client)}</b><span>${e(entry.project.clientName ?? "—")}</span></div><div><b>${e(L.status)}</b><span>${e(enumLabel(entry.project.status, locale))}</span></div><div><b>${e(L.contractValue)}</b><span class="ltr">${money(entry.summary.contractValue)}</span></div><div><b>${e(L.netCash)}</b><span class="ltr">${money(entry.summary.netCashPosition)}</span></div></div>`
+        );
+        if (wants("contract") || wants("outstanding")) {
+          parts.push(
+            `<div class="finance-grid">${kpi(L.contractValue, money(entry.summary.contractValue))}${kpi(L.collections, money(entry.summary.clientPaymentsTotal))}${kpi(L.outstanding, money(entry.summary.outstandingBalance))}${kpi(L.collectionPct, pct(entry.summary.collectionPercent))}</div>`
+          );
+        }
+        const boq = sections.boq as { sectionTotals: Array<{ section: string | null; total: string }>; items?: Array<Record<string, string | null>> } | undefined;
+        if (boq) {
+          const rows: Array<Array<string | number | null>> = boq.sectionTotals.map((row) => [row.section ?? "—", money(row.total)]);
+          if (boq.items) {
+            for (const item of boq.items) {
+              rows.push([`${item.code} — ${item.description}`, `${money(item.lineTotal)}`]);
+            }
+          }
+          parts.push(subheading(L.boq) + table([L.section, L.total], rows, L.noData));
+        }
+        const estimates = sections.estimates as Array<{ title: string; version: number; isCurrent: boolean; total: string; items?: Array<Record<string, string | null>> }> | undefined;
+        if (estimates) {
+          const rows = estimates.map((estimate) => [
+            estimate.title,
+            `V${estimate.version}`,
+            estimate.isCurrent ? L.current : L.finalized,
+            money(estimate.total)
+          ] as Array<string | number | null>);
+          let extra = "";
+          for (const estimate of estimates) {
+            if (estimate.items?.length) {
+              extra += table(
+                [L.description, L.amount],
+                estimate.items.map((item) => [item.description ?? "—", money(item.lineTotal)]),
+                L.noData
+              );
+            }
+          }
+          parts.push(subheading(L.estimates) + table([L.title, L.version, L.status, L.total], rows, L.noData) + extra);
+        }
+        const exp = sections.expenses as { byCategory: Array<{ category: string; total: string }>; rows?: Array<Record<string, string | null>> } | undefined;
+        if (exp) {
+          const catRows = exp.byCategory.map((row) => [enumLabel(row.category, locale), money(row.total)]);
+          let html = exp.byCategory.length ? table([L.category, L.total], catRows, L.noData) : "";
+          if (exp.rows?.length) {
+            html += table(
+              [L.date, L.description, L.party, L.category, L.amount, L.status],
+              exp.rows.map((row) => [
+                String(row.expenseDate ?? "").slice(0, 10),
+                row.description,
+                row.vendor,
+                row.category ? enumLabel(row.category, locale) : "—",
+                money(row.amount),
+                row.status === "VOID" ? enumLabel("VOID", locale) : enumLabel("ACTIVE", locale)
+              ]),
+              L.noData
+            );
+          }
+          parts.push(subheading(L.expenses) + (html || `<div class="empty">${e(L.noData)}</div>`));
+        }
+        const collections = sections.collections as { rows?: Array<Record<string, string | null>>; count?: number; total?: string } | undefined;
+        if (collections) {
+          if (collections.rows) {
+            parts.push(
+              subheading(L.collections) +
+                table(
+                  [L.date, L.party, L.method, L.amount, L.reference, L.status],
+                  collections.rows.map((row) => [
+                    String(row.paymentDate ?? "").slice(0, 10),
+                    row.description,
+                    row.method ? enumLabel(row.method, locale) : "—",
+                    money(row.amount),
+                    row.reference,
+                    row.status === "VOID" ? enumLabel("VOID", locale) : enumLabel("ACTIVE", locale)
+                  ]),
+                  L.noData
+                )
+            );
+          } else {
+            parts.push(`<div class="finance-grid">${kpi(L.count, String(collections.count ?? 0))}${kpi(L.total, money(collections.total))}</div>`);
+          }
+        }
+        const contractors = sections.contractorPayments as { rows?: Array<Record<string, string | null>>; count?: number; total?: string } | undefined;
+        if (contractors) {
+          if (contractors.rows) {
+            parts.push(
+              subheading(L.contractorPayments) +
+                table(
+                  [L.date, L.party, L.method, L.amount, L.reference, L.status],
+                  contractors.rows.map((row) => [
+                    String(row.paymentDate ?? "").slice(0, 10),
+                    row.payee,
+                    row.method ? enumLabel(row.method, locale) : "—",
+                    money(row.amount),
+                    row.reference,
+                    row.status === "VOID" ? enumLabel("VOID", locale) : enumLabel("ACTIVE", locale)
+                  ]),
+                  L.noData
+                )
+            );
+          } else {
+            parts.push(`<div class="finance-grid">${kpi(L.count, String(contractors.count ?? 0))}${kpi(L.total, money(contractors.total))}</div>`);
+          }
+        }
+        const acts = sections.activity as Array<{ id: string; action: string; actorName: string | null; createdAt: string }> | undefined;
+        if (acts) {
+          parts.push(
+            subheading(L.activity) +
+              table(
+                [L.date, L.description, "Actor"],
+                acts.map((log) => [formatDate(log.createdAt, locale), enumLabel(log.action, locale), log.actorName ?? "—"]),
+                L.noData
+              )
+          );
+        }
+        parts.push("</section>");
+        return parts.join("");
+      })
+      .join("");
+
+    return `<!doctype html><html lang="${locale}" dir="${ar ? "rtl" : "ltr"}"><head><meta charset="utf-8"><style>
+@font-face{font-family:Almarai;src:url(data:font/woff2;base64,${fontRegular}) format('woff2');font-weight:400}@font-face{font-family:Almarai;src:url(data:font/woff2;base64,${fontBold}) format('woff2');font-weight:700}
+@page{size:A4 landscape;margin:12mm 10mm 16mm}*{box-sizing:border-box}body{margin:0;color:#17234b;font-family:Almarai,Arial,sans-serif;font-size:9.5px;line-height:1.6}header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #e87625;padding-bottom:9px;margin-bottom:14px}header img{width:145px;height:auto}h1{font-size:20px;margin:0;color:#17234b}h2{font-size:13px;margin:0 0 8px;padding:6px 9px;border-${ar ? "right" : "left"}:4px solid #e87625;background:#f3f5f9}h3{font-size:11px;margin:10px 0 6px;color:#17234b}section{margin:0 0 13px;break-inside:avoid}section.allow-break{break-inside:auto}.meta{color:#667085;margin-top:3px}.identity{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid #d8dde8;margin-bottom:8px}.identity div{display:grid;grid-template-columns:42% 1fr;padding:5px 8px;border-bottom:1px solid #e7eaf0}.identity div:nth-child(odd){border-${ar ? "left" : "right"}:1px solid #e7eaf0}.identity div:nth-last-child(-n+2){border-bottom:0}.identity b{color:#667085}table{width:100%;border-collapse:collapse}th,td{border:1px solid #d8dde8;padding:4px 6px;text-align:${ar ? "right" : "left"};vertical-align:top;overflow-wrap:anywhere}th{background:#17234b;color:#fff;font-weight:700}tr{break-inside:avoid}.empty{padding:12px;border:1px dashed #bdc5d5;color:#667085;text-align:center}.ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}.cover-code{font:700 11px monospace;color:#e87625}.finance-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:8px}.finance-card{border:1px solid #d8dde8;padding:7px}.finance-card b{display:block;color:#667085;font-size:8px}.finance-card strong{font-size:11px}.project-band{border-top:2px solid #17234b;padding-top:8px;margin-top:16px}footer{margin-top:12px;border-top:1px solid #d8dde8;padding-top:6px;color:#667085;font-size:8px}</style></head><body>
+<header><div><h1>${e(L.report)}</h1><div class="cover-code ltr">ELHABAK-FINANCE</div><div class="meta">${L.generated}: <span class="ltr">${e(formatDate(report.generatedAt, locale))}</span> · ${L.scope}: ${e(scopeLabel)} (${report.projectCount}) · ${L.period}: <span class="ltr">${e(period)}</span> · ${L.detail}: ${e(report.detail === "DETAILED" ? L.detailed : L.summarized)}</div></div><img src="data:image/png;base64,${logo}" alt="ELHABAK"></header>
+${wants("executive") || wants("contract") || wants("outstanding") || wants("cost") ? section(L.executive, `<div class="finance-grid">${executiveCards}</div>`) : ""}
+${report.projects.length > 1 ? section(L.portfolioBreakdown, breakdownTable, true) : ""}
+${projectBlocks}
+<footer>ELHABAK CONSTRUCTION — ${ar ? "الحباك للاستشارات الهندسية" : "Engineering Consultancy"}</footer></body></html>`;
+  }
 }
 
 function section(title: string, content: string, allowBreak = false) {
@@ -254,7 +564,7 @@ function section(title: string, content: string, allowBreak = false) {
 function subheading(title: string) {
   return `<h3>${e(title)}</h3>`;
 }
-function table(headers: string[], rows: Array<Array<string | number | null>>, empty: string) {
+function table(headers: string[], rows: Array<Array<string | number | null | undefined>>, empty: string) {
   if (!rows.length) return `<div class="empty">${e(empty)}</div>`;
   return `<table><thead><tr>${headers.map((header) => `<th>${e(header)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell == null ? "—" : e(String(cell))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 }
@@ -298,6 +608,14 @@ function enumLabel(value: string, locale: Locale) {
     CORRESPONDENCE: { ar: "مراسلات", en: "Correspondence" },
     HANDOVER: { ar: "مستندات التسليم", en: "Handover" },
     ARCHIVED: { ar: "مؤرشف", en: "Archived" },
+    CASH: { ar: "نقدي", en: "Cash" },
+    BANK_TRANSFER: { ar: "تحويل بنكي", en: "Bank transfer" },
+    CHECK: { ar: "شيك", en: "Check" },
+    LABOR: { ar: "عمالة", en: "Labor" },
+    TRANSPORT: { ar: "نقل", en: "Transport" },
+    EQUIPMENT: { ar: "معدات", en: "Equipment" },
+    SUBCONTRACTOR: { ar: "مقاول فرعي", en: "Subcontractor" },
+    VOID: { ar: "ملغي", en: "Void" },
     "project.created": { ar: "تم إنشاء المشروع", en: "Project Created" },
     "project.phase_changed": { ar: "تم تحديث مرحلة المشروع", en: "Project Phase Updated" },
     "project.progress_changed": { ar: "تم تحديث نسبة الإنجاز", en: "Project Progress Updated" },

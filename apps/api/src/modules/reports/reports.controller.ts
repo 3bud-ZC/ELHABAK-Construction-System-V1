@@ -15,6 +15,18 @@ import type { RequestUser } from "../../shared/http.types";
 import { PdfService } from "./pdf.service";
 import { ReportsService } from "./reports.service";
 
+const PROJECT_REPORT_SECTIONS = ["overview", "operations", "designs", "documents", "communication", "activity", "finance"];
+
+/** Unknown section names are ignored; an empty/omitted list means the full report. */
+function parseSections(raw: string | undefined): string[] | undefined {
+  if (!raw?.trim()) return undefined;
+  const sections = raw
+    .split(",")
+    .map((section) => section.trim())
+    .filter((section) => PROJECT_REPORT_SECTIONS.includes(section));
+  return sections.length ? sections : undefined;
+}
+
 @UseGuards(AuthGuard)
 @Controller("reports")
 export class ReportsController {
@@ -29,8 +41,8 @@ export class ReportsController {
   }
 
   @Get("projects/:id")
-  getProjectReport(@CurrentUser() user: RequestUser, @Param("id") id: string) {
-    return this.reports.getProjectReport(user, id);
+  getProjectReport(@CurrentUser() user: RequestUser, @Param("id") id: string, @Query("sections") rawSections?: string) {
+    return this.reports.getProjectReport(user, id, parseSections(rawSections));
   }
 
   @Get("projects/:id/pdf")
@@ -39,11 +51,12 @@ export class ReportsController {
     @CurrentUser() user: RequestUser,
     @Param("id") id: string,
     @Query("lang") rawLanguage: string | undefined,
+    @Query("sections") rawSections: string | undefined,
     @Res() response: Response
   ) {
     if (rawLanguage !== "ar" && rawLanguage !== "en")
       throw new BadRequestException("Report language must be ar or en.");
-    const report = await this.reports.getProjectReport(user, id);
+    const report = await this.reports.getProjectReport(user, id, parseSections(rawSections));
     const buffer = await this.pdf.render(report, rawLanguage);
     const code = report.project.code?.replace(/[^a-zA-Z0-9_-]/g, "-") || report.project.id;
     response.setHeader("Content-Type", "application/pdf");

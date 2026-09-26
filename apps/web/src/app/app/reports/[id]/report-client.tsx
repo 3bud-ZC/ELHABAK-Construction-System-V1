@@ -30,6 +30,8 @@ export function ReportClient() {
   const [report, setReport] = useState<ProjectReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // null = every section; a Set holds the explicit inclusion list for refetch.
+  const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const labels = useMemo(
     () =>
       ar
@@ -57,6 +59,7 @@ export function ReportClient() {
             messages: "عدد الرسائل",
             lastMessage: "آخر رسالة",
             noData: "لا توجد بيانات مسجلة لهذا القسم.",
+            sectionPicker: "أقسام التقرير",
             failed: "تعذر تحميل التقرير أو لا تملك صلاحية عرضه.",
             loading: "جاري إعداد التقرير...",
             internal: "داخلي",
@@ -86,6 +89,7 @@ export function ReportClient() {
             messages: "Message count",
             lastMessage: "Last message",
             noData: "No persisted data is available for this section.",
+            sectionPicker: "Report sections",
             failed: "The report could not be loaded or you are not authorized to view it.",
             loading: "Preparing report...",
             internal: "Internal",
@@ -94,10 +98,17 @@ export function ReportClient() {
     [ar]
   );
 
+  const optionalKeys = useMemo(
+    () => ["operations", "designs", "finance", "documents", "communication", "activity"],
+    []
+  );
+
   useEffect(() => {
     let active = true;
     setLoading(true);
-    apiRequest<ProjectReport>(`/reports/projects/${params.id}`)
+    const included = optionalKeys.filter((key) => !excluded.has(key));
+    const suffix = included.length === optionalKeys.length ? "" : `?sections=${included.join(",")}`;
+    apiRequest<ProjectReport>(`/reports/projects/${params.id}${suffix}`)
       .then((result) => {
         if (active) {
           setReport(result);
@@ -113,7 +124,18 @@ export function ReportClient() {
     return () => {
       active = false;
     };
-  }, [labels.failed, params.id]);
+  }, [labels.failed, params.id, excluded, optionalKeys]);
+
+  const sectionChips: Array<{ key: string; label: string; gated: boolean }> = [
+    { key: "operations", label: labels.operations, gated: false },
+    { key: "designs", label: labels.design, gated: false },
+    { key: "finance", label: labels.finance, gated: true },
+    { key: "documents", label: labels.documents, gated: false },
+    { key: "communication", label: labels.communication, gated: false },
+    { key: "activity", label: labels.activity, gated: false }
+  ];
+  const canSeeFinance = report?.viewerRole === "ADMIN" || report?.viewerRole === "ACCOUNTANT";
+  const includedKeys = optionalKeys.filter((key) => !excluded.has(key));
 
   if (loading)
     return (
@@ -141,10 +163,43 @@ export function ReportClient() {
           <strong>{`${labels.title}: ${p.name}`}</strong>
           <span className="admin-command-strip__subtitle">{labels.lead}</span>
         </div>
-        <a className="ui-button ui-button--primary" href={reportPdfUrl(p.id, locale)}>
+        <a
+          className="ui-button ui-button--primary"
+          href={reportPdfUrl(
+            p.id,
+            locale,
+            includedKeys.length === optionalKeys.length ? undefined : includedKeys
+          )}
+        >
           <Download size={17} />
           {labels.export}
         </a>
+      </div>
+      <div className="report-section-picker" role="group" aria-label={labels.sectionPicker}>
+        <span className="report-section-picker__label">{labels.sectionPicker}</span>
+        {sectionChips
+          .filter((chip) => !chip.gated || canSeeFinance)
+          .map((chip) => {
+            const on = !excluded.has(chip.key);
+            return (
+              <button
+                key={chip.key}
+                type="button"
+                aria-pressed={on}
+                className={`report-section-chip${on ? " report-section-chip--on" : ""}`}
+                onClick={() =>
+                  setExcluded((current) => {
+                    const next = new Set(current);
+                    if (next.has(chip.key)) next.delete(chip.key);
+                    else next.add(chip.key);
+                    return next;
+                  })
+                }
+              >
+                {chip.label}
+              </button>
+            );
+          })}
       </div>
       {error && (
         <div className="form-error" role="alert">

@@ -55,7 +55,7 @@ export class ReportsService {
     return rows.map(serializeIdentity);
   }
 
-  async getProjectReport(user: RequestUser, projectId: string) {
+  async getProjectReport(user: RequestUser, projectId: string, sections?: string[]) {
     this.assertReportRole(user);
     await this.assertProjectAccess(user, projectId);
     const project = await this.prisma.project.findUnique({
@@ -64,10 +64,18 @@ export class ReportsService {
     });
     if (!project) throw new NotFoundException("Project not found.");
 
+    const requested = new Set(sections ?? []);
+    const wants = (key: string) => requested.size === 0 || requested.has(key);
     const isClient = user.role === "CLIENT";
     const canReadOperations = user.role === "ADMIN" || user.role === "ENGINEER" || isClient;
+    const wantsOperations = canReadOperations && wants("operations");
+    const wantsDesigns = canReadOperations && wants("designs");
+    const wantsDocuments = canReadOperations && wants("documents");
+    const wantsActivity = canReadOperations && wants("activity");
+    const wantsCommunication = canReadOperations && wants("communication");
+    const wantsFinance = wants("finance");
     const [siteUpdates, designs, documents, activity, communication, finance] = await Promise.all([
-      canReadOperations
+      wantsOperations
         ? this.prisma.siteUpdate.findMany({
             where: { projectId, ...(isClient ? { isClientVisible: true } : {}) },
             select: {
@@ -84,7 +92,7 @@ export class ReportsService {
             take: 20
           })
         : Promise.resolve([]),
-      canReadOperations
+      wantsDesigns
         ? this.prisma.designItem.findMany({
             where: { projectId },
             select: {
@@ -98,7 +106,7 @@ export class ReportsService {
             orderBy: { updatedAt: "desc" }
           })
         : Promise.resolve([]),
-      canReadOperations
+      wantsDocuments
         ? this.prisma.projectDocument.findMany({
             where: { projectId, ...(isClient ? { status: "ACTIVE", isClientVisible: true } : {}) },
             select: {
@@ -114,7 +122,7 @@ export class ReportsService {
             orderBy: { updatedAt: "desc" }
           })
         : Promise.resolve([]),
-      canReadOperations
+      wantsActivity
         ? this.prisma.auditLog.findMany({
             where: {
               projectId,
@@ -136,21 +144,21 @@ export class ReportsService {
             take: 30
           })
         : Promise.resolve([]),
-      canReadOperations
+      wantsCommunication
         ? this.prisma.projectMessage.aggregate({
             where: { projectId },
             _count: { id: true },
             _max: { createdAt: true }
           })
         : Promise.resolve(null),
-      this.getFinance(user, projectId)
+      wantsFinance ? this.getFinance(user, projectId) : Promise.resolve(null)
     ]);
 
     return {
       scope: user.role === "ACCOUNTANT" ? "FINANCE" : "PROJECT",
       viewerRole: user.role,
       project: serializeIdentity(project),
-      siteOperations: canReadOperations
+      siteOperations: wantsOperations
         ? {
             progress: project.progress,
             currentPhase: project.phase,
@@ -166,11 +174,11 @@ export class ReportsService {
             }))
           }
         : null,
-      designs: canReadOperations
+      designs: wantsDesigns
         ? designs.map((item) => ({ ...item, updatedAt: item.updatedAt.toISOString() }))
         : null,
       finance,
-      documents: canReadOperations
+      documents: wantsDocuments
         ? documents.map((item) => ({ ...item, updatedAt: item.updatedAt.toISOString() }))
         : null,
       communication: communication
@@ -179,7 +187,7 @@ export class ReportsService {
             lastMessageAt: communication._max.createdAt?.toISOString() ?? null
           }
         : null,
-      activity: canReadOperations
+      activity: wantsActivity
         ? activity.map((item) => ({
             id: item.id,
             action: item.action,

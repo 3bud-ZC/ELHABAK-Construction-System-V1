@@ -200,7 +200,10 @@ export class AuthService {
     if (!account?.passwordHash || !(await compare(currentPassword, account.passwordHash))) {
       throw new UnauthorizedException("Current password is incorrect.");
     }
-    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: await this.hashPassword(newPassword) } });
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await this.hashPassword(newPassword), mustChangePassword: false }
+    });
     await this.prisma.authSession.updateMany({
       where: { userId: user.id, id: { not: sessionId }, revokedAt: null },
       data: { revokedAt: new Date() }
@@ -234,6 +237,7 @@ type PersistedUser = {
   displayName: string;
   role: UserRole;
   isActive: boolean;
+  mustChangePassword?: boolean;
 };
 
 export function toRequestUser(
@@ -246,6 +250,7 @@ export function toRequestUser(
     displayName: user.displayName,
     role: user.role,
     isActive: user.isActive,
+    mustChangePassword: user.mustChangePassword ?? false,
     ...(impersonation ? { impersonation } : {})
   };
 }
