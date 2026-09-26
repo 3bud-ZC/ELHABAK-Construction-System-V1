@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { OperationsGrid, OperationsMetric, OperationsPanel } from "@elhabak/ui";
 import { apiRequest } from "../../../lib/api";
 import { useCurrentUser } from "../../../lib/user-context";
 
@@ -26,10 +27,25 @@ export function SettingsClient() {
   }
 
   return <section className="app-page settings-page">
-    <header className="page-header"><div><span className="section-kicker">{ar ? "الحساب" : "ACCOUNT"}</span><h1>{ar ? "الإعدادات" : "Settings"}</h1><p>{ar ? "إدارة بيانات الحساب وكلمة المرور." : "Manage your account details and password."}</p></div></header>
-    <div className="settings-grid">
-      <section className="console-surface settings-identity"><h2>{ar ? "بيانات الحساب" : "Account details"}</h2><dl><div><dt>{ar ? "الاسم" : "Name"}</dt><dd>{user.displayName}</dd></div><div><dt>{ar ? "معرّف الدخول" : "Login identifier"}</dt><dd className="mono" dir="ltr">{user.email}</dd></div></dl></section>
-      <form className="console-surface settings-password" onSubmit={(event) => void submit(event)}><h2>{ar ? "تغيير كلمة المرور" : "Change password"}</h2><label className="ui-field"><span>{ar ? "كلمة المرور الحالية" : "Current password"}</span><input name="currentPassword" type="password" required autoComplete="current-password" /></label><label className="ui-field"><span>{ar ? "كلمة المرور الجديدة" : "New password"}</span><input name="newPassword" type="password" required minLength={10} autoComplete="new-password" /><small>{ar ? "10 أحرف على الأقل." : "At least 10 characters."}</small></label><label className="ui-field"><span>{ar ? "تأكيد كلمة المرور" : "Confirm password"}</span><input name="confirmation" type="password" required minLength={10} autoComplete="new-password" /></label>{error && <p className="form-error" role="alert">{error}</p>}{message && <p className="form-success" role="status">{message}</p>}<button className="ui-button ui-button--primary" disabled={busy} type="submit">{busy ? (ar ? "جاري الحفظ..." : "Saving...") : (ar ? "حفظ كلمة المرور" : "Save password")}</button></form>
+    <header className="page-header"><div><span className="section-kicker">{ar ? "الحساب" : "ACCOUNT"}</span><h1>{ar ? "إعدادات الحساب" : "Account settings"}</h1><p>{ar ? "هوية الحساب، معرّف الدخول، وتغيير كلمة المرور من مساحة واحدة واضحة." : "Account identity, login identifier, and password change in one clear workspace."}</p></div></header>
+    <div className="settings-grid settings-ops-grid">
+      <OperationsPanel className="settings-identity" eyebrow={ar ? "هوية الحساب" : "IDENTITY"} title={ar ? "بيانات الدخول الحالية" : "Current access details"}>
+        <OperationsGrid columns="repeat(3, minmax(150px, 1fr))">
+          <OperationsMetric tone="navy" label={ar ? "الاسم" : "Name"} value={<bdi>{user.displayName}</bdi>} />
+          <OperationsMetric tone="neutral" label={ar ? "معرّف الدخول" : "Login identifier"} value={<bdi dir="ltr">{user.email}</bdi>} />
+          <OperationsMetric tone="success" label={ar ? "الدور" : "Role"} value={user.role} hint={user.mustChangePassword ? (ar ? "تغيير كلمة المرور مطلوب عند الدخول الأول" : "Password change required on first login") : undefined} />
+        </OperationsGrid>
+      </OperationsPanel>
+      <OperationsPanel className="settings-password" eyebrow={ar ? "الأمان" : "SECURITY"} title={ar ? "تغيير كلمة المرور" : "Change password"} description={ar ? "يحافظ النظام على إجبار تغيير كلمة المرور لأول دخول، وتؤدي هذه العملية إلى إلغاء الجلسات الأخرى." : "First-login forced password change remains enforced; changing password revokes other sessions."}>
+        <form className="settings-password__form" onSubmit={(event) => void submit(event)}>
+          <label className="ui-field"><span>{ar ? "كلمة المرور الحالية" : "Current password"}</span><input name="currentPassword" type="password" required autoComplete="current-password" /></label>
+          <label className="ui-field"><span>{ar ? "كلمة المرور الجديدة" : "New password"}</span><input name="newPassword" type="password" required minLength={10} autoComplete="new-password" /><small>{ar ? "10 أحرف على الأقل." : "At least 10 characters."}</small></label>
+          <label className="ui-field"><span>{ar ? "تأكيد كلمة المرور" : "Confirm password"}</span><input name="confirmation" type="password" required minLength={10} autoComplete="new-password" /></label>
+          {error && <p className="form-error" role="alert">{error}</p>}
+          {message && <p className="form-success" role="status">{message}</p>}
+          <footer className="form-actions-bar"><button className="ui-button ui-button--primary" disabled={busy} type="submit">{busy ? (ar ? "جاري الحفظ..." : "Saving...") : (ar ? "حفظ كلمة المرور" : "Save password")}</button></footer>
+        </form>
+      </OperationsPanel>
     </div>
   </section>;
 }

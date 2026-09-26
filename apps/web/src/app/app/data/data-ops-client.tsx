@@ -13,7 +13,7 @@ import {
   UploadCloud,
   UserRoundPlus
 } from "lucide-react";
-import { Badge, EmptyState, LoadingState, PageHeader } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, OperationsStagePath, PageHeader } from "@elhabak/ui";
 import {
   apiRequest,
   dataOpsJobLabel,
@@ -74,7 +74,7 @@ export function DataOpsClient() {
           adminOnly: "هذه الأداة متاحة للمديرين فقط.",
           loadingLabel: "جاري تحميل مركز البيانات...",
           importGroup: "عمليات الاستيراد",
-          importLead: "اختيار الملف ← معاينة ← تحقق ← تأكيد",
+          importLead: "رفع الملف ← تحقق ← معاينة ← تجربة جافة ← حل التعارضات ← تأكيد ← استيراد ← نتيجة",
           exportGroup: "عمليات التصدير",
           toolsMetric: "أدوات استيراد",
           projectsCount: "مشاريع في السجل",
@@ -117,7 +117,7 @@ export function DataOpsClient() {
           adminOnly: "This tool is available to administrators only.",
           loadingLabel: "Loading data center...",
           importGroup: "Import operations",
-          importLead: "Select file → preview → validate → confirm",
+          importLead: "Upload → Validate → Preview → Dry Run → Resolve Conflicts → Confirm → Import → Result",
           exportGroup: "Export operations",
           toolsMetric: "Import tools",
           projectsCount: "Projects in register",
@@ -321,6 +321,17 @@ export function DataOpsClient() {
                   <p>{labels.importLead}</p>
                 </div>
               </header>
+              <OperationsStagePath
+                className="dataops-workflow-path"
+                stages={(ar
+                  ? ["رفع", "تحقق", "معاينة", "تجربة", "تعارضات", "تأكيد", "استيراد", "نتيجة"]
+                  : ["Upload", "Validate", "Preview", "Dry run", "Conflicts", "Confirm", "Import", "Result"]
+                ).map((label, index) => ({
+                  code: String(index + 1).padStart(2, "0"),
+                  label,
+                  state: index === 0 ? "current" : "upcoming"
+                }))}
+              />
               <div className="dataops-tools">
                 {importCards.map((card) => (
                   <button type="button" className="dataops-tool" key={card.id} onClick={() => setTool(card.id)}>

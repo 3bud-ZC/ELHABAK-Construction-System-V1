@@ -1,6 +1,7 @@
 "use client";
 
 import { LIFECYCLE_PHASES, phaseLabel, type ProjectPhase } from "../lib/api";
+import { OperationsStagePath } from "@elhabak/ui";
 
 type LifecycleProps = {
   phase: ProjectPhase;
@@ -17,17 +18,18 @@ export function Lifecycle({ phase, locale }: LifecycleProps) {
   return (
     <section className="lifecycle-control" aria-label={statusLabels.title}>
       <div className="delivery-path__heading"><strong>{statusLabels.title}</strong><span>{statusLabels.current}: {phaseLabel(phase, locale)}</span></div>
-      <ol className="delivery-path">
-        {LIFECYCLE_PHASES.map((step, index) => {
+      <OperationsStagePath
+        className="delivery-path"
+        stages={LIFECYCLE_PHASES.map((step, index) => {
           const state = index < currentIndex ? "done" : index === currentIndex ? "current" : "upcoming";
-          return (
-            <li className={`delivery-path__stage delivery-path__stage--${state}`} key={step} aria-current={state === "current" ? "step" : undefined}>
-              <div className="delivery-path__rail" aria-hidden="true"><span className="delivery-path__number" dir="ltr">{String(index + 1).padStart(2, "0")}</span></div>
-              <div className="delivery-path__info"><strong>{phaseLabel(step, locale)}</strong><small>{statusLabels[state]}</small></div>
-            </li>
-          );
+          return {
+            code: String(index + 1).padStart(2, "0"),
+            label: phaseLabel(step, locale),
+            state,
+            caption: statusLabels[state]
+          };
         })}
-      </ol>
+      />
     </section>
   );
 }

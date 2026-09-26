@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, OperationsPanel, PageHeader } from "@elhabak/ui";
 import {
   Archive,
-  CheckCircle2,
   Download,
   KeyRound,
   LogIn,
@@ -15,7 +14,6 @@ import {
   PowerOff,
   RotateCcw,
   Trash2,
-  UserX,
   UsersRound,
   X
 } from "lucide-react";
@@ -192,12 +190,14 @@ export function UsersClient({ mode, id }: UsersClientProps) {
         </div>
 
         {!loading ? (
-          <div className="users-kpi-strip">
-            <MetricCard icon={<UsersRound size={18} />} tone="navy" label={labels.total} value={users.length} />
-            <MetricCard icon={<CheckCircle2 size={18} />} tone="success" label={labels.activeCount} value={activeCount} />
-            <MetricCard icon={<UserX size={18} />} tone="orange" label={labels.suspendedCount} value={suspendedCount} />
-            <MetricCard icon={<Archive size={18} />} tone="neutral" label={labels.archivedCount} value={archivedCount} />
-          </div>
+          <OperationsPanel className="team-account-ledger" eyebrow={ar ? "دورة حياة الحسابات" : "ACCOUNT LIFECYCLE"}>
+            <OperationsGrid columns="repeat(4, minmax(150px, 1fr))">
+              <OperationsMetric tone="navy" label={labels.total} value={<bdi>{users.length}</bdi>} />
+              <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{activeCount}</bdi>} />
+              <OperationsMetric tone="warning" label={labels.suspendedCount} value={<bdi>{suspendedCount}</bdi>} />
+              <OperationsMetric tone="neutral" label={labels.archivedCount} value={<bdi>{archivedCount}</bdi>} />
+            </OperationsGrid>
+          </OperationsPanel>
         ) : null}
 
         <div className="users-role-strip">

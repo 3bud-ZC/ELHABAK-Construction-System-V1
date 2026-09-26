@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, MetricCard, OperationsGrid, OperationsMetric, OperationsPanel } from "@elhabak/ui";
 import {
   Banknote,
   ClipboardList,
@@ -298,17 +298,18 @@ function SummaryPanel({
         </button>
       </div>
 
-      <div className="finance-kpi-grid finance-summary-primary">
-        <MetricCard tone="navy" icon={<Landmark size={18} />} label={labels.contractValue} value={summary?.contractValue ? money(summary.contractValue, currency, locale) : labels.notSet} />
-        <MetricCard tone="success" icon={<Banknote size={18} />} label={labels.clientPayments} value={money(summary?.clientPaymentsTotal, currency, locale)} />
-        <MetricCard
-          tone={overpaid ? "danger" : "navy"}
-          icon={<Wallet size={18} />}
-          label={labels.outstanding}
-          value={summary?.outstandingBalance !== null && summary?.outstandingBalance !== undefined ? money(summary.outstandingBalance, currency, locale) : labels.notSet}
-          hint={overpaid ? labels.overpaidNote : undefined}
-        />
-      </div>
+      <OperationsPanel className="finance-position-panel" eyebrow={ar ? "العقد والتحصيل" : "CONTRACT & COLLECTIONS"}>
+        <OperationsGrid className="finance-position-panel__grid" columns="1.25fr 1fr 1fr">
+          <OperationsMetric tone="navy" label={labels.contractValue} value={summary?.contractValue ? money(summary.contractValue, currency, locale) : labels.notSet} />
+          <OperationsMetric tone="success" label={labels.clientPayments} value={money(summary?.clientPaymentsTotal, currency, locale)} />
+          <OperationsMetric
+            tone={overpaid ? "danger" : "navy"}
+            label={labels.outstanding}
+            value={summary?.outstandingBalance !== null && summary?.outstandingBalance !== undefined ? money(summary.outstandingBalance, currency, locale) : labels.notSet}
+            hint={overpaid ? labels.overpaidNote : undefined}
+          />
+        </OperationsGrid>
+      </OperationsPanel>
 
       {summary?.contractValue !== null && summary?.contractValue !== undefined && summary.clientPaymentsTotal !== undefined && (() => {
         /* Exact collection ratio: minor units only, capped at 100% for the bar. */
@@ -328,18 +329,15 @@ function SummaryPanel({
         );
       })()}
 
-      <div className="finance-kpi-grid finance-summary-secondary">
-        <MetricCard tone="orange" icon={<ClipboardList size={18} />} label={labels.boqTotal} value={money(summary?.boqTotal, currency, locale)} />
-        <MetricCard
-          tone="orange"
-          icon={<FileText size={18} />}
-          label={labels.estimateTotal}
-          value={summary?.estimateTotal === null ? labels.noEstimate : money(summary?.estimateTotal, currency, locale)}
-        />
-        <MetricCard tone="danger" icon={<Receipt size={18} />} label={labels.expenses} value={money(summary?.expensesTotal, currency, locale)} />
-        <MetricCard tone="danger" icon={<Landmark size={18} />} label={labels.contractorPayments} value={money(summary?.contractorPaymentsTotal, currency, locale)} />
-        <MetricCard tone="navy" icon={<Wallet size={18} />} label={labels.committed} value={money(summary?.committedCostTotal, currency, locale)} />
-      </div>
+      <OperationsPanel className="finance-cost-panel" eyebrow={ar ? "التكلفة والالتزام" : "COST & COMMITMENTS"}>
+        <OperationsGrid columns="repeat(5, minmax(150px, 1fr))">
+          <OperationsMetric tone="warning" label={labels.boqTotal} value={money(summary?.boqTotal, currency, locale)} />
+          <OperationsMetric tone="warning" label={labels.estimateTotal} value={summary?.estimateTotal === null ? labels.noEstimate : money(summary?.estimateTotal, currency, locale)} />
+          <OperationsMetric tone="danger" label={labels.expenses} value={money(summary?.expensesTotal, currency, locale)} />
+          <OperationsMetric tone="danger" label={labels.contractorPayments} value={money(summary?.contractorPaymentsTotal, currency, locale)} />
+          <OperationsMetric tone="navy" label={labels.committed} value={money(summary?.committedCostTotal, currency, locale)} />
+        </OperationsGrid>
+      </OperationsPanel>
 
       {showContractDialog && (
         <ContractValueDialog

@@ -63,7 +63,12 @@ export function ReportClient() {
             failed: "تعذر تحميل التقرير أو لا تملك صلاحية عرضه.",
             loading: "جاري إعداد التقرير...",
             internal: "داخلي",
-            shared: "متاح للعميل"
+            shared: "متاح للعميل",
+            executiveSummary: "الملخص التنفيذي",
+            projectInformation: "بيانات المشروع",
+            financialPosition: "الموقف المالي",
+            activityCommunication: "النشاط / التواصل",
+            timelineAudit: "الجدول الزمني / التدقيق"
           }
         : {
             title: "Project Report",
@@ -93,7 +98,12 @@ export function ReportClient() {
             failed: "The report could not be loaded or you are not authorized to view it.",
             loading: "Preparing report...",
             internal: "Internal",
-            shared: "Client shared"
+            shared: "Client shared",
+            executiveSummary: "Executive Summary",
+            projectInformation: "Project Information",
+            financialPosition: "Financial Position",
+            activityCommunication: "Activity / Communication",
+            timelineAudit: "Timeline / Audit"
           },
     [ar]
   );
@@ -206,33 +216,44 @@ export function ReportClient() {
           {error}
         </div>
       )}
-      <div className="report-identity-card">
-        <div className="report-identity-card__title">
-          <div>
-            <strong>{p.name}</strong>
-            <bdi className="mono">{p.code ?? "—"}</bdi>
+      <ReportSection title={labels.executiveSummary} index="01">
+        <div className="report-summary-grid">
+          <Summary label={labels.status} value={statusLabel(p.status, locale)} />
+          <Summary label={labels.phase} value={phaseLabel(p.phase, locale)} />
+          <Summary label={ar ? "نسبة الإنجاز" : "Progress"} value={`${p.progress}%`} mono />
+          <Summary label={labels.target} value={date(p.targetDate)} mono />
+        </div>
+      </ReportSection>
+
+      <ReportSection title={labels.projectInformation} index="02">
+        <div className="report-identity-card">
+          <div className="report-identity-card__title">
+            <div>
+              <strong>{p.name}</strong>
+              <bdi className="mono">{p.code ?? "—"}</bdi>
+            </div>
+            <Badge tone={statusTone(p.status)}>{statusLabel(p.status, locale)}</Badge>
           </div>
-          <Badge tone={statusTone(p.status)}>{statusLabel(p.status, locale)}</Badge>
+          <div className="report-progress">
+            <span>{phaseLabel(p.phase, locale)}</span>
+            <ProgressBar value={p.progress} />
+            <strong>
+              <bdi>{p.progress}%</bdi>
+            </strong>
+          </div>
+          <dl className="report-facts">
+            <Fact label={labels.client} value={p.client?.user.displayName} />
+            <Fact label={labels.engineer} value={p.engineer?.displayName} />
+            <Fact label={labels.location} value={p.location} />
+            <Fact label={labels.category} value={categoryLabel(p.category, locale)} />
+            <Fact label={labels.start} value={date(p.startDate)} />
+            <Fact label={labels.target} value={date(p.targetDate)} />
+          </dl>
         </div>
-        <div className="report-progress">
-          <span>{phaseLabel(p.phase, locale)}</span>
-          <ProgressBar value={p.progress} />
-          <strong>
-            <bdi>{p.progress}%</bdi>
-          </strong>
-        </div>
-        <dl className="report-facts">
-          <Fact label={labels.client} value={p.client?.user.displayName} />
-          <Fact label={labels.engineer} value={p.engineer?.displayName} />
-          <Fact label={labels.location} value={p.location} />
-          <Fact label={labels.category} value={categoryLabel(p.category, locale)} />
-          <Fact label={labels.start} value={date(p.startDate)} />
-          <Fact label={labels.target} value={date(p.targetDate)} />
-        </dl>
-      </div>
+      </ReportSection>
 
       {report.siteOperations && (
-        <ReportSection title={labels.operations} index="01">
+        <ReportSection title={labels.operations} index="03">
           <div className="report-summary-grid">
             <Summary
               label={labels.phase}
@@ -261,7 +282,7 @@ export function ReportClient() {
       )}
 
       {report.designs && (
-        <ReportSection title={labels.design} index="02">
+        <ReportSection title={labels.design} index="04">
           {report.designs.length ? (
             <div className="report-table-wrap">
               <table className="report-table">
@@ -293,22 +314,8 @@ export function ReportClient() {
         </ReportSection>
       )}
 
-      {report.finance && (
-        <ReportSection title={labels.finance} index="03">
-          {financeRows.length ? (
-            <div className="report-summary-grid">
-              {financeRows.map(([label, value]) => (
-                <Summary key={label} label={label} value={value} mono />
-              ))}
-            </div>
-          ) : (
-            <Empty text={labels.noData} />
-          )}
-        </ReportSection>
-      )}
-
       {report.documents && (
-        <ReportSection title={labels.documents} index="04">
+        <ReportSection title={labels.documents} index="05">
           {report.documents.length ? (
             <div className="report-table-wrap">
               <table className="report-table">
@@ -343,8 +350,22 @@ export function ReportClient() {
         </ReportSection>
       )}
 
+      {report.finance && (
+        <ReportSection title={labels.financialPosition} index="06">
+          {financeRows.length ? (
+            <div className="report-summary-grid">
+              {financeRows.map(([label, value]) => (
+                <Summary key={label} label={label} value={value} mono />
+              ))}
+            </div>
+          ) : (
+            <Empty text={labels.noData} />
+          )}
+        </ReportSection>
+      )}
+
       {report.communication && (
-        <ReportSection title={labels.communication} index="05">
+        <ReportSection title={labels.activityCommunication} index="07">
           <div className="report-summary-grid">
             <Summary
               label={labels.messages}
@@ -360,7 +381,7 @@ export function ReportClient() {
         </ReportSection>
       )}
       {report.activity && (
-        <ReportSection title={labels.activity} index="06">
+        <ReportSection title={labels.timelineAudit} index="08">
           {report.activity.length ? (
             <div className="report-list">
               {report.activity.map((item) => (

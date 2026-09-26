@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, ProgressBar } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, OperationsPanel, ProgressBar } from "@elhabak/ui";
 import {
   AlertTriangle,
   ArrowUpLeft,
@@ -86,6 +86,10 @@ type DashboardSummary = {
     }>;
   };
 };
+
+function arLabel(locale: "ar" | "en", ar: string, en: string) {
+  return locale === "ar" ? ar : en;
+}
 
 export function AppDashboard() {
   const searchParams = useSearchParams();
@@ -334,36 +338,19 @@ export function AppDashboard() {
       {error && <div className="form-error">{error}</div>}
 
       {dashboard && (
-        <div className="dashboard-kpi-strip">
-          <MetricCard
-            icon={<FolderKanban size={17} />}
-            tone="navy"
-            label={labels.active}
-            value={<bdi>{dashboard.activeProjects}</bdi>}
-            hint={labels.activeContext}
-          />
-          <MetricCard
-            icon={<Users2 size={17} />}
-            tone="info"
-            label={labels.clients}
-            value={<bdi>{dashboard.clientCount}</bdi>}
-            hint={labels.clientContext}
-          />
-          <MetricCard
-            icon={<Ruler size={17} />}
-            tone={dashboard.pendingReviewCount > 0 ? "orange" : "success"}
-            label={labels.pendingReviews}
-            value={<bdi>{dashboard.pendingReviewCount}</bdi>}
-            hint={labels.designReview}
-          />
-          <MetricCard
-            icon={<AlertTriangle size={17} />}
-            tone={dashboard.overdueCount > 0 ? "danger" : "success"}
-            label={labels.overdueShort}
-            value={<bdi>{dashboard.overdueCount}</bdi>}
-            hint={labels.overdue}
-          />
-        </div>
+        <OperationsPanel
+          className="dashboard-ops-ledger"
+          eyebrow={arLabel(locale, "مؤشرات تشغيلية", "Operational position")}
+          title={arLabel(locale, "حالة المحفظة الآن", "Portfolio state right now")}
+          description={arLabel(locale, "أرقام مختصرة موجهة للعمل: أين توجد المشاريع، وما الذي يتطلب قراراً.", "Action-oriented figures: where projects stand and what needs a decision.")}
+        >
+          <OperationsGrid columns="1.2fr 1fr 1fr 1fr">
+            <OperationsMetric tone="navy" label={labels.active} value={<bdi>{dashboard.activeProjects}</bdi>} hint={labels.activeContext} />
+            <OperationsMetric tone="neutral" label={labels.clients} value={<bdi>{dashboard.clientCount}</bdi>} hint={labels.clientContext} />
+            <OperationsMetric tone={dashboard.pendingReviewCount > 0 ? "warning" : "success"} label={labels.pendingReviews} value={<bdi>{dashboard.pendingReviewCount}</bdi>} hint={labels.designReview} />
+            <OperationsMetric tone={dashboard.overdueCount > 0 ? "danger" : "success"} label={labels.overdueShort} value={<bdi>{dashboard.overdueCount}</bdi>} hint={labels.overdue} />
+          </OperationsGrid>
+        </OperationsPanel>
       )}
 
       {isAdmin && dashboard?.projects.length === 0 && (

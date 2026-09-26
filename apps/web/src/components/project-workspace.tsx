@@ -179,6 +179,12 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
           <ProgressBar value={project.progress} tone={project.progress >= 70 ? "success" : "orange"} />
           <strong><bdi>{project.progress}%</bdi></strong>
         </div>
+        <dl className="project-context-bar__facts">
+          <div><dt>{labels.client}</dt><dd dir="auto">{project.client?.user.displayName ?? labels.unset}</dd></div>
+          <div><dt>{labels.engineer}</dt><dd dir="auto">{project.engineer?.displayName ?? labels.unset}</dd></div>
+          <div><dt>{labels.location}</dt><dd dir="auto">{project.location ?? labels.unset}</dd></div>
+          <div><dt>{labels.target}</dt><dd><bdi>{formatDate(project.targetDate)}</bdi></dd></div>
+        </dl>
         {nav}
         {role === "ADMIN" && (
           <Link

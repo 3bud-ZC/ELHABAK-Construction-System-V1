@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { Badge, LoadingState } from "@elhabak/ui";
+import { Badge, LoadingState, OperationsStagePath } from "@elhabak/ui";
 import { Download, FileSpreadsheet, Play, Search } from "lucide-react";
 import {
   apiRequest,
@@ -103,7 +103,13 @@ export function FinanceReportBuilder({ locale }: { locale: "ar" | "en" }) {
             category: "الفئة",
             reference: "المرجع",
             actor: "بواسطة",
-            type: "النوع"
+            type: "النوع",
+            stepScope: "نطاق المشاريع",
+            stepDates: "الفترة",
+            stepSections: "الأقسام",
+            stepDetail: "التفصيل",
+            stepOutput: "اللغة / الإخراج",
+            stepGenerate: "إنشاء"
           }
         : {
             title: "Financial Report Builder",
@@ -154,7 +160,13 @@ export function FinanceReportBuilder({ locale }: { locale: "ar" | "en" }) {
             category: "Category",
             reference: "Reference",
             actor: "By",
-            type: "Type"
+            type: "Type",
+            stepScope: "Project scope",
+            stepDates: "Date range",
+            stepSections: "Sections",
+            stepDetail: "Detail level",
+            stepOutput: "Language / output",
+            stepGenerate: "Generate"
           },
     [ar]
   );
@@ -244,6 +256,22 @@ export function FinanceReportBuilder({ locale }: { locale: "ar" | "en" }) {
       </header>
 
       <div className="finance-builder__controls">
+        <OperationsStagePath
+          className="finance-builder__steps"
+          stages={[
+            labels.stepScope,
+            labels.stepDates,
+            labels.stepSections,
+            labels.stepDetail,
+            labels.stepOutput,
+            labels.stepGenerate
+          ].map((label, index) => ({
+            code: String(index + 1).padStart(2, "0"),
+            label,
+            state: index === 0 ? "current" : "upcoming"
+          }))}
+        />
+
         <div className="finance-builder__group">
           <span className="finance-builder__label">{labels.scope}</span>
           <div className="finance-scope-bar finance-scope-bar--inline" role="group">

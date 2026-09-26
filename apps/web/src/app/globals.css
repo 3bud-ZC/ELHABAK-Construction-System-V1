@@ -15632,6 +15632,253 @@ a.ui-button:focus-visible {
   gap: .45rem;
 }
 
+.ops-panel {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--white);
+  box-shadow: var(--shadow-xs);
+}
+
+.ops-panel__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .8rem;
+  align-items: start;
+  padding: .85rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.ops-panel__head h2 {
+  margin: .1rem 0 0;
+  color: var(--navy);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.ops-panel__head p {
+  max-width: 68ch;
+  margin: .2rem 0 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.ops-panel__eyebrow {
+  color: var(--orange);
+  font-size: .66rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.ops-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .45rem;
+}
+
+.ops-grid {
+  display: grid;
+  grid-template-columns: var(--ops-grid-cols, repeat(auto-fit, minmax(220px, 1fr)));
+  gap: .65rem;
+}
+
+.ops-metric {
+  display: grid;
+  align-content: start;
+  gap: .18rem;
+  min-height: 72px;
+  border: 1px solid var(--border-soft);
+  border-inline-start: 3px solid var(--border);
+  border-radius: 4px;
+  background: #fbfcfe;
+  padding: .65rem .75rem;
+}
+
+.ops-metric span {
+  color: var(--muted);
+  font-size: .66rem;
+  font-weight: 800;
+}
+
+.ops-metric strong {
+  color: var(--navy);
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ops-metric small {
+  color: var(--muted);
+  font-size: .68rem;
+  line-height: 1.4;
+}
+
+.ops-metric--navy { border-inline-start-color: var(--navy); }
+.ops-metric--success { border-inline-start-color: #16835b; }
+.ops-metric--warning { border-inline-start-color: var(--orange); }
+.ops-metric--danger { border-inline-start-color: #b42318; }
+
+.ops-timeline {
+  display: grid;
+}
+
+.ops-timeline__item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: .55rem;
+  position: relative;
+  padding: .65rem .75rem;
+}
+
+.ops-timeline__item + .ops-timeline__item {
+  border-top: 1px solid var(--border-soft);
+}
+
+.ops-timeline__marker {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--navy);
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+.ops-timeline__body {
+  min-width: 0;
+}
+
+.ops-timeline__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .35rem .55rem;
+}
+
+.ops-timeline__title strong {
+  color: var(--navy);
+  font-size: .82rem;
+}
+
+.ops-timeline__title span,
+.ops-timeline__body time,
+.ops-timeline__body small {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.ops-timeline__body p {
+  margin: .25rem 0 0;
+  color: var(--text);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.ops-stage-path {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--white);
+  list-style: none;
+}
+
+.ops-stage-path__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .55rem;
+  align-items: center;
+  min-height: 70px;
+  padding: .65rem .75rem;
+  border-inline-start: 1px solid var(--border-soft);
+}
+
+.ops-stage-path__item:first-child {
+  border-inline-start: 0;
+}
+
+.ops-stage-path__code {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+}
+
+.ops-stage-path__copy {
+  display: grid;
+  min-width: 0;
+  gap: .12rem;
+}
+
+.ops-stage-path__copy strong {
+  color: var(--navy);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.ops-stage-path__copy small {
+  color: var(--muted);
+  font-size: .66rem;
+}
+
+.ops-stage-path__item--done .ops-stage-path__code,
+.ops-stage-path__item--current .ops-stage-path__code {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: var(--white);
+}
+
+.ops-stage-path__item--done {
+  background: #f7faf7;
+}
+
+.ops-stage-path__item--current {
+  background: rgba(232, 118, 37, .08);
+  box-shadow: inset 0 -3px 0 var(--orange);
+}
+
+.ops-stage-path__item--current .ops-stage-path__copy small {
+  color: #9a4b13;
+  font-weight: 850;
+}
+
+.ops-form-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .7rem .85rem;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .85rem;
+}
+
+.ops-form-section legend {
+  display: grid;
+  gap: .12rem;
+  padding-inline: .35rem;
+  color: var(--navy);
+  font-weight: 850;
+}
+
+.ops-form-section legend small {
+  color: var(--muted);
+  font-size: .7rem;
+  font-weight: 600;
+}
+
 .app-page {
   width: min(1400px, calc(100% - 40px));
 }
@@ -15968,6 +16215,134 @@ a.ui-button:focus-visible {
   border-radius: 4px;
 }
 
+.dashboard-ops-ledger,
+.client-account-ledger,
+.team-account-ledger,
+.reports-category-workspace {
+  margin-bottom: .85rem;
+}
+
+.dashboard-ops-ledger .ops-panel__head,
+.client-account-ledger .ops-panel__head,
+.team-account-ledger .ops-panel__head,
+.finance-position-panel .ops-panel__head,
+.finance-cost-panel .ops-panel__head {
+  padding-block: .65rem;
+}
+
+.project-context-bar__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(92px, 1fr));
+  gap: .35rem;
+  min-width: min(100%, 520px);
+  margin: 0;
+}
+
+.project-context-bar__facts div {
+  display: grid;
+  gap: .08rem;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  background: #fbfcfe;
+  padding: .34rem .45rem;
+}
+
+.project-context-bar__facts dt {
+  color: var(--muted);
+  font-size: .58rem;
+  font-weight: 850;
+}
+
+.project-context-bar__facts dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--navy);
+  font-size: .68rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.design-review-state-panel {
+  overflow: hidden;
+}
+
+.design-review-state-panel .ops-panel__head {
+  border-bottom: 0;
+}
+
+.design-review-state-panel .review-state,
+.design-review-state-panel .review-description,
+.design-review-state-panel .inline-confirm,
+.design-review-state-panel .ui-button {
+  margin-inline: .85rem;
+}
+
+.design-review-state-panel .review-state {
+  margin-bottom: .65rem;
+}
+
+.finance-position-panel,
+.finance-cost-panel {
+  margin-block: .75rem;
+}
+
+.finance-position-panel .ops-grid,
+.finance-cost-panel .ops-grid {
+  padding: .75rem;
+}
+
+.reports-category-workspace .ops-grid {
+  padding: .75rem;
+}
+
+.dataops-workflow-path,
+.finance-builder__steps {
+  margin-bottom: .8rem;
+}
+
+.dataops-workflow-path {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.finance-builder__steps {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.dataops-workflow-path .ops-stage-path__item,
+.finance-builder__steps .ops-stage-path__item {
+  min-height: 58px;
+  padding: .5rem .55rem;
+}
+
+.dataops-workflow-path .ops-stage-path__copy strong,
+.finance-builder__steps .ops-stage-path__copy strong {
+  font-size: .7rem;
+}
+
+.dataops-workflow-path .ops-stage-path__code,
+.finance-builder__steps .ops-stage-path__code {
+  width: 28px;
+  height: 28px;
+  font-size: .66rem;
+}
+
+.settings-ops-grid {
+  align-items: start;
+  gap: .85rem;
+}
+
+.settings-identity .ops-grid {
+  padding: .75rem;
+}
+
+.settings-password__form {
+  display: grid;
+  gap: .75rem;
+  padding: .85rem;
+}
+
 .data-table.admin-register .data-row,
 .users-table .data-row,
 .client-row,
@@ -15991,6 +16366,17 @@ a.ui-button:focus-visible {
   .dashboard-body,
   .technical-record-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .project-context-bar__facts {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .dataops-workflow-path,
+  .finance-builder__steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -16084,8 +16470,38 @@ a.ui-button:focus-visible {
     display: grid;
   }
 
+  .ops-stage-path,
   .delivery-path__stage {
-    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ops-stage-path__item {
+    min-height: 58px;
+    border-inline-start: 0;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .ops-stage-path__item:first-child {
+    border-top: 0;
+  }
+
+  .project-context-bar {
+    position: static;
+  }
+
+  .project-context-bar__facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .project-context-bar__facts dd {
+    white-space: normal;
+  }
+
+  .finance-cost-panel .ops-grid,
+  .reports-category-workspace .ops-grid,
+  .dataops-workflow-path,
+  .finance-builder__steps {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .cad-preview-frame {

@@ -4,7 +4,7 @@ import { FileText, Search, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, ProgressBar } from "@elhabak/ui";
+import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, OperationsPanel, ProgressBar } from "@elhabak/ui";
 import {
   apiRequest,
   phaseLabel,
@@ -43,7 +43,10 @@ export function ReportsClient() {
           open: "فتح التقرير",
           failed: "تعذر تحميل مركز التقارير. حاول مرة أخرى.",
           projectsLead: "تقرير تنفيذي لكل مشروع: التقدم والتصاميم والمستندات والمالية وفق صلاحياتك.",
-          financeLead: "تقرير مالي مرن عبر مشروع أو مجموعة مشاريع أو المحفظة كاملة."
+          financeLead: "تقرير مالي مرن عبر مشروع أو مجموعة مشاريع أو المحفظة كاملة.",
+          siteOps: "عمليات الموقع",
+          designReviews: "التصميم / المراجعات",
+          documents: "المستندات"
         }
         : {
           title: "Reports Center",
@@ -57,7 +60,10 @@ export function ReportsClient() {
           open: "Open report",
           failed: "Reports Center could not be loaded. Try again.",
           projectsLead: "An executive report per project: progress, designs, documents, and finance within your permissions.",
-          financeLead: "A flexible financial report across one project, a selected set, or the full portfolio."
+          financeLead: "A flexible financial report across one project, a selected set, or the full portfolio.",
+          siteOps: "Site Operations",
+          designReviews: "Design / Reviews",
+          documents: "Documents"
         },
     [ar]
   );
@@ -114,6 +120,21 @@ export function ReportsClient() {
           </button>
         </nav>
       )}
+
+      <OperationsPanel
+        className="reports-category-workspace"
+        eyebrow={ar ? "تصنيف التقارير" : "REPORT CATEGORIES"}
+        title={ar ? "مساحة عمل التقارير" : "Reporting workspace"}
+        description={ar ? "اختر التقرير حسب نطاق القرار: مشروع، مالية، موقع، تصميم، أو مستندات." : "Choose the report by decision scope: project, finance, site, design, or documents."}
+      >
+        <OperationsGrid columns="repeat(5, minmax(140px, 1fr))">
+          <OperationsMetric tone={tab === "projects" ? "navy" : "neutral"} label={labels.projectReports} value={<bdi>{projects.length}</bdi>} hint={labels.projectsLead} />
+          {canFinance && <OperationsMetric tone={tab === "finance" ? "navy" : "neutral"} label={labels.financeReport} value={ar ? "محفظة" : "Portfolio"} hint={labels.financeLead} />}
+          <OperationsMetric tone="neutral" label={labels.siteOps} value={ar ? "ميداني" : "Field"} />
+          <OperationsMetric tone="neutral" label={labels.designReviews} value={ar ? "اعتماد" : "Reviews"} />
+          <OperationsMetric tone="neutral" label={labels.documents} value={ar ? "تحكم" : "Control"} />
+        </OperationsGrid>
+      </OperationsPanel>
 
       {tab === "finance" && canFinance && <FinanceReportBuilder locale={locale} />}
 

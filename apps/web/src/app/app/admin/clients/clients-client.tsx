@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Badge, EmptyState, LoadingState, MetricCard, PageHeader } from "@elhabak/ui";
-import { CheckCircle2, Download, Phone, UploadCloud, UserRoundCog, UserX, UsersRound } from "lucide-react";
+import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, OperationsPanel, PageHeader } from "@elhabak/ui";
+import { Download, UploadCloud, UserRoundCog } from "lucide-react";
 import { accountStatusTone, apiRequest, dataOpsExportUrl, type ClientRecord } from "../../../../lib/api";
 
 type Mode = "list" | "create" | "edit";
@@ -169,12 +169,14 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           </div>
         </div>
         {!loading && (
-          <div className="metric-grid">
-            <MetricCard icon={<UsersRound size={18} />} tone="navy" label={labels.total} value={clients.length} />
-            <MetricCard icon={<CheckCircle2 size={18} />} tone="success" label={labels.activeCount} value={activeCount} />
-            <MetricCard icon={<UserX size={18} />} tone="orange" label={labels.inactiveCount} value={clients.length - activeCount} />
-            <MetricCard icon={<Phone size={18} />} tone="info" label={labels.contactReady} value={contactReadyCount} />
-          </div>
+          <OperationsPanel className="client-account-ledger" eyebrow={ar ? "حالة الوصول" : "ACCESS STATE"}>
+            <OperationsGrid columns="repeat(4, minmax(150px, 1fr))">
+              <OperationsMetric tone="navy" label={labels.total} value={<bdi>{clients.length}</bdi>} />
+              <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{activeCount}</bdi>} />
+              <OperationsMetric tone="warning" label={labels.inactiveCount} value={<bdi>{clients.length - activeCount}</bdi>} />
+              <OperationsMetric tone="neutral" label={labels.contactReady} value={<bdi>{contactReadyCount}</bdi>} />
+            </OperationsGrid>
+          </OperationsPanel>
         )}
         <div className="console-surface">
           <div className="table-toolbar">

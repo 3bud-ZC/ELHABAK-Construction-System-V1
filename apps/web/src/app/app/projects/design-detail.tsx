@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Badge, LoadingState } from "@elhabak/ui";
+import { Badge, LoadingState, OperationsPanel } from "@elhabak/ui";
 import { Check, Download, FileClock, FileText, MessageSquare, Pencil, Send, UploadCloud, X, XCircle } from "lucide-react";
 import { ProjectWorkspace } from "../../../components/project-workspace";
 import {
@@ -231,29 +231,30 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
             {comments.length === 0 && <p className="review-conversation__empty">{labels.noConversation}</p>}
             {comments.map((entry) => <article className="review-comment" key={entry.id}>
               <span className="review-comment__avatar" aria-hidden="true">{entry.actor.displayName.slice(0, 1)}</span>
-              <div className="review-comment__body"><div className="review-comment__header"><strong dir="auto">{entry.actor.displayName}</strong><span>{roleLabel(entry.actor.role, locale)}</span><time dateTime={entry.createdAt}>{dateTime(entry.createdAt)}</time></div><p dir="auto">{entry.comment}</p></div>
+              <div className="review-comment__body"><div className="review-comment__header"><strong dir="auto">{entry.actor.displayName}</strong><span>{roleLabel(entry.actor.role, locale)}</span><bdi className="mono" dir="ltr">{selected.revisionCode}</bdi><time dateTime={entry.createdAt}>{dateTime(entry.createdAt)}</time></div><p dir="auto">{entry.comment}</p></div>
             </article>)}
           </div>
           <form className="comment-form review-conversation__composer" onSubmit={(event) => void addComment(event)}>
             <label htmlFor="design-review-comment" className="comment-form__target">{labels.commentOn} <bdi className="mono" dir="ltr">{selected.revisionCode}</bdi></label>
-            <textarea id="design-review-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder={labels.commentPlaceholder} maxLength={2000} disabled={mutating} rows={3} />
+            <textarea id="design-review-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder={labels.commentPlaceholder} maxLength={2000} disabled={mutating} rows={3} aria-invalid={comment.length > 2000} />
             <div className="comment-form__footer"><span className="review-conversation__count" dir="ltr">{comment.length}/2000</span><button className="ui-button ui-button--primary ui-button--sm" type="submit" disabled={mutating || !comment.trim()} aria-busy={mutating}><Send size={14} />{mutating ? labels.sending : labels.addComment}</button></div>
           </form>
         </section>
       </main>
 
       <aside className="design-detail-sidebar technical-control-sidebar">
-        <section className="workspace-panel">
-          <div className="workspace-panel__title">
-            <FileText size={16} />
-            <h3>{labels.current}</h3>
-          </div>
+        <OperationsPanel
+          className="workspace-panel design-review-state-panel"
+          eyebrow={ar ? "حالة المراجعة" : "REVIEW STATE"}
+          title={labels.current}
+          description={<><bdi className="mono" dir="ltr">{design.currentRevision.revisionCode}</bdi> · {designNextAction(design.status, user.role, locale)}</>}
+        >
           <div className="review-state"><bdi className="revision-badge mono" dir="ltr">{design.currentRevision.revisionCode}</bdi><Badge tone={designStatusTone(design.currentRevision.status)}>{designStatusLabel(design.currentRevision.status, locale)}</Badge></div>
           {design.description && <p className="review-description" dir="auto">{design.description}</p>}
           {canManage && design.currentRevision.status === "DRAFT" && (
             <SubmitRevisionButton labels={labels} revisionCode={design.currentRevision.revisionCode} disabled={mutating} onConfirm={() => void mutate(`/projects/${projectId}/designs/${designId}/revisions/${design.currentRevision.id}/submit`, {}, labels.submitted)} />
           )}
-        </section>
+        </OperationsPanel>
 
         <section className="workspace-panel">
           <div className="workspace-panel__title">
