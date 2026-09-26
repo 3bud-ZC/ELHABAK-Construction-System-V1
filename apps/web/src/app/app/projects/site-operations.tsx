@@ -1118,7 +1118,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                 const isProjectCreated = event.kind === "PROJECT_CREATED";
 
                 return (
-                  <article className={`site-timeline-card field-activity ${event.kind.toLowerCase()}`} key={event.id}>
+                  <article className={`site-timeline-card field-activity site-activity-record ${event.kind.toLowerCase()}`} key={event.id}>
                     {/* Node marker on rail */}
                     <div className="site-timeline-node">
                       {isPhaseChange && <Milestone size={15} />}
@@ -1198,7 +1198,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
                       {/* Event Media Attachments */}
                       {event.media && event.media.length > 0 && (
-                        <div className={`site-timeline-media-grid ${event.media.length === 1 ? "site-timeline-media-grid--single" : ""}`}>
+                        <div className={`site-timeline-media-grid site-media-gallery ${event.media.length === 1 ? "site-timeline-media-grid--single site-media-gallery--single" : "site-media-gallery--multiple"}`}>
                           {event.media.map((item) => {
                             const isImage = item.mediaType === "IMAGE";
                             const fullUrl = mediaUrl(projectId, item.id);

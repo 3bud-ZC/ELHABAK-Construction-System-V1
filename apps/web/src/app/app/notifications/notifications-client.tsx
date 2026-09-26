@@ -188,7 +188,7 @@ export function NotificationsClient() {
                     {item.body && <span className="notifications-row__body">{item.body}</span>}
                   </span>
                   {item.project && (
-                    <span className="notifications-row__project mono">{item.project.code ?? item.project.name}</span>
+                    <span className="notifications-row__project notification-destination mono">{item.project.code ?? item.project.name}</span>
                   )}
                   <span className="notifications-row__time">
                     <bdi>{formatAppDate(item.createdAt, locale, true)}</bdi> · {relativeTime(item.createdAt, locale)}

@@ -439,7 +439,7 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
       <ProjectWorkspace project={project} locale={locale} role={user.role} active="chat" />
       {error && <div className="form-error">{error}</div>}
 
-      <div className="chat-shell">
+      <div className="chat-shell chat-communication-workspace">
         <div className="chat-context-bar chat-channel-header">
           <div className="chat-context-bar__info"><strong>{ar ? "محادثة المشروع" : "Project conversation"}</strong><span>{ar ? "التواصل بين فريق المشروع والعميل" : "Communication between the project team and client"}</span></div>
           <span className="chat-context-bar__tag"><bdi dir="ltr">{messages.length}</bdi> {ar ? "رسالة محملة" : "loaded messages"}</span>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, OperationsPanel, PageHeader } from "@elhabak/ui";
-import { Download, UploadCloud, UserRoundCog } from "lucide-react";
+import { Check, Copy, Download, KeyRound, UploadCloud, UserRoundCog } from "lucide-react";
 import { accountStatusTone, apiRequest, dataOpsExportUrl, type ClientRecord } from "../../../../lib/api";
 
 type Mode = "list" | "create" | "edit";
@@ -21,6 +21,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const locale = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
 
@@ -144,6 +145,16 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
       setError(err instanceof Error ? err.message : "Request failed.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function copyToClipboard(text: string, field: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2500);
+    } catch {
+      // ignore clipboard error
     }
   }
 
@@ -287,18 +298,59 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         {error ? <p className="form-error">{error}</p> : null}
         {success ? <p className="form-success">{success}</p> : null}
         {mode === "create" && record ? (
-          <div className="client-create-next-step">
-            <div>
-              <strong>{labels.generatedCredentials}</strong>
-              <span className="mono">{record.generatedCredentials?.email ?? record.user.email}</span>
-              <span className="mono">{record.generatedCredentials?.temporaryPassword ?? "—"}</span>
+          <div className="client-create-next-step credential-reveal" role="region" aria-label={labels.generatedCredentials}>
+            <div className="credential-reveal__header">
+              <KeyRound size={20} className="credential-reveal__icon" />
+              <div>
+                <strong>{labels.generatedCredentials}</strong>
+                <p className="credential-reveal__warning">
+                  {ar
+                    ? "تنبيه أمني: كلمة المرور المؤقتة تظهر لمرة واحدة فقط ولن يتم عرضها مجدداً. يُرجى نسخها وتزويد العميل بها مع إلزامه باستبدالها بشكل خاص عند أول تسجيل دخول."
+                    : "Security Notice: This temporary password is shown only once and cannot be retrieved again. Please copy and provide it to the client; they must change it privately upon first login."}
+                </p>
+              </div>
             </div>
+            <div className="credential-reveal__fields">
+              <div className="credential-reveal__row">
+                <span className="credential-reveal__label">{labels.email}</span>
+                <span className="mono credential-reveal__value"><bdi>{record.generatedCredentials?.email ?? record.user.email}</bdi></span>
+                <button
+                  type="button"
+                  className="ui-button ui-button--secondary ui-button--sm"
+                  onClick={() => void copyToClipboard(record.generatedCredentials?.email ?? record.user.email, "email")}
+                  aria-label={copiedField === "email" ? (ar ? "تم النسخ" : "Copied") : (ar ? "نسخ معرّف الدخول" : "Copy identifier")}
+                >
+                  {copiedField === "email" ? <Check size={14} /> : <Copy size={14} />}
+                  <span>{copiedField === "email" ? (ar ? "تم النسخ" : "Copied") : (ar ? "نسخ" : "Copy")}</span>
+                </button>
+              </div>
+              {record.generatedCredentials?.temporaryPassword ? (
+                <div className="credential-reveal__row">
+                  <span className="credential-reveal__label">{labels.password}</span>
+                  <span className="mono credential-reveal__value credential-reveal__value--secret"><bdi>{record.generatedCredentials.temporaryPassword}</bdi></span>
+                  <button
+                    type="button"
+                    className="ui-button ui-button--secondary ui-button--sm"
+                    onClick={() => void copyToClipboard(record.generatedCredentials?.temporaryPassword ?? "", "password")}
+                    aria-label={copiedField === "password" ? (ar ? "تم النسخ" : "Copied") : (ar ? "نسخ كلمة المرور" : "Copy password")}
+                  >
+                    {copiedField === "password" ? <Check size={14} /> : <Copy size={14} />}
+                    <span>{copiedField === "password" ? (ar ? "تم النسخ" : "Copied") : (ar ? "نسخ" : "Copy")}</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <div className="credential-reveal__actions">
+
+
+
             <Link
               className="ui-button ui-button--primary ui-button--sm"
               href={ar ? `/app/admin/projects/new?clientId=${record.id}` : `/app/admin/projects/new?clientId=${record.id}&lang=en`}
             >
               {labels.createProject}
             </Link>
+            </div>
           </div>
         ) : null}
 

@@ -424,7 +424,10 @@ function CreateDocumentDialog({ projectId, locale, onClose, onCreated }: { proje
           </fieldset>
           {error && <div className="form-error">{error}</div>}
           {uploading && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={uploading}>{labels.save}</button></footer>
+          <footer>
+            <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={uploading}>{labels.close}</button>
+            <button className="ui-button ui-button--accent" type="submit" disabled={uploading}>{labels.save}</button>
+          </footer>
         </form>
       </section>
     </div>

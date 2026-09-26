@@ -843,6 +843,7 @@ function LineItemDialog({
           </fieldset>
           {error && <div className="form-error" role="alert">{error}</div>}
           <footer className="finance-dialog-actions">
+            <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={saving}>{labels.close}</button>
             {!editing && (
               <button className="ui-button" type="button" disabled={saving} onClick={(event) => void submit(event, true)}>{labels.saveAdd}</button>
             )}
@@ -879,7 +880,7 @@ function BoqPanel({
     ? {
       title: "جدول الكميات (BOQ)", lead: "سجل هندسي كثيف لبنود الكميات والأسعار والإجماليات المعتمدة.",
       addItem: "إضافة بند", code: "الكود", description: "الوصف", unit: "الوحدة", quantity: "الكمية", unitRate: "سعر الوحدة",
-      total: "الإجمالي", actions: "الإجراء", empty: "لا توجد بنود في جدول الكميات", emptyHint: "ابدأ بإضافة أول بند.",
+      total: "الإجمالي", notes: "ملاحظات", actions: "الإجراء", empty: "لا توجد بنود في جدول الكميات", emptyHint: "ابدأ بإضافة أول بند.",
       overall: "الإجمالي الكلي", loading: "جاري تحميل جدول الكميات...", removeConfirm: "هل تريد حذف هذا البند؟", section: "القسم",
       searchPlaceholder: "بحث بالكود أو الوصف أو القسم...", allSections: "كل الأقسام", unsectioned: "بدون قسم",
       itemsCount: (n: number) => `${n} بند`, shownOf: (shown: number, total: number) => `${shown} من ${total} بند`,
@@ -888,7 +889,7 @@ function BoqPanel({
     : {
       title: "Bill of Quantities (BOQ)", lead: "Dense engineering register of quantities, rates, and approved totals.",
       addItem: "Add Item", code: "Code", description: "Description", unit: "Unit", quantity: "Quantity", unitRate: "Unit Rate",
-      total: "Total", actions: "Action", empty: "No BOQ items registered", emptyHint: "Start by adding the first item.",
+      total: "Line Total", notes: "Notes", actions: "Action", empty: "No BOQ items registered", emptyHint: "Start by adding the first item.",
       overall: "Overall Total", loading: "Loading BOQ...", removeConfirm: "Remove this item?", section: "Section",
       searchPlaceholder: "Search code, description, or section...", allSections: "All sections", unsectioned: "Unsectioned",
       itemsCount: (n: number) => `${n} item${n === 1 ? "" : "s"}`, shownOf: (shown: number, total: number) => `${shown} of ${total} items`,
@@ -952,7 +953,7 @@ function BoqPanel({
   if (loading) return <LoadingState label={labels.loading} />;
 
   const filtering = search.trim() !== "" || sectionFilter !== "";
-  const cols = "minmax(200px,2fr) 96px 100px 116px 132px" + (readOnly ? "" : " 112px");
+  const cols = "80px 96px minmax(200px,2fr) 68px 84px 104px 116px minmax(110px,1fr)" + (readOnly ? "" : " 108px");
 
   return (
     <section>
@@ -1012,20 +1013,23 @@ function BoqPanel({
           {visibleItems.length === 0 ? (
             <p className="finance-register__empty-filter">{labels.noMatch}</p>
           ) : (
-            <div className="finance-register" style={{ "--finance-cols": cols } as React.CSSProperties}>
+            <div className="finance-register boq-register--qs" style={{ "--finance-cols": cols } as React.CSSProperties}>
               <div className="finance-register__head">
+                <span>{labels.code}</span>
+                <span>{labels.section}</span>
                 <span>{labels.description}</span>
                 <span>{labels.unit}</span>
-                <span>{labels.quantity}</span>
-                <span>{labels.unitRate}</span>
-                <span>{labels.total}</span>
+                <span className="num">{labels.quantity}</span>
+                <span className="num">{labels.unitRate}</span>
+                <span className="num">{labels.total}</span>
+                <span>{labels.notes}</span>
                 {!readOnly && <span>{labels.actions}</span>}
               </div>
               {groupedItems.map(([section, items]) => {
                 const subtotal = formatMoneyMajor(sumAmountMinor(items.map((item) => item.lineTotal)));
                 return (
                   <Fragment key={section || "__none__"}>
-                    <div className="finance-section-header" role="row">
+                    <div className="finance-section-header boq-section-ledger" role="row">
                       <strong className="finance-section-header__name">{section === "" ? labels.unsectioned : section}</strong>
                       <span className="finance-section-header__count">{labels.itemsCount(items.length)}</span>
                       <span className="finance-section-header__total">
@@ -1035,14 +1039,16 @@ function BoqPanel({
                     </div>
                     {items.map((item) => (
                       <div className="finance-register__row" key={item.id}>
+                        <span className="finance-register__cell mono" data-label={labels.code}><bdi dir="ltr">{item.code}</bdi></span>
+                        <span className="finance-register__cell" data-label={labels.section}>{item.section || labels.unsectioned}</span>
                         <div className="finance-register__identity" data-label={labels.description}>
-                          <span className="mono" style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{item.code}</span>
                           <strong>{item.description}</strong>
                         </div>
                         <span className="finance-register__cell" data-label={labels.unit}>{boqUnitLabel(item.unit, locale)}</span>
-                        <span className="finance-register__cell finance-register__cell--amount" data-label={labels.quantity}><bdi>{num(item.quantity)}</bdi></span>
-                        <span className="finance-register__cell finance-register__cell--amount" data-label={labels.unitRate}><bdi>{num(item.unitRate, 2)}</bdi></span>
-                        <span className="finance-register__cell finance-register__cell--amount finance-register__cell--total" data-label={labels.total}><bdi>{num(item.lineTotal, 2)}</bdi></span>
+                        <span className="finance-register__cell finance-register__cell--amount num" data-label={labels.quantity}><bdi>{num(item.quantity)}</bdi></span>
+                        <span className="finance-register__cell finance-register__cell--amount num" data-label={labels.unitRate}><bdi>{num(item.unitRate, 2)}</bdi></span>
+                        <span className="finance-register__cell finance-register__cell--amount finance-register__cell--total num" data-label={labels.total}><bdi>{num(item.lineTotal, 2)}</bdi></span>
+                        <span className="finance-register__cell finance-register__cell--muted" data-label={labels.notes}>{item.note || "—"}</span>
                         {!readOnly && (
                           <div className="finance-register__actions">
                             <button className="icon-button" type="button" onClick={() => setShowDialog({ item })} aria-label={`${ar ? "تعديل" : "Edit"} ${item.code}`}><Pencil size={15} /></button>
@@ -1336,7 +1342,10 @@ function ExpenseDialog({ projectId, locale, onClose, onCreated }: { projectId: s
           </fieldset>
           {error && <div className="form-error">{error}</div>}
           {saving && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button></footer>
+          <footer>
+            <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={saving}>{labels.close}</button>
+            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+          </footer>
         </form>
       </section>
     </div>
@@ -1653,7 +1662,10 @@ function ClientPaymentDialog({ projectId, locale, onClose, onCreated }: { projec
           </fieldset>
           {error && <div className="form-error">{error}</div>}
           {saving && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button></footer>
+          <footer>
+            <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={saving}>{labels.close}</button>
+            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+          </footer>
         </form>
       </section>
     </div>
@@ -1905,7 +1917,10 @@ function ContractorPaymentDialog({ projectId, locale, onClose, onCreated }: { pr
           </fieldset>
           {error && <div className="form-error">{error}</div>}
           {saving && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button></footer>
+          <footer>
+            <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={saving}>{labels.close}</button>
+            <button className="ui-button ui-button--accent" type="submit" disabled={saving}>{labels.save}</button>
+          </footer>
         </form>
       </section>
     </div>

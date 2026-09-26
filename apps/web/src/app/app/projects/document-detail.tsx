@@ -218,7 +218,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
       <div className="design-detail-layout technical-record-layout">
         <main className="design-preview-column technical-preview-column">
           {selected && (
-            <section className="workspace-panel design-file-panel technical-file-panel">
+            <section className="workspace-panel design-file-panel technical-file-panel document-preview-workbench">
               <div className="workspace-panel__title">
                 <div className="workspace-panel__title-left">
                   <FileText size={16} />
@@ -306,7 +306,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
               <FileClock size={16} />
               <h3>{labels.versionHistory}</h3>
             </div>
-            <div className="revision-list">
+            <div className="revision-list document-version-ledger">
               {document.versions.map((version, index) => (
                 <div className={`revision-card ${selected?.id === version.id ? "active" : ""}`} key={version.id}>
                   <button
@@ -324,6 +324,11 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
                     <span className="revision-card__uploader">
                       {version.uploadedBy.displayName} · <bdi>{formatFileSize(version.fileSize, locale)}</bdi>
                     </span>
+                    {version.checksumSha256 && (
+                      <span className="revision-card__checksum mono" title={version.checksumSha256}>
+                        <small>SHA: </small><bdi>{version.checksumSha256.slice(0, 8)}…{version.checksumSha256.slice(-6)}</bdi>
+                      </span>
+                    )}
                     {version.note && <span className="revision-card__note">{version.note}</span>}
                   </button>
                   <a
@@ -460,7 +465,10 @@ function VersionUploadDialog({ projectId, document, locale, onClose, onUpdated }
           <label className="ui-field">{labels.notes}<textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={2000} /></label>
           {error && <div className="form-error">{error}</div>}
           {uploading && <div className="upload-progress"><span>{labels.uploading} <bdi>{progress}%</bdi></span><div><i style={{ width: `${progress}%` }} /></div></div>}
-          <footer><button className="ui-button ui-button--accent" type="submit" disabled={uploading}>{labels.save}</button></footer>
+          <footer>
+            <button className="ui-button ui-button--secondary" type="button" onClick={onClose} disabled={uploading}>{labels.close}</button>
+            <button className="ui-button ui-button--accent" type="submit" disabled={uploading}>{labels.save}</button>
+          </footer>
         </form>
       </section>
     </div>

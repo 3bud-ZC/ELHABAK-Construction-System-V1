@@ -354,7 +354,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             </>
           )}
 
-          <form className="form-panels project-form-panels" onSubmit={(event) => void submit(event)}>
+          <form className="form-panels project-form-panels project-form-system" onSubmit={(event) => void submit(event)}>
             <div className="project-form-main">
             <div className="form-panel">
               <div className="form-panel__head">

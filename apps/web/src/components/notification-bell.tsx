@@ -165,7 +165,7 @@ export function NotificationBell({ locale }: NotificationBellProps) {
                   <span className="notification-panel__item-time">{relativeTime(item.createdAt, locale)}</span>
                 </span>
                 <span className="notification-panel__item-title">{item.title}</span>
-                {item.project && <span className="notification-panel__item-project mono">{item.project.code ?? item.project.name}</span>}
+                {item.project && <span className="notification-panel__item-project notification-destination mono">{item.project.code ?? item.project.name}</span>}
               </button>
             ))}
           </div>

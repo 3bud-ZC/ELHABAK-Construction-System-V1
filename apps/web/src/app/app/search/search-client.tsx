@@ -183,6 +183,7 @@ export function SearchClient() {
                   >
                     <span className="search-result__body">
                       <span>
+                        <span className="search-result__type">{typeLabel(result.type)}</span>
                         <strong>{result.title}</strong>
                       </span>
                       {result.context && <bdi>{result.context}</bdi>}
