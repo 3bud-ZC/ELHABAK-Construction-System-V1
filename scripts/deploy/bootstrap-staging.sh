@@ -213,6 +213,14 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # Browsers fetch the web app manifest (and its icons) without credentials.
+    location ~ ^/(manifest\.webmanifest|apple-icon\.png|brand/icon-(192|512)\.png)$ {
+        auth_basic off;
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location = /robots.txt {
         auth_basic off;
         default_type text/plain;

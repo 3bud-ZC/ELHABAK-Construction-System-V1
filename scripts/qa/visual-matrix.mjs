@@ -2,9 +2,10 @@
 // matrix (page overflow, off-screen content, sub-12px text, small phone touch targets,
 // console/page errors).
 //
-// LOCAL ISOLATED QA ONLY: run against a local web (:3000) + API (:4000) pointed at the
-// `elhabak_test` database. The script signs in with the demo admin and opens Chat (which
-// marks messages read), so it refuses any non-local target.
+// ISOLATED QA ONLY: a local web (:3000) + API (:4000) on the `elhabak_test` database, or
+// staging.elhabak.com (QA_WEB=https://staging.elhabak.com QA_API=https://staging.elhabak.com/api
+// QA_BASIC_AUTH=user:pass). It signs in with the demo admin and opens Chat (which marks
+// messages read), so it refuses the production domain.
 //
 // Usage: node scripts/qa/visual-matrix.mjs <outDir> [viewports|all] [routes|all] [ar|en]
 //   env: QA_WEB, QA_API (default localhost), QA_EMAIL, QA_PASSWORD (default: DEMO_ADMIN_PASSWORD
@@ -31,12 +32,18 @@ const env = Object.fromEntries(
 );
 const WEB = process.env.QA_WEB ?? "http://localhost:3000";
 const API = process.env.QA_API ?? "http://localhost:4000";
+// Allowed: the local isolated stack, or staging.elhabak.com. Never the production domain —
+// the harness signs in with demo accounts and opens Chat (which marks messages read).
 for (const target of [WEB, API]) {
-  if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(target)) {
-    console.error(`Refusing non-local QA target ${target}: this harness is for the isolated elhabak_test stack only.`);
+  if (!/^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?|https:\/\/staging\.elhabak\.com(\/api)?)$/.test(target)) {
+    console.error(`Refusing QA target ${target}: only the local elhabak_test stack or staging.elhabak.com.`);
     process.exit(2);
   }
 }
+// staging.elhabak.com sits behind HTTP basic auth: QA_BASIC_AUTH="user:password".
+const basicAuth = process.env.QA_BASIC_AUTH
+  ? { username: process.env.QA_BASIC_AUTH.split(":")[0], password: process.env.QA_BASIC_AUTH.split(":").slice(1).join(":") }
+  : null;
 const EMAIL = process.env.QA_EMAIL ?? "mohamed.elhabak@elhabak.local";
 const PASSWORD = process.env.QA_PASSWORD ?? env.DEMO_ADMIN_PASSWORD;
 if (!PASSWORD) {
@@ -76,6 +83,7 @@ const browser = await puppeteer.launch({
   args: ["--no-sandbox", "--lang=ar", "--hide-scrollbars"]
 });
 const page = await browser.newPage();
+if (basicAuth) await page.authenticate(basicAuth);
 await page.setViewport({ width: 1440, height: 900 });
 await page.goto(`${WEB}/login`, { waitUntil: "networkidle2" });
 await page.evaluate((l) => {

@@ -41,7 +41,8 @@ TARBALL="${1:?usage: deploy-release.sh <tarball>}"
 APP_USER="elhabak"
 
 REL="$BASE/releases/$(date +%Y%m%d-%H%M%S)"
-PREV="$(readlink -f "$BASE/current" 2>/dev/null || true)"
+# Only an existing symlink is a previous release (the first deploy of a target has none).
+PREV="$( [ -L "$BASE/current" ] && readlink -f "$BASE/current" || true )"
 
 echo ">> release dir: $REL"
 mkdir -p "$REL"
