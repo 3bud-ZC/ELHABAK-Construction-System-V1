@@ -1,5 +1,5 @@
 import { companyContact, telHref, whatsappHref } from "@elhabak/contracts";
-import type { Locale } from "./translations";
+import { dictionary, type Locale } from "./translations";
 import type { SeoContent } from "../app/seo-page";
 
 type SeoPageKey =
@@ -697,7 +697,7 @@ export const seoPages: Record<SeoPageKey, Record<Locale, SeoContent>> = {
           heading: "بيانات التواصل",
           cards: [
             { title: "الهاتف المباشر", text: companyContact.phone, href: telHref(companyContact) },
-            { title: "واتساب", text: "راسلنا مباشرة على واتساب لبدء المحادثة.", href: whatsappHref(companyContact) },
+            { title: "واتساب", text: "راسلنا مباشرة على واتساب لبدء المحادثة.", href: whatsappHref(companyContact, dictionary.ar.home.whatsappMessage) },
             { title: "البريد الإلكتروني", text: "elhabakconstruction.eg@gmail.com", href: "mailto:elhabakconstruction.eg@gmail.com" },
             { title: "المقر", text: "أب تاون مول، مدينة سوهاج الجديدة، سوهاج" }
           ]
@@ -746,7 +746,7 @@ export const seoPages: Record<SeoPageKey, Record<Locale, SeoContent>> = {
           heading: "Contact Channels",
           cards: [
             { title: "Direct Phone", text: companyContact.phone, href: telHref(companyContact) },
-            { title: "WhatsApp", text: "Message us directly on WhatsApp to start the conversation.", href: whatsappHref(companyContact) },
+            { title: "WhatsApp", text: "Message us directly on WhatsApp to start the conversation.", href: whatsappHref(companyContact, dictionary.en.home.whatsappMessage) },
             { title: "Email", text: "elhabakconstruction.eg@gmail.com", href: "mailto:elhabakconstruction.eg@gmail.com" },
             { title: "Office", text: "Uptown Mall, New Sohag City, Sohag, Egypt" }
           ]
