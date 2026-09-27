@@ -187,7 +187,7 @@ UI guidance:
 
 Company contact details from supplied identity files:
 - Email: `elhabakconstruction.eg@gmail.com`
-- Phone: `(+20) 011 111 309 18`
+- Phone / WhatsApp: `(+20) 011 306 667 26` (E.164 `+201130666726`)
 - Address: `Uptown Mall, New Sohag City, Sohag, Egypt`
 
 ## 8. Brand asset index

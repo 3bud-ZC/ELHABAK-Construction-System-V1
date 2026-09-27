@@ -12,13 +12,13 @@ export const companyContact = {
   email: "elhabakconstruction.eg@gmail.com",
   // Human-facing Egyptian display format only - never derive machine URLs (tel:, wa.me)
   // from this string; use the canonical `phoneE164`/`whatsappNumber` values below.
-  phone: "(+20) 011 111 309 18",
+  phone: "(+20) 011 306 667 26",
   // Canonical E.164 form of the number above (+20 then the national number without the
   // trunk 0). `tel:` links and JSON-LD use this verbatim.
-  phoneE164: "+201111130918",
+  phoneE164: "+201130666726",
   // Digits-only international form for wa.me deep links (wa.me rejects "+", spaces, and
   // trunk zeros).
-  whatsappNumber: "201111130918",
+  whatsappNumber: "201130666726",
   address: "Uptown Mall, New Sohag City, Sohag, Egypt"
 } as const;
 
@@ -26,8 +26,8 @@ export type ContactChannels = typeof companyContact;
 
 /**
  * Normalizes an Egyptian phone number to E.164 ("+20XXXXXXXXXX"). Handles the formats the
- * number is realistically encountered in: "(+20) 011 111 309 18", "+20 111 113 0918",
- * "011 111 309 18", "00201111130918", or a bare national number. Returns null for empty,
+ * number is realistically encountered in: "(+20) 011 306 667 26", "+20 113 066 6726",
+ * "011 306 667 26", "00201130666726", or a bare national number. Returns null for empty,
  * implausible, or non-Egyptian input - this is deliberately scoped to EG because the only
  * numbers this product publishes are Egyptian.
  */

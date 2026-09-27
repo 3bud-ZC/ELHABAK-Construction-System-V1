@@ -7,8 +7,8 @@ import {
   whatsappHref
 } from "../../../packages/contracts/src/index.ts";
 
-const EXPECTED_E164 = "+201111130918";
-const EXPECTED_WA = "201111130918";
+const EXPECTED_E164 = "+201130666726";
+const EXPECTED_WA = "201130666726";
 
 test("canonical contact values are the machine-readable source of truth", () => {
   assert.equal(companyContact.phoneE164, EXPECTED_E164);
@@ -16,26 +16,26 @@ test("canonical contact values are the machine-readable source of truth", () => 
 });
 
 test("normalizePhoneToE164 handles the stored display format", () => {
-  // The exact presentation string shown on the site: "(+20) 011 111 309 18".
+  // The exact presentation string shown on the site: "(+20) 011 306 667 26".
   assert.equal(normalizePhoneToE164(companyContact.phone), EXPECTED_E164);
 });
 
 test("normalizePhoneToE164 handles +20 international variants", () => {
-  assert.equal(normalizePhoneToE164("+20 111 113 0918"), EXPECTED_E164);
-  assert.equal(normalizePhoneToE164("+201111130918"), EXPECTED_E164);
-  assert.equal(normalizePhoneToE164("00201111130918"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("+20 113 066 6726"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("+201130666726"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("00201130666726"), EXPECTED_E164);
   // Trunk zero carried after the country code - the exact bug this pass fixes.
-  assert.equal(normalizePhoneToE164("+20 0111 113 0918"), EXPECTED_E164);
-  assert.equal(normalizePhoneToE164("+2001111130918"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("+20 0113 066 6726"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("+2001130666726"), EXPECTED_E164);
 });
 
 test("normalizePhoneToE164 handles domestic 011... and formatted variants", () => {
-  assert.equal(normalizePhoneToE164("01111130918"), EXPECTED_E164);
-  assert.equal(normalizePhoneToE164("011 111 309 18"), EXPECTED_E164);
-  assert.equal(normalizePhoneToE164("(011) 111-30918"), EXPECTED_E164);
-  assert.equal(normalizePhoneToE164("  0111 113 0918  "), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("01130666726"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("011 306 667 26"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("(011) 306-66726"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("  0113 066 6726  "), EXPECTED_E164);
   // Bare national significant number (no trunk 0).
-  assert.equal(normalizePhoneToE164("1111130918"), EXPECTED_E164);
+  assert.equal(normalizePhoneToE164("1130666726"), EXPECTED_E164);
 });
 
 test("normalizePhoneToE164 rejects empty and implausible input", () => {
