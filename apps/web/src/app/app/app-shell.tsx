@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { apiRequest, roleLabel, type UserRecord } from "../../lib/api";
+import { apiRequest, roleLabel, setSessionHint, type UserRecord } from "../../lib/api";
 import { UserContext } from "../../lib/user-context";
 import { NotificationBell } from "../../components/notification-bell";
 import { ForcePasswordChange } from "./force-password-change";
@@ -159,9 +159,11 @@ export function AppShell({ children }: AppShellProps) {
 
     apiRequest<{ user: UserRecord }>("/auth/me")
       .then((result) => {
+        setSessionHint(true);
         if (alive) setUser(result.user);
       })
       .catch(() => {
+        setSessionHint(false);
         router.replace(locale === "ar" ? "/login" : "/login?lang=en");
       })
       .finally(() => {
@@ -190,6 +192,7 @@ export function AppShell({ children }: AppShellProps) {
     await apiRequest<{ ok: true }>("/auth/logout", { method: "POST", body: "{}" }).catch(
       () => undefined
     );
+    setSessionHint(false);
     router.replace(locale === "ar" ? "/login" : "/login?lang=en");
   }
 

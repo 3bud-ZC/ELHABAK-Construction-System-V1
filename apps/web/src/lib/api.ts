@@ -232,6 +232,29 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Non-secret "signed in on this browser" hint (no token, no identity). The login page
+ * only probes /auth/me when it is set, so signed-out visitors never trigger a 401.
+ */
+const SESSION_HINT_KEY = "elhabak-session-hint";
+
+export function setSessionHint(signedIn: boolean) {
+  try {
+    if (signedIn) localStorage.setItem(SESSION_HINT_KEY, "1");
+    else localStorage.removeItem(SESSION_HINT_KEY);
+  } catch {
+    // storage unavailable (private mode): the hint is only an optimisation
+  }
+}
+
+export function hasSessionHint() {
+  try {
+    return localStorage.getItem(SESSION_HINT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const isFormData = init?.body instanceof FormData;
   const requestInit: RequestInit = {

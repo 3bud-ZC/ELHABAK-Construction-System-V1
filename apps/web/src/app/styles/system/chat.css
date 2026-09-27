@@ -25,6 +25,19 @@
     flex: 0 0 auto;
   }
 
+  /* Phones and tablets: pin the column to the same fixed containing block as the
+     bottom navigation instead of sizing it with 100dvh. iOS 26 Safari's floating
+     toolbar lets the dynamic viewport extend underneath the toolbar while fixed
+     elements stop above it, so a 100dvh column ran behind the navigation and hid
+     the composer. Fixed `inset: 0` lines both up in every engine. */
+  @media (max-width: 1099.98px) {
+    .app-main:has(> .chat-page) {
+      position: fixed;
+      inset: 0;
+      height: auto;
+    }
+  }
+
   .app-main > .chat-page {
     display: flex;
     flex: 1 1 auto;

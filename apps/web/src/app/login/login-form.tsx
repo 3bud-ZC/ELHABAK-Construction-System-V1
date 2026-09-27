@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { apiRequest } from "../../lib/api";
+import { apiRequest, hasSessionHint, setSessionHint } from "../../lib/api";
 
 /**
  * Mirrors the server-side stripping in `emailSchema` (packages/validation): mobile
@@ -51,14 +51,16 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
   const dashboardHref = locale === "ar" ? "/app" : "/app?lang=en";
 
-  // Already signed in (valid session cookie): skip the form and open the dashboard.
+  // Already signed in on this browser: skip the form and open the dashboard. Only probed
+  // when the local hint is set, so a signed-out visitor never triggers a 401.
   useEffect(() => {
     let alive = true;
+    if (!hasSessionHint()) return;
     apiRequest<{ user: unknown }>("/auth/me")
       .then(() => {
         if (alive) router.replace(dashboardHref);
       })
-      .catch(() => undefined);
+      .catch(() => setSessionHint(false));
     return () => {
       alive = false;
     };
@@ -84,6 +86,7 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
       });
 
       // Every role lands on its dashboard (it adapts to the role).
+      setSessionHint(true);
       router.replace(dashboardHref);
     } catch (requestError) {
       setError(requestError instanceof Error && requestError.message ? labels.invalid : labels.server);
