@@ -454,7 +454,7 @@
     .sticky-actions {
       position: fixed;
       inset-inline: 0;
-      bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+      bottom: var(--nav-offset, calc(var(--bottom-nav-height) + var(--safe-bottom)));
       z-index: calc(var(--z-bottom-nav) - 1);
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
@@ -470,6 +470,12 @@
     .project-form-actions > .ui-button--primary,
     .sticky-actions > .ui-button--primary {
       order: -1;
+    }
+
+    /* The pinned action bar already carries "Back"; the header copy of it
+       would only push the form down. */
+    .app-page:has(.project-form-actions) > .page-header .page-header__actions {
+      display: none;
     }
 
     .app-page:has(.admin-form > .form-actions-bar, .project-form-actions, .sticky-actions) {

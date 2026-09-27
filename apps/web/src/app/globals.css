@@ -26,6 +26,8 @@
 @import "./styles/system/site.css";
 @import "./styles/system/finance.css";
 @import "./styles/system/documents.css";
+@import "./styles/system/chat.css";
+@import "./styles/system/data.css";
 @import "./styles/system/admin.css";
 @import "./styles/system/reports.css";
 @import "./styles/system/settings.css";

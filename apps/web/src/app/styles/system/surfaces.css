@@ -144,6 +144,11 @@
       display: none;
     }
 
+    .module-heading > .ui-button {
+      flex: 1 1 100%;
+      min-height: var(--control-height-touch);
+    }
+
     .module-heading__meta {
       display: flex;
       flex: 1 1 100%;

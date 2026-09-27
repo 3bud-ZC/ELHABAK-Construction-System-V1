@@ -24,6 +24,10 @@
     border-inline-end: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: none;
     color: rgba(255, 255, 255, 0.86);
+    /* Short laptop screens: the rail scrolls itself instead of extending
+       the document below the viewport. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
   }
@@ -457,8 +461,25 @@
       font-size: var(--fs-label);
     }
 
+    /* Everything that must clear the bottom navigation (page padding,
+       sticky form actions, the chat column) reads this one offset. */
+    .app-shell {
+      --nav-offset: calc(var(--bottom-nav-height) + var(--safe-bottom));
+    }
+
     .app-main {
-      padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+      padding-bottom: var(--nav-offset);
+    }
+
+    /* Typing mode: while a text field in the page has focus the virtual
+       keyboard is up, so the navigation steps aside and the page (chat
+       composer, sticky Save) sits directly on the keyboard / screen edge. */
+    .app-shell:has(.app-main :is(textarea, select, input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="button"], [type="submit"], [type="reset"])):focus) {
+      --nav-offset: 0px;
+    }
+
+    .app-shell:has(.app-main :is(textarea, select, input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="button"], [type="submit"], [type="reset"])):focus) .app-bottom-nav {
+      display: none;
     }
 
     .app-page {

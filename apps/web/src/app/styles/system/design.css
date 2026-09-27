@@ -669,6 +669,7 @@
     .design-detail-sidebar {
       display: flex;
       flex-direction: column;
+      align-items: stretch; /* the desktop grid's align-items:start would shrink cards */
       gap: var(--space-3);
     }
 
@@ -716,6 +717,13 @@
 
     .comment-form {
       padding: var(--space-3);
+    }
+
+    .comment-form textarea {
+      min-height: 64px;
+      max-height: 160px;
+      field-sizing: content; /* grows with the comment instead of a fixed 3 rows */
+      font-size: var(--fs-body-lg); /* ≥16px: no iOS focus zoom */
     }
 
     .comment-form__footer .ui-button {

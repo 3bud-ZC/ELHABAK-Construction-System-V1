@@ -3677,38 +3677,6 @@ html[dir="rtl"] .revision-list>button.active {
   white-space: nowrap;
 }
 
-@media (max-width: 980px) {
-
-  /* The chat-shell's old `calc(100dvh - Npx)` sizing assumed a fixed amount of chrome above
-     it, but the real Project Command Header + workspace tab bar are much taller once stacked
-     on a phone/tablet - live testing at 390px found the composer sitting ~190px below the
-     visible viewport (and still ~28px below it at 768px). Rather than guess yet another
-     fragile constant for the *entire* header's height, `.chat-page` becomes a flex column
-     bounded to the viewport (minus just the sticky topbar, which is a stable, predictable
-     height even when it wraps), so the header/tab bar keep their natural size and
-     `.chat-shell` flexes to fill whatever is actually left - correct regardless of how tall
-     the (collapsible below 700px) header ends up being. */
-  .project-workspace-page.chat-page {
-    display: flex;
-    flex-direction: column;
-    height: calc(100dvh - 110px);
-    min-height: 0;
-    gap: var(--space-3);
-    padding-block: var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
-  }
-
-  .project-workspace-page.chat-page>* {
-    flex: 0 0 auto;
-  }
-
-  .project-workspace-page.chat-page>.chat-shell {
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-    max-height: none;
-  }
-}
-
 /* ==========================================================================
    Milestone 08 - Project Communication & Realtime Collaboration
    ========================================================================== */
@@ -4040,9 +4008,6 @@ html[dir="rtl"] .revision-list>button.active {
 
 .chat-shell {
   display: flex;
-  height: calc(100dvh - 320px);
-  min-height: 420px;
-  max-height: 760px;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -4375,13 +4340,6 @@ html[dir="rtl"] .revision-list>button.active {
   flex: 0 0 auto;
   color: var(--muted);
   font-size: var(--fs-caption);
-}
-
-@media (max-width: 980px) {
-  .chat-shell {
-    height: calc(100dvh - 280px);
-    min-height: 380px;
-  }
 }
 
 @media (max-width: 640px) {
@@ -8885,20 +8843,6 @@ html[dir="rtl"] .revision-list>button.active {
   .finance-summary-primary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .project-workspace-page.chat-page {
-    height: calc(100dvh - 167px);
-    overflow: hidden;
-  }
-
-  .project-workspace-page.chat-page > .chat-shell {
-    min-height: 0 !important;
-    overflow: hidden;
-  }
-
-  .project-workspace-page.chat-page .chat-message-list {
-    min-height: 0;
-  }
 }
 
 .settings-identity h2,
@@ -8987,9 +8931,6 @@ html[dir="rtl"] .revision-list>button.active {
 .boq-register--qs .finance-register__head span.num { text-align: end; }
 .boq-register--qs .finance-register__identity strong { font-size: var(--fs-caption); line-height: 1.35; }
 
-.chat-page { min-height: 0; }
-.chat-page .chat-shell,
-.chat-communication-workspace { height: calc(100dvh - 190px); min-height: 430px; max-height: none; border-radius: 4px; }
 .chat-channel-header { min-height: 54px; padding: .55rem .9rem; background: var(--white); border-bottom: 1px solid var(--border); }
 .chat-channel-header .chat-context-bar__info { display: grid; gap: .05rem; }
 .chat-channel-header .chat-context-bar__info strong { font-size: var(--fs-body-sm); }
@@ -9002,20 +8943,12 @@ html[dir="rtl"] .revision-list>button.active {
 .chat-page .chat-bubble__meta { align-items: center; flex-wrap: wrap; row-gap: .1rem; margin-bottom: .1rem; }
 .chat-page .chat-bubble__role { text-transform: none; }
 .chat-page .chat-bubble__text { margin: .1rem 0; line-height: 1.6; }
-.chat-page .chat-composer { padding: .65rem .85rem calc(.65rem + env(safe-area-inset-bottom)); }
 .chat-page .chat-composer__input { min-width: 0; resize: vertical; max-height: 140px; }
 .chat-page .chat-composer__mic, .chat-page .chat-composer__send { min-height: 42px; }
 @media (max-width: 700px) {
   .technical-file-panel .workspace-panel__title a { margin-inline-start: 0; }
-  .chat-page .chat-shell,
-  .chat-communication-workspace { height: calc(100dvh - 210px - env(safe-area-inset-bottom)); min-height: 350px; }
   .chat-page .chat-bubble { max-width: 89%; }
   .chat-page .chat-message-list { padding: .6rem; }
-  .chat-page .chat-composer { padding: .5rem .6rem calc(.5rem + env(safe-area-inset-bottom)); }
-}
-@media (max-width: 390px) {
-  .chat-page .chat-composer__row { gap: .35rem; }
-  .chat-page .chat-composer__send { padding-inline: .5rem; }
 }
 
 /* ------------------------------------------------------------------ */
@@ -9539,24 +9472,12 @@ html[dir="rtl"] .revision-list>button.active {
   white-space: nowrap;
 }
 
-.dataops-workflow-path {
-  margin-bottom: .8rem;
-}
-
-.dataops-workflow-path {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-}
-
 .dataops-workflow-path .ops-stage-path__copy strong,
 .finance-builder__steps .ops-stage-path__copy strong {
   font-size: var(--fs-caption);
 }
 
 @media (max-width: 1100px) {
-
-  .dataops-workflow-path {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 768px) {
@@ -9575,20 +9496,12 @@ html[dir="rtl"] .revision-list>button.active {
     white-space: normal;
   }
 
-  .dataops-workflow-path {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
   .admin-command-strip__actions > * {
     flex: 1 1 auto;
   }
 
   .finance-summary-primary {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .chat-page .chat-shell {
-    height: calc(100dvh - 178px - env(safe-area-inset-bottom));
   }
 }
 
@@ -9597,18 +9510,6 @@ html[dir="rtl"] .revision-list>button.active {
   .app-bottom-nav a,
   .app-bottom-nav button {
     font-size: var(--fs-caption);
-  }
-
-  .chat-page .chat-composer__row {
-    grid-template-columns: minmax(0, 1fr) 42px 46px;
-  }
-
-  .chat-page .chat-composer__send {
-    min-width: 0;
-  }
-
-  .chat-page .chat-composer__send span {
-    display: none;
   }
 }
 

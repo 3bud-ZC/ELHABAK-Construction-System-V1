@@ -67,7 +67,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover"
+  viewportFit: "cover",
+  // Android Chrome shrinks the layout viewport (and dvh) above the virtual keyboard,
+  // so viewport-tall layouts such as the chat column keep the composer on screen.
+  interactiveWidget: "resizes-content"
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

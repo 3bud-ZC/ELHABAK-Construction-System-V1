@@ -116,6 +116,66 @@
     gap: var(--space-4);
   }
 
+  /* One form grid for every dialog section: short fields pair up two per
+     row; anything long-form or block-level (textareas, drop zones, selected
+     files, hints, progress, errors) spans the row, and a trailing unpaired
+     field takes the full row — no half-empty columns. */
+  .design-dialog fieldset > :is(
+      legend,
+      p,
+      .full-span,
+      .field-hint,
+      .upload-dropzone,
+      .selected-file,
+      .upload-progress,
+      .form-error,
+      .inline-confirm,
+      .ui-field:has(textarea),
+      label.ui-field:last-of-type:nth-of-type(odd)
+    ) {
+    grid-column: 1 / -1;
+  }
+
+  .design-dialog fieldset > .field-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--fs-label);
+  }
+
+  .design-dialog fieldset > .field-hint bdi {
+    color: var(--navy);
+    font-family: var(--font-mono);
+    font-weight: 800;
+  }
+
+  .design-dialog .upload-dropzone {
+    min-height: 148px;
+    padding: var(--space-5) var(--space-4);
+  }
+
+  /* Numbered sections (01, 02, …) when a dialog form has more than one. */
+  .design-dialog form:has(> fieldset + fieldset) {
+    counter-reset: dialog-section;
+  }
+
+  .design-dialog form:has(> fieldset + fieldset) > fieldset > legend::before {
+    counter-increment: dialog-section;
+    content: counter(dialog-section, decimal-leading-zero);
+    display: inline-grid;
+    min-width: 26px;
+    height: 20px;
+    margin-inline-end: var(--space-2);
+    padding-inline: 4px;
+    place-items: center;
+    border-radius: var(--radius-sm);
+    background: var(--navy);
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: var(--fs-caption);
+    font-weight: 800;
+    vertical-align: 1px;
+  }
+
   .site-modal-body {
     display: grid;
     gap: var(--space-4);

@@ -507,4 +507,23 @@
       display: block;
     }
   }
+
+  /* Overview → finance module card: formatted amounts as label ↔ value rows
+     (three truncated columns could not hold "EGP 750,000.00"). */
+  .overview-module-card__finance {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .overview-module-card__finance > span {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .overview-module-card__finance strong {
+    overflow: visible;
+    white-space: nowrap;
+  }
 }

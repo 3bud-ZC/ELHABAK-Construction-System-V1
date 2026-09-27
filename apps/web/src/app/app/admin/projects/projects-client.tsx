@@ -197,7 +197,6 @@ export function ProjectsClient() {
         eyebrow={labels.eyebrow}
         title={labels.title}
         description={labels.lead}
-        meta={<span><bdi>{visibleProjects.length}</bdi> {visibleProjects.length === 1 ? labels.result : labels.results}</span>}
         actions={
           <Link className="ui-button ui-button--primary" href={href("/app/admin/projects/new")}>
             <Plus size={16} /> {labels.create}

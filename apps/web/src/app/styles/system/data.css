@@ -1,0 +1,111 @@
+/*
+ * System · Data Operations hub.
+ *   ≥768   the eight-stage import workflow is one horizontal rail (8 equal
+ *          stages, number over label, connector between stages) — no 6 + 2
+ *          wrap with an empty row.
+ *   <768   the same eight stages as a compact 4 × 2 matrix (~112px tall)
+ *          so the page identity, workflow and the first import tool all land
+ *          in or immediately after the first phone viewport.
+ */
+@layer system {
+  .dataops-workflow-path.ops-stage-path {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .dataops-workflow-path .ops-stage-path__item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-1);
+    border-inline-start: 0;
+    text-align: center;
+  }
+
+  /* connector from each stage to the next (logical, so it runs RTL in Arabic) */
+  .dataops-workflow-path .ops-stage-path__item::after {
+    content: "";
+    position: absolute;
+    top: calc(var(--space-3) + 15px);
+    inset-inline-start: calc(50% + 20px);
+    width: calc(100% - 40px);
+    height: 1px;
+    background: var(--border);
+  }
+
+  .dataops-workflow-path .ops-stage-path__item:last-child::after {
+    display: none;
+  }
+
+  .dataops-workflow-path .ops-stage-path__code {
+    position: relative;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+  }
+
+  .dataops-workflow-path .ops-stage-path__copy strong {
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 767.98px) {
+    .dataops-console {
+      gap: var(--space-4);
+    }
+
+    .dataops-metrics .dataops-metric {
+      gap: 2px;
+      padding: var(--space-2) var(--space-3);
+    }
+
+    .dataops-metric dd {
+      font-size: var(--fs-title-sm);
+    }
+
+    /* The stage rail below already spells out the sequence. */
+    .dataops-section__head p {
+      display: none;
+    }
+
+    .dataops-workflow-path.ops-stage-path {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .dataops-workflow-path .ops-stage-path__item {
+      gap: var(--space-1);
+      padding: var(--space-2) 2px;
+    }
+
+    .dataops-workflow-path .ops-stage-path__item:nth-child(n + 5) {
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .dataops-workflow-path .ops-stage-path__item::after {
+      top: calc(var(--space-2) + 13px);
+      inset-inline-start: calc(50% + 17px);
+      width: calc(100% - 34px);
+    }
+
+    /* each row of four is its own run */
+    .dataops-workflow-path .ops-stage-path__item:nth-child(4)::after {
+      display: none;
+    }
+
+    .dataops-workflow-path .ops-stage-path__code {
+      width: 26px;
+      height: 26px;
+    }
+
+    .dataops-workflow-path .ops-stage-path__item--current {
+      box-shadow: inset 0 -2px 0 var(--orange);
+    }
+
+    .dataops-tool {
+      gap: var(--space-2);
+      padding: var(--space-3);
+    }
+  }
+}

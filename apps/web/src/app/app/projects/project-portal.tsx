@@ -22,6 +22,7 @@ import {
   activityLabel,
   apiRequest,
   formatAppDate,
+  formatMoney,
   designStatusLabel,
   designStatusTone,
   phaseLabel,
@@ -173,9 +174,9 @@ export function ProjectPortal({ projectId }: PortalProps) {
           stats: !overview.finance.configured
             ? <span className="overview-module-card__empty">{labels.financeNotConfigured}</span>
             : <span className="overview-module-card__finance">
-              <span><small>{labels.financeContract}</small><strong className="mono"><bdi>{overview.finance.contractValue ?? "—"}</bdi></strong></span>
-              <span><small>{labels.financePaid}</small><strong className="mono"><bdi>{overview.finance.paidAmount}</bdi></strong></span>
-              <span><small>{labels.financeOutstanding}</small><strong className="mono"><bdi>{overview.finance.outstandingBalance ?? "—"}</bdi></strong></span>
+              <span><small>{labels.financeContract}</small><strong className="mono"><bdi dir="ltr">{overview.finance.contractValue === null ? "—" : formatMoney(overview.finance.contractValue, overview.finance.currency, "en")}</bdi></strong></span>
+              <span><small>{labels.financePaid}</small><strong className="mono"><bdi dir="ltr">{formatMoney(overview.finance.paidAmount, overview.finance.currency, "en")}</bdi></strong></span>
+              <span><small>{labels.financeOutstanding}</small><strong className="mono"><bdi dir="ltr">{overview.finance.outstandingBalance === null ? "—" : formatMoney(overview.finance.outstandingBalance, overview.finance.currency, "en")}</bdi></strong></span>
             </span>
         }
         : null,

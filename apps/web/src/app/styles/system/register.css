@@ -343,4 +343,35 @@
       display: inline;
     }
   }
+
+  /* Phone cards: tighter rhythm, and progress shares its row with Open. */
+  @media (max-width: 767.98px) {
+    .ops-register {
+      padding: var(--space-2);
+    }
+
+    .ops-register__row {
+      gap: var(--space-2) var(--space-3);
+      padding: var(--space-3) var(--space-4);
+    }
+
+    .ops-register__cell--identity,
+    .ops-register__cell.project-register-cell--identity {
+      padding-bottom: var(--space-2);
+    }
+
+    .ops-register--projects .project-register-cell--progress {
+      grid-column: 1;
+      align-self: end;
+    }
+
+    .ops-register--projects .project-register-cell--progress > div {
+      gap: var(--space-2);
+    }
+
+    .ops-register--projects .project-register-cell--action {
+      grid-column: 2;
+      align-self: end;
+    }
+  }
 }

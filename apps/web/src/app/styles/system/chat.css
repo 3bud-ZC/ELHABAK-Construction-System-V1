@@ -1,0 +1,202 @@
+/*
+ * System · project chat.
+ *
+ * Height is owned by flex, never by `calc(100dvh - Npx)` constants: the chat
+ * route turns `.app-main` into a viewport-tall column (topbar → page), and
+ * the page into a column (project context → conversation). Inside the
+ * conversation only the message history scrolls; the channel header and the
+ * composer keep their natural height, so the composer is always on screen —
+ * above the bottom navigation on phones, and above the virtual keyboard once
+ * the shell drops the navigation while a field is focused (see shell.css).
+ *
+ * When space runs short (short phones, expanded "Project details", an open
+ * keyboard) the project context header is the element that gives way: it
+ * shrinks and scrolls internally while the conversation keeps its minimum.
+ */
+@layer system {
+  .app-main:has(> .chat-page) {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .app-main:has(> .chat-page) > * {
+    flex: 0 0 auto;
+  }
+
+  .app-main > .chat-page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-height: 0;
+    padding-bottom: var(--space-4);
+    overflow: hidden;
+  }
+
+  .chat-page > * {
+    flex: 0 0 auto;
+    margin-block: 0;
+  }
+
+  .chat-page > .project-context {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* --------------------------- conversation --------------------------- */
+  .chat-page > .chat-shell {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    height: auto;
+    min-height: 300px;
+    max-height: none;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: none;
+  }
+
+  .chat-shell > .chat-channel-header {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 0;
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--white);
+  }
+
+  .chat-channel-header .chat-context-bar__info {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .chat-channel-header .chat-context-bar__info strong {
+    color: var(--text-strong);
+    font-size: var(--fs-body-sm);
+  }
+
+  .chat-channel-header .chat-context-bar__info span {
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  .chat-channel-header .chat-context-bar__tag {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  .chat-shell > .chat-message-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0;
+  }
+
+  .chat-shell > .chat-new-indicator {
+    bottom: 84px;
+  }
+
+  .chat-shell > .chat-composer {
+    flex: 0 0 auto;
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  .chat-composer__row {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-2);
+  }
+
+  .chat-page .chat-composer__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: var(--control-height-touch);
+    max-height: 132px;
+    resize: none;
+    border-radius: var(--radius-md);
+    font-size: var(--fs-body-sm);
+    line-height: var(--lh-snug);
+    field-sizing: content;
+  }
+
+  .chat-page .chat-composer__mic,
+  .chat-page .chat-composer__send {
+    flex: 0 0 auto;
+    min-width: var(--touch-target);
+    height: var(--control-height-touch);
+    min-height: var(--control-height-touch);
+    border-radius: var(--radius-md);
+  }
+
+  .chat-page .chat-composer__mic {
+    width: var(--touch-target);
+  }
+
+  /* ------------------------------ phone ------------------------------ */
+  @media (max-width: 767.98px) {
+    .app-main > .chat-page {
+      gap: var(--space-2);
+      padding-top: var(--space-3);
+      padding-bottom: var(--space-2);
+    }
+
+    .chat-page > .chat-shell {
+      min-height: 260px;
+    }
+
+    /* One line: title + loaded count; the descriptive sub-line is desktop only. */
+    .chat-shell > .chat-channel-header {
+      padding: var(--space-2) var(--space-3);
+    }
+
+    .chat-channel-header .chat-context-bar__info span {
+      display: none;
+    }
+
+    .chat-shell > .chat-composer {
+      padding: var(--space-2);
+    }
+
+    .chat-page .chat-composer__input {
+      font-size: var(--fs-body-lg); /* ≥16px: no iOS focus zoom */
+    }
+
+    .chat-page .chat-composer__send {
+      padding-inline: var(--space-3);
+    }
+
+    /* Typing mode: the shell has dropped the bottom navigation, so the
+       composer is the last thing on screen and owns the home-indicator inset. */
+    .app-shell:has(.chat-composer__input:focus) .app-main > .chat-page {
+      padding-bottom: calc(var(--space-2) + var(--safe-bottom));
+    }
+
+    /* While composing, the conversation owns the (keyboard-shortened)
+       screen; the project context returns as soon as the field blurs. */
+    .app-shell:has(.chat-composer__input:focus) .chat-page > .project-context {
+      display: none;
+    }
+  }
+}

@@ -695,6 +695,12 @@
       font-size: var(--fs-title-lg);
     }
 
+    /* The greeting is desktop-only: on a phone the first viewport belongs to
+       system status, the KPI strip and the attention queue. */
+    .dashboard-head p {
+      display: none;
+    }
+
     .dashboard-head__meta {
       display: flex;
       flex: 1 1 100%;
