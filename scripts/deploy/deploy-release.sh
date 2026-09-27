@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
-# Production deploy orchestrator for elhabak.com — run on the VPS as root.
+# Deploy orchestrator for elhabak.com (production) and staging.elhabak.com — run on
+# the VPS as root.
 #
 # Usage: deploy-release.sh /root/elhabak-release.tar.gz
+#        ELHABAK_TARGET=staging deploy-release.sh /root/elhabak-release.tar.gz
+#
+# Targets (production is the default and behaves exactly as before):
+#   production  /var/www/elhabak          pm2 elhabak-{api,web}          db elhabak
+#   staging     /var/www/elhabak-staging  pm2 elhabak-staging-{api,web}  db elhabak_staging
+#               (staging also applies committed migrations automatically; production
+#                migrations stay a manual, backed-up step)
 #
 # Safe order (the /current symlink is touched only after every gate passes):
 #   1. extract to timestamped release dir
@@ -15,9 +23,19 @@
 #   9. on health failure: revert /current to the previous release
 set -euo pipefail
 
-BASE="/var/www/elhabak"
+TARGET_ENV="${ELHABAK_TARGET:-production}"
+case "$TARGET_ENV" in
+  production) BASE="/var/www/elhabak"; DOMAIN="elhabak.com"; APP_PREFIX="elhabak"; DB_NAME="elhabak" ;;
+  staging) BASE="/var/www/elhabak-staging"; DOMAIN="staging.elhabak.com"; APP_PREFIX="elhabak-staging"; DB_NAME="elhabak_staging" ;;
+  *) echo "FATAL: unknown ELHABAK_TARGET '$TARGET_ENV' (production|staging)"; exit 1 ;;
+esac
 SHARED="$BASE/shared"
 SHARED_ENV="${ELHABAK_SHARED_ENV:-$SHARED/.env}"
+# release-preflight.sh reads these; the production values equal its built-in defaults.
+export ELHABAK_SHARED_ENV="$SHARED_ENV" ELHABAK_SHARED_STORAGE="$SHARED/storage"
+export ELHABAK_PROD_DOMAIN="$DOMAIN" ELHABAK_PROD_DB_NAME="$DB_NAME" ELHABAK_PROD_DB_USER="$DB_NAME"
+PM2_APPS="$APP_PREFIX-api $APP_PREFIX-web"
+HEALTH_URL="https://$DOMAIN/api/health"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TARBALL="${1:?usage: deploy-release.sh <tarball>}"
 APP_USER="elhabak"
@@ -60,29 +78,38 @@ pnpm build
 echo ">> full preflight (env + sanity + build output)"
 "$SCRIPT_DIR/release-preflight.sh" "$REL"
 
+if [ "$TARGET_ENV" = "staging" ]; then
+  echo ">> staging: apply committed migrations to $DB_NAME"
+  pnpm db:migrate:deploy
+fi
+
 # --- switch -------------------------------------------------------------------
 RELEASE_COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commitSha"])' "$REL/.release-meta.json")"
 echo ">> switching /current -> $REL (previous: ${PREV:-none})"
 ln -sfn "$REL" "$BASE/current"
 
-su -s /bin/bash "$APP_USER" -c "COMMIT_SHA=$RELEASE_COMMIT pm2 restart elhabak-api elhabak-web --update-env" >/dev/null
+# First release of a target: register its processes from the shared ecosystem file.
+for app in $PM2_APPS; do
+  su -s /bin/bash "$APP_USER" -c "pm2 describe $app" >/dev/null 2>&1     || su -s /bin/bash "$APP_USER" -c "COMMIT_SHA=$RELEASE_COMMIT pm2 start $SHARED/ecosystem.config.cjs --only $app && pm2 save" >/dev/null
+done
+su -s /bin/bash "$APP_USER" -c "COMMIT_SHA=$RELEASE_COMMIT pm2 restart $PM2_APPS --update-env" >/dev/null
 sleep 4
 
 HEALTH=""
 for i in 1 2 3 4 5 6 7 8; do
-  HEALTH="$(curl -sf --max-time 10 https://elhabak.com/api/health || true)"
+  HEALTH="$(curl -sf --max-time 10 "$HEALTH_URL" || true)"
   echo "$HEALTH" | grep -q '"status":"ok"' && echo "$HEALTH" | grep -q '"database":"connected"' && break
   sleep 3
 done
 
 if echo "$HEALTH" | grep -q '"status":"ok"' && echo "$HEALTH" | grep -q '"database":"connected"'; then
-  su -s /bin/bash "$APP_USER" -c "pm2 list" | grep -E 'elhabak-(api|web)' || true
+  su -s /bin/bash "$APP_USER" -c "pm2 list" | grep -E " $APP_PREFIX-(api|web) " || true
   echo "DEPLOY PASS: $REL"
-  echo "rollback: ln -sfn ${PREV:-<previous-release>} $BASE/current && su -s /bin/bash $APP_USER -c 'pm2 restart elhabak-api elhabak-web'"
+  echo "rollback: ln -sfn ${PREV:-<previous-release>} $BASE/current && su -s /bin/bash $APP_USER -c 'pm2 restart $PM2_APPS'"
 else
   echo "FAIL: post-switch health check failed — reverting /current"
   [ -n "$PREV" ] && ln -sfn "$PREV" "$BASE/current"
-  su -s /bin/bash "$APP_USER" -c "pm2 restart elhabak-api elhabak-web" >/dev/null || true
+  su -s /bin/bash "$APP_USER" -c "pm2 restart $PM2_APPS" >/dev/null || true
   echo "DEPLOY FAIL: reverted to ${PREV:-none}"
   exit 1
 fi

@@ -3,9 +3,14 @@
 #
 # Usage: rollback.sh /var/www/elhabak/releases/<timestamp>
 #        rollback.sh --list          (show candidate releases)
+#        ELHABAK_TARGET=staging rollback.sh ...   (staging.elhabak.com)
 set -euo pipefail
 
-BASE="/var/www/elhabak"
+case "${ELHABAK_TARGET:-production}" in
+  production) BASE="/var/www/elhabak"; DOMAIN="elhabak.com"; APP_PREFIX="elhabak" ;;
+  staging) BASE="/var/www/elhabak-staging"; DOMAIN="staging.elhabak.com"; APP_PREFIX="elhabak-staging" ;;
+  *) echo "FATAL: unknown ELHABAK_TARGET (production|staging)"; exit 1 ;;
+esac
 APP_USER="elhabak"
 
 release_sha() {
@@ -39,8 +44,8 @@ TARGET="${1:?usage: rollback.sh <release-dir> | --list}"
 
 echo ">> rolling back /current -> $TARGET"
 ln -sfn "$TARGET" "$BASE/current"
-su -s /bin/bash "$APP_USER" -c "pm2 restart elhabak-api elhabak-web" >/dev/null
+su -s /bin/bash "$APP_USER" -c "pm2 restart $APP_PREFIX-api $APP_PREFIX-web" >/dev/null
 sleep 4
-curl -sf --max-time 10 https://elhabak.com/api/health \
+curl -sf --max-time 10 "https://$DOMAIN/api/health" \
   && echo && echo "ROLLBACK PASS" \
   || { echo "ROLLBACK FAIL: health check failed — investigate immediately"; exit 1; }
