@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { apiRequest } from "../../lib/api";
 
 /**
@@ -49,6 +49,20 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const dashboardHref = locale === "ar" ? "/app" : "/app?lang=en";
+
+  // Already signed in (valid session cookie): skip the form and open the dashboard.
+  useEffect(() => {
+    let alive = true;
+    apiRequest<{ user: unknown }>("/auth/me")
+      .then(() => {
+        if (alive) router.replace(dashboardHref);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [router, dashboardHref]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,13 +78,13 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const result = await apiRequest<{ user: { role: string } }>("/auth/login", {
+      await apiRequest<{ user: { role: string } }>("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email: normalizedEmail, password })
       });
 
-      const target = result.user.role === "ADMIN" ? "/app/admin/users" : "/app";
-      router.replace(locale === "ar" ? target : `${target}?lang=en`);
+      // Every role lands on its dashboard (it adapts to the role).
+      router.replace(dashboardHref);
     } catch (requestError) {
       setError(requestError instanceof Error && requestError.message ? labels.invalid : labels.server);
     } finally {

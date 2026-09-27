@@ -7,6 +7,7 @@ import { Badge, EmptyState, LoadingState, OperationsGrid, OperationsMetric, Oper
 import {
   AlertTriangle,
   ArrowUpLeft,
+  CalendarClock,
   Camera,
   CheckCircle2,
   Database,
@@ -22,12 +23,15 @@ import {
   apiRequest,
   categoryLabel,
   disciplineLabel,
+  financePortfolioUrl,
   formatAppDate,
+  formatMoney,
   LIFECYCLE_PHASES,
   phaseLabel,
   statusLabel,
   statusTone,
   type DesignDiscipline,
+  type FinancePortfolio,
   type ProjectPhase,
   type ProjectRecord,
   type ProjectStatus
@@ -97,6 +101,7 @@ export function AppDashboard() {
   const user = useCurrentUser();
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
+  const [portfolio, setPortfolio] = useState<FinancePortfolio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -289,6 +294,14 @@ export function AppDashboard() {
       .finally(() => {
         if (alive) setLoading(false);
       });
+    // Portfolio money position (read-only, computed server-side) for the roles that own finance.
+    if (user.role === "ADMIN" || user.role === "ACCOUNTANT") {
+      apiRequest<FinancePortfolio>(financePortfolioUrl([]))
+        .then((result) => {
+          if (alive) setPortfolio(result);
+        })
+        .catch(() => undefined);
+    }
     return () => {
       alive = false;
     };
@@ -315,6 +328,19 @@ export function AppDashboard() {
   }));
   const phaseTotal = dashboard?.projects.length ?? 0;
   const isAdmin = user.role === "ADMIN";
+  const canFinance = isAdmin || user.role === "ACCOUNTANT";
+  const t = (ar: string, en: string) => arLabel(locale, ar, en);
+  const averageProgress = visibleProjects.length
+    ? Math.round(visibleProjects.reduce((sum, project) => sum + project.progress, 0) / visibleProjects.length)
+    : 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingDeliveries = visibleProjects
+    .filter((project) => project.targetDate && project.status !== "COMPLETED" && project.status !== "CANCELLED" && new Date(project.targetDate) >= today)
+    .sort((a, b) => new Date(a.targetDate!).getTime() - new Date(b.targetDate!).getTime())
+    .slice(0, 4)
+    .map((project) => ({ project, days: Math.round((new Date(project.targetDate!).getTime() - today.getTime()) / 86_400_000) }));
+  const money = (value: string | null | undefined) => (value === null || value === undefined ? "—" : formatMoney(value, portfolio?.currency ?? "EGP", "en"));
 
   return (
     <section className="app-page dashboard-page">
@@ -328,6 +354,18 @@ export function AppDashboard() {
           <strong><bdi>{formatDate(new Date(), { weekday: "long", day: "numeric", month: "long" })}</bdi></strong>
           <span className="dashboard-head__system"><i aria-hidden="true" />{labels.systemReady}</span>
         </div>
+        {canFinance && (
+          <div className="dashboard-head__actions">
+            <Link className="ui-button ui-button--secondary" href={href("/app/reports?builder=finance")}>
+              <FileText size={16} /> {t("تقرير مالي", "Finance report")}
+            </Link>
+            {isAdmin && (
+              <Link className="ui-button ui-button--primary" href={href("/app/admin/projects/new")}>
+                <Plus size={16} /> {labels.newProject}
+              </Link>
+            )}
+          </div>
+        )}
       </header>
 
       {loading && <LoadingState label={locale === "ar" ? "جاري قراءة بيانات التشغيل..." : "Reading operations data..."} />}
@@ -335,11 +373,17 @@ export function AppDashboard() {
 
       {dashboard && (
         <OperationsPanel className="dashboard-ops-ledger" aria-label={arLabel(locale, "حالة المحفظة الآن", "Portfolio state right now")}>
-          <OperationsGrid columns="1.2fr 1fr 1fr 1fr">
+          <OperationsGrid columns="repeat(5, minmax(0, 1fr))">
             <OperationsMetric tone="navy" label={labels.active} value={<bdi>{dashboard.activeProjects}</bdi>} hint={labels.activeContext} />
             <OperationsMetric tone="neutral" label={labels.clients} value={<bdi>{dashboard.clientCount}</bdi>} hint={labels.clientContext} />
             <OperationsMetric tone={dashboard.pendingReviewCount > 0 ? "warning" : "success"} label={labels.pendingReviews} value={<bdi>{dashboard.pendingReviewCount}</bdi>} hint={labels.designReview} />
             <OperationsMetric tone={dashboard.overdueCount > 0 ? "danger" : "success"} label={labels.overdueShort} value={<bdi>{dashboard.overdueCount}</bdi>} hint={labels.overdue} />
+            <OperationsMetric
+              tone="neutral"
+              label={t("متوسط الإنجاز", "Average progress")}
+              value={<bdi>{averageProgress}%</bdi>}
+              hint={t("عبر كل المشاريع", "Across all projects")}
+            />
           </OperationsGrid>
         </OperationsPanel>
       )}
@@ -375,6 +419,32 @@ export function AppDashboard() {
       {!loading && (
         <div className="dashboard-body">
           <div className="dashboard-body__main">
+            {canFinance && portfolio && (
+              <section className="dashboard-finance-panel" aria-labelledby="dashboard-finance-title">
+                <header className="dashboard-section-heading dashboard-section-heading--compact">
+                  <div>
+                    <span className="dashboard-section-heading__eyebrow">{t("المركز المالي", "Financial position")}</span>
+                    <h2 id="dashboard-finance-title">{t("الموقف المالي للمحفظة", "Portfolio financial position")}</h2>
+                    <p>{t("أرقام محسوبة من السجلات المالية المسجلة فعلياً.", "Computed from the recorded financial ledgers.")}</p>
+                  </div>
+                  <Link className="dashboard-section-link" href={href("/app/finance")}>
+                    {labels.finance} <ArrowUpLeft size={15} aria-hidden="true" />
+                  </Link>
+                </header>
+                <dl className="dashboard-finance-grid">
+                  <div><dt>{t("قيمة العقود", "Contract value")}</dt><dd className="mono"><bdi dir="ltr">{money(portfolio.totals.contractValue)}</bdi></dd></div>
+                  <div><dt>{t("المحصّل من العملاء", "Collected from clients")}</dt><dd className="mono dashboard-finance-grid__in"><bdi dir="ltr">{money(portfolio.totals.clientPaymentsTotal)}</bdi></dd></div>
+                  <div><dt>{t("المتبقي على العملاء", "Outstanding from clients")}</dt><dd className="mono dashboard-finance-grid__due"><bdi dir="ltr">{money(portfolio.totals.outstandingBalance)}</bdi></dd></div>
+                  <div><dt>{t("التكلفة الفعلية", "Actual cost")}</dt><dd className="mono"><bdi dir="ltr">{money(portfolio.totals.committedCostTotal)}</bdi></dd></div>
+                </dl>
+                <div className="dashboard-finance-foot">
+                  <span>{t("نسبة التحصيل", "Collected")} <b className="mono"><bdi>{portfolio.totals.collectionPercent ?? 0}%</bdi></b></span>
+                  <ProgressBar value={portfolio.totals.collectionPercent ?? 0} tone="success" />
+                  <span>{t("صافي النقد", "Net cash")} <b className="mono"><bdi dir="ltr">{money(portfolio.totals.netCashPosition)}</bdi></b></span>
+                </div>
+              </section>
+            )}
+
             <section className="dashboard-projects-panel">
               <header className="dashboard-section-heading">
                 <div>
@@ -537,22 +607,34 @@ export function AppDashboard() {
                   )}
                 </section>
               )}
-              <section className="dashboard-quick-panel">
-              <header className="dashboard-section-heading dashboard-section-heading--compact">
-                <div>
-                  <span className="dashboard-section-heading__eyebrow">{labels.quickEyebrow}</span>
-                  <h2>{labels.quickTitle}</h2>
-                  <p>{labels.quickLead}</p>
-                </div>
-              </header>
-              <div className="dashboard-quick-grid">
-                {isAdmin && <Link href={href("/app/admin/projects/new")}><Plus size={16} /><strong>{labels.newProject}</strong></Link>}
-                <Link href={href("/app/reports")}><FileText size={16} /><strong>{labels.reports}</strong></Link>
-                {(user.role === "ADMIN" || user.role === "ACCOUNTANT") && <Link href={href("/app/finance")}><WalletCards size={16} /><strong>{labels.finance}</strong></Link>}
-                {isAdmin && <Link href={href("/app/admin/users")}><Users2 size={16} /><strong>{labels.team}</strong></Link>}
-                {isAdmin && <Link href={href("/app/data")}><Database size={16} /><strong>{labels.dataOps}</strong></Link>}
-              </div>
-            </section>
+              {upcomingDeliveries.length > 0 && (
+                <section className="dashboard-deliveries-panel" aria-labelledby="dashboard-deliveries-title">
+                  <header className="dashboard-section-heading dashboard-section-heading--compact">
+                    <div>
+                      <span className="dashboard-section-heading__eyebrow">{t("الجدول الزمني", "Schedule")}</span>
+                      <h2 id="dashboard-deliveries-title">{t("مواعيد التسليم القادمة", "Upcoming deliveries")}</h2>
+                    </div>
+                    <CalendarClock size={18} aria-hidden="true" className="dashboard-deliveries-panel__icon" />
+                  </header>
+                  <div className="dashboard-deliveries">
+                    {upcomingDeliveries.map(({ project, days }) => (
+                      <Link className="dashboard-delivery-row" href={href(`/app/projects/${project.id}`)} key={project.id}>
+                        <span className="dashboard-delivery-row__date">
+                          <b className="mono"><bdi>{formatDate(project.targetDate!, { day: "2-digit" })}</bdi></b>
+                          <small><bdi>{formatDate(project.targetDate!, { month: "short", year: "numeric" })}</bdi></small>
+                        </span>
+                        <span className="dashboard-delivery-row__body">
+                          <strong>{project.name}</strong>
+                          <small>{phaseLabel(project.phase, locale)} · <bdi className="mono">{project.progress}%</bdi></small>
+                        </span>
+                        <span className={`dashboard-delivery-row__due${days <= 14 ? " is-soon" : ""}`}>
+                          {days === 0 ? t("اليوم", "Today") : locale === "ar" ? <>بعد <bdi className="mono">{days}</bdi> يوم</> : <>in <bdi className="mono">{days}</bdi> d</>}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
 
             {dashboard && (
               <>
@@ -609,6 +691,23 @@ export function AppDashboard() {
                 </section>
               </>
             )}
+              <section className="dashboard-quick-panel">
+              <header className="dashboard-section-heading dashboard-section-heading--compact">
+                <div>
+                  <span className="dashboard-section-heading__eyebrow">{labels.quickEyebrow}</span>
+                  <h2>{labels.quickTitle}</h2>
+                  <p>{labels.quickLead}</p>
+                </div>
+              </header>
+              <div className="dashboard-quick-grid">
+                {isAdmin && <Link href={href("/app/admin/projects/new")}><Plus size={16} /><strong>{labels.newProject}</strong></Link>}
+                <Link href={href("/app/reports")}><FileText size={16} /><strong>{labels.reports}</strong></Link>
+                {(user.role === "ADMIN" || user.role === "ACCOUNTANT") && <Link href={href("/app/finance")}><WalletCards size={16} /><strong>{labels.finance}</strong></Link>}
+                {isAdmin && <Link href={href("/app/admin/users")}><Users2 size={16} /><strong>{labels.team}</strong></Link>}
+                {isAdmin && <Link href={href("/app/data")}><Database size={16} /><strong>{labels.dataOps}</strong></Link>}
+              </div>
+            </section>
+
             </aside>
           )}
         </div>

@@ -368,19 +368,21 @@ export function AppShell({ children }: AppShellProps) {
               </div>
             )}
           </nav>
-          <div className="app-sidebar-footer">
-            <span className="app-nav-label app-account-label">{labels.account}</span>
+          {/* Account: one compact row — identity plus settings / sign-out icon actions. */}
+          <div className="app-sidebar-footer" aria-label={labels.account}>
             <div className="app-user-card">
               <span className="app-user-avatar">{initials}</span>
               <span className="app-user-meta">
                 <strong>{user.displayName}</strong>
                 <span>{roleLabel(user.role, locale)}</span>
               </span>
+              <Link className="app-user-card__action" href={href("/app/settings")} aria-label={labels.settings} title={labels.settings}>
+                <UserRoundCog size={16} />
+              </Link>
+              <button className="app-user-card__action" type="button" onClick={() => void logout()} aria-label={labels.logout} title={labels.logout}>
+                <LogOut size={16} />
+              </button>
             </div>
-            <Link className="app-sidebar-settings" href={href("/app/settings")}><UserRoundCog size={15} /> {labels.settings}</Link>
-            <button className="app-sidebar-logout" type="button" onClick={() => void logout()}>
-              <LogOut size={15} /> {labels.logout}
-            </button>
           </div>
         </aside>
         <section className="app-main">
