@@ -1330,7 +1330,28 @@ a {
     padding: 3.5rem 0;
   }
   .services-complementary-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(78%, 280px);
+    gap: 0.875rem;
+    margin-inline: calc(var(--public-gutter, 1rem) * -1);
+    padding: 0.25rem var(--public-gutter, 1rem) 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--public-gutter, 1rem);
+    scrollbar-width: none;
+  }
+  .services-complementary-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .services-complementary-grid > .service-card--compact {
+    scroll-snap-align: start;
+  }
+  .services-complementary-grid .service-card__thumb {
+    aspect-ratio: 16 / 10;
+    min-height: 0;
   }
 }
 
@@ -1485,8 +1506,22 @@ a {
     padding: 1.75rem 1.25rem;
   }
   .process-grid {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+  }
+  .process-stage__connector {
+    margin-bottom: 0.75rem;
+  }
+  .process-stage__node {
+    font-size: 1.375rem;
+    margin-bottom: 0.5rem;
+  }
+  .process-stage__content h3 {
+    font-size: 1rem;
+  }
+  .process-stage__content p {
+    font-size: 0.8125rem;
+    line-height: 1.6;
   }
 }
 
@@ -2062,6 +2097,78 @@ a {
   height: 2.5rem;
   width: auto;
   object-fit: contain;
+  /* The brand file is navy-on-transparent; on the navy footer it renders white. */
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+/* Four-column footer: brand · company · services · direct contact */
+.footer-top--columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.8fr) minmax(0, 0.9fr) minmax(0, 1.35fr);
+  align-items: start;
+  gap: 2rem;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+  font-style: normal;
+}
+
+.footer-col__title {
+  margin-bottom: 0.25rem;
+  color: #FFFFFF;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.footer-col .footer-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.75rem;
+  overflow-wrap: anywhere;
+}
+
+.footer-contact .footer-nav__link {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.footer-contact .footer-nav__link bdi {
+  min-width: 0;
+}
+
+.footer-col .footer-nav__link svg {
+  flex: 0 0 auto;
+  color: var(--public-orange-500);
+}
+
+@media (max-width: 980px) {
+  .footer-top--columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  /* company | services side by side; brand and direct contact span the row */
+  .footer-top--columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 1rem;
+  }
+
+  .footer-top--columns > .footer-brand-col,
+  .footer-top--columns > .footer-contact {
+    grid-column: 1 / -1;
+  }
+
+  .footer-col .footer-nav__link {
+    min-height: 2.5rem;
+  }
 }
 
 .footer-slogan {
@@ -2123,28 +2230,32 @@ a {
 /* ==========================================================================
    SCROLL REVEAL ANIMATIONS & ACCESSIBILITY
    ========================================================================== */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
-}
+/* Content is only pre-hidden when scripts can reveal it again: visitors and crawlers
+   without JavaScript always get the full page. */
+@media (scripting: enabled) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+  }
 
-[data-reveal="mask"] {
-  opacity: 0;
-  transform: scale(0.97);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
+  [data-reveal="mask"] {
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 
-[data-reveal="fade"] {
-  opacity: 0;
-  transform: none;
-  transition: opacity 0.5s ease;
-}
+  [data-reveal="fade"] {
+    opacity: 0;
+    transform: none;
+    transition: opacity 0.5s ease;
+  }
 
-[data-reveal].is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2597,4 +2708,57 @@ a {
   }
 }
 
+
+/* ==========================================================================
+   MOBILE CONTACT BAR — phone only: call + WhatsApp always one tap away
+   ========================================================================== */
+.mobile-contact-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-contact-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: 0.625rem 1rem calc(0.625rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--public-border);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 -8px 24px rgba(4, 8, 17, 0.1);
+    backdrop-filter: saturate(1.2) blur(10px);
+  }
+
+  .mobile-contact-bar a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.875rem;
+    padding-inline: 1rem;
+    border-radius: var(--public-radius-md, 8px);
+    font-size: 0.9375rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .mobile-contact-bar__call {
+    border: 1px solid var(--public-border);
+    background: #FFFFFF;
+    color: var(--public-navy-900);
+  }
+
+  .mobile-contact-bar__whatsapp {
+    background: #1f9d55;
+    color: #FFFFFF;
+  }
+
+  /* keep the footer's last line clear of the bar */
+  .site-shell:has(> .mobile-contact-bar) {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
 }

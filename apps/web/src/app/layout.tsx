@@ -34,7 +34,8 @@ export const metadata: Metadata = {
     canonical: "/",
     languages: {
       ar: "/",
-      en: "/?lang=en"
+      en: "/?lang=en",
+      "x-default": "/"
     }
   },
   openGraph: {
@@ -68,6 +69,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#0b132b",
   // Android Chrome shrinks the layout viewport (and dvh) above the virtual keyboard,
   // so viewport-tall layouts such as the chat column keep the composer on screen.
   interactiveWidget: "resizes-content"
@@ -76,9 +78,11 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Reading the nonce that proxy.ts generated for this request makes every route render
   // dynamically, which is exactly what the nonce-based Content-Security-Policy requires.
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
+  const locale = requestHeaders.get("x-elhabak-locale") === "en" ? "en" : "ar";
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning className={`${almarai.variable} ${rubik.variable}`}>
+    <html lang={locale} dir={locale === "en" ? "ltr" : "rtl"} suppressHydrationWarning className={`${almarai.variable} ${rubik.variable}`}>
       <body>
         <Script
           id="elhabak-lang-boot"

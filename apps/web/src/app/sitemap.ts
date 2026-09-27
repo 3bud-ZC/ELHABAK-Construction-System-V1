@@ -14,13 +14,17 @@ const publicRoutes = [
   "/contact"
 ] as const;
 
+// A fixed content date: stamping `new Date()` on every request tells crawlers every page
+// changed on every fetch. Bump this when public page content materially changes.
+const CONTENT_UPDATED = new Date("2026-09-27T00:00:00Z");
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  const lastModified = CONTENT_UPDATED;
 
   return publicRoutes.flatMap((route) => {
     const arUrl = `${siteUrl}${route || "/"}`;
     const enUrl = `${siteUrl}${route}?lang=en`;
-    const languages = { ar: arUrl, en: enUrl };
+    const languages = { ar: arUrl, en: enUrl, "x-default": arUrl };
     const priority = route === "" ? 1 : route === "/contact" || route === "/services" ? 0.9 : 0.8;
 
     return [

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { Button } from "@elhabak/ui";
 import { dictionary, resolveLocale, textDirections } from "../../i18n/translations";
 import { LoginForm } from "./login-form";
@@ -9,6 +10,17 @@ type PageProps = {
 
 function langHref(locale: "ar" | "en", path = "/login") {
   return locale === "ar" ? path : `${path}?lang=en`;
+}
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const locale = resolveLocale((await searchParams)?.lang);
+  // The operations portal sign-in is not a search landing page: keep it out of the index
+  // (links still followed) and give it its own canonical instead of inheriting the home one.
+  return {
+    title: locale === "ar" ? "تسجيل الدخول | منصة الحباك للمشاريع" : "Sign in | ELHABAK Project Platform",
+    alternates: { canonical: langHref(locale) },
+    robots: { index: false, follow: true }
+  };
 }
 
 export default async function LoginPage({ searchParams }: PageProps) {

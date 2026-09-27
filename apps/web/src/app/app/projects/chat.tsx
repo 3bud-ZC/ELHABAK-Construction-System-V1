@@ -134,9 +134,25 @@ export function ChatWorkspace({ projectId }: ChatWorkspaceProps) {
     setPendingNewCount(0);
   }, []);
 
+  // Messages count as read only when someone can actually see them: a chat left open in a
+  // background tab defers the read marker until the tab becomes visible again.
+  const pendingReadRef = useRef(false);
   const markRead = useCallback(() => {
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+      pendingReadRef.current = true;
+      return;
+    }
+    pendingReadRef.current = false;
     apiRequest(`/projects/${projectId}/messages/read`, { method: "POST", body: "{}" }).catch(() => undefined);
   }, [projectId]);
+
+  useEffect(() => {
+    function onVisibility() {
+      if (document.visibilityState === "visible" && pendingReadRef.current && isNearBottomRef.current) markRead();
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [markRead]);
 
   const boundaryRef = useRef<string | null>(null);
 

@@ -31,7 +31,8 @@ export function seoMetadata(path: string, locale: Locale, meta: SeoMetaInput): M
       canonical,
       languages: {
         ar: path,
-        en: `${path}?lang=en`
+        en: `${path}?lang=en`,
+        "x-default": path
       }
     },
     openGraph: {
@@ -112,8 +113,22 @@ export function publicNavItems(locale: Locale, labels: { about: string; services
   ];
 }
 
+/** Every public service landing page — the footer links all of them (internal linking). */
+export function serviceLandingLinks(locale: Locale) {
+  const ar = locale === "ar";
+  return [
+    { href: langHref(locale, "/architectural-design"), label: ar ? "التصميم المعماري" : "Architectural design" },
+    { href: langHref(locale, "/engineering-consultancy"), label: ar ? "الاستشارات الهندسية" : "Engineering consultancy" },
+    { href: langHref(locale, "/construction-management"), label: ar ? "إدارة التنفيذ" : "Construction management" },
+    { href: langHref(locale, "/site-supervision"), label: ar ? "الإشراف على التنفيذ" : "Site supervision" },
+    { href: langHref(locale, "/project-management"), label: ar ? "إدارة المشروعات" : "Project management" }
+  ];
+}
+
 export function SiteFooter({ locale }: { locale: Locale }) {
   const t = dictionary[locale];
+  const ar = locale === "ar";
+  const whatsapp = whatsappHref(companyContact, t.home.whatsappMessage);
   const links = [
     { href: langHref(locale, "/about"), label: t.nav.about },
     { href: langHref(locale, "/services"), label: t.nav.services },
@@ -125,7 +140,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer className="site-footer">
       <div className="container footer-inner">
-        <div className="footer-top">
+        <div className="footer-top footer-top--columns">
           <div className="footer-brand-col">
             <Image
               src="/brand/logo-horizontal.png"
@@ -138,25 +153,72 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             <p className="footer-entity">
               <bdi>{t.home.footerText}</bdi>
               <span aria-hidden="true"> · </span>
-              <bdi>{locale === "ar" ? "ELHABAK Construction" : "الحباك للمقاولات والاستشارات الهندسية"}</bdi>
+              <bdi>{ar ? "ELHABAK Construction" : "الحباك للمقاولات والاستشارات الهندسية"}</bdi>
             </p>
           </div>
-          <nav className="footer-nav" aria-label={t.home.footerNav}>
+          <nav className="footer-col" aria-label={t.home.footerNav}>
+            <span className="footer-col__title">{ar ? "الشركة" : "Company"}</span>
             {links.map((link) => (
               <a href={link.href} className="footer-nav__link" key={link.href}>
                 {link.label}
               </a>
             ))}
           </nav>
+          <nav className="footer-col" aria-label={ar ? "خدماتنا" : "Our services"}>
+            <span className="footer-col__title">{ar ? "خدماتنا" : "Our services"}</span>
+            {serviceLandingLinks(locale).map((link) => (
+              <a href={link.href} className="footer-nav__link" key={link.href}>
+                {link.label}
+              </a>
+            ))}
+          </nav>
+          <address className="footer-col footer-contact">
+            <span className="footer-col__title">{ar ? "تواصل مباشر" : "Direct contact"}</span>
+            <a href={telHref(companyContact)} className="footer-nav__link">
+              <Phone size={15} aria-hidden="true" /> <bdi dir="ltr">{companyContact.phone}</bdi>
+            </a>
+            <a href={whatsapp} target="_blank" rel="noreferrer" className="footer-nav__link">
+              <MessageCircle size={15} aria-hidden="true" /> {ar ? "واتساب" : "WhatsApp"}
+            </a>
+            <a href={`mailto:${companyContact.email}`} className="footer-nav__link">
+              <Mail size={15} aria-hidden="true" /> <bdi dir="ltr">{companyContact.email}</bdi>
+            </a>
+            <a href="https://maps.app.goo.gl/apBRMCmUquZ6XYXv7" target="_blank" rel="noreferrer" className="footer-nav__link">
+              <MapPin size={15} aria-hidden="true" /> <bdi dir="ltr">{companyContact.address}</bdi>
+            </a>
+          </address>
         </div>
         <div className="footer-bottom">
           <p className="footer-copyright">{t.home.footerRights}</p>
           <p className="footer-location">
-            {locale === "ar" ? "سوهاج — جمهورية مصر العربية" : "Sohag — Arab Republic of Egypt"}
+            {ar ? "سوهاج — جمهورية مصر العربية" : "Sohag — Arab Republic of Egypt"}
           </p>
         </div>
       </div>
     </footer>
+  );
+}
+
+/** Phone-only sticky contact bar: the two actions a site visitor actually takes. */
+export function MobileContactBar({ locale }: { locale: Locale }) {
+  const t = dictionary[locale];
+  const ar = locale === "ar";
+  return (
+    <nav className="mobile-contact-bar" aria-label={ar ? "تواصل سريع" : "Quick contact"}>
+      <a href={telHref(companyContact)} className="mobile-contact-bar__call">
+        <Phone size={18} aria-hidden="true" />
+        <span>{ar ? "اتصال" : "Call"}</span>
+      </a>
+      <a
+        href={whatsappHref(companyContact, t.home.whatsappMessage)}
+        target="_blank"
+        rel="noreferrer"
+        className="mobile-contact-bar__whatsapp"
+      >
+        <MessageCircle size={18} aria-hidden="true" />
+        <span>{ar ? "واتساب — ابدأ مشروعك" : "WhatsApp — start a project"}</span>
+      </a>
+    </nav>
   );
 }
 
@@ -387,6 +449,7 @@ export function SeoPageShell({ locale, path, children }: SeoPageProps) {
       {children}
       <CtaBand locale={locale} />
       <SiteFooter locale={locale} />
+      <MobileContactBar locale={locale} />
     </main>
   );
 }

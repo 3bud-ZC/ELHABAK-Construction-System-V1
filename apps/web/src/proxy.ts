@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Two responsibilities:
+ * Three responsibilities (the third: forward the request locale as `x-elhabak-locale`):
  *
  * 1. Emit a per-request nonce Content-Security-Policy. Next.js reads the nonce back out of
  *    the request CSP during server rendering and stamps it onto every framework/page
@@ -45,6 +45,9 @@ export function proxy(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  // The locale lives in `?lang=en`; forwarding it lets the root layout server-render the
+  // correct <html lang/dir> so crawlers see English pages as English (LTR).
+  requestHeaders.set("x-elhabak-locale", request.nextUrl.searchParams.get("lang") === "en" ? "en" : "ar");
   requestHeaders.set("Content-Security-Policy", csp);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
@@ -63,7 +66,7 @@ export const config = {
     // Every HTML route - skipping static assets, the image optimizer, public marketing
     // assets, generated metadata routes, and client-router prefetch requests.
     {
-      source: "/((?!api|_next/static|_next/image|favicon.ico|icon.png|robots.txt|sitemap.xml|brand|marketing).*)",
+      source: "/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.webmanifest|robots.txt|sitemap.xml|brand|marketing).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" }

@@ -28,7 +28,7 @@ import { PublicHeader } from "./public-header";
 import { PublicHero } from "./public-hero";
 import { PublicMotion } from "./public-motion";
 import { FaqAccordion } from "./faq-accordion";
-import { publicNavItems } from "./seo-page";
+import { MobileContactBar, publicNavItems, SiteFooter } from "./seo-page";
 
 type PageProps = {
   searchParams?: Promise<{ lang?: string }>;
@@ -61,7 +61,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
         canonical: "/?lang=en",
         languages: {
           ar: "/",
-          en: "/?lang=en"
+          en: "/?lang=en",
+          "x-default": "/"
         }
       },
       openGraph: {
@@ -108,7 +109,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       canonical: "/",
       languages: {
         ar: "/",
-        en: "/?lang=en"
+        en: "/?lang=en",
+        "x-default": "/"
       }
     },
     openGraph: {
@@ -161,7 +163,7 @@ export default async function HomePage({ searchParams }: PageProps) {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": ["Organization", "ProfessionalService"],
+        "@type": ["Organization", "ProfessionalService", "GeneralContractor"],
         "@id": `${siteUrl}/#organization`,
         name: "ELHABAK Construction",
         legalName: "الحباك للمقاولات والاستشارات الهندسية",
@@ -174,6 +176,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           "الحباك للاستشارات الهندسية"
         ],
         sameAs: ["https://maps.app.goo.gl/apBRMCmUquZ6XYXv7"],
+        hasMap: "https://maps.app.goo.gl/apBRMCmUquZ6XYXv7",
         url: `${siteUrl}/`,
         description: t.home.aboutLead,
         email: t.contact.email,
@@ -222,6 +225,16 @@ export default async function HomePage({ searchParams }: PageProps) {
         alternateName: ["ELHABAK", "الحباك", "الحباك للمقاولات والاستشارات الهندسية"],
         publisher: { "@id": `${siteUrl}/#organization` },
         inLanguage: ["ar", "en"]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${siteUrl}${langHref(locale)}#faq`,
+        inLanguage: locale,
+        mainEntity: t.faq.map(([question, answer]) => ({
+          "@type": "Question",
+          name: question,
+          acceptedAnswer: { "@type": "Answer", text: answer }
+        }))
       }
     ]
   };
@@ -710,44 +723,8 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* Deep Architectural Footer */}
-      <footer className="site-footer">
-        <div className="container footer-inner">
-          <div className="footer-top">
-            <div className="footer-brand-col">
-              <Image
-                src="/brand/logo-horizontal.png"
-                alt="ELHABAK Construction"
-                width={190}
-                height={80}
-                className="footer-logo"
-              />
-              <p className="footer-slogan">{t.home.footerTagline}</p>
-              <p className="footer-entity">
-                <bdi>{t.home.footerText}</bdi>
-                <span aria-hidden="true"> · </span>
-                <bdi>{locale === "ar" ? "ELHABAK Construction" : "الحباك للمقاولات والاستشارات الهندسية"}</bdi>
-              </p>
-            </div>
-
-            <nav className="footer-nav" aria-label={t.home.footerNav}>
-              <a href={langHref(locale, "/about")} className="footer-nav__link">{t.nav.about}</a>
-              <a href={langHref(locale, "/services")} className="footer-nav__link">{t.nav.services}</a>
-              <a href={`${langHref(locale)}#process`} className="footer-nav__link">{t.nav.process}</a>
-              <a href={langHref(locale, "/platform")} className="footer-nav__link">{t.nav.platform}</a>
-              <a href={`${langHref(locale)}#faq`} className="footer-nav__link">{t.home.faqEyebrow}</a>
-              <a href={langHref(locale, "/contact")} className="footer-nav__link">{t.nav.contact}</a>
-            </nav>
-          </div>
-
-          <div className="footer-bottom">
-            <p className="footer-copyright">{t.home.footerRights}</p>
-            <p className="footer-location">
-              {locale === "ar" ? "سوهاج — جمهورية مصر العربية" : "Sohag — Arab Republic of Egypt"}
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter locale={locale} />
+      <MobileContactBar locale={locale} />
     </main>
   );
 }
