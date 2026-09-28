@@ -1,7 +1,12 @@
 import { z } from "zod";
+import { normalizeEgyptianMobile } from "@elhabak/contracts";
 import { moneyAmountSchema, quantitySchema } from "./money";
+import { PASSWORD_MAX_LENGTH } from "./password-policy";
+
+export { normalizeEgyptianMobile };
 
 export * from "./money";
+export * from "./password-policy";
 
 export const healthResponseSchema = z.object({
   status: z.enum(["ok", "degraded"]),
@@ -127,25 +132,52 @@ export const resetUserPasswordSchema = z.object({
   temporaryPassword: z.string().min(10).max(128)
 });
 
-export const createClientSchema = z.object({
-  email: emailSchema.optional().or(z.literal("")),
-  displayName: nonEmptyStringSchema,
-  phone: z.string().trim().max(40).optional().or(z.literal("")),
-  notes: z.string().trim().max(2000).optional().or(z.literal("")),
-  isActive: z.boolean().default(true),
-  temporaryPassword: z.string().min(10).max(128).optional().or(z.literal(""))
+/** Client mobile number, parsed straight to its canonical E.164 form ("+201XXXXXXXXX"). */
+export const clientMobileSchema = z.string().max(40).transform((value, ctx) => {
+  const mobile = normalizeEgyptianMobile(value);
+  if (!mobile) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Enter a valid Egyptian mobile number (010, 011, 012 or 015 followed by 8 digits)."
+    });
+    return z.NEVER;
+  }
+  return mobile;
 });
+
+/**
+ * Client accounts never take an Admin-typed password: the server generates the temporary
+ * credential (create) or regenerates it through the dedicated reset endpoint. Both schemas
+ * are strict so a stale form that still posts `temporaryPassword` fails loudly instead of
+ * silently replacing the credential the client was given.
+ */
+export const createClientSchema = z
+  .object({
+    email: emailSchema.optional().or(z.literal("")),
+    displayName: nonEmptyStringSchema,
+    phone: clientMobileSchema,
+    notes: z.string().trim().max(2000).optional().or(z.literal("")),
+    isActive: z.boolean().default(true)
+  })
+  .strict();
 
 export const updateClientSchema = z
   .object({
     email: emailSchema.optional(),
     displayName: nonEmptyStringSchema.optional(),
-    phone: z.string().trim().max(40).optional().or(z.literal("")),
+    phone: clientMobileSchema.optional(),
     notes: z.string().trim().max(2000).optional().or(z.literal("")),
-    isActive: z.boolean().optional(),
-    temporaryPassword: z.string().min(10).max(128).optional()
+    isActive: z.boolean().optional()
   })
+  .strict()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1).max(256).transform(stripTrailingClipboardNewline),
+    newPassword: z.string().max(PASSWORD_MAX_LENGTH * 4)
+  })
+  .strict();
 
 const optionalDateSchema = z.string().trim().date().optional().or(z.literal(""));
 

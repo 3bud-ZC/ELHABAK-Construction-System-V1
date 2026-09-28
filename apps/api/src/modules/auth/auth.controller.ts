@@ -1,8 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import type { Response } from "express";
 import { serialize } from "cookie";
-import { loginSchema } from "@elhabak/validation";
-import { z } from "zod";
+import { changePasswordSchema, loginSchema } from "@elhabak/validation";
 import { AuthService } from "./auth.service";
 import { AuthGuard } from "./auth.guard";
 import { CurrentUser } from "./current-user.decorator";
@@ -48,11 +47,13 @@ export class AuthController {
     return { user };
   }
 
-  @UseGuards(AuthGuard)
+  // Same per-IP budget as login: the current-password check is otherwise an unthrottled
+  // guessing oracle for anyone holding a live session.
+  @UseGuards(AuthGuard, LoginThrottleGuard)
   @Post("password/change")
   @HttpCode(200)
   changePassword(@CurrentUser() user: RequestUser, @Req() request: AuthenticatedRequest, @Body() body: unknown) {
-    const input = z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(10).max(128) }).parse(body);
+    const input = parseBody(changePasswordSchema, body);
     return this.authService.changePassword(user, request.sessionId, input.currentPassword, input.newPassword);
   }
 

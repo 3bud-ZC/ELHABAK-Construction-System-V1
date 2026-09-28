@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import type { Prisma, UserRole } from "@elhabak/database";
 import { createClientSchema, updateClientSchema } from "@elhabak/validation";
 import { AuthService, normalizeEmail, toRequestUser } from "../auth/auth.service";
+import { generateClientTemporaryPassword } from "../auth/temporary-password";
 import { PrismaService } from "../../shared/prisma.service";
 import { AuditService } from "./audit.service";
 import { parseBody } from "../../shared/zod";
@@ -14,6 +15,7 @@ const clientUserSelect = {
   displayName: true,
   role: true,
   isActive: true,
+  mustChangePassword: true,
   archivedAt: true,
   createdAt: true,
   updatedAt: true
@@ -81,7 +83,7 @@ export class AdminClientsService {
   async create(actorId: string, rawBody: unknown) {
     const input = parseBody(createClientSchema, rawBody);
     const displayName = input.displayName.trim();
-    const generatedPassword = input.temporaryPassword?.trim() || generateTemporaryPassword();
+    const generatedPassword = generateClientTemporaryPassword(input.phone);
     const baseEmail = input.email?.trim() ? normalizeEmail(input.email) : await this.nextGeneratedEmail(displayName);
     const passwordHash = await this.authService.hashPassword(generatedPassword);
 
@@ -99,9 +101,8 @@ export class AdminClientsService {
         }
       };
 
-      const phone = emptyToNull(input.phone);
+      data.phone = input.phone;
       const notes = emptyToNull(input.notes);
-      if (phone !== undefined) data.phone = phone;
       if (notes !== undefined) data.notes = notes;
 
       const client = await this.prisma.clientProfile.create({
@@ -116,9 +117,15 @@ export class AdminClientsService {
         generatedLogin: !input.email?.trim()
       });
 
+      // The only time this plaintext exists outside the client's hands: returned once
+      // (no-store), never persisted, never audited, never logged.
       return {
         ...toClientResponse(client),
-        generatedCredentials: { email: client.user.email, temporaryPassword: generatedPassword }
+        generatedCredentials: {
+          email: client.user.email,
+          phone: client.phone,
+          temporaryPassword: generatedPassword
+        }
       };
     } catch (error) {
       handleUniqueEmail(error);
@@ -161,18 +168,13 @@ export class AdminClientsService {
       }
       userData.isActive = input.isActive;
     }
-    if (input.temporaryPassword !== undefined) {
-      userData.passwordHash = await this.authService.hashPassword(input.temporaryPassword);
-      userData.mustChangePassword = true;
-    }
 
     try {
       const data: Prisma.ClientProfileUpdateInput = {};
-      const phone = emptyToNull(input.phone);
       const notes = emptyToNull(input.notes);
 
-      if (phone !== undefined) {
-        data.phone = phone;
+      if (input.phone !== undefined) {
+        data.phone = input.phone;
       }
       if (notes !== undefined) {
         data.notes = notes;
@@ -199,17 +201,50 @@ export class AdminClientsService {
         });
       }
 
-      if (input.temporaryPassword !== undefined) {
-        await this.revokeSessions(existing.userId);
-        await this.audit.record(actorId, "user.password_reset", {
-          targetUserId: existing.userId
-        });
-      }
-
       return toClientResponse(client);
     } catch (error) {
       handleUniqueEmail(error);
     }
+  }
+
+  /**
+   * Replaces the client's credential with a freshly generated temporary password (label
+   * taken from the stored mobile), flags it for first-login change, revokes every live
+   * session, and returns the plaintext exactly once. The Admin never types a client
+   * password: a lost credential is recovered only by generating a new one.
+   */
+  async resetPassword(actorId: string, id: string) {
+    const existing = await this.prisma.clientProfile.findUnique({
+      where: { id },
+      include: { user: { select: clientUserSelect } }
+    });
+    if (!existing) throw new NotFoundException("Client not found.");
+    if (existing.user.archivedAt) {
+      throw new ConflictException("Restore the archived client account before resetting its password.");
+    }
+
+    const temporaryPassword = generateClientTemporaryPassword(existing.phone);
+    await this.prisma.user.update({
+      where: { id: existing.userId },
+      data: { passwordHash: await this.authService.hashPassword(temporaryPassword), mustChangePassword: true }
+    });
+    const sessionsRevoked = await this.revokeSessions(existing.userId);
+    await this.audit.record(actorId, "user.password_reset", {
+      targetUserId: existing.userId,
+      clientId: existing.id,
+      method: "generated",
+      sessionsRevoked
+    });
+
+    return {
+      clientId: existing.id,
+      displayName: existing.user.displayName,
+      email: existing.user.email,
+      phone: existing.phone,
+      isActive: existing.user.isActive,
+      temporaryPassword,
+      sessionsRevoked
+    };
   }
 
   private async revokeSessions(userId: string) {
@@ -231,6 +266,7 @@ function toClientResponse(client: {
     displayName: string;
     role: UserRole;
     isActive: boolean;
+    mustChangePassword: boolean;
     archivedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
@@ -257,10 +293,6 @@ function emptyToNull(value: string | undefined): string | null | undefined {
 
   const trimmed = value.trim();
   return trimmed.length === 0 ? null : trimmed;
-}
-
-function generateTemporaryPassword() {
-  return `Ehb-${randomBytes(9).toString("base64url")}`;
 }
 
 function toLoginSlug(value: string) {

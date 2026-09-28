@@ -271,7 +271,7 @@ describe("Milestone 02 auth, RBAC, users, clients", () => {
     const linked = await request(app.getHttpServer())
       .post("/admin/clients")
       .set("Cookie", adminCookie)
-      .send({ email: linkedEmail, displayName: "Linked Client", isActive: true, temporaryPassword: password })
+      .send({ email: linkedEmail, displayName: "Linked Client", phone: "01001234567", isActive: true })
       .expect(201);
 
     const impact = await request(app.getHttpServer())
@@ -419,17 +419,17 @@ describe("Milestone 02 auth, RBAC, users, clients", () => {
         displayName: "Created Client",
         phone: "+20 100 000 0000",
         notes: "Test client only.",
-        isActive: true,
-        temporaryPassword: password
+        isActive: true
       })
       .expect(201);
 
     expect(created.body.user.role).toBe("CLIENT");
     expect(created.body.user.passwordHash).toBeUndefined();
+    expect(created.body.phone).toBe("+201000000000");
 
     const clientLogin = await request(app.getHttpServer())
       .post("/auth/login")
-      .send({ email, password })
+      .send({ email, password: created.body.generatedCredentials.temporaryPassword })
       .expect(200);
     expect(clientLogin.body.user.role).toBe("CLIENT");
 
@@ -440,7 +440,7 @@ describe("Milestone 02 auth, RBAC, users, clients", () => {
       .expect(200);
 
     expect(updated.body.user.displayName).toBe("Updated Client");
-    expect(updated.body.phone).toBe("+20 111 111 1111");
+    expect(updated.body.phone).toBe("+201111111111");
 
     const list = await request(app.getHttpServer()).get("/admin/clients").set("Cookie", adminCookie).expect(200);
     expect(list.body.some((client: { id: string }) => client.id === created.body.id)).toBe(true);

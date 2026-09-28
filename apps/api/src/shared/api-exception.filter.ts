@@ -13,6 +13,8 @@ type ErrorBody = {
   statusCode: number;
   error: string;
   message: string | string[];
+  code?: string;
+  reason?: string;
   timestamp: string;
   path: string;
   requestId?: string;
@@ -57,10 +59,15 @@ export class ApiExceptionFilter implements ExceptionFilter {
       );
     }
 
+    // Stable machine-readable codes let the web client show a precise localized message
+    // (e.g. CURRENT_PASSWORD_INVALID) without parsing English text.
+    const detail = typeof exceptionResponse === "object" && exceptionResponse !== null ? (exceptionResponse as Record<string, unknown>) : {};
     const body: ErrorBody = {
       statusCode: status,
       error: HttpStatus[status] ?? "Error",
       message,
+      ...(typeof detail.code === "string" ? { code: detail.code } : {}),
+      ...(typeof detail.reason === "string" ? { reason: detail.reason } : {}),
       timestamp: new Date().toISOString(),
       path: request.url ?? "",
       ...(request.requestId ? { requestId: request.requestId } : {})

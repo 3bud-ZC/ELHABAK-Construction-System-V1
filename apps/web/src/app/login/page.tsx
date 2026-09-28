@@ -109,6 +109,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
               submit: t.submit,
               invalid: t.invalid,
               server: t.server,
+              rateLimited: t.rateLimited,
               showPassword: t.showPassword,
               hidePassword: t.hidePassword,
               required: t.required

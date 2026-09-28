@@ -125,6 +125,67 @@
     justify-content: flex-end;
   }
 
+  /* Shared password-change form: Settings > Security and the first-login gate. */
+  .password-change-form {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .settings-password .password-change-form {
+    padding: var(--space-5);
+  }
+
+  /* 44px touch targets for the field and its show/hide toggle on phones. */
+  .password-change-form .password-input input {
+    min-height: 44px;
+    padding-inline-end: 3.25rem;
+  }
+
+  .password-change-form .password-input .icon-button {
+    width: 44px;
+    height: 44px;
+    inset-inline-end: 0;
+  }
+
+  .password-rules {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-soft);
+    list-style: none;
+  }
+
+  .password-rules li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--fs-label);
+    font-weight: 600;
+  }
+
+  .password-rules li.is-met {
+    color: var(--success);
+  }
+
+  .password-rules svg {
+    flex: 0 0 auto;
+  }
+
+  .password-change-form__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .force-password .password-change-form__actions .ui-button {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
   @media (max-width: 1023.98px) {
     .settings-layout {
       grid-template-columns: minmax(0, 1fr);
@@ -133,7 +194,7 @@
 
   @media (max-width: 767.98px) {
     .settings-card__head,
-    .settings-password__form {
+    .settings-password .password-change-form {
       padding: var(--space-4);
     }
 
@@ -143,8 +204,10 @@
       padding: var(--space-3) var(--space-4);
     }
 
-    .settings-password__actions .ui-button {
+    .password-change-form__actions .ui-button {
       width: 100%;
+      min-height: 44px;
+      justify-content: center;
     }
   }
 }

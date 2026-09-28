@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { apiRequest, hasSessionHint, setSessionHint } from "../../lib/api";
+import { ApiError, apiRequest, hasSessionHint, setSessionHint } from "../../lib/api";
 
 /**
  * Mirrors the server-side stripping in `emailSchema` (packages/validation): mobile
@@ -36,6 +36,7 @@ type LoginFormProps = {
     submit: string;
     invalid: string;
     server: string;
+    rateLimited: string;
     showPassword: string;
     hidePassword: string;
     required: string;
@@ -89,7 +90,10 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
       setSessionHint(true);
       router.replace(dashboardHref);
     } catch (requestError) {
-      setError(requestError instanceof Error && requestError.message ? labels.invalid : labels.server);
+      // Only a credential rejection reads as "invalid details"; throttling and outages must
+      // not tell a user with the right password that it is wrong.
+      const status = requestError instanceof ApiError ? requestError.status : 0;
+      setError(status === 401 || status === 400 ? labels.invalid : status === 429 ? labels.rateLimited : labels.server);
     } finally {
       setLoading(false);
     }

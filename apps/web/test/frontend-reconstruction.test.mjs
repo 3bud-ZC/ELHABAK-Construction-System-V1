@@ -13,6 +13,7 @@ const bell = source("components/notification-bell.tsx");
 const notifications = source("app/app/notifications/notifications-client.tsx");
 const search = source("app/app/search/search-client.tsx");
 const clients = source("app/app/admin/clients/clients-client.tsx");
+const credentialsPanel = source("app/app/admin/clients/client-credentials-panel.tsx");
 const projectForm = source("app/app/admin/projects/project-form.tsx");
 const entry = source("app/globals.css");
 const systemDir = new URL("../src/app/styles/system/", import.meta.url);
@@ -32,7 +33,8 @@ test("remaining reconstruction surfaces expose final composition markers", () =>
   assert.match(bell, /notification-destination/);
   assert.match(notifications, /notification-destination/);
   assert.match(search, /search-result__type/);
-  assert.match(clients, /credential-reveal/);
+  assert.match(clients, /ClientCredentialsPanel/);
+  assert.match(credentialsPanel, /credential-reveal/);
   assert.match(projectForm, /project-form-system/);
 });
 

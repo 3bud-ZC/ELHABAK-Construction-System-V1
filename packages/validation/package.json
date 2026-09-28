@@ -13,6 +13,10 @@
       "types": "./dist/money-core.d.ts",
       "default": "./dist/money-core.js"
     },
+    "./password-policy": {
+      "types": "./dist/password-policy.d.ts",
+      "default": "./dist/password-policy.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -21,6 +25,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@elhabak/contracts": "workspace:*",
     "zod": "^4.1.12"
   }
 }

@@ -12,8 +12,8 @@ owner can control even off-site.
 ## Current Status
 
 **V1 100% complete.** Milestone 10 (Production Hardening, Final Acceptance, Handover &
-Delivery) is complete. The product is **READY FOR CLIENT HANDOVER** and deployed to
-production on Railway. See [STATUS.md](STATUS.md) for the full run log and
+Delivery) is complete. The product is **READY FOR CLIENT HANDOVER** and runs in
+production on a dedicated VPS (`https://elhabak.com`). See [STATUS.md](STATUS.md) for the full run log and
 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for the canonical product specification.
 
 ## Core Modules
@@ -38,9 +38,9 @@ Authorization is enforced server-side for every role, not just hidden in the UI.
 
 - **Frontend:** Next.js 16 (App Router, Turbopack) + React 19 + TypeScript
 - **Backend:** NestJS 11 + TypeScript, Socket.IO for realtime
-- **Database:** PostgreSQL (Neon) via Prisma ORM
+- **Database:** PostgreSQL 16 via Prisma ORM
 - **Package manager:** pnpm workspaces
-- **Deployment:** Docker images on Railway (`elhabak-web`, `elhabak-api`)
+- **Deployment:** VPS release flow (PM2 + Nginx) via `scripts/deploy/`
 
 ## Monorepo Structure
 
@@ -60,27 +60,29 @@ packages/
 
 ### Prerequisites
 
-- Node.js 22
-- pnpm 11 (`corepack enable` or `npm i -g pnpm@11.7.0`)
-- A PostgreSQL database (Neon or local)
+- Node.js 22 (production runs 22.x; 24.x also works locally)
+- pnpm 11.7.0 (`corepack enable` or `npm i -g pnpm@11.7.0`; pinned by `packageManager`)
+- PostgreSQL 16 (a local instance is enough for development and tests)
 
 ### Install
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
 ### Environment configuration
 
-Copy `.env.example` to `.env` at the repository root and fill in real values.
-**Never commit real secrets** — `.env*` is gitignored except `.env.example`.
+Copy `.env.example` to `.env` at the repository root and fill in real values, and
+`apps/web/.env.example` to `apps/web/.env.local` for the web app's public URLs.
+**Never commit real secrets** — `.env*` is gitignored except the `.env.example` files.
 
 ### Database
 
 ```bash
+pnpm db:validate                                        # validate the Prisma schema
 pnpm db:generate                                        # generate Prisma client
-pnpm --filter @elhabak/database db:migrate:apply         # apply committed migrations
-pnpm db:seed                                             # idempotent demo/MVP seed
+pnpm db:migrate:deploy                                  # apply committed migrations (never `db push`)
+pnpm db:seed                                            # idempotent demo/MVP seed (local only)
 ```
 
 ### Development servers
@@ -99,21 +101,36 @@ pnpm lint             # eslint across the monorepo
 
 ## Tests
 
+The API suite writes real rows, so it refuses to run unless `DATABASE_URL` (and
+`DIRECT_DATABASE_URL`, if set) points at a **loopback** PostgreSQL database named
+`elhabak_test` or `elhabak_test_*`. Create that database, apply migrations to it, and pass
+the URL in the environment (it overrides `.env`):
+
 ```bash
-pnpm test             # runs the NestJS API automated test suite (vitest)
+export DATABASE_URL=postgresql://<user>:<password>@127.0.0.1:5432/elhabak_test
+export DIRECT_DATABASE_URL=$DATABASE_URL
+pnpm db:migrate:deploy
+pnpm test                          # API (vitest) + web (node --test)
+pnpm --filter @elhabak/web test    # web tests only (no database needed)
 ```
 
 ## Deployment
 
-Production runs on Railway as two services, each built from its own Dockerfile at the
-repository root:
+Production runs on a VPS: PostgreSQL 16 on loopback, the API and web as PM2 processes
+(`elhabak-api`, `elhabak-web`) behind Nginx, with file storage on the server under
+`/var/www/elhabak/shared/storage`. Releases are immutable directories under
+`/var/www/elhabak/releases/`, and `/var/www/elhabak/current` points at the active one.
 
-- **`elhabak-web`** — `Dockerfile.web`, Next.js production server
-- **`elhabak-api`** — `Dockerfile.api`, NestJS API with a persistent volume for file storage
+Deploy only through the canonical scripts (key-based SSH):
 
-Database: **Neon PostgreSQL**. File storage (uploads, media, voice notes, generated
-reports) lives on a Railway persistent volume mounted into the API service — no external
-object storage provider is used in V1.
+- `scripts/deploy/package-release.sh` — packages a committed, clean `HEAD` with provenance metadata
+- `scripts/deploy/release-preflight.sh` — environment and build-output guards
+- `scripts/deploy/deploy-release.sh` — install, build, preflight, atomic `current` switch, PM2 restart
+- `scripts/deploy/rollback.sh` — switch back to the previous release
+
+Schema changes ship as committed Prisma migrations applied with `migrate deploy` after a
+verified backup. `/api/health` reports the deployed commit, which must equal `origin/main`
+and the release metadata. `Dockerfile.api`/`Dockerfile.web` remain for container builds.
 
 ## File Storage
 
@@ -141,7 +158,7 @@ Both directions are verified at desktop, tablet, and mobile breakpoints.
 
 - **V1:** 100% complete — Milestone 10 done, READY FOR CLIENT HANDOVER
 - **V5 Product Experience:** 100% complete — all visual/product-experience phases delivered
-- **Production:** Live on Railway (web + API + Neon PostgreSQL)
+- **Production:** Live at `https://elhabak.com` (VPS: PM2 + Nginx + PostgreSQL 16)
 
 ## License
 

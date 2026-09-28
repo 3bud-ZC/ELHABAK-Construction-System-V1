@@ -1,6 +1,15 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException
+} from "@nestjs/common";
 import { parseApiEnv } from "@elhabak/config";
 import type { UserRole } from "@elhabak/database";
+import { passwordPolicyIssue } from "@elhabak/validation";
+import { canonicalGeneratedTemporaryPassword } from "./temporary-password";
 import { PrismaService } from "../../shared/prisma.service";
 import type { RequestUser } from "../../shared/http.types";
 import { compare, hash } from "bcryptjs";
@@ -45,7 +54,19 @@ export class AuthService {
     const normalizedEmail = normalizeEmail(email);
     const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     const passwordHash = user?.passwordHash ?? this.dummyPasswordHash;
-    const passwordOk = await compare(password, passwordHash);
+    let passwordOk = await compare(password, passwordHash);
+
+    // Generated temporary credentials tolerate case/separator/invisible-mark drift from
+    // being relayed over WhatsApp or retyped on a phone (see temporary-password.ts). Only
+    // an input shaped exactly like a generated credential is folded, and only an account
+    // still holding its temporary credential can match it; the second comparison runs
+    // whenever the input has that shape, so timing does not reveal the account state.
+    if (!passwordOk) {
+      const canonical = canonicalGeneratedTemporaryPassword(password);
+      if (canonical !== null && canonical !== password) {
+        passwordOk = (await compare(canonical, passwordHash)) && Boolean(user?.mustChangePassword);
+      }
+    }
 
     if (!user || !user.isActive || user.archivedAt || !user.passwordHash || !passwordOk) {
       throw new UnauthorizedException("Invalid email or password.");
@@ -195,20 +216,50 @@ export class AuthService {
 
   async changePassword(user: RequestUser, sessionId: string | undefined, currentPassword: string, newPassword: string) {
     if (!sessionId) throw new UnauthorizedException("Authentication required.");
-    if (newPassword.length < 10 || newPassword.length > 128) throw new ForbiddenException("Password must be between 10 and 128 characters.");
+    // An Admin viewing as another user holds that user's effective identity but not their
+    // credential; the account owner is the only party allowed to replace it.
+    if (user.impersonation) {
+      throw new ForbiddenException({ code: "PASSWORD_CHANGE_IMPERSONATION", message: "Exit user view before changing a password." });
+    }
+    const policyIssue = passwordPolicyIssue(newPassword);
+    if (policyIssue) {
+      throw new BadRequestException({ code: "PASSWORD_POLICY", reason: policyIssue, message: "New password does not meet the password policy." });
+    }
+
     const account = await this.prisma.user.findUnique({ where: { id: user.id } });
     if (!account?.passwordHash || !(await compare(currentPassword, account.passwordHash))) {
-      throw new UnauthorizedException("Current password is incorrect.");
+      // 400, not 401: the session is valid, only the re-entered secret is wrong. A 401
+      // would read as "session expired" to the client and bounce the user to sign-in.
+      throw new BadRequestException({ code: "CURRENT_PASSWORD_INVALID", message: "Current password is incorrect." });
     }
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: await this.hashPassword(newPassword), mustChangePassword: false }
-    });
-    await this.prisma.authSession.updateMany({
-      where: { userId: user.id, id: { not: sessionId }, revokedAt: null },
-      data: { revokedAt: new Date() }
-    });
-    return { ok: true as const };
+    if (await compare(newPassword, account.passwordHash)) {
+      throw new BadRequestException({ code: "PASSWORD_POLICY", reason: "same_as_current", message: "New password must differ from the current password." });
+    }
+
+    const passwordHash = await this.hashPassword(newPassword);
+    const revokedAt = new Date();
+    const [, revoked] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash, mustChangePassword: false }
+      }),
+      this.prisma.authSession.updateMany({
+        where: {
+          id: { not: sessionId },
+          revokedAt: null,
+          OR: [{ userId: user.id }, { impersonatedUserId: user.id }]
+        },
+        data: { revokedAt }
+      }),
+      this.prisma.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "user.password_changed",
+          metadata: { targetUserId: user.id, wasTemporary: account.mustChangePassword }
+        }
+      })
+    ]);
+    return { ok: true as const, otherSessionsRevoked: revoked.count };
   }
 
   async logout(sessionId: string | undefined): Promise<void> {

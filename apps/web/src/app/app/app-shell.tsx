@@ -188,6 +188,23 @@ export function AppShell({ children }: AppShellProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen]);
 
+  // Phone "typing mode" (shell.css) hides the bottom nav while a page field has focus and
+  // drops the sticky Save bar to the screen edge. Pressing a sticky action would first blur
+  // the field, bring the nav back over the bar and move the button before the press ends,
+  // swallowing the tap. Keeping focus on press holds the layout still so the click lands.
+  useEffect(() => {
+    function keepTypingFocus(event: MouseEvent) {
+      const control = event.target instanceof Element ? event.target.closest("button, a") : null;
+      if (!control?.closest(".form-actions-bar, .project-form-actions, .sticky-actions")) return;
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active.matches("input, textarea, select") && active.closest(".app-main")) {
+        event.preventDefault();
+      }
+    }
+    document.addEventListener("mousedown", keepTypingFocus, true);
+    return () => document.removeEventListener("mousedown", keepTypingFocus, true);
+  }, []);
+
   async function logout() {
     await apiRequest<{ ok: true }>("/auth/logout", { method: "POST", body: "{}" }).catch(
       () => undefined
@@ -246,7 +263,8 @@ export function AppShell({ children }: AppShellProps) {
     .join("")
     .toUpperCase();
 
-  if (user.mustChangePassword) {
+  // Admin "view as" sessions are not the account owner and are not gated (the API agrees).
+  if (user.mustChangePassword && !user.impersonation) {
     return (
       <ForcePasswordChange
         locale={locale}

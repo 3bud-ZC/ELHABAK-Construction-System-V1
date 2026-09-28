@@ -57,7 +57,17 @@ export type ClientRecord = {
   lastProjectActivityAt?: string | null;
   createdAt: string;
   updatedAt: string;
-  generatedCredentials?: { email: string; temporaryPassword: string };
+  generatedCredentials?: ClientCredentials;
+};
+
+/** One-time plaintext credential returned by client create / reset. Never persisted client-side. */
+export type ClientCredentials = { email: string; phone: string | null; temporaryPassword: string };
+
+export type ClientPasswordReset = ClientCredentials & {
+  clientId: string;
+  displayName: string;
+  isActive: boolean;
+  sessionsRevoked: number;
 };
 
 export type ProjectRecord = {
@@ -226,7 +236,10 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:400
 export class ApiError extends Error {
   constructor(
     message: string,
-    readonly status: number
+    readonly status: number,
+    /** Stable server error code (e.g. CURRENT_PASSWORD_INVALID) when the API provides one. */
+    readonly code?: string,
+    readonly reason?: string
   ) {
     super(message);
   }
@@ -274,7 +287,13 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   const response = await fetch(`${apiBaseUrl}${path}`, requestInit);
 
   if (!response.ok) {
-    throw new ApiError(localizedRequestError(response.status), response.status);
+    const payload = safeJson(await response.text().catch(() => ""));
+    throw new ApiError(
+      localizedRequestError(response.status),
+      response.status,
+      typeof payload.code === "string" ? payload.code : undefined,
+      typeof payload.reason === "string" ? payload.reason : undefined
+    );
   }
 
   return (await response.json()) as T;
@@ -311,12 +330,13 @@ function localizedRequestError(status: number) {
   if (status === 401) return ar ? "انتهت جلسة الدخول. سجّل الدخول مرة أخرى." : "Your session has expired. Sign in again.";
   if (status === 403) return ar ? "لا تملك صلاحية تنفيذ هذا الإجراء." : "You are not authorized to perform this action.";
   if (status === 404) return ar ? "تعذر العثور على السجل المطلوب." : "The requested record could not be found.";
+  if (status === 429) return ar ? "محاولات كثيرة خلال وقت قصير. انتظر دقيقة ثم حاول مرة أخرى." : "Too many attempts in a short time. Wait a minute and try again.";
   if (status === 409) return ar ? "تعذر إكمال الإجراء بسبب تعارض في البيانات." : "The action could not be completed because of a data conflict.";
   if (status >= 400 && status < 500) return ar ? "تحقق من البيانات المدخلة وحاول مرة أخرى." : "Check the submitted information and try again.";
   return ar ? "تعذر الاتصال بالخادم. حاول مرة أخرى." : "The server could not be reached. Try again.";
 }
 
-function safeJson(value: string): { message?: unknown } {
+function safeJson(value: string): { message?: unknown; code?: unknown; reason?: unknown } {
   try {
     const parsed = JSON.parse(value) as unknown;
     return typeof parsed === "object" && parsed !== null ? parsed : {};

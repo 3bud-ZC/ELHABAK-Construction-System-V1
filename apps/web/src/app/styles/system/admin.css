@@ -214,39 +214,105 @@
     font-size: var(--fs-label);
   }
 
-  .credential-reveal__fields {
-    display: grid;
-    gap: var(--space-2);
+  .credential-panel__title {
+    color: var(--navy);
+    font-size: var(--fs-body);
+    font-weight: 800;
   }
 
-  .credential-reveal__row {
+  .credential-reveal__warning svg {
+    vertical-align: -2px;
+  }
+
+  .credential-panel__facts {
     display: grid;
-    grid-template-columns: 140px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
+    margin: 0;
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-md);
     background: var(--surface-soft);
   }
 
-  .credential-reveal__label {
+  .credential-panel__facts > div {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .credential-panel__facts > div + div {
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .credential-panel__facts dt {
     color: var(--muted);
     font-size: var(--fs-label);
     font-weight: 700;
   }
 
-  .credential-reveal__value {
+  .credential-panel__facts dd {
+    min-width: 0;
+    margin: 0;
     overflow-wrap: anywhere;
     color: var(--text-strong);
-    font-size: var(--fs-body-sm);
     font-weight: 700;
-    direction: ltr;
-    text-align: end;
   }
 
-  [dir="ltr"] .credential-reveal__value {
-    text-align: start;
+  .credential-panel__secret dd {
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+  }
+
+  .credential-panel__password {
+    display: inline-block;
+    max-width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px dashed var(--orange);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--navy);
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 0.9rem + 0.6vw, 1.25rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+
+  .credential-panel__secret small {
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+  }
+
+  .credential-panel__copy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .credential-panel__copy .ui-button,
+  .credential-reveal__actions .ui-button {
+    min-height: 44px;
+  }
+
+  .client-credential-state__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .client-credential-state__row .ui-badge {
+    gap: 6px;
+  }
+
+  .reset-password-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
 
   .credential-reveal__actions {
@@ -404,12 +470,15 @@
       font-size: var(--fs-body);
     }
 
-    .credential-reveal__row {
-      grid-template-columns: minmax(0, 1fr) auto;
+    .credential-panel__facts > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
     }
 
-    .credential-reveal__label {
-      grid-column: 1 / -1;
+    .credential-panel__copy .ui-button,
+    .credential-reveal__actions .ui-button {
+      flex: 1 1 100%;
+      justify-content: center;
     }
 
     .overview-header {

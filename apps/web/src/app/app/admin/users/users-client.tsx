@@ -5,6 +5,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdaptiveFilters, Badge, EmptyState, LoadingState, OperationsGrid, OperationsHeader, OperationsMetric, OperationsPanel, OperationsSurface, PageHeader, Register, RegisterCell, RegisterRow, type FilterChip } from "@elhabak/ui";
 import {
   Archive,
+  Check,
+  Copy,
   Download,
   KeyRound,
   LogIn,
@@ -124,7 +126,9 @@ export function UsersClient({ mode, id }: UsersClientProps) {
     setOpenMenu(null);
     setError(null);
     setConfirmationText("");
-    setTemporaryPassword("");
+    // Reset starts from a generated, visible value: a blind typed password is how an Admin
+    // ends up handing out a credential that differs from what was actually saved.
+    setTemporaryPassword(kind === "reset" ? generateTemporaryPassword() : "");
     if (kind === "delete") {
       setActionBusy(true);
       try {
@@ -332,9 +336,30 @@ function ActionDialog(props: { pending: PendingAction; labels: ReturnType<typeof
     <p>{dialogDescription(pending, props.ar)}</p>
     {pending.kind === "delete" && pending.impact && !pending.impact.canPermanentlyDelete ? <div className="deletion-impact"><strong>{labels.linkedHistory}</strong><ul>{pending.impact.linkedRecords.map((item) => <li key={item.relation}>{relationLabel(item.relation, props.ar)}: {item.count}</li>)}</ul><span>{labels.archiveInstead}</span></div> : null}
     {permanent ? <label className="ui-field"><span>{labels.typeEmail} <strong>{pending.user.email}</strong></span><input value={props.confirmationText} onChange={(event) => props.onConfirmationText(event.target.value)} autoComplete="off" /></label> : null}
-    {pending.kind === "reset" ? <label className="ui-field"><span>{labels.newTemporaryPassword}</span><input type="password" minLength={10} value={props.temporaryPassword} onChange={(event) => props.onTemporaryPassword(event.target.value)} autoComplete="new-password" /><small>{labels.passwordRequirement}</small></label> : null}
+    {pending.kind === "reset" ? <ResetPasswordField ar={props.ar} label={labels.newTemporaryPassword} hint={labels.passwordRequirement} value={props.temporaryPassword} onChange={props.onTemporaryPassword} /> : null}
     <div className="account-dialog__actions"><button className="ui-button ui-button--secondary" type="button" onClick={props.onClose}>{labels.cancel}</button><button className={pending.kind === "impersonate" || pending.kind === "activate" || pending.kind === "restore" ? "ui-button ui-button--primary" : "ui-button account-dialog__danger"} type="button" disabled={disabled} onClick={props.onConfirm}>{busy ? labels.processing : dialogConfirm(pending, props.ar)}</button></div>
   </div></div>;
+}
+
+function ResetPasswordField({ ar, label, hint, value, onChange }: { ar: boolean; label: string; hint: string; value: string; onChange: (value: string) => void }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopied(false);
+    }
+  }
+  return <label className="ui-field"><span>{label}</span>
+    <input className="mono" type="text" dir="ltr" minLength={10} value={value} onChange={(event) => { setCopied(false); onChange(event.target.value); }} autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+    <span className="reset-password-tools">
+      <button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={() => { setCopied(false); onChange(generateTemporaryPassword()); }}><KeyRound size={14} /> {ar ? "توليد جديد" : "Regenerate"}</button>
+      <button type="button" className="ui-button ui-button--secondary ui-button--sm" onClick={() => void copy()}>{copied ? <Check size={14} /> : <Copy size={14} />} {copied ? (ar ? "تم النسخ" : "Copied") : (ar ? "نسخ" : "Copy")}</button>
+    </span>
+    <small>{hint} {ar ? "انسخ كلمة المرور قبل التأكيد؛ لن تظهر مرة أخرى." : "Copy it before confirming; it will not be shown again."}</small>
+  </label>;
 }
 
 function statusOf(user: UserRecord): AccountStatus {

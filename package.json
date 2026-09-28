@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm --parallel --filter @elhabak/web --filter @elhabak/api dev",
     "build": "pnpm -r --sort build",
-    "lint": "eslint .",
+    "lint": "pnpm -r --filter \"./packages/*\" build && eslint .",
     "typecheck": "pnpm -r --filter \"./packages/*\" build && pnpm -r --sort typecheck",
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @elhabak/database db:generate",

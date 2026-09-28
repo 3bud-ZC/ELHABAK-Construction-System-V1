@@ -1,36 +1,17 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { KeyRound, ShieldCheck, UserRound } from "lucide-react";
 import { OperationsHeader } from "@elhabak/ui";
-import { apiRequest, roleLabel } from "../../../lib/api";
+import { roleLabel } from "../../../lib/api";
 import { useCurrentUser } from "../../../lib/user-context";
+import { PasswordChangeForm } from "../password-change-form";
 
 export function SettingsClient() {
   const user = useCurrentUser();
   const searchParams = useSearchParams();
   const locale = searchParams.get("lang") === "en" ? "en" : "ar";
   const ar = locale === "ar";
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(null); setMessage(null);
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const currentPassword = formValue(data, "currentPassword");
-    const newPassword = formValue(data, "newPassword");
-    const confirmation = formValue(data, "confirmation");
-    if (newPassword !== confirmation) { setError(ar ? "كلمتا المرور غير متطابقتين." : "Passwords do not match."); setBusy(false); return; }
-    try {
-      await apiRequest("/auth/password/change", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) });
-      form.reset(); setMessage(ar ? "تم تغيير كلمة المرور وإلغاء الجلسات الأخرى." : "Password changed and other sessions revoked.");
-    } catch (err) { setError(err instanceof Error ? err.message : "Request failed."); }
-    finally { setBusy(false); }
-  }
-
   return <section className="app-page settings-page">
     <OperationsHeader
       eyebrow={ar ? "الحساب" : "Account"}
@@ -71,20 +52,8 @@ export function SettingsClient() {
             <p>{ar ? "تغيير كلمة المرور يلغي جميع الجلسات الأخرى على الأجهزة الأخرى." : "Changing your password signs out every other session."}</p>
           </div>
         </header>
-        <form className="settings-password__form" onSubmit={(event) => void submit(event)}>
-          <label className="ui-field"><span>{ar ? "كلمة المرور الحالية" : "Current password"}</span><input name="currentPassword" type="password" required autoComplete="current-password" /></label>
-          <label className="ui-field"><span>{ar ? "كلمة المرور الجديدة" : "New password"}</span><input name="newPassword" type="password" required minLength={10} autoComplete="new-password" aria-describedby="settings-password-rule" /><small id="settings-password-rule">{ar ? "10 أحرف على الأقل." : "At least 10 characters."}</small></label>
-          <label className="ui-field"><span>{ar ? "تأكيد كلمة المرور" : "Confirm password"}</span><input name="confirmation" type="password" required minLength={10} autoComplete="new-password" /></label>
-          {error && <p className="form-error" role="alert">{error}</p>}
-          {message && <p className="form-success" role="status">{message}</p>}
-          <footer className="settings-password__actions"><button className="ui-button ui-button--primary" disabled={busy} type="submit"><KeyRound size={18} />{busy ? (ar ? "جاري الحفظ..." : "Saving...") : (ar ? "حفظ كلمة المرور" : "Save password")}</button></footer>
-        </form>
+        <PasswordChangeForm locale={locale} variant="settings" />
       </section>
     </div>
   </section>;
-}
-
-function formValue(data: FormData, key: string) {
-  const value = data.get(key);
-  return typeof value === "string" ? value : "";
 }

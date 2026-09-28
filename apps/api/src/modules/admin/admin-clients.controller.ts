@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Header, HttpCode, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { Roles } from "../auth/roles.decorator";
@@ -22,7 +22,9 @@ export class AdminClientsController {
     return this.clientsService.get(id);
   }
 
+  // Responses carrying a one-time plaintext credential must never be cached.
   @Post()
+  @Header("Cache-Control", "no-store")
   create(@CurrentUser() user: RequestUser, @Body() body: unknown) {
     return this.clientsService.create(user.id, body);
   }
@@ -30,5 +32,12 @@ export class AdminClientsController {
   @Patch(":id")
   update(@CurrentUser() user: RequestUser, @Param("id") id: string, @Body() body: unknown) {
     return this.clientsService.update(user.id, id, body);
+  }
+
+  @Post(":id/reset-password")
+  @HttpCode(200)
+  @Header("Cache-Control", "no-store")
+  resetPassword(@CurrentUser() user: RequestUser, @Param("id") id: string) {
+    return this.clientsService.resetPassword(user.id, id);
   }
 }

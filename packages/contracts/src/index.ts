@@ -29,11 +29,12 @@ export type ContactChannels = typeof companyContact;
  * number is realistically encountered in: "(+20) 011 306 667 26", "+20 113 066 6726",
  * "011 306 667 26", "00201130666726", or a bare national number. Returns null for empty,
  * implausible, or non-Egyptian input - this is deliberately scoped to EG because the only
- * numbers this product publishes are Egyptian.
+ * numbers this product publishes or stores for clients are Egyptian. Arabic-Indic digits
+ * and the invisible bidi marks an RTL clipboard embeds are folded away first.
  */
 export function normalizePhoneToE164(input: string | null | undefined): string | null {
   if (!input) return null;
-  const trimmed = input.trim();
+  const trimmed = toLatinPhoneText(input).trim();
   if (!trimmed) return null;
 
   const hadPlus = trimmed.startsWith("+");
@@ -65,6 +66,45 @@ export function normalizePhoneToE164(input: string | null | undefined): string |
     return null;
   }
   return `+${national}`;
+}
+
+const EGYPTIAN_MOBILE_E164 = /^\+201[0125]\d{8}$/;
+const PHONE_TEXT_ALLOWED = /^[\d\s+\-().]+$/;
+
+/**
+ * Canonical client mobile number: E.164 "+201XXXXXXXXX" for the Egyptian mobile ranges
+ * (010, 011, 012, 015), accepting every everyday spelling - "01130666726", "+20 11 3066
+ * 6726", "00201130666726", "011 3066 6726", Arabic-Indic digits. Anything containing
+ * letters or other symbols, landlines, and foreign numbers return null so the caller
+ * can reject the input instead of silently storing a malformed number. This is the single
+ * normalizer shared by the client forms (web + API validation) and the client temporary
+ * password generator.
+ */
+export function normalizeEgyptianMobile(input: string | null | undefined): string | null {
+  if (!input) return null;
+  const text = toLatinPhoneText(input).trim();
+  if (!text || !PHONE_TEXT_ALLOWED.test(text)) return null;
+  const e164 = normalizePhoneToE164(text);
+  return e164 && EGYPTIAN_MOBILE_E164.test(e164) ? e164 : null;
+}
+
+/** Folds Arabic-Indic / Extended Arabic-Indic digits to ASCII and drops bidi/zero-width marks. */
+function toLatinPhoneText(value: string): string {
+  let out = "";
+  for (const ch of value) {
+    const code = ch.codePointAt(0) as number;
+    if (code >= 0x0660 && code <= 0x0669) out += String(code - 0x0660);
+    else if (code >= 0x06f0 && code <= 0x06f9) out += String(code - 0x06f0);
+    else if (
+      (code >= 0x200b && code <= 0x200f) ||
+      (code >= 0x202a && code <= 0x202e) ||
+      (code >= 0x2066 && code <= 0x2069) ||
+      code === 0xfeff ||
+      code === 0x061c
+    ) continue;
+    else out += ch;
+  }
+  return out;
 }
 
 /** `tel:` URI for the contact's canonical E.164 number. */

@@ -174,6 +174,12 @@ describe("Final pass - finance control, reports, client lifecycle, data ops", ()
 
   it("aggregates canonical persisted totals across ALL projects", async () => {
     const server = app.getHttpServer();
+    // ALL scope includes every project in the database (e.g. a seeded demo project), so
+    // combined totals are asserted as an exact minor-unit delta over this baseline.
+    const baseline = await request(server).get("/finance/portfolio").set("Cookie", accountantCookie).expect(200);
+    const minor = (value: string) => BigInt(value.replace(".", ""));
+    const baselinePayments = minor(baseline.body.totals.clientPaymentsTotal as string);
+    const baselineContract = minor(baseline.body.totals.contractValue as string);
     await request(server)
       .patch(`/projects/${projectA}/finance/contract`)
       .set("Cookie", adminCookie)
@@ -243,8 +249,8 @@ describe("Final pass - finance control, reports, client lifecycle, data ops", ()
     expect(rowA.summary.costVsContractPercent).toBe(12.5);
 
     // Combined totals = exact minor-unit sum across scope.
-    expect(portfolio.body.totals.clientPaymentsTotal).toBe("350000.00");
-    expect(portfolio.body.totals.contractValue).toBe("1500000.00");
+    expect(minor(portfolio.body.totals.clientPaymentsTotal as string) - baselinePayments).toBe(35_000_000n);
+    expect(minor(portfolio.body.totals.contractValue as string) - baselineContract).toBe(150_000_000n);
   });
 
   it("supports ONE and SELECTED scopes plus not-found protection", async () => {
@@ -395,7 +401,7 @@ describe("Final pass - finance control, reports, client lifecycle, data ops", ()
     const created = await request(server)
       .post("/admin/clients")
       .set("Cookie", adminCookie)
-      .send({ displayName: "FP Portal Client" })
+      .send({ displayName: "FP Portal Client", phone: "01112223344" })
       .expect(201);
     expect(created.body.generatedCredentials.email).toMatch(/^fp\.portal\.client(\.\d+)?@elhabak\.com$/);
     const tempPassword = created.body.generatedCredentials.temporaryPassword;
@@ -413,7 +419,7 @@ describe("Final pass - finance control, reports, client lifecycle, data ops", ()
     const second = await request(server)
       .post("/admin/clients")
       .set("Cookie", adminCookie)
-      .send({ displayName: "FP Portal Client" })
+      .send({ displayName: "FP Portal Client", phone: "01112223344" })
       .expect(201);
     expect(second.body.generatedCredentials.email).not.toBe(created.body.generatedCredentials.email);
 
