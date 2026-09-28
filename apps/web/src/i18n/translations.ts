@@ -49,7 +49,7 @@ export const dictionary = {
       aboutEyebrow: "عن الحباك",
       aboutTitle: "شريكك الهندسي من الفكرة إلى الواقع",
       aboutLead:
-        "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) تقدم خدمات التصميم والتنفيذ والتشطيب بإدارة احترافية، نلتزم بالجودة والشفافية، ونبني شراكات طويلة الأمد مع عملائنا.",
+        "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) هي شركة مصرية تقدم خدمات المقاولات والاستشارات الهندسية، وتشمل التصميم المعماري والهندسي، إدارة والإشراف على المشروعات، أعمال التنفيذ والتشطيبات، ومتابعة دورة المشروع من مراحل التصميم وحتى التنفيذ والتسليم.",
       aboutCta: "استعرض خدماتنا",
       aboutBadgeTitle: "هندسة تبني مجتمعات أفضل",
       aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
@@ -105,9 +105,21 @@ export const dictionary = {
       footerText: "الحباك للمقاولات والاستشارات الهندسية",
       footerTagline: "نبني اليوم ... لمستقبل أفضل",
       footerNav: "أقسام الموقع",
-      footerRights: "جميع الحقوق محفوظة © 2026 الحباك للمقاولات والاستشارات الهندسية"
+      footerRights: "جميع الحقوق محفوظة © 2026 الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction)"
     },
     faq: [
+      [
+        "ما هي شركة ELHABAK Construction؟",
+        "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) هي شركة مصرية تقدم خدمات المقاولات والاستشارات الهندسية، وتشمل التصميم المعماري والهندسي، إدارة والإشراف على المشروعات، أعمال التنفيذ والتشطيبات، ومتابعة دورة المشروع من مراحل التصميم وحتى التنفيذ والتسليم."
+      ],
+      [
+        "ما الخدمات التي تقدمها الحباك للمقاولات والاستشارات الهندسية؟",
+        "تشمل خدماتنا التصميم المعماري والهندسي، الاستشارات الهندسية، إدارة المشروعات والإشراف على التنفيذ، أعمال المقاولات العامة والتشطيبات، بالإضافة إلى منصة رقمية لمتابعة المشروع."
+      ],
+      [
+        "كيف أتواصل مع ELHABAK Construction؟",
+        "يمكنك التواصل معنا هاتفياً عبر الرقم 01130666726، أو عبر واتساب على الرقم 201130666726، أو عبر البريد الإلكتروني elhabakconstruction.eg@gmail.com."
+      ],
       [
         "هل يمكن طلب معاينة قبل التعاقد؟",
         "نعم، نوفر جلسة معاينة أولية للموقع لفحص طبيعة المكان ومطابقة الأبعاد وتحديد الاحتياجات الفنية بدقة قبل اعتماد نطاق العمل."
@@ -123,24 +135,24 @@ export const dictionary = {
     ],
     services: [
       [
-        "التصميم",
-        "تصميم معماري وإنشائي تفصيلي يحول الرؤية إلى مخططات تنفيذية معتمدة ومطابقة للكود."
+        "التصميم المعماري والهندسي",
+        "تصميم معماري وإنشائي تفصيلي يحول الرؤية إلى مخططات تنفيذية معتمدة ومطابقة للكود الهندسي."
       ],
       [
-        "التنفيذ الإنشائي",
-        "تنفيذ الأعمال الإنشائية والخرسانية بإشراف هندسي صارم ومطابقة دقيقة للمواصفات الفنية."
+        "الاستشارات الهندسية",
+        "استشارات هندسية متخصصة ومراجعة فنية للمخططات وتنسيق الدراسات الهندسية ودعم اتخاذ القرار."
+      ],
+      [
+        "إدارة المشروعات والإشراف",
+        "إدارة المشروعات والإشراف الهندسي الميداني ومطابقة المواصفات وضبط الجداول الزمنية ومراحل التسليم."
+      ],
+      [
+        "المقاولات العامة والتنفيذ",
+        "تنفيذ أعمال البناء والخرسانات والمقاولات العامة بمسؤولية هندسية موحدة من الاستلام حتى التسليم."
       ],
       [
         "التشطيبات المعمارية",
         "تشطيبات داخلية وخارجية راقية بأعلى معايير الجودة واعتماد دقيق للعينات والمواد."
-      ],
-      [
-        "المقاولات العامة",
-        "إدارة وتنفيذ شامل لكافة بنود المقاولات والتنسيق الميداني المتكامل حتى التسليم."
-      ],
-      [
-        "التأثيث والفرش",
-        "حلول تأثيث وتصميم داخلي متكاملة تتناغم مع المساحة والوظيفة والطابع المعماري."
       ]
     ],
     process: [
@@ -182,7 +194,7 @@ export const dictionary = {
       heroTag: "Engineering That Makes a Difference",
       heroTitle: "ELHABAK Construction",
       heroSubtitle:
-        "Design, construction, and finishing for residential and commercial projects with integrated engineering management and precise digital follow-up from inspection to handover.",
+        "ELHABAK Construction (الحباك للمقاولات والاستشارات الهندسية) — design, construction, and finishing for residential and commercial projects with integrated engineering management and precise digital follow-up from inspection to handover.",
       primaryCta: "Start Your Project",
       requestInspection: "Request Inspection",
       secondaryCta: "Explore Our Services",
@@ -207,7 +219,7 @@ export const dictionary = {
       aboutEyebrow: "About ELHABAK",
       aboutTitle: "Your Engineering Partner from Idea to Reality",
       aboutLead:
-        "ELHABAK Construction (الحباك للمقاولات والاستشارات الهندسية) delivers design, execution, and finishing with professional management, committing to quality, transparency, and long-term client partnerships.",
+        "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing architectural and engineering design, project management and supervision, construction and finishing services, with project delivery support from design through execution and handover.",
       aboutCta: "Explore Our Services",
       aboutBadgeTitle: "Engineering Stronger Communities",
       aboutBadgeSubtitle: "ENGINEERING STRONGER COMMUNITIES",
@@ -267,6 +279,18 @@ export const dictionary = {
     },
     faq: [
       [
+        "What is ELHABAK Construction?",
+        "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing architectural and engineering design, project management and supervision, construction and finishing services, with project delivery support from design through execution and handover."
+      ],
+      [
+        "What services does ELHABAK Construction provide?",
+        "Our services encompass architectural and engineering design, engineering consultancy, construction management and site supervision, contracting and finishing works, supported by our project tracking platform."
+      ],
+      [
+        "How can I contact ELHABAK Construction?",
+        "You can reach us by phone at 01130666726, via WhatsApp at 201130666726, or by email at elhabakconstruction.eg@gmail.com."
+      ],
+      [
         "Can we request a site inspection before contracting?",
         "Yes, we provide an initial site visit to assess location conditions, verify dimensions, and identify technical requirements before finalizing scope."
       ],
@@ -281,24 +305,24 @@ export const dictionary = {
     ],
     services: [
       [
-        "Design",
+        "Architectural & Engineering Design",
         "Detailed architectural and engineering drawings that turn vision into buildable, approved specifications."
       ],
       [
-        "Construction",
-        "Structural and reinforced concrete execution under rigorous engineering supervision and code compliance."
+        "Engineering Consultancy",
+        "Specialized engineering consultancy, technical reviews, drawings coordination, and project feasibility support."
       ],
       [
-        "Finishing",
+        "Project Management & Supervision",
+        "Comprehensive project management, site supervision, schedule discipline, and quality control from inspection to handover."
+      ],
+      [
+        "Contracting & Construction",
+        "Structural execution and general contracting delivered under direct engineering management and rigorous code compliance."
+      ],
+      [
+        "Finishing Works",
         "Premium interior and exterior architectural finishing with sample approvals and exacting quality control."
-      ],
-      [
-        "General Contracting",
-        "Coordinated contracting execution across all civil, MEP, and site trades until final closeout."
-      ],
-      [
-        "Furniture & Fit-Out",
-        "Tailored furnishing and interior fit-out harmonized with spatial flow, function, and aesthetics."
       ]
     ],
     process: [

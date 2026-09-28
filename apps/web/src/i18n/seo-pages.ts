@@ -596,86 +596,183 @@ export const seoPages: Record<SeoPageKey, Record<Locale, SeoContent>> = {
   about: {
     ar: {
       meta: {
-        title: "من نحن | الحباك للمقاولات والاستشارات الهندسية",
+        title: "من نحن | ELHABAK Construction — الحباك للمقاولات والاستشارات الهندسية",
         description:
-          "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) في سوهاج: تصميم وتنفيذ وإشراف بإدارة هندسية واحدة، وفلسفة تحكم واضحة مدعومة بمنصة متابعة رقمية للعميل.",
-        keywords: ["الحباك للمقاولات والاستشارات الهندسية", "الحباك للمقاولات", "شركة مقاولات سوهاج", "مكتب هندسي سوهاج"]
+          "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) هي شركة مصرية تقدم خدمات المقاولات والاستشارات الهندسية، وتشمل التصميم المعماري والهندسي، إدارة والإشراف على المشروعات، أعمال التنفيذ والتشطيبات، ومتابعة دورة المشروع من مراحل التصميم وحتى التنفيذ والتسليم.",
+        keywords: [
+          "الحباك للمقاولات والاستشارات الهندسية",
+          "ELHABAK Construction",
+          "من نحن الحباك",
+          "شركة مقاولات مصر",
+          "استشارات هندسية سوهاج",
+          "تصميم معماري وإشراف"
+        ]
       },
-      eyebrow: "عن الحباك",
-      title: "شركة مقاولات واستشارات هندسية تجمع التصميم والتنفيذ والمتابعة في مسؤولية واحدة",
-      lead: "الحباك للمقاولات والاستشارات الهندسية شركة مقرها سوهاج تعمل على المشروعات السكنية والتجارية — من المعاينة والتصميم إلى التنفيذ والتسليم.",
-      image: { src: "/marketing/about-building.webp", alt: "مبنى من مشاريع الحباك للمقاولات والاستشارات الهندسية" },
+      eyebrow: "عن الشركة",
+      title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
+      lead:
+        "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) هي شركة مصرية تقدم خدمات المقاولات والاستشارات الهندسية، وتشمل التصميم المعماري والهندسي، إدارة والإشراف على المشروعات، أعمال التنفيذ والتشطيبات، ومتابعة دورة المشروع من مراحل التصميم وحتى التنفيذ والتسليم.",
+      image: { src: "/marketing/about-building.webp", alt: "مبنى من مشروعات شركة الحباك للمقاولات والاستشارات الهندسية" },
       sections: [
         {
-          heading: "من نحن",
+          heading: "ما هي شركة ELHABAK Construction؟ (من نحن)",
           paragraphs: [
-            "الحباك شركة مقاولات واستشارات هندسية تقدم الاستشارة والتصميم المعماري والتنفيذ والإشراف وإدارة المشاريع. نعمل على المباني السكنية والتجارية والتشطيبات والمقاولات العامة والتأثيث.",
-            "مقرنا في سوهاج ونخدم عملاءنا بفريق يجمع بين المعرفة التصميمية والخبرة الميدانية — فالمهندس الذي يرسم المخطط هو من يتابع تنفيذه."
+            "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) هي شركة مصرية متخصصة تقدم حلولاً هندسية متكاملة في مجالات المقاولات العامة والاستشارات الهندسية والتصميم المعماري والإشراف على التنفيذ. تأسست الشركة لتقديم نموذج عمل هندسي موحد يربط الفكرة المعمارية والدراسات الإنشائية بالتنفيذ الميداني الفعلي، مما يضمن أعلى معايير الجودة والسلامة الإنشائية والالتزام بالجداول الزمنية والميزانيات المعتمدة.",
+            "يقع المقر الرئيسي للشركة في محافظة سوهاج بجمهورية مصر العربية، وتخدم عملاءها في المشروعات السكنية والتجارية والاستثمارية. يرتكز عملنا على إدارة هندسية متخصصة تشرف على دورة حياة المشروع كاملة، من أول معاينة للموقع وحتى التسليم النهائي، مدعومة بمنظومة رقمية متطورة تتيح المتابعة الشفافة واللحظية لكافة بنود الأعمال."
           ]
         },
         {
-          heading: "فلسفتنا في التحكم بالمشروع",
-          bullets: [
-            "قرار واحد مسؤول: لا تناقض بين التصميم والتنفيذ لأنهما في يد فريق واحد",
-            "توثيق قبل التنفيذ: المقايسات والمخططات والاعتمادات تسبق العمل الميداني",
-            "متابعة يومية: الموقع يُوثق بالصور والتقارير لا بالانطباعات",
-            "شفافية للعميل: كل مرحلة مرئية عبر منصة المتابعة الرقمية"
+          heading: "الملف التعريفي والبيانات الأساسية للشركة",
+          lead: "بيانات الهوية الرسمية لشركة الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction):",
+          facts: [
+            { label: "الاسم التجاري", value: "الحباك للمقاولات والاستشارات الهندسية" },
+            { label: "الاسم بالإنجليزية", value: "ELHABAK Construction", isLtr: true },
+            { label: "الموقع الرسمي", value: "elhabak.com", isLtr: true, href: "https://elhabak.com/" },
+            { label: "الدولة", value: "مصر" },
+            { label: "مجال العمل", value: "المقاولات والاستشارات الهندسية" },
+            { label: "الهاتف الرسمي", value: "01130666726", isLtr: true, href: "tel:+201130666726" },
+            { label: "واتساب", value: "201130666726", isLtr: true, href: "https://wa.me/201130666726" },
+            { label: "البريد الإلكتروني", value: "elhabakconstruction.eg@gmail.com", isLtr: true, href: "mailto:elhabakconstruction.eg@gmail.com" },
+            { label: "المقر الرئيسي", value: "أب تاون مول، مدينة سوهاج الجديدة، سوهاج" }
           ]
         },
         {
-          heading: "الميزة الرقمية",
-          paragraphs: [
-            "بنينا نظام متابعة داخلياً لأن تجربة العميل التقليدية — مكالمات وصور واتساب وتقارير متأخرة — لا تليق بمشروع يكلّف ملايين. اليوم يتابع عميل الحباك مشروعه من هاتفه: التقدم، الصور، التصاميم، المستندات، والمحادثات في مكان واحد."
+          heading: "نطاق الخدمات والمسؤولية الهندسية",
+          lead: "تغطي خدمات الحباك كافة مراحل المشروع الهندسي تحت مسؤولية وإشراف فريق عمل واحد:",
+          cards: [
+            { title: "التصميم المعماري والهندسي", text: "إعداد المخططات المعمارية والإنشائية والكهروميكانيكية المتكاملة والمطابقة للأكواد الهندسية.", href: "/architectural-design" },
+            { title: "الاستشارات الهندسية", text: "تقديم الدراسات الفنية، مراجعة واعتماد المخططات، وتقديم الدعم الهندسي لاتخاذ القرارات السليمة.", href: "/engineering-consultancy" },
+            { title: "إدارة المشروعات", text: "إدارة شاملة لدورة المشروع، وضبط الجدول الزمني والتكاليف وتنسيق الموارد من البداية وحتى التسليم.", href: "/project-management" },
+            { title: "الإشراف على التنفيذ", text: "إشراف هندسي ميداني يومي ومطابقة دقيقة لمواصفات البناء وجودة المواد المعتمدة.", href: "/site-supervision" },
+            { title: "المقاولات العامة والتنفيذ", text: "تنفيذ الأعمال الإنشائية والخرسانية وأعمال البناء المتكاملة بأعلى درجات الكفاءة.", href: "/construction-management" },
+            { title: "أعمال التشطيبات", text: "تنفيذ التشطيبات المعمارية الداخلية والخارجية الراقية باعتماد العينات والمواد القياسية.", href: "/services" }
+          ]
+        },
+        {
+          heading: "دورة تسليم المشروع (من المعاينة حتى التسليم)",
+          lead: "منهجية العمل المعتمدة في شركة الحباك لضمان أعلى درجات الانضباط والجودة:",
+          steps: [
+            { title: "المعاينة الميدانية", text: "زيارة موقع المشروع وفحص طبيعة الأرض ومطابقة الأبعاد وتحديد المتطلبات الفنية بدقة." },
+            { title: "التصميم والدراسات", text: "إعداد المخططات الهندسية التفصيلية المعمارية والإنشائية واعتماد كافة الرؤى التصميمية." },
+            { title: "المقايسة ودراسة التكاليف", text: "إعداد جداول الكميات (BOQ) ودراسة المواصفات والتكاليف بشفافية تامة." },
+            { title: "التنفيذ الميداني", text: "بدء الأعمال الإنشائية في الموقع تحت إشراف هندسي مستمر وتوثيق يومي لكافة المراحل." },
+            { title: "التسليم الابتدائي", text: "فحص شامل لكافة بنود الأعمال المنفذة ومطابقتها للمواصفات ومعالجة أي ملاحظات فنية." },
+            { title: "التسليم النهائي", text: "اعتماد المشروع نهائياً وتسليم كافة الوثائق الهندسية والمستندات والضمانات للمالك." }
+          ]
+        },
+        {
+          heading: "الأسئلة الشائعة حول شركة الحباك",
+          cards: [
+            {
+              title: "ما هي شركة ELHABAK Construction؟",
+              text: "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) هي شركة مصرية تقدم خدمات المقاولات والاستشارات الهندسية، وتشمل التصميم المعماري والهندسي، إدارة والإشراف على المشروعات، أعمال التنفيذ والتشطيبات، ومتابعة دورة المشروع من مراحل التصميم وحتى التنفيذ والتسليم."
+            },
+            {
+              title: "ما الخدمات التي تقدمها الحباك للمقاولات والاستشارات الهندسية؟",
+              text: "تشمل خدماتنا التصميم المعماري والهندسي، الاستشارات الهندسية، إدارة المشروعات والإشراف على التنفيذ، أعمال المقاولات العامة والتشطيبات، بالإضافة إلى منصة رقمية لمتابعة المشروع."
+            },
+            {
+              title: "كيف أتواصل مع ELHABAK Construction؟",
+              text: "يمكنك التواصل معنا هاتفياً عبر الرقم 01130666726، أو عبر واتساب على الرقم 201130666726، أو عبر البريد الإلكتروني elhabakconstruction.eg@gmail.com."
+            }
           ]
         }
       ],
-      linksTitle: "تابع",
+      linksTitle: "روابط سريعة",
       links: [
-        { href: "/services", label: "خدماتنا", text: "نطاق العمل الكامل" },
-        { href: "/platform", label: "المنصة", text: "نظام المتابعة الذي نعمل به" },
-        { href: "/contact", label: "تواصل معنا", text: "ابدأ الحديث عن مشروعك" }
+        { href: "/services", label: "خدماتنا", text: "استعرض نطاق العمل الكامل" },
+        { href: "/platform", label: "منصة المشاريع", text: "نظام المتابعة الرقمي لمشروعك" },
+        { href: "/contact", label: "تواصل معنا", text: "تحدث مع فريقنا الهندسي" }
       ]
     },
     en: {
       meta: {
-        title: "About Us | ELHABAK Construction",
+        title: "About Us | ELHABAK Construction — Contracting & Engineering Consultancy",
         description:
-          "ELHABAK Construction (الحباك للمقاولات والاستشارات الهندسية) in Sohag, Egypt: design, execution, and supervision under one accountable engineering management, backed by a digital client tracking platform.",
-        keywords: ["ELHABAK Construction", "construction company Egypt", "engineering consultancy Sohag"]
+          "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing architectural and engineering design, project management and supervision, construction and finishing services, with project delivery support from design through execution and handover.",
+        keywords: [
+          "ELHABAK Construction",
+          "contracting company Egypt",
+          "engineering consultancy Sohag",
+          "about ELHABAK",
+          "architectural design Egypt"
+        ]
       },
       eyebrow: "About ELHABAK",
-      title: "A Construction & Engineering Company Holding Design, Execution, and Follow-up in One Responsibility",
-      lead: "ELHABAK Construction is a Sohag-based company working on residential and commercial projects — from site inspection and design to execution and handover.",
-      image: { src: "/marketing/about-building.webp", alt: "A building delivered by ELHABAK Construction" },
+      title: "ELHABAK Construction | Contracting & Engineering Consultancy",
+      lead:
+        "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing architectural and engineering design, project management and supervision, construction and finishing services, with project delivery support from design through execution and handover.",
+      image: { src: "/marketing/about-building.webp", alt: "A building project delivered by ELHABAK Construction" },
       sections: [
         {
-          heading: "Who We Are",
+          heading: "What is ELHABAK Construction? (Who We Are)",
           paragraphs: [
-            "ELHABAK Construction is a construction and engineering company delivering consultancy, architectural design, execution, supervision, and project management. We work on residential and commercial buildings, finishing, general contracting, and furnishing.",
-            "We are based in Sohag and serve clients with a team that combines design knowledge and field experience — the engineer who draws the plan is the one who follows its execution."
+            "ELHABAK Construction (الحباك للمقاولات والاستشارات الهندسية) is an Egyptian contracting and engineering consultancy firm specializing in integrated architectural and engineering design, project management, site supervision, and turnkey construction. The company was established to provide a unified engineering delivery model that connects architectural concepts and structural engineering directly with field execution, ensuring uncompromising build quality, structural integrity, and schedule adherence.",
+            "Headquartered in Sohag, Egypt, the company serves residential, commercial, and investment projects. Our engineering management oversees the complete project lifecycle from initial site inspection and preliminary estimation through full handover, supported by a dedicated digital platform providing clients with transparent, verified progress tracking."
           ]
         },
         {
-          heading: "Our Project Control Philosophy",
-          bullets: [
-            "One accountable decision-maker: no design-versus-execution contradiction under one team",
-            "Documentation before execution: estimates, drawings, and approvals precede site work",
-            "Daily follow-up: the site is documented with photos and reports, not impressions",
-            "Client transparency: every stage is visible through the digital tracking platform"
+          heading: "Company Profile & Identity Facts",
+          lead: "Official entity details for ELHABAK Construction (الحباك للمقاولات والاستشارات الهندسية):",
+          facts: [
+            { label: "Trade Name", value: "ELHABAK Construction", isLtr: true },
+            { label: "Arabic Name", value: "الحباك للمقاولات والاستشارات الهندسية" },
+            { label: "Official Website", value: "elhabak.com", isLtr: true, href: "https://elhabak.com/" },
+            { label: "Country", value: "Egypt" },
+            { label: "Industry", value: "Contracting & Engineering Consultancy" },
+            { label: "Official Phone", value: "01130666726", isLtr: true, href: "tel:+201130666726" },
+            { label: "WhatsApp", value: "201130666726", isLtr: true, href: "https://wa.me/201130666726" },
+            { label: "Email", value: "elhabakconstruction.eg@gmail.com", isLtr: true, href: "mailto:elhabakconstruction.eg@gmail.com" },
+            { label: "Main Office", value: "Uptown Mall, New Sohag City, Sohag, Egypt" }
           ]
         },
         {
-          heading: "The Digital Advantage",
-          paragraphs: [
-            "We built our internal tracking system because the traditional client experience — calls, scattered photos, late reports — does not suit a project that costs millions. Today an ELHABAK client follows the project from their phone: progress, photos, designs, documents, and conversations in one place."
+          heading: "Scope of Services & Engineering Responsibility",
+          lead: "ELHABAK Construction covers all stages of engineering and construction under a single accountable management:",
+          cards: [
+            { title: "Architectural & Engineering Design", text: "Comprehensive architectural, structural, and MEP engineering drawings compliant with Egyptian building codes.", href: "/architectural-design" },
+            { title: "Engineering Consultancy", text: "Specialized technical review, feasibility analysis, drawing coordination, and engineering decision support.", href: "/engineering-consultancy" },
+            { title: "Project Management", text: "Full lifecycle schedule, cost, resource, and quality management from inspection to completion.", href: "/project-management" },
+            { title: "Site Supervision", text: "Continuous on-site engineering oversight ensuring strict adherence to specifications and approved drawings.", href: "/site-supervision" },
+            { title: "Contracting & Construction", text: "Structural works, concrete pouring, and comprehensive general contracting delivered on schedule.", href: "/construction-management" },
+            { title: "Finishing Works", text: "High-end interior and exterior finishing with material and sample approvals.", href: "/services" }
+          ]
+        },
+        {
+          heading: "Project Delivery Lifecycle (Inspection to Handover)",
+          lead: "Our verified 6-stage engineering delivery workflow:",
+          steps: [
+            { title: "Site Inspection", text: "Field visit to assess topography, verify dimensions, and establish project requirements." },
+            { title: "Design & Studies", text: "Developing architectural concepts, structural blueprints, and technical specifications." },
+            { title: "Preliminary Estimation & BOQ", text: "Itemized Bill of Quantities and transparent cost calculations before construction." },
+            { title: "Site Execution", text: "Active construction with direct engineering supervision and daily milestone tracking." },
+            { title: "Initial Handover", text: "Detailed snagging walkthrough and initial handover inspection with the client." },
+            { title: "Final Handover", text: "Final project closeout, warranty delivery, and official documentation transfer." }
+          ]
+        },
+        {
+          heading: "Frequently Asked Questions About ELHABAK",
+          cards: [
+            {
+              title: "What is ELHABAK Construction?",
+              text: "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing architectural and engineering design, project management and supervision, construction and finishing services, with project delivery support from design through execution and handover."
+            },
+            {
+              title: "What services does ELHABAK Construction provide?",
+              text: "Our services encompass architectural and engineering design, engineering consultancy, construction management and site supervision, contracting and finishing works, supported by our project tracking platform."
+            },
+            {
+              title: "How can I contact ELHABAK Construction?",
+              text: "You can reach us by phone at 01130666726, via WhatsApp at 201130666726, or by email at elhabakconstruction.eg@gmail.com."
+            }
           ]
         }
       ],
-      linksTitle: "Continue",
+      linksTitle: "Quick Links",
       links: [
-        { href: "/services", label: "Our Services", text: "The full scope of work" },
-        { href: "/platform", label: "The Platform", text: "The tracking system we run" },
-        { href: "/contact", label: "Contact Us", text: "Start the conversation about your project" }
+        { href: "/services", label: "Our Services", text: "Explore our full scope of work" },
+        { href: "/platform", label: "Project Platform", text: "Learn about our digital tracking system" },
+        { href: "/contact", label: "Contact Us", text: "Speak with our engineering team" }
       ]
     }
   },
@@ -683,23 +780,30 @@ export const seoPages: Record<SeoPageKey, Record<Locale, SeoContent>> = {
   contact: {
     ar: {
       meta: {
-        title: "تواصل معنا | الحباك للمقاولات والاستشارات الهندسية",
+        title: "تواصل معنا | ELHABAK Construction — الحباك للمقاولات والاستشارات الهندسية",
         description:
-          "تواصل مع الحباك للمقاولات والاستشارات الهندسية في سوهاج: ابدأ مشروعك، اطلب معاينة، أو ناقش احتياجك الهندسي — هاتف، واتساب، بريد إلكتروني، وعنوان المقر.",
-        keywords: ["تواصل الحباك", "مكتب هندسي سوهاج", "طلب معاينة موقع", "استشارة مشروع"]
+          "تواصل مع شركة الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) في مصر: هاتف 01130666726، واتساب 201130666726، بريد إلكتروني، واستشارة هندسية لمشروعك.",
+        keywords: [
+          "تواصل الحباك",
+          "ELHABAK Construction contact",
+          "مكتب هندسي سوهاج",
+          "طلب معاينة موقع",
+          "استشارة هندسية مصر"
+        ]
       },
       eyebrow: "تواصل معنا",
-      title: "ابدأ مشروعك بمعاينة واضحة ورد سريع",
-      lead: "أخبرنا عن مشروعك — سكني أو تجاري، تصميم أو تنفيذ أو إشراف — وسيتواصل معك فريقنا الهندسي لترتيب المعاينة ومناقشة نطاق العمل.",
+      title: "تواصل مع ELHABAK Construction — الحباك للمقاولات والاستشارات الهندسية",
+      lead:
+        "أخبرنا عن مشروعك — سكني أو تجاري، تصميم أو تنفيذ أو إشراف — وسيتواصل معك فريق شركة الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) لترتيب المعاينة ومناقشة نطاق العمل.",
       image: { src: "/marketing/contact-crane.webp", alt: "معدات إنشائية في موقع مشروع — تواصل مع الحباك" },
       sections: [
         {
-          heading: "بيانات التواصل",
+          heading: "بيانات التواصل المعتمدة",
           cards: [
-            { title: "الهاتف المباشر", text: companyContact.phone, href: telHref(companyContact) },
-            { title: "واتساب", text: "راسلنا مباشرة على واتساب لبدء المحادثة.", href: whatsappHref(companyContact, dictionary.ar.home.whatsappMessage) },
+            { title: "الهاتف المباشر", text: "01130666726", href: telHref(companyContact) },
+            { title: "واتساب", text: "201130666726", href: whatsappHref(companyContact, dictionary.ar.home.whatsappMessage) },
             { title: "البريد الإلكتروني", text: "elhabakconstruction.eg@gmail.com", href: "mailto:elhabakconstruction.eg@gmail.com" },
-            { title: "المقر", text: "أب تاون مول، مدينة سوهاج الجديدة، سوهاج" }
+            { title: "المقر الرئيسي", text: "أب تاون مول، مدينة سوهاج الجديدة، سوهاج" }
           ]
         },
         {
@@ -714,12 +818,12 @@ export const seoPages: Record<SeoPageKey, Record<Locale, SeoContent>> = {
         {
           heading: "ما الذي يمكننا مساعدتك فيه؟",
           bullets: [
-            "تصميم معماري لمشروع سكني أو تجاري",
-            "تنفيذ وإنشاءات وتشطيبات",
+            "تصميم معماري وهندسي لمشروع سكني أو تجاري",
+            "تنفيذ وإنشاءات وأعمال خرسانية",
+            "تشطيبات معمارية داخلية وخارجية",
             "إشراف هندسي على مشروع قائم",
             "إدارة مشروع كاملة من المعاينة للتسليم",
-            "استشارة فنية قبل شراء أو بناء",
-            "مقاولات عامة وتأثيث"
+            "استشارة فنية قبل شراء أو بناء"
           ]
         }
       ],
@@ -732,23 +836,29 @@ export const seoPages: Record<SeoPageKey, Record<Locale, SeoContent>> = {
     },
     en: {
       meta: {
-        title: "Contact | ELHABAK Construction — Sohag, Egypt",
+        title: "Contact Us | ELHABAK Construction — Contracting & Engineering Consultancy",
         description:
-          "Contact ELHABAK Construction in Sohag: start your project, request a site inspection, or discuss your engineering needs — phone, WhatsApp, email, and office address.",
-        keywords: ["contact ELHABAK", "engineering office Sohag", "request site inspection"]
+          "Contact ELHABAK Construction in Egypt: phone 01130666726, WhatsApp 201130666726, email, and specialized engineering consultation for your project.",
+        keywords: [
+          "contact ELHABAK",
+          "ELHABAK Construction phone",
+          "engineering office Sohag",
+          "request site inspection"
+        ]
       },
       eyebrow: "Contact Us",
-      title: "Start Your Project with a Clear Inspection and a Fast Response",
-      lead: "Tell us about your project — residential or commercial, design, execution, or supervision — and our engineering team will arrange the inspection and discuss scope.",
+      title: "Contact ELHABAK Construction — Contracting & Engineering Consultancy",
+      lead:
+        "Tell us about your project — residential or commercial, design, execution, or supervision — and the ELHABAK Construction engineering team will arrange an inspection and discuss scope.",
       image: { src: "/marketing/contact-crane.webp", alt: "Construction equipment on a project site — contact ELHABAK" },
       sections: [
         {
-          heading: "Contact Channels",
+          heading: "Official Contact Channels",
           cards: [
-            { title: "Direct Phone", text: companyContact.phone, href: telHref(companyContact) },
-            { title: "WhatsApp", text: "Message us directly on WhatsApp to start the conversation.", href: whatsappHref(companyContact, dictionary.en.home.whatsappMessage) },
+            { title: "Direct Phone", text: "01130666726", href: telHref(companyContact) },
+            { title: "WhatsApp", text: "201130666726", href: whatsappHref(companyContact, dictionary.en.home.whatsappMessage) },
             { title: "Email", text: "elhabakconstruction.eg@gmail.com", href: "mailto:elhabakconstruction.eg@gmail.com" },
-            { title: "Office", text: "Uptown Mall, New Sohag City, Sohag, Egypt" }
+            { title: "Main Office", text: "Uptown Mall, New Sohag City, Sohag, Egypt" }
           ]
         },
         {
@@ -763,12 +873,12 @@ export const seoPages: Record<SeoPageKey, Record<Locale, SeoContent>> = {
         {
           heading: "What We Can Help With",
           bullets: [
-            "Architectural design for residential or commercial projects",
+            "Architectural and engineering design for residential or commercial projects",
             "Execution, structural works, and finishing",
             "Engineering supervision of an existing project",
             "Full project management from inspection to handover",
             "Technical consultation before buying or building",
-            "General contracting and furnishing"
+            "General contracting and turnkey delivery"
           ]
         }
       ],

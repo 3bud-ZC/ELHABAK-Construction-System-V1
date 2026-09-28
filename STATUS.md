@@ -1417,3 +1417,47 @@
   - EXTERNAL / MANUAL — production visual QA of the password screens with the owner's session; sending the credential over WhatsApp from the owner's phone.
 - **Known limitations**: the account created 2026-09-27 still holds the credential that replaced the shown one — the owner should open it and use **Generate new temporary password** once this release is live (no production data was changed by this pass). Client imports from spreadsheets still keep their lenient phone rule and receive unusable random passwords until the Admin generates one.
 - **Release**: no schema migration. staging.elhabak.com first, then elhabak.com, from this commit via the canonical package → preflight → deploy flow; production business data untouched.
+
+### 2026-09-28 — ELHABAK COMPANY ENTITY SEO & SEARCH DISCOVERABILITY PASS
+- **Objective**: Establish crystal-clear, canonical ELHABAK Construction company entity discoverability across Google Search, Google Gemini, and AI web indexers without redesigning authenticated app or mutating production business logic.
+- **Canonical Identity Applied**:
+  - English trade name: `ELHABAK Construction`
+  - Arabic legal/official name: `الحباك للمقاولات والاستشارات الهندسية`
+  - Alternate Names: `["الحباك للمقاولات والاستشارات الهندسية", "ELHABAK", "الحباك", "الحباك للمقاولات", "الحباك للاستشارات الهندسية"]`
+  - Domain: `https://elhabak.com` (with strict fallback to https://elhabak.com across `siteUrl` without trailing slashes)
+  - Official Phone Display: `01130666726` | E.164: `+201130666726` | wa.me: `201130666726`
+  - Email: `elhabakconstruction.eg@gmail.com`
+  - Logo: `https://elhabak.com/brand/logo-horizontal.png` (HTTP 200 confirmed live)
+  - Google Maps Entity Link: `https://maps.app.goo.gl/apBRMCmUquZ6XYXv7` (in `sameAs` and `hasMap`)
+  - Postal Address in JSON-LD: deliberately omitted to prevent indexing unverified or incomplete postal data; registered operating country Egypt (`areaServed: Country "Egypt"`).
+  - Facts Policy: zero fabricated company facts (founding date, employee count, and fictitious awards omitted from structured data and content).
+- **Canonical Descriptions**:
+  - AR: "الحباك للمقاولات والاستشارات الهندسية (ELHABAK Construction) هي شركة مصرية تقدم خدمات المقاولات والاستشارات الهندسية، وتشمل التصميم المعماري والهندسي، إدارة والإشراف على المشروعات، أعمال التنفيذ والتشطيبات، ومتابعة دورة المشروع من مراحل التصميم وحتى التنفيذ والتسليم."
+  - EN: "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing architectural and engineering design, project management and supervision, construction and finishing services, with project delivery support from design through execution and handover."
+- **5 Core Services**:
+  1. Architectural & Engineering Design / التصميم المعماري والهندسي
+  2. Project Management & Supervision / إدارة والإشراف على المشروعات
+  3. Construction & Finishing / أعمال التنفيذ والتشطيبات
+  4. Contracting & Site Delivery / المقاولات وتسليم المواقع
+  5. Furnishing & Interior Execution / التأثيث والتشطيب الداخلي
+- **Structured Data Architecture (`apps/web/src/lib/structured-data.ts`)**:
+  - Canonical `Organization` schema with `@id: "https://elhabak.com/#organization"` and `@type: ["Organization", "ProfessionalService", "GeneralContractor"]`.
+  - Canonical `WebSite` schema with `@id: "https://elhabak.com/#website"` and `publisher: { "@id": "https://elhabak.com/#organization" }`.
+  - Canonical `AboutPage` and `ContactPage` schemas referencing Organization via `about` and `mainEntity`.
+  - Canonical `BreadcrumbList` schema connecting pages to home.
+  - Canonical `FAQPage` schema on homepage with company entity questions and answers.
+  - Linked `@graph` pattern across Home, About, and Contact pages.
+- **Page Upgrades**:
+  - Home (`apps/web/src/app/page.tsx`): Updated `@graph` linking Organization, WebSite, FAQPage, BreadcrumbList. Hero subtitle, meta description, and about lead updated with canonical text.
+  - About (`apps/web/src/app/about/page.tsx` & `apps/web/src/i18n/seo-pages.ts`): First section answers "What is ELHABAK Construction?", full 9-point factual identity table (`.company-facts-dl`), 5 services, 6 delivery phases, FAQ section, and `AboutPage` structured data.
+  - Contact (`apps/web/src/app/contact/page.tsx` & `apps/web/src/i18n/seo-pages.ts`): Contact cards with official phone `01130666726`, direct `tel:+201130666726`, `wa.me/201130666726`, email, Google Maps link, and `ContactPage` structured data.
+  - Indexing: `sitemap.ts` includes all public pages with canonical URLs and hreflang alternatives; `robots.ts` allows `/` and disallows `/app`.
+- **Automated Verification**:
+  - Web test suite: **39/39 PASS** (`entity-seo.test.mjs`, `public-home-content.test.mjs`, `layout-seo-guards.test.mjs`, `contact.test.mjs`, `client-credentials.test.mjs`, `frontend-reconstruction.test.mjs`).
+  - Quality Gates: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `git diff --check` all **PASS** (exit 0).
+  - Visual QA via Chromium Headless (1440x900 desktop, 390x844 mobile): **12/12 page-viewport combinations PASS with 0 horizontal overflow**, valid JSON-LD graph, and 100% 200 OK.
+- **External Owner Actions Required**:
+  - Claim / verify Google Business Profile using exact canonical name `ELHABAK Construction / الحباك للمقاولات والاستشارات الهندسية` and official phone `01130666726`.
+  - Submit `https://elhabak.com/sitemap.xml` to Google Search Console and request indexing for `/`, `/about`, `/contact`.
+  - Re-query Google Search / Google Gemini after search indexation has taken place.
+

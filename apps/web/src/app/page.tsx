@@ -38,15 +38,21 @@ function langHref(locale: "ar" | "en", path = "/") {
   return locale === "ar" ? path : `${path}?lang=en`;
 }
 
+import {
+  buildCanonicalOrganization,
+  buildCanonicalWebSite,
+  buildBreadcrumbSchema
+} from "../lib/structured-data";
+
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const params = await searchParams;
   const locale = resolveLocale(params?.lang);
 
   if (locale === "en") {
     return {
-      title: "ELHABAK Construction | Engineering & Construction in Egypt",
+      title: "ELHABAK Construction | Contracting & Engineering Consultancy",
       description:
-        "ELHABAK Construction provides architectural design, engineering consultancy, construction management, site supervision, contracting and digital project tracking in Egypt.",
+        "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing design, supervision, project management, construction and finishing services.",
       keywords: [
         "ELHABAK Construction",
         "Elhabak",
@@ -66,9 +72,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
         }
       },
       openGraph: {
-        title: "ELHABAK Construction | Engineering & Construction in Egypt",
+        title: "ELHABAK Construction | Contracting & Engineering Consultancy",
         description:
-          "Engineering delivery for residential and commercial projects with digital project tracking from inspection to handover.",
+          "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing design, supervision, project management, construction and finishing services.",
         url: "/?lang=en",
         siteName: "ELHABAK Construction",
         locale: "en_US",
@@ -83,18 +89,18 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       },
       twitter: {
         card: "summary_large_image",
-        title: "ELHABAK Construction | Engineering & Construction in Egypt",
+        title: "ELHABAK Construction | Contracting & Engineering Consultancy",
         description:
-          "Design, construction, finishing, general contracting, and furnishing with organized digital project follow-up.",
+          "ELHABAK Construction is an Egyptian contracting and engineering consultancy company providing design, supervision, project management, construction and finishing services.",
         images: ["/marketing/hero-delivery.webp"]
       }
     };
   }
 
   return {
-    title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
+    title: "ELHABAK Construction | الحباك للمقاولات والاستشارات الهندسية",
     description:
-      "شركة الحباك للمقاولات والاستشارات الهندسية تقدم خدمات التصميم المعماري، إدارة المشروعات، الإشراف على التنفيذ، المقاولات والتشطيبات، مع نظام رقمي لمتابعة تقدم المشروع.",
+      "الحباك للمقاولات والاستشارات الهندسية — خدمات التصميم والاستشارات الهندسية، إدارة والإشراف على المشروعات، المقاولات والتنفيذ والتشطيبات في مصر.",
     keywords: [
       "الحباك للمقاولات والاستشارات الهندسية",
       "الحباك للمقاولات",
@@ -114,9 +120,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       }
     },
     openGraph: {
-      title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
+      title: "ELHABAK Construction | الحباك للمقاولات والاستشارات الهندسية",
       description:
-        "شركة مقاولات واستشارات هندسية: تصميم معماري، إدارة مشروعات، إشراف على التنفيذ، وتشطيبات للمشروعات السكنية والتجارية بمتابعة رقمية من المعاينة حتى التسليم.",
+        "الحباك للمقاولات والاستشارات الهندسية — خدمات التصميم والاستشارات الهندسية، إدارة والإشراف على المشروعات، المقاولات والتنفيذ والتشطيبات في مصر.",
       url: "/",
       siteName: "ELHABAK Construction",
       locale: "ar_EG",
@@ -131,9 +137,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     },
     twitter: {
       card: "summary_large_image",
-      title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
+      title: "ELHABAK Construction | الحباك للمقاولات والاستشارات الهندسية",
       description:
-        "تصميم معماري، إدارة مشروعات، إشراف على التنفيذ، مقاولات وتشطيبات مع متابعة رقمية منظمة للمشروع.",
+        "الحباك للمقاولات والاستشارات الهندسية — خدمات التصميم والاستشارات الهندسية، إدارة والإشراف على المشروعات، المقاولات والتنفيذ والتشطيبات في مصر.",
       images: ["/marketing/hero-delivery.webp"]
     }
   };
@@ -159,73 +165,29 @@ export default async function HomePage({ searchParams }: PageProps) {
     [langHref(locale, "/contact"), t.nav.contact]
   ] as const;
 
+  // Canonical entity schema: Organization, ProfessionalService, GeneralContractor
+  const organizationLd = {
+    ...buildCanonicalOrganization(locale),
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: locale === "ar" ? "نطاق الخدمات" : "Scope of services",
+      itemListElement: t.services.map(([title, body], index) => ({
+        "@type": "Offer",
+        position: index + 1,
+        itemOffered: {
+          "@type": "Service",
+          name: title,
+          description: body
+        }
+      }))
+    }
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": ["Organization", "ProfessionalService", "GeneralContractor"],
-        "@id": `${siteUrl}/#organization`,
-        name: "ELHABAK Construction",
-        legalName: "الحباك للمقاولات والاستشارات الهندسية",
-        alternateName: [
-          "ELHABAK",
-          "Elhabak",
-          "الحباك",
-          "الحباك للمقاولات والاستشارات الهندسية",
-          "الحباك للمقاولات",
-          "الحباك للاستشارات الهندسية"
-        ],
-        sameAs: ["https://maps.app.goo.gl/apBRMCmUquZ6XYXv7"],
-        hasMap: "https://maps.app.goo.gl/apBRMCmUquZ6XYXv7",
-        url: `${siteUrl}/`,
-        description: t.home.aboutLead,
-        email: t.contact.email,
-        telephone: t.contact.phoneE164,
-        logo: `${siteUrl}/brand/logo-horizontal.png`,
-        image: `${siteUrl}/marketing/hero-delivery.webp`,
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: "Uptown Mall",
-          addressLocality: "New Sohag City",
-          addressRegion: "Sohag",
-          addressCountry: "EG"
-        },
-        areaServed: [
-          { "@type": "City", name: "Sohag" },
-          { "@type": "Country", name: "Egypt" }
-        ],
-        contactPoint: [
-          {
-            "@type": "ContactPoint",
-            contactType: "customer service",
-            telephone: t.contact.phoneE164,
-            email: t.contact.email,
-            availableLanguage: ["ar", "en"]
-          }
-        ],
-        hasOfferCatalog: {
-          "@type": "OfferCatalog",
-          name: locale === "ar" ? "نطاق الخدمات" : "Scope of services",
-          itemListElement: t.services.map(([title, body], index) => ({
-            "@type": "Offer",
-            position: index + 1,
-            itemOffered: {
-              "@type": "Service",
-              name: title,
-              description: body
-            }
-          }))
-        }
-      },
-      {
-        "@type": "WebSite",
-        "@id": `${siteUrl}/#website`,
-        url: `${siteUrl}/`,
-        name: "ELHABAK Construction",
-        alternateName: ["ELHABAK", "الحباك", "الحباك للمقاولات والاستشارات الهندسية"],
-        publisher: { "@id": `${siteUrl}/#organization` },
-        inLanguage: ["ar", "en"]
-      },
+      organizationLd,
+      buildCanonicalWebSite(),
       {
         "@type": "FAQPage",
         "@id": `${siteUrl}${langHref(locale)}#faq`,
@@ -233,9 +195,13 @@ export default async function HomePage({ searchParams }: PageProps) {
         mainEntity: t.faq.map(([question, answer]) => ({
           "@type": "Question",
           name: question,
-          acceptedAnswer: { "@type": "Answer", text: answer }
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: answer
+          }
         }))
-      }
+      },
+      buildBreadcrumbSchema(locale, "/", locale === "ar" ? "الرئيسية" : "Home")
     ]
   };
 
@@ -340,7 +306,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           <span className="hero-eyebrow__index" aria-hidden="true">
             {locale === "ar" ? "الهندسة والمقاولات" : "ENGINEERING & CONSTRUCTION"}
           </span>
-          <span className="hero-eyebrow__brand">ELHABAK CONSTRUCTION</span>
+          <span className="hero-eyebrow__brand">ELHABAK Construction</span>
         </div>
         <h1 aria-label={t.home.heroTitle}>
           {locale === "ar" ? (

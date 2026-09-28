@@ -24,9 +24,9 @@ const rubik = Rubik({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
+  title: "ELHABAK Construction | الحباك للمقاولات والاستشارات الهندسية",
   description:
-    "شركة الحباك للمقاولات والاستشارات الهندسية تقدم التصميم المعماري، إدارة المشروعات، الإشراف على التنفيذ، المقاولات والتشطيبات، مع نظام رقمي لمتابعة تقدم المشروع.",
+    "الحباك للمقاولات والاستشارات الهندسية — خدمات التصميم والاستشارات الهندسية، إدارة والإشراف على المشروعات، المقاولات والتنفيذ والتشطيبات في مصر.",
   applicationName: "ELHABAK Construction Operations",
   creator: "ELHABAK Construction",
   category: "engineering and construction",
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
     }
   },
   openGraph: {
-    title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
+    title: "ELHABAK Construction | الحباك للمقاولات والاستشارات الهندسية",
     description:
-      "شركة مقاولات واستشارات هندسية: تصميم معماري، إدارة مشروعات، إشراف على التنفيذ، وتشطيبات بمتابعة رقمية منظمة.",
+      "الحباك للمقاولات والاستشارات الهندسية — خدمات التصميم والاستشارات الهندسية، إدارة والإشراف على المشروعات، المقاولات والتنفيذ والتشطيبات في مصر.",
     url: "/",
     siteName: "ELHABAK Construction",
     locale: "ar_EG",
@@ -58,9 +58,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "الحباك للمقاولات والاستشارات الهندسية | ELHABAK Construction",
+    title: "ELHABAK Construction | الحباك للمقاولات والاستشارات الهندسية",
     description:
-      "Architectural design, engineering consultancy, construction management, site supervision, and contracting with digital project tracking.",
+      "الحباك للمقاولات والاستشارات الهندسية — خدمات التصميم والاستشارات الهندسية، إدارة والإشراف على المشروعات، المقاولات والتنفيذ والتشطيبات في مصر.",
     images: ["/marketing/hero-delivery.webp"]
   }
 };

@@ -10,14 +10,12 @@ export const textDirections = {
 
 export const companyContact = {
   email: "elhabakconstruction.eg@gmail.com",
-  // Human-facing Egyptian display format only - never derive machine URLs (tel:, wa.me)
-  // from this string; use the canonical `phoneE164`/`whatsappNumber` values below.
-  phone: "(+20) 011 306 667 26",
-  // Canonical E.164 form of the number above (+20 then the national number without the
-  // trunk 0). `tel:` links and JSON-LD use this verbatim.
+  // Official company phone display format: 01130666726
+  phone: "01130666726",
+  phoneFormatted: "(+20) 011 306 667 26",
+  // Canonical E.164 form (+20 then national number without trunk 0).
   phoneE164: "+201130666726",
-  // Digits-only international form for wa.me deep links (wa.me rejects "+", spaces, and
-  // trunk zeros).
+  // Digits-only international form for wa.me deep links.
   whatsappNumber: "201130666726",
   address: "Uptown Mall, New Sohag City, Sohag, Egypt"
 } as const;

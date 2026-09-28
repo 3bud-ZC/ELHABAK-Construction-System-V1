@@ -6,7 +6,6 @@ import { Button } from "@elhabak/ui";
 import { companyContact, telHref, whatsappHref } from "@elhabak/contracts";
 import type { Locale } from "../i18n/translations";
 import { dictionary, textDirections } from "../i18n/translations";
-import { siteUrl } from "../lib/site";
 import { PublicHeader } from "./public-header";
 import { PublicMotion } from "./public-motion";
 
@@ -69,37 +68,19 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
   );
 }
 
+import {
+  buildCanonicalOrganization,
+  buildCanonicalWebSite,
+  buildBreadcrumbSchema,
+  buildServiceSchema
+} from "../lib/structured-data";
+
 export function breadcrumbLd(locale: Locale, path: string, name: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: locale === "ar" ? "الرئيسية" : "Home",
-        item: `${siteUrl}${langHref(locale)}`
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name,
-        item: `${siteUrl}${langHref(locale, path)}`
-      }
-    ]
-  };
+  return buildBreadcrumbSchema(locale, path, name);
 }
 
 export function serviceLd(locale: Locale, path: string, name: string, description: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    name,
-    description,
-    url: `${siteUrl}${langHref(locale, path)}`,
-    provider: { "@type": "Organization", "@id": `${siteUrl}/#organization` },
-    areaServed: [{ "@type": "Country", name: "Egypt" }]
-  };
+  return buildServiceSchema(locale, path, name, description);
 }
 
 /** Public site navigation shared by the homepage and standalone pages. */
@@ -271,6 +252,14 @@ export type SeoSection = {
   bullets?: string[];
   cards?: { title: string; text: string; href?: string }[];
   steps?: { title: string; text: string }[];
+  facts?: SeoFact[];
+};
+
+export type SeoFact = {
+  label: string;
+  value: string;
+  isLtr?: boolean;
+  href?: string;
 };
 
 export type SeoContent = {
@@ -298,10 +287,21 @@ export function SeoPage({
 }) {
   const dir = textDirections[locale];
   const arrow = dir === "rtl" ? <ArrowLeft size={15} /> : <ArrowRight size={15} />;
+  const structuredDataGraph: Record<string, unknown>[] = [
+    buildCanonicalOrganization(locale),
+    buildCanonicalWebSite(),
+    breadcrumbLd(locale, path, content.title),
+    ...(extraLd ? [extraLd] : [])
+  ];
+
   return (
     <SeoPageShell locale={locale} path={path}>
-      <JsonLd data={breadcrumbLd(locale, path, content.title)} />
-      {extraLd ? <JsonLd data={extraLd} /> : null}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": structuredDataGraph
+        }}
+      />
 
       <section className="lp-hero" aria-labelledby="lp-title">
         <div className="container lp-hero__inner">
@@ -372,6 +372,27 @@ export function SeoPage({
                   );
                 })}
               </div>
+            ) : null}
+            {section.facts ? (
+              <dl className="company-facts-dl" data-reveal="up">
+                {section.facts.map((fact) => (
+                  <div className="company-fact-row" key={fact.label}>
+                    <dt className="company-fact-label">{fact.label}</dt>
+                    <dd className="company-fact-value" dir={fact.isLtr ? "ltr" : undefined}>
+                      {fact.href ? (
+                        <a
+                          href={fact.href}
+                          {...(fact.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
+                        >
+                          {fact.value}
+                        </a>
+                      ) : (
+                        fact.value
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             ) : null}
             {section.steps ? (
               <ol className="lp-steps" data-reveal-group>

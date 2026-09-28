@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { resolveLocale } from "../../i18n/translations";
 import { seoPages } from "../../i18n/seo-pages";
 import { SeoPage, seoMetadata } from "../seo-page";
+import { buildContactPageSchema } from "../../lib/structured-data";
 
 const PATH = "/contact";
 type Props = { searchParams?: Promise<{ lang?: string }> };
@@ -13,5 +14,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function ContactPage({ searchParams }: Props) {
   const locale = resolveLocale((await searchParams)?.lang);
-  return <SeoPage locale={locale} path={PATH} content={seoPages.contact[locale]} />;
+  return (
+    <SeoPage
+      locale={locale}
+      path={PATH}
+      content={seoPages.contact[locale]}
+      extraLd={buildContactPageSchema(locale)}
+    />
+  );
 }
