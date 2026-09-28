@@ -21,6 +21,8 @@
   --orange-soft: #fad7bd;
   --orange-wash: rgba(232, 118, 37, 0.1);
   --orange-glow: rgba(232, 118, 37, 0.22);
+  /* Orange for small text on light surfaces (AA 4.5:1); --orange stays for fills/lines. */
+  --orange-ink: #b9520d;
   --white: #ffffff;
 
   /* Surfaces */
@@ -146,8 +148,28 @@
   --dur-fast: 120ms;
   --dur: 200ms;
 
-  --blueprint-grid: none;
-  --blueprint-grid-light: none;
+  /* Architectural grounds: minor 24px / major 120px technical grids. */
+  --blueprint-line: rgba(150, 180, 235, 0.14);
+  --blueprint-line-soft: rgba(150, 180, 235, 0.06);
+  --paper-line: rgba(22, 35, 75, 0.07);
+  --paper-line-soft: rgba(22, 35, 75, 0.035);
+  --blueprint-grid:
+    linear-gradient(var(--blueprint-line) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--blueprint-line) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(var(--blueprint-line-soft) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--blueprint-line-soft) 1px, transparent 1px) 0 0 / 24px 24px;
+  --blueprint-grid-light:
+    linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(var(--paper-line-soft) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--paper-line-soft) 1px, transparent 1px) 0 0 / 24px 24px;
+  /* Measure strip (ruler ticks) used under headers and bars. */
+  --ruler-ticks:
+    repeating-linear-gradient(90deg, rgba(22, 35, 75, 0.18) 0 1px, transparent 1px 12px) left bottom / 100% 4px no-repeat,
+    repeating-linear-gradient(90deg, rgba(22, 35, 75, 0.3) 0 1px, transparent 1px 60px) left bottom / 100% 8px no-repeat;
+  --ease-draw: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-slow: 420ms;
+  --font-technical: var(--font-mono);
   color-scheme: light;
 }
 
@@ -155,5 +177,6 @@
   :root {
     --dur-fast: 0ms;
     --dur: 0ms;
+    --dur-slow: 0ms;
   }
 }

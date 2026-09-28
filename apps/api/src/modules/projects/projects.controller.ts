@@ -93,10 +93,10 @@ export class ProjectsController {
     @Res() response: Response
   ) {
     const media = await this.projectsService.getMediaForUser(user, projectId, mediaId);
-    const file = this.storageService.open(media.storagePath);
+    const file = await this.storageService.open(media.storagePath);
     response.setHeader("Content-Type", media.mimeType);
     response.setHeader("Content-Length", String(media.fileSize));
     response.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(media.originalFilename)}"`);
-    file.stream.pipe(response);
+    this.storageService.send(file.stream, response);
   }
 }

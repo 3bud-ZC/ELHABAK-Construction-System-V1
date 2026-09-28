@@ -1,10 +1,12 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { parseApiEnv } from "@elhabak/config";
 import { createReadStream } from "node:fs";
 import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
 import { basename, extname, join, resolve, sep } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { ReadStream } from "node:fs";
+import { pipeline } from "node:stream";
+import type { Writable } from "node:stream";
 import type { SiteMediaType } from "@elhabak/database";
 
 type StoredFile = {
@@ -205,19 +207,39 @@ export class StorageService {
     await unlink(this.absolutePath(storagePath)).catch(() => undefined);
   }
 
-  open(storagePath: string): { stream: ReadStream; filename: string } {
+  /**
+   * Opens a stored file for download. A record whose file is missing on disk answers
+   * 404 before any header is sent; without this check the stream's ENOENT 'error'
+   * event was unhandled and terminated the whole API process.
+   */
+  async open(storagePath: string): Promise<{ stream: ReadStream; filename: string }> {
     const absolutePath = this.absolutePath(storagePath);
-
+    await this.assertStoredFile(absolutePath);
     return { stream: createReadStream(absolutePath), filename: basename(absolutePath) };
   }
 
   async statSize(storagePath: string): Promise<number> {
-    const stats = await stat(this.absolutePath(storagePath));
-    return stats.size;
+    const absolutePath = this.absolutePath(storagePath);
+    return (await this.assertStoredFile(absolutePath)).size;
+  }
+
+  /**
+   * Streams a file into the HTTP response. `pipeline` tears down both sides on any
+   * read/write error (disk fault, client abort), so a failure ends that one response
+   * instead of surfacing as an unhandled stream error.
+   */
+  send(stream: ReadStream, response: Writable) {
+    pipeline(stream, response, () => undefined);
   }
 
   openRange(storagePath: string, start: number, end: number): ReadStream {
     return createReadStream(this.absolutePath(storagePath), { start, end });
+  }
+
+  private async assertStoredFile(absolutePath: string) {
+    const stats = await stat(absolutePath).catch(() => null);
+    if (!stats?.isFile()) throw new NotFoundException("File not found.");
+    return stats;
   }
 
   private absolutePath(storagePath: string) {

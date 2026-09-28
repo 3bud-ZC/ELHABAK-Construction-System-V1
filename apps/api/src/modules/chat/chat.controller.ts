@@ -78,13 +78,13 @@ export class ChatController {
       response.setHeader("Content-Range", `bytes ${start}-${safeEnd}/${size}`);
       response.setHeader("Content-Length", String(safeEnd - start + 1));
       response.setHeader("Content-Type", mimeType);
-      this.storage.openRange(storagePath, start, safeEnd).pipe(response);
+      this.storage.send(this.storage.openRange(storagePath, start, safeEnd), response);
       return;
     }
 
     response.setHeader("Content-Type", mimeType);
     response.setHeader("Content-Length", String(size));
-    const file = this.storage.open(storagePath);
-    file.stream.pipe(response);
+    const file = await this.storage.open(storagePath);
+    this.storage.send(file.stream, response);
   }
 }

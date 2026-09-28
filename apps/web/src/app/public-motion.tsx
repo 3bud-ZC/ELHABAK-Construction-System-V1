@@ -12,7 +12,7 @@ export function PublicMotion() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const targets = document.querySelectorAll<HTMLElement>("[data-reveal], [data-reveal-group]");
+    const targets = document.querySelectorAll<HTMLElement>("[data-reveal], [data-reveal-group], .bp-art:not(.is-live)");
     if (reduced) {
       targets.forEach((el) => el.classList.add("is-visible"));
       return () => window.removeEventListener("scroll", onScroll);

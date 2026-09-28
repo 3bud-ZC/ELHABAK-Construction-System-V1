@@ -28,6 +28,7 @@ import { PublicHeader } from "./public-header";
 import { PublicHero } from "./public-hero";
 import { PublicMotion } from "./public-motion";
 import { FaqAccordion } from "./faq-accordion";
+import { BlueprintPlan, BlueprintSection } from "./blueprint-art";
 import { MobileContactBar, publicNavItems, SiteFooter } from "./seo-page";
 
 type PageProps = {
@@ -483,14 +484,8 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       {/* ============ 04 // 6-STAGE ENGINEERING DELIVERY PROCESS ============ */}
       <section id="process" className="process-section" aria-labelledby="process-title">
-        <div className="process-bg-media" aria-hidden="true">
-          <Image
-            src="/marketing/process-blueprint.webp"
-            alt=""
-            fill
-            sizes="100vw"
-            className="process-bg-media__img"
-          />
+        <div className="process-bg-media" aria-hidden="true" data-reveal="fade">
+          <BlueprintSection className="process-bg-media__art" />
           <div className="process-bg-overlay" />
           <span className="process-watermark">{t.home.processWatermark}</span>
         </div>
@@ -620,14 +615,8 @@ export default async function HomePage({ searchParams }: PageProps) {
             </div>
 
             <div className="faq-visual" data-reveal="mask">
-              <div className="faq-technical-card">
-                <Image
-                  src="/marketing/process-blueprint.webp"
-                  alt="Isometric engineering project blueprint"
-                  fill
-                  sizes="(max-width: 980px) 100vw, 36vw"
-                  className="faq-technical-img"
-                />
+              <div className="faq-technical-card faq-technical-card--plan">
+                <BlueprintPlan className="faq-technical-plan" />
                 <div className="faq-technical-overlay">
                   <span className="faq-technical-tag">
                     {locale === "ar" ? "مخطط تشغيل هندسي متكامل" : "INTEGRATED ENGINEERING BLUEPRINT"}
@@ -650,6 +639,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             className="cta-banner-bg__img"
           />
           <div className="cta-banner-overlay" />
+          <BlueprintPlan className="cta-banner-plan" />
         </div>
 
         <div className="container cta-banner-inner" data-reveal="up">

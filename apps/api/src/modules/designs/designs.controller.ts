@@ -121,11 +121,11 @@ export class DesignsController {
     @Res() response: Response
   ) {
     const revision = await this.designs.getFile(user, projectId, designId, revisionId);
-    const file = this.storage.open(revision.storagePath);
+    const file = await this.storage.open(revision.storagePath);
     const disposition = download === "1" ? "attachment" : "inline";
     response.setHeader("Content-Type", revision.mimeType);
     response.setHeader("Content-Length", String(revision.fileSize));
     response.setHeader("Content-Disposition", `${disposition}; filename="design-file"; filename*=UTF-8''${encodeURIComponent(revision.originalFilename)}`);
-    file.stream.pipe(response);
+    this.storage.send(file.stream, response);
   }
 }

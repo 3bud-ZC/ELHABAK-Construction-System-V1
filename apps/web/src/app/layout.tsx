@@ -7,6 +7,7 @@ import { DirectionSync } from "./direction-sync";
 import { siteUrl } from "../lib/site";
 import "./globals.css";
 import "./public-home.css";
+import "./public-architecture.css";
 
 const almarai = Almarai({
   subsets: ["arabic"],

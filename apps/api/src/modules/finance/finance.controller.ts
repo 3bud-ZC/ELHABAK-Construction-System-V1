@@ -200,7 +200,7 @@ export class FinanceController {
     @Res() response: Response
   ) {
     const attachment = await this.finance.getExpenseAttachmentFile(user, projectId, expenseId, attachmentId);
-    this.streamAttachment(attachment, response);
+    await this.streamAttachment(attachment, response);
   }
 
   // ---------------------------------------------------------------- Client payments
@@ -259,7 +259,7 @@ export class FinanceController {
     @Res() response: Response
   ) {
     const attachment = await this.finance.getClientPaymentAttachmentFile(user, projectId, paymentId, attachmentId);
-    this.streamAttachment(attachment, response);
+    await this.streamAttachment(attachment, response);
   }
 
   // ---------------------------------------------------------------- Contractor payments
@@ -318,18 +318,18 @@ export class FinanceController {
     @Res() response: Response
   ) {
     const attachment = await this.finance.getContractorPaymentAttachmentFile(user, projectId, paymentId, attachmentId);
-    this.streamAttachment(attachment, response);
+    await this.streamAttachment(attachment, response);
   }
 
-  private streamAttachment(attachment: { storagePath: string; mimeType: string; fileSize: number; originalFilename: string }, response: Response) {
-    const file = this.storage.open(attachment.storagePath);
+  private async streamAttachment(attachment: { storagePath: string; mimeType: string; fileSize: number; originalFilename: string }, response: Response) {
+    const file = await this.storage.open(attachment.storagePath);
     response.setHeader("Content-Type", attachment.mimeType);
     response.setHeader("Content-Length", String(attachment.fileSize));
     response.setHeader(
       "Content-Disposition",
       `inline; filename="receipt"; filename*=UTF-8''${encodeURIComponent(attachment.originalFilename)}`
     );
-    file.stream.pipe(response);
+    this.storage.send(file.stream, response);
   }
 }
 

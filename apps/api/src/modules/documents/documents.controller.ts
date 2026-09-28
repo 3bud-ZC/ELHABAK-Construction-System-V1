@@ -116,7 +116,7 @@ export class DocumentsController {
     @Res() response: Response
   ) {
     const version = await this.documents.getFile(user, projectId, documentId, versionId);
-    const file = this.storage.open(version.storagePath);
+    const file = await this.storage.open(version.storagePath);
     const disposition = download === "1" ? "attachment" : "inline";
     response.setHeader("Content-Type", version.mimeType);
     response.setHeader("Content-Length", String(version.fileSize));
@@ -124,6 +124,6 @@ export class DocumentsController {
       "Content-Disposition",
       `${disposition}; filename="document-file"; filename*=UTF-8''${encodeURIComponent(version.originalFilename)}`
     );
-    file.stream.pipe(response);
+    this.storage.send(file.stream, response);
   }
 }

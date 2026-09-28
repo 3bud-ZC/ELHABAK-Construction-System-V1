@@ -1488,4 +1488,37 @@
 - **Manual Owner Action Reminder**:
   - MANUAL OWNER ACTION REQUIRED: Open the Client account created 2026-09-27 in the Admin Portal and click "Generate new temporary password" to re-issue credentials.
 
-
+### 2026-09-28 — ARCHITECTURAL ENGINEERING DESIGN SYSTEM (public site + product)
+- **Direction**: owner request for a stronger, architectural identity in white + deep blue + orange. The written brief was the source (no reference images were attached). The system is built from engineering-drawing conventions: blueprint grounds (24px minor / 120px major technical grid), drawing sheets with orange registration marks, dimension marks `|—|`, ruler strips, sheet indices (A-01…), axis bubbles, level datums, and stroke-drawn line art. No code-rain or random glyph effects.
+- **Design tokens** (`styles/tokens.css`, shared by site and product): `--blueprint-grid` / `--blueprint-grid-light` (the previously disabled grid tokens are now real), `--ruler-ticks`, `--orange-ink` (#b9520d, AA contrast for small orange text; bright orange stays for fills/lines), `--ease-draw`, `--dur-slow`, `--font-technical`. One brand orange (#e87625) across public and product (the public site previously used a second orange, #EA580C).
+- **Line art** (`app/blueprint-art.tsx`, dependency-free SVG, aria-hidden): an axonometric structural wireframe generated with an isometric projector (4 slabs, perimeter columns, dashed core, orange cantilever crown, structural axes A–D / 1–3, 24.00 plan dimension, level datums +0.00…+14.40, section cut, survey nodes, scale bar, north arrow), a dimensioned floor plan (walls, glazing, door swings, room tags) and a building section (ground hatch, bays, floors, roof). Geometry is computed deterministically, so server and client render identical markup. Motion is CSS only: strokes draw in via `pathLength=1`; the hero drawing plays on load; others start when scrolled into view (`PublicMotion` now observes `.bp-art`); in the hero a dashed "level scan" plane rises through the floors and survey nodes pulse. Everything is static under `prefers-reduced-motion`, and fully drawn when scripting is off.
+- **Public website** (`public-architecture.css`, `public` layer after `public-home.css`):
+  - **Hero**: deep-navy blueprint ground with crop-mark frame; the animated axonometric drawing is the centrepiece. The rotating site photo is pinned to it as a drawing sheet with a title block (ELHABAK · SHEET A-10n · stage · 1:100) and registration marks. Orange primary CTA and white-outline secondary. Glass system note with an orange datum; capability strip with hairline separators. The scene rail is restyled for dark mode, and the phone mockup was removed for a cleaner drawing composition.
+  - **Section system**: every section eyebrow becomes a sheet label (`A-01 |—| label`, CSS counter); a ruler strip marks each section's top edge.
+  - **About**: grid paper, photo with registration marks and an `18.40 m` dimension line, navy badge.
+  - **Services**: drawing-sheet cards (4px radius, hairline border). On hover: corner brackets draw in, a technical grid reveals, the photo lifts from muted to full colour, and the index rule extends.
+  - **Process**: navy band with the animated building section; axis-bubble stage numbers; measured connectors that draw in when the band enters view.
+  - **Platform**: grid paper, framed devices.
+  - **FAQ**: numbered technical list (Q.01…), hairline dividers, orange datum on the open item; the stock image replaced by an animated floor-plan sheet.
+  - **Contact band**: blueprint ground with a plan drawing; orange WhatsApp CTA; the phone number set as a mono datum.
+  - **Footer**: title-block treatment (grid, orange top rule, dimension-marked column titles).
+  - **Subpages** (`lp-*`): blueprint hero with orange base rule, framed media, grid-paper alternating sections, measured step indices, hover-lift cards.
+  - **Header**: glass with a ruler edge, and orange draw-in underlines on nav links.
+  - All green CTA overrides (`#16A34A !important` on the hero, contact band, mobile drawer and mobile contact bar) are now brand orange.
+  - Mono type is limited to Latin codes and numbers; Arabic labels keep Almarai.
+- **Product UI** (`styles/system/architecture.css`, last in the `system` layer; decoration only — no control changes size, nothing below 12px):
+  - **Sidebar**: blueprint grid, ruler under the brand with orange 60px datums, dimension-marked group labels, orange-to-transparent active state with a 2px datum.
+  - **Content column**: drawing-paper canvas.
+  - **Headers**: ruler plus orange datum under every ops/page/dashboard header (the datum measures in on load), and `|—|` eyebrows in AA orange ink.
+  - **Surfaces**: sheet corner brackets on primary panels (dashboard, ops panels and surfaces, project context); grid-paper panel and register heads; tabular numerals on KPIs and money.
+  - **Controls**: tick rulers at the foot of KPI cells, measured tab indicator with end ticks, primary buttons with an orange base rule, 4px technical radius.
+  - **Login and first-login**: blueprint login panel with registration marks; blueprint first-login gate card.
+  - **Motion**: entrance is opacity-only, so fixed Save bars and the chat composer stay anchored.
+- **Defect found and fixed during QA**: the API **process crashed** when a download targeted a record whose file is missing on disk (restored backup, manual cleanup, failed copy). `createReadStream` emitted an unhandled `ENOENT` error and Node exited. Reproduced locally on a site-media record. `StorageService.open`/`statSize` now verify the file and answer 404 before any header is sent. All six download paths (site media, design revisions, documents, finance receipts, voice notes incl. range requests) now stream through `stream.pipeline`, so a read or write failure ends only that response. Production API error logs show no occurrence (latent). New `storage-resilience.spec.ts`: missing file → 404 ×3 and the API keeps serving.
+- **Phone**: the canonical company number remains `01130666726` (display) / `+201130666726` (tel) / `201130666726` (wa.me) from `@elhabak/contracts`; a repository scan found no other company number; a new web test pins the contract values.
+- **Verification** (local production build + isolated `elhabak_test`; Chromium, phones via Chromium mobile emulation — WebKit/Safari not run here):
+  - Internal matrix **70/70**: 14 screens — dashboard, projects, project overview, design, site activity, project finance, documents, chat, finance centre, data operations, reports, clients, new client, settings — at AR 1440×900, 390×844, 412×915 and EN 1440×900, 390×844. Zero page overflow, zero off-screen content outside horizontal tab scrollers, zero text under 12px, zero console errors.
+  - Public matrix **35/35**: home, services, contact, about, platform, architectural design and login at AR 1440/390/412 and EN 1440/390. Zero horizontal overflow.
+  - Gates: `pnpm install --frozen-lockfile`, `db:validate`, `db:generate`, `lint`, `typecheck`, `build`, API **182/182** (20 files) and web **46/46** (new `architecture-design.test.mjs`: layer order, tokens, motion safety, opacity-only entrance, no green CTAs, canonical phone), PostCSS parse of the production CSS (4 files, 3,426 rules) and `git diff --check` — PASS.
+- **Notes**: iOS Safari rendering of the hero drawing and the blur surfaces should be glanced at on the owner's phone (Chromium-only verification here).
+- **Release**: staging.elhabak.com first, then elhabak.com, from this commit via the canonical package → preflight → deploy flow. No schema migration; no production data touched.

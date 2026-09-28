@@ -243,7 +243,7 @@ a {
 
 .header-login--solid {
   background: var(--public-navy-850) !important;
-  color: #FFFFFF !important;
+  color: #FFFFFF;
   font-weight: 600;
   border-radius: var(--public-radius-md);
   padding: 0.5rem 1.125rem;
@@ -424,8 +424,8 @@ a {
 }
 
 .mobile-drawer__btn--whatsapp {
-  background: #16A34A !important;
-  color: #FFFFFF !important;
+  background: var(--public-orange-500);
+  color: #FFFFFF;
 }
 
 .mobile-drawer__footer {
@@ -591,15 +591,14 @@ a {
 }
 
 .hero-cta--whatsapp {
-  background: #16A34A !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+  background: var(--public-orange-500);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px var(--public-orange-glow);
 }
 
 .hero-cta--whatsapp:hover {
-  background: #15803D !important;
+  background: var(--public-orange-600);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.4);
 }
 
 .hero-cta--ghost {
@@ -1620,7 +1619,7 @@ a {
   align-items: center;
   gap: 0.5rem;
   background: var(--public-navy-850) !important;
-  color: #FFFFFF !important;
+  color: #FFFFFF;
   font-weight: 700;
   padding: 0.875rem 1.75rem;
   border-radius: var(--public-radius-md);
@@ -1978,17 +1977,17 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.625rem;
-  background: #16A34A !important;
-  color: #FFFFFF !important;
+  background: var(--public-orange-500);
+  color: #FFFFFF;
   font-weight: 700;
   padding: 0.875rem 1.875rem;
   border-radius: var(--public-radius-md);
-  box-shadow: 0 4px 18px rgba(22, 163, 74, 0.4);
+  box-shadow: 0 4px 18px var(--public-orange-glow);
   transition: all var(--public-transition);
 }
 
 .cta-banner-btn:hover {
-  background: #15803D !important;
+  background: var(--public-orange-600);
   transform: translateY(-1px);
 }
 
