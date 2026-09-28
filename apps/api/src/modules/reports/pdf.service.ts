@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import puppeteer, { type Browser } from "puppeteer-core";
 import type { ReportsService } from "./reports.service";
 import type { FinancePortfolioService } from "../finance/finance-portfolio.service";
+import { Semaphore, SemaphoreBusyError } from "../../shared/semaphore";
 
 type ReportData = Awaited<ReturnType<ReportsService["getProjectReport"]>>;
 type FinanceReportData = Awaited<ReturnType<FinancePortfolioService["buildReport"]>>;
@@ -12,8 +13,42 @@ type Locale = "ar" | "en";
 @Injectable()
 export class PdfService implements OnApplicationShutdown {
   private browser: Browser | undefined;
+  private launching: Promise<Browser> | undefined;
+  /**
+   * One shared Chromium; at most PDF_CONCURRENCY tabs render at once (each tab is a
+   * renderer process, ~50-150 MB). Up to PDF_QUEUE requests wait up to 60 s for a slot;
+   * beyond that the caller gets 503 instead of the host running out of memory.
+   */
+  private readonly slots = new Semaphore(
+    positiveInt(process.env.PDF_CONCURRENCY, 2),
+    positiveInt(process.env.PDF_QUEUE, 20),
+    60_000
+  );
 
   async render(report: ReportData, locale: Locale) {
+    return this.withSlot(() => this.renderProject(report, locale));
+  }
+
+  async renderFinanceReport(report: FinanceReportData, locale: Locale) {
+    return this.withSlot(() => this.renderFinance(report, locale));
+  }
+
+  get load() {
+    return { rendering: this.slots.inUse, queued: this.slots.queued };
+  }
+
+  private async withSlot(task: () => Promise<Buffer>) {
+    try {
+      return await this.slots.run(task);
+    } catch (error) {
+      if (error instanceof SemaphoreBusyError) {
+        throw new ServiceUnavailableException("Report generation is busy. Try again shortly.");
+      }
+      throw error;
+    }
+  }
+
+  private async renderProject(report: ReportData, locale: Locale) {
     const browser = await this.getBrowser();
     const page = await browser.newPage();
     try {
@@ -34,7 +69,7 @@ export class PdfService implements OnApplicationShutdown {
     }
   }
 
-  async renderFinanceReport(report: FinanceReportData, locale: Locale) {
+  private async renderFinance(report: FinanceReportData, locale: Locale) {
     const browser = await this.getBrowser();
     const page = await browser.newPage();
     try {
@@ -67,14 +102,25 @@ export class PdfService implements OnApplicationShutdown {
 
   private async getBrowser() {
     if (this.browser?.connected) return this.browser;
-    const executablePath = findChromium();
-    if (!executablePath) throw new ServiceUnavailableException("PDF renderer is unavailable.");
-    this.browser = await puppeteer.launch({
-      executablePath,
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+    // Single-flight launch: concurrent first requests share one Chromium instead of
+    // each launching (and leaking) their own.
+    this.launching ??= (async () => {
+      const executablePath = findChromium();
+      if (!executablePath) throw new ServiceUnavailableException("PDF renderer is unavailable.");
+      const browser = await puppeteer.launch({
+        executablePath,
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+      });
+      browser.on("disconnected", () => {
+        if (this.browser === browser) this.browser = undefined;
+      });
+      this.browser = browser;
+      return browser;
+    })().finally(() => {
+      this.launching = undefined;
     });
-    return this.browser;
+    return this.launching;
   }
 
   private html(report: ReportData, locale: Locale) {
@@ -692,4 +738,9 @@ function findChromium() {
       : undefined
   ].filter((value): value is string => Boolean(value));
   return candidates.find(existsSync);
+}
+
+function positiveInt(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }

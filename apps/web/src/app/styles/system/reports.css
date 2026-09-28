@@ -494,8 +494,8 @@
     font-weight: 800;
   }
 
-  /* ------------------------ card tables below 1024 ------------------------ */
-  @media (max-width: 1023.98px) {
+  /* ---------- card tables whenever the content column cannot hold every column ---------- */
+  @container app (max-width: 1159.98px) {
     .report-table-wrap--cards {
       overflow: visible;
       border: 0;

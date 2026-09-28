@@ -7,6 +7,9 @@ import { PrismaService } from "../../shared/prisma.service";
 import { AuditService } from "./audit.service";
 import { parseBody } from "../../shared/zod";
 import { RealtimeGateway } from "../realtime/realtime.gateway";
+import type { PageRequest } from "../../shared/paging";
+
+const STAFF_ROLES = ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER"] as const;
 
 const PRIMARY_ADMIN_EMAIL = "mohamed.elhabak@elhabak.local";
 
@@ -54,7 +57,12 @@ export class AdminUsersService {
     private readonly realtime: RealtimeGateway
   ) {}
 
-  async list(search?: string, role?: UserRole, status?: AccountStatus) {
+  /**
+   * Without `paging` returns the full staff array (project-form pickers). With `paging`
+   * the Team register gets one bounded page, server-side search/role/status filtering,
+   * a stable order and whole-team summary counts.
+   */
+  async list(search?: string, role?: UserRole, status?: AccountStatus, paging?: PageRequest | null) {
     const trimmedSearch = search?.trim();
     const where: Prisma.UserWhereInput = {};
 
@@ -77,9 +85,28 @@ export class AdminUsersService {
     const users = await this.prisma.user.findMany({
       where,
       select: userResponseSelect,
-      orderBy: [{ createdAt: "desc" }]
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      ...(paging ? { skip: paging.skip, take: paging.pageSize } : {})
     });
-    return users.map(toUserResponse);
+    const rows = users.map(toUserResponse);
+    if (!paging) return rows;
+
+    const staff = { role: { in: [...STAFF_ROLES] } };
+    const [total, byRole, active, suspended, archived] = await Promise.all([
+      this.prisma.user.count({ where }),
+      this.prisma.user.groupBy({ by: ["role"], where: staff, _count: { _all: true } }),
+      this.prisma.user.count({ where: { ...staff, isActive: true, archivedAt: null } }),
+      this.prisma.user.count({ where: { ...staff, isActive: false, archivedAt: null } }),
+      this.prisma.user.count({ where: { ...staff, archivedAt: { not: null } } })
+    ]);
+    const roles = Object.fromEntries(STAFF_ROLES.map((name) => [name, byRole.find((row) => row.role === name)?._count._all ?? 0]));
+    return {
+      items: rows,
+      total,
+      page: paging.page,
+      pageSize: paging.pageSize,
+      summary: { total: active + suspended + archived, active, suspended, archived, roles }
+    };
   }
 
   async get(id: string) {

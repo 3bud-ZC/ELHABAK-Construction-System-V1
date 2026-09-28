@@ -67,9 +67,19 @@ export class ProjectsController {
   getTimeline(
     @CurrentUser() user: RequestUser,
     @Param("id") id: string,
-    @Query("type") type?: string
+    @Query("type") type?: string,
+    @Query("limit") limit?: string,
+    @Query("before") before?: string
   ) {
-    return this.projectsService.getTimeline(user, id, type);
+    return this.projectsService.getTimeline(user, id, type, {
+      ...(limit ? { limit: Number(limit) } : {}),
+      ...(before ? { before } : {})
+    });
+  }
+
+  @Get(":id/timeline/summary")
+  getTimelineSummary(@CurrentUser() user: RequestUser, @Param("id") id: string) {
+    return this.projectsService.getTimelineSummary(user, id);
   }
 
   @Post(":id/site-updates")

@@ -1,7 +1,12 @@
 /*
  * System · shell — one app frame across devices.
- *   ≥1100px  fixed sidebar (right in Arabic, left in English) + utility topbar
- *   768–1099 off-canvas drawer + compact topbar with search
+ *   ≥1200px  fixed sidebar (right in Arabic, left in English) + utility topbar
+ *   768–1199 off-canvas drawer + compact topbar with search
+ *
+ * The sidebar needs 232px; below 1200px it would leave less than ~920px for
+ * registers and forms, so the drawer shell takes over. Inside the shell, content
+ * layouts respond to the real content width through the `app` container on
+ * .app-main (container queries), not to the viewport.
  *   <768     compact topbar + 5-destination bottom navigation + drawer "Menu"
  */
 @layer system {
@@ -212,6 +217,9 @@
   /* ------------------------------- topbar ------------------------------- */
   .app-main {
     min-width: 0;
+    /* inline-size containment only: fixed Save bars, the chat composer and
+       bottom sheets keep the viewport as their containing block. */
+    container: app / inline-size;
   }
 
   .app-topbar {
@@ -370,7 +378,7 @@
   }
 
   /* ------------------------ drawer (tablet + phone) ------------------------ */
-  @media (max-width: 1099.98px) {
+  @media (max-width: 1199.98px) {
     .app-shell {
       grid-template-columns: minmax(0, 1fr);
     }

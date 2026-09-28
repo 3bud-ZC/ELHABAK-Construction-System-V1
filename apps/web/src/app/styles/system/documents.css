@@ -303,7 +303,7 @@
   }
 
   /* --------------------------- cards below 1024 --------------------------- */
-  @media (max-width: 1023.98px) {
+  @container app (max-width: 1023.98px) {
     .design-register {
       gap: var(--space-2);
       padding: var(--space-2);

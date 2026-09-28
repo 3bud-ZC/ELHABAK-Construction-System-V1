@@ -420,7 +420,7 @@
   }
 
   /* ------------------------------- tablet ------------------------------- */
-  @media (max-width: 1023.98px) {
+  @container app (max-width: 1023.98px) {
     .site-status-strip {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -532,5 +532,16 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--space-2);
     }
+  }
+
+  /* Paged timeline: earlier activity loads on demand. */
+  .site-timeline-more {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-4) 0 var(--space-2);
+  }
+
+  .site-timeline-more .ui-button {
+    min-height: var(--control-height-touch);
   }
 }

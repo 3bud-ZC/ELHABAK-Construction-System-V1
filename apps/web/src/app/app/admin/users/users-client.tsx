@@ -19,7 +19,8 @@ import {
   UsersRound,
   X
 } from "lucide-react";
-import { apiRequest, dataOpsExportUrl, formatAppDate, roleLabel, type UserRecord, type UserRole } from "../../../../lib/api";
+import { apiRequest, dataOpsExportUrl, formatAppDate, REGISTER_PAGE_SIZE, roleLabel, type PagedResult, type UserListSummary, type UserRecord, type UserRole } from "../../../../lib/api";
+import { RegisterPager } from "../../../../components/register-pager";
 import { useCurrentUser } from "../../../../lib/user-context";
 import { filterLabels } from "../../../../lib/adaptive";
 
@@ -53,6 +54,12 @@ export function UsersClient({ mode, id }: UsersClientProps) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
   const [statusFilter, setStatusFilter] = useState<AccountStatus | "ALL">("ALL");
+  // Server-side paging and filtering; counts come from the whole-team summary.
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState<UserListSummary | null>(null);
+  const [query, setQuery] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [confirmationText, setConfirmationText] = useState("");
@@ -64,16 +71,15 @@ export function UsersClient({ mode, id }: UsersClientProps) {
   const ar = locale === "ar";
 
   const labels = useMemo(() => copy(ar), [ar]);
-  const activeCount = users.filter((user) => statusOf(user) === "ACTIVE").length;
-  const suspendedCount = users.filter((user) => statusOf(user) === "SUSPENDED").length;
-  const archivedCount = users.filter((user) => statusOf(user) === "ARCHIVED").length;
-  const visibleUsers = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase();
-    return users.filter((user) => {
-      const matchesQuery = !query || `${user.displayName} ${user.email}`.toLocaleLowerCase().includes(query);
-      return matchesQuery && (roleFilter === "ALL" || user.role === roleFilter) && (statusFilter === "ALL" || statusOf(user) === statusFilter);
-    });
-  }, [roleFilter, search, statusFilter, users]);
+  const visibleUsers = users;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setQuery(search.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     if (mode === "create") {
@@ -81,9 +87,19 @@ export function UsersClient({ mode, id }: UsersClientProps) {
       return;
     }
     setLoading(true);
-    const request = mode === "list" ? apiRequest<UserRecord[]>("/admin/users").then(setUsers) : apiRequest<UserRecord>(`/admin/users/${id}`).then(setRecord);
+    const params = new URLSearchParams({ page: String(page), pageSize: String(REGISTER_PAGE_SIZE) });
+    if (query) params.set("search", query);
+    if (roleFilter !== "ALL") params.set("role", roleFilter);
+    if (statusFilter !== "ALL") params.set("status", statusFilter);
+    const request = mode === "list"
+      ? apiRequest<PagedResult<UserRecord, UserListSummary>>(`/admin/users?${params.toString()}`).then((result) => {
+        setUsers(result.items);
+        setTotal(result.total);
+        setSummary(result.summary);
+      })
+      : apiRequest<UserRecord>(`/admin/users/${id}`).then(setRecord);
     request.catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
-  }, [id, mode]);
+  }, [id, mode, page, query, roleFilter, statusFilter, refreshKey]);
 
   useEffect(() => {
     if (!openMenu) return;
@@ -170,6 +186,8 @@ export function UsersClient({ mode, id }: UsersClientProps) {
       }
       setSuccess(actionSuccess(kind, ar, pending.impact));
       setPending(null);
+      // Lifecycle actions change the summary counts (and possibly filter membership).
+      setRefreshKey((value) => value + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : labels.requestFailed);
     } finally {
@@ -197,10 +215,10 @@ export function UsersClient({ mode, id }: UsersClientProps) {
         {!loading ? (
           <OperationsPanel className="team-account-ledger" aria-label={ar ? "دورة حياة الحسابات" : "Account lifecycle"}>
             <OperationsGrid columns="repeat(4, minmax(150px, 1fr))">
-              <OperationsMetric tone="navy" label={labels.total} value={<bdi>{users.length}</bdi>} />
-              <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{activeCount}</bdi>} />
-              <OperationsMetric tone="warning" label={labels.suspendedCount} value={<bdi>{suspendedCount}</bdi>} />
-              <OperationsMetric tone="neutral" label={labels.archivedCount} value={<bdi>{archivedCount}</bdi>} />
+              <OperationsMetric tone="navy" label={labels.total} value={<bdi>{summary?.total ?? 0}</bdi>} />
+              <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{summary?.active ?? 0}</bdi>} />
+              <OperationsMetric tone="warning" label={labels.suspendedCount} value={<bdi>{summary?.suspended ?? 0}</bdi>} />
+              <OperationsMetric tone="neutral" label={labels.archivedCount} value={<bdi>{summary?.archived ?? 0}</bdi>} />
             </OperationsGrid>
           </OperationsPanel>
         ) : null}
@@ -210,7 +228,7 @@ export function UsersClient({ mode, id }: UsersClientProps) {
           <div className="users-role-strip__chips">
             {roles.map((role) => (
               <span key={role} className="users-role-chip">
-                {roleLabel(role, locale)} <strong>{users.filter((user) => user.role === role).length}</strong>
+                {roleLabel(role, locale)} <strong>{summary?.roles[role] ?? 0}</strong>
               </span>
             ))}
           </div>
@@ -220,24 +238,24 @@ export function UsersClient({ mode, id }: UsersClientProps) {
           <AdaptiveFilters
             className="register-filters"
             labels={filterLabels(locale)}
-            onClear={() => { setRoleFilter("ALL"); setStatusFilter("ALL"); }}
+            onClear={() => { setRoleFilter("ALL"); setStatusFilter("ALL"); setPage(1); }}
             chips={[
-              roleFilter !== "ALL" && { key: "role", label: roleLabel(roleFilter, locale), onRemove: () => setRoleFilter("ALL") },
-              statusFilter !== "ALL" && { key: "status", label: statusFilter === "ACTIVE" ? labels.active : statusFilter === "SUSPENDED" ? labels.suspended : labels.archived, onRemove: () => setStatusFilter("ALL") }
+              roleFilter !== "ALL" && { key: "role", label: roleLabel(roleFilter, locale), onRemove: () => { setRoleFilter("ALL"); setPage(1); } },
+              statusFilter !== "ALL" && { key: "status", label: statusFilter === "ACTIVE" ? labels.active : statusFilter === "SUSPENDED" ? labels.suspended : labels.archived, onRemove: () => { setStatusFilter("ALL"); setPage(1); } }
             ].filter(Boolean) as FilterChip[]}
             search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} /></label>}
-            meta={!loading ? <span><bdi>{visibleUsers.length}</bdi> {ar ? "مستخدم" : "users"}</span> : undefined}
+            meta={!loading ? <span><bdi>{total}</bdi> {ar ? "مستخدم" : "users"}</span> : undefined}
           >
             <label className="adaptive-filter-field">
               <span className="adaptive-filter-field__label">{labels.role}</span>
-              <select className="filter-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as UserRole | "ALL")} aria-label={labels.filterRole}>
+              <select className="filter-select" value={roleFilter} onChange={(event) => { setRoleFilter(event.target.value as UserRole | "ALL"); setPage(1); }} aria-label={labels.filterRole}>
                 <option value="ALL">{labels.allRoles}</option>
                 {roles.map((role) => <option value={role} key={role}>{roleLabel(role, locale)}</option>)}
               </select>
             </label>
             <label className="adaptive-filter-field">
               <span className="adaptive-filter-field__label">{labels.status}</span>
-              <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AccountStatus | "ALL")} aria-label={labels.filterStatus}>
+              <select className="filter-select" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value as AccountStatus | "ALL"); setPage(1); }} aria-label={labels.filterStatus}>
                 <option value="ALL">{labels.allStatuses}</option>
                 <option value="ACTIVE">{labels.active}</option>
                 <option value="SUSPENDED">{labels.suspended}</option>
@@ -274,6 +292,7 @@ export function UsersClient({ mode, id }: UsersClientProps) {
               ))}
             </Register>
           ) : null}
+          {!loading ? <RegisterPager page={page} pageSize={REGISTER_PAGE_SIZE} total={total} locale={locale} onPage={setPage} /> : null}
         </OperationsSurface>
         {pending ? <ActionDialog pending={pending} labels={labels} ar={ar} busy={actionBusy} confirmationText={confirmationText} temporaryPassword={temporaryPassword} onConfirmationText={setConfirmationText} onTemporaryPassword={setTemporaryPassword} onClose={() => setPending(null)} onConfirm={() => void confirmAction()} /> : null}
       </section>

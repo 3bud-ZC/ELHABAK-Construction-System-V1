@@ -94,6 +94,11 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   const user = useCurrentUser();
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEventRecord[]>([]);
+  // The timeline is paged server-side (TIMELINE_PAGE events per request); KPI counts
+  // come from the whole-project summary so they stay exact beyond the first page.
+  const [timelineSummary, setTimelineSummary] = useState<TimelineSummary | null>(null);
+  const [hasMoreTimeline, setHasMoreTimeline] = useState(false);
+  const [loadingMoreTimeline, setLoadingMoreTimeline] = useState(false);
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("ALL");
   const [viewMode, setViewMode] = useState<"timeline" | "gallery">("timeline");
   const [loading, setLoading] = useState(true);
@@ -196,6 +201,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           galleryView: "معرض وسائط الموقع",
           emptyTimeline: "لا توجد تحديثات موقع مسجلة بعد",
           emptyTimelineHint: "عند إضافة تقارير الموقع أو تغيير المراحل ستظهر هنا مرتبة زمنياً.",
+          loadEarlier: "عرض النشاط الأقدم",
+          loadingEarlier: "جاري التحميل...",
           emptyGallery: "لا توجد صور أو مقاطع فيديو مرفوعة بعد",
           emptyGalleryHint: "الصور والفيديوهات المرفقة بتقارير الموقع ستظهر في المعرض.",
           workerPanelTitle: "رفع تحديث ميداني سريع",
@@ -270,6 +277,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
           galleryView: "Media Gallery",
           emptyTimeline: "No site updates recorded yet",
           emptyTimelineHint: "Field reports and phase transitions will appear here chronologically.",
+          loadEarlier: "Show earlier activity",
+          loadingEarlier: "Loading...",
           emptyGallery: "No field media uploaded yet",
           emptyGalleryHint: "Photos and videos attached to site updates will appear in the gallery.",
           workerPanelTitle: "Quick Field Upload",
@@ -333,12 +342,15 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
   const loadData = useCallback(async () => {
     try {
-      const [projectData, timelineData] = await Promise.all([
+      const [projectData, timelineData, summary] = await Promise.all([
         apiRequest<ProjectRecord>(`/projects/${projectId}`),
-        apiRequest<TimelineEventRecord[]>(`/projects/${projectId}/timeline${selectedTypeFilter !== "ALL" ? `?type=${selectedTypeFilter}` : ""}`)
+        apiRequest<TimelineEventRecord[]>(timelineUrl(projectId, selectedTypeFilter)),
+        apiRequest<TimelineSummary>(`/projects/${projectId}/timeline/summary`)
       ]);
       setProject(projectData);
       setTimelineEvents(timelineData);
+      setHasMoreTimeline(timelineData.length === TIMELINE_PAGE);
+      setTimelineSummary(summary);
       setNewProgress(projectData.progress);
       setNewPhase(projectData.phase);
       setError("");
@@ -363,9 +375,11 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
       return;
     }
     let alive = true;
-    apiRequest<TimelineEventRecord[]>(`/projects/${projectId}/timeline${selectedTypeFilter !== "ALL" ? `?type=${selectedTypeFilter}` : ""}`)
+    apiRequest<TimelineEventRecord[]>(timelineUrl(projectId, selectedTypeFilter))
       .then((result) => {
-        if (alive) setTimelineEvents(result);
+        if (!alive) return;
+        setTimelineEvents(result);
+        setHasMoreTimeline(result.length === TIMELINE_PAGE);
       })
       .catch((err) => {
         if (alive) setError(err instanceof Error ? err.message : "Failed to load timeline.");
@@ -374,6 +388,24 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
       alive = false;
     };
   }, [projectId, selectedTypeFilter]);
+
+  const loadEarlierTimeline = useCallback(async () => {
+    const oldest = timelineEvents[timelineEvents.length - 1];
+    if (!oldest) return;
+    setLoadingMoreTimeline(true);
+    try {
+      const older = await apiRequest<TimelineEventRecord[]>(timelineUrl(projectId, selectedTypeFilter, oldest.timestamp));
+      setTimelineEvents((current) => {
+        const seen = new Set(current.map((event) => event.id));
+        return [...current, ...older.filter((event) => !seen.has(event.id))];
+      });
+      setHasMoreTimeline(older.length === TIMELINE_PAGE);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load timeline.");
+    } finally {
+      setLoadingMoreTimeline(false);
+    }
+  }, [timelineEvents, projectId, selectedTypeFilter]);
 
   // Authorization flags
   const canManageProgressAndPhase = useMemo(() => {
@@ -388,8 +420,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
 
   const isWorker = user.role === "WORKER";
   const isClient = user.role === "CLIENT";
-  // Update counts come from the timeline (unbounded, already fetched) - not from
-  // project.siteUpdates, which is no longer part of the detail payload.
+  // Loaded site-update events (the current timeline pages); totals use timelineSummary.
   const siteUpdateEvents = useMemo(() => timelineEvents.filter((event) => event.kind === "SITE_UPDATE"), [timelineEvents]);
   const latestEvent = timelineEvents[0];
   const latestEventTime = latestEvent
@@ -893,10 +924,10 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         </div>
         <div className="site-status-strip__cell">
           <span className="site-status-strip__label"><Activity size={16} aria-hidden="true" /> {labels.totalUpdates}</span>
-          <strong dir="ltr">{siteUpdateEvents.length}</strong>
+          <strong dir="ltr">{timelineSummary?.totalUpdates ?? siteUpdateEvents.length}</strong>
           <span className="site-status-strip__chips">
             {SITE_UPDATE_TYPES.map((t) => {
-              const count = siteUpdateEvents.filter((u) => u.type === t).length;
+              const count = timelineSummary ? (timelineSummary.byType[t] ?? 0) : siteUpdateEvents.filter((u) => u.type === t).length;
               if (count === 0) return null;
               return <Badge key={t} tone={siteUpdateTypeTone(t)}>{siteUpdateTypeLabel(t, locale)}: {count}</Badge>;
             })}
@@ -904,7 +935,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         </div>
         <div className="site-status-strip__cell">
           <span className="site-status-strip__label"><ImageIcon size={16} aria-hidden="true" /> {labels.mediaAssets}</span>
-          <strong dir="ltr">{allGalleryMedia.length}</strong>
+          <strong dir="ltr">{timelineSummary?.mediaCount ?? allGalleryMedia.length}</strong>
         </div>
       </section>
 
@@ -1178,6 +1209,13 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
               })}
             </div>
           )}
+          {hasMoreTimeline ? (
+            <div className="site-timeline-more">
+              <button type="button" className="ui-button ui-button--secondary" onClick={() => void loadEarlierTimeline()} disabled={loadingMoreTimeline}>
+                {loadingMoreTimeline ? labels.loadingEarlier : labels.loadEarlier}
+              </button>
+            </div>
+          ) : null}
         </section>
       )}
 
@@ -1685,4 +1723,20 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
       )}
     </section>
   );
+}
+
+const TIMELINE_PAGE = 100;
+
+type TimelineSummary = {
+  totalUpdates: number;
+  byType: Partial<Record<string, number>>;
+  mediaCount: number;
+  lastUpdateAt: string | null;
+};
+
+function timelineUrl(projectId: string, type: string, before?: string) {
+  const query = new URLSearchParams({ limit: String(TIMELINE_PAGE) });
+  if (type !== "ALL") query.set("type", type);
+  if (before) query.set("before", before);
+  return `/projects/${projectId}/timeline?${query.toString()}`;
 }

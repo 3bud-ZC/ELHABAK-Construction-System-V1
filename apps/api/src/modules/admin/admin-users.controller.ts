@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req, UseGuards } from "@nestjs/common";
 import type { UserRole } from "@elhabak/database";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
@@ -6,6 +6,7 @@ import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
 import type { AuthenticatedRequest, RequestUser } from "../../shared/http.types";
 import { AdminUsersService } from "./admin-users.service";
+import { parsePageRequest } from "../../shared/paging";
 
 @UseGuards(AuthGuard, RolesGuard)
 @Roles("ADMIN")
@@ -16,10 +17,16 @@ export class AdminUsersController {
   @Get()
   list(
     @Query("search") search?: string,
-    @Query("role") role?: UserRole,
-    @Query("status") status?: "ACTIVE" | "SUSPENDED" | "ARCHIVED"
+    @Query("role") role?: string,
+    @Query("status") status?: string,
+    @Query("page") page?: string,
+    @Query("pageSize") pageSize?: string
   ) {
-    return this.usersService.list(search, role, status);
+    const roleFilter = role && ["ADMIN", "ENGINEER", "ACCOUNTANT", "WORKER", "CLIENT"].includes(role) ? (role as UserRole) : undefined;
+    if (role && !roleFilter) throw new BadRequestException("Unknown role filter.");
+    const statusFilter = status === "ACTIVE" || status === "SUSPENDED" || status === "ARCHIVED" ? status : undefined;
+    if (status && !statusFilter) throw new BadRequestException("Unknown status filter.");
+    return this.usersService.list(search, roleFilter, statusFilter, parsePageRequest(page, pageSize));
   }
 
   @Get(":id")

@@ -529,7 +529,7 @@
   }
 
   /* ------------------------------- tablet ------------------------------- */
-  @media (max-width: 1023.98px) {
+  @container app (max-width: 1023.98px) {
     /* Ledgers become record cards below the laptop width — no crushed
        columns, no page-level horizontal scroll. */
     .finance-register {

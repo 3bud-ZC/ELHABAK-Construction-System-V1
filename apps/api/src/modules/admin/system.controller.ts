@@ -14,4 +14,9 @@ export class SystemController {
   storage() {
     return this.systemService.storageUsage();
   }
+
+  @Get("diagnostics")
+  diagnostics() {
+    return this.systemService.diagnostics();
+  }
 }

@@ -343,6 +343,38 @@
     }
   }
 
+  /* Dialogs and sheets: short transform/opacity entrances (compositor-only). */
+  @media (prefers-reduced-motion: no-preference) {
+    .modal-backdrop,
+    .account-dialog-backdrop,
+    .ui-overlay__backdrop {
+      animation: arch-fade 180ms var(--ease) both;
+    }
+
+    :is(.design-dialog, .site-modal-dialog, .account-dialog, .ui-modal) {
+      animation: arch-dialog-in 220ms var(--ease) both;
+    }
+
+    .ui-bottom-sheet {
+      animation: arch-sheet-up 260ms var(--ease) both;
+    }
+  }
+
+  @keyframes arch-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes arch-dialog-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes arch-sheet-up {
+    from { opacity: 0.6; transform: translateY(28px); }
+    to { opacity: 1; transform: none; }
+  }
+
   @keyframes arch-enter {
     from { opacity: 0; }
     to { opacity: 1; }

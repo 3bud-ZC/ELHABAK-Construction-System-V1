@@ -232,7 +232,7 @@ a {
   border-radius: var(--public-radius-md);
   border: 1px solid var(--public-border);
   background: var(--public-surface);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .lang-link:hover {
@@ -248,7 +248,7 @@ a {
   border-radius: var(--public-radius-md);
   padding: 0.5rem 1.125rem;
   border: 1px solid var(--public-navy-850);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .header-login--solid:hover {
@@ -274,7 +274,7 @@ a {
   border: 1px solid var(--public-border);
   color: var(--public-navy-850);
   cursor: pointer;
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .mobile-menu-btn:hover {
@@ -587,7 +587,7 @@ a {
   font-weight: 700;
   padding: 0.875rem 1.625rem;
   border-radius: var(--public-radius-md);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .hero-cta--whatsapp {
@@ -843,7 +843,7 @@ a {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .hero-rail__state.is-active {
@@ -1068,7 +1068,7 @@ a {
   border: 1px solid rgba(234, 88, 12, 0.3);
   padding: 0.75rem 1.5rem;
   border-radius: var(--public-radius-md);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .about-cta-btn:hover {
@@ -1624,7 +1624,7 @@ a {
   padding: 0.875rem 1.75rem;
   border-radius: var(--public-radius-md);
   box-shadow: 0 4px 14px rgba(11, 19, 43, 0.2);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .platform-cta-btn:hover {
@@ -1840,7 +1840,7 @@ a {
   padding: 0.75rem 1.5rem;
   border-radius: var(--public-radius-md);
   background: var(--public-surface);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .faq-action-btn:hover {
@@ -1983,7 +1983,7 @@ a {
   padding: 0.875rem 1.875rem;
   border-radius: var(--public-radius-md);
   box-shadow: 0 4px 18px var(--public-orange-glow);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .cta-banner-btn:hover {
@@ -2004,7 +2004,7 @@ a {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  transition: all var(--public-transition);
+  transition: color var(--public-transition), background-color var(--public-transition), border-color var(--public-transition), box-shadow var(--public-transition), transform var(--public-transition), opacity var(--public-transition);
 }
 
 .cta-banner-phone:hover {
@@ -2236,7 +2236,6 @@ a {
     opacity: 0;
     transform: translateY(24px);
     transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: opacity, transform;
   }
 
   [data-reveal="mask"] {

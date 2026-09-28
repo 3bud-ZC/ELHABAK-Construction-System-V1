@@ -70,3 +70,4 @@ if (directDatabaseUrl) {
 // would flake them, so specs run with a high limit unless a spec pins its own value
 // before importing AppModule (the security-hardening spec does exactly that).
 process.env.AUTH_LOGIN_RATE_LIMIT ??= "1000";
+process.env.AUTH_LOGIN_IP_RATE_LIMIT ??= "1000";

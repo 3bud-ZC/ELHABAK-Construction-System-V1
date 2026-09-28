@@ -47,6 +47,12 @@ export type UserRecord = {
   updatedAt: string;
 };
 
+/** Opt-in paged response of growing admin registers (`?page=`). */
+export type PagedResult<T, S> = { items: T[]; total: number; page: number; pageSize: number; summary: S };
+export type ClientListSummary = { total: number; active: number; inactive: number; contactReady: number };
+export type UserListSummary = { total: number; active: number; suspended: number; archived: number; roles: Record<string, number> };
+export const REGISTER_PAGE_SIZE = 25;
+
 export type ClientRecord = {
   id: string;
   user: UserRecord;

@@ -628,7 +628,7 @@
   }
 
   /* ------------------------------- tablet ------------------------------- */
-  @media (max-width: 1099.98px) {
+  @container app (max-width: 1059.98px) {
     .design-detail-layout {
       grid-template-columns: minmax(0, 1fr);
     }

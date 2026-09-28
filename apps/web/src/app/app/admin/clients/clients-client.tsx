@@ -6,7 +6,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { normalizeEgyptianMobile } from "@elhabak/contracts";
 import { AdaptiveFilters, Badge, ConfirmDialog, EmptyState, LoadingState, OperationsGrid, OperationsHeader, OperationsMetric, OperationsPanel, OperationsSurface, PageHeader, Register, RegisterCell, RegisterRow } from "@elhabak/ui";
 import { ArrowLeft, ArrowRight, Download, KeyRound, UploadCloud, UserRoundCog } from "lucide-react";
-import { accountStatusTone, apiRequest, dataOpsExportUrl, type ClientPasswordReset, type ClientRecord } from "../../../../lib/api";
+import { accountStatusTone, apiRequest, dataOpsExportUrl, REGISTER_PAGE_SIZE, type ClientListSummary, type ClientPasswordReset, type ClientRecord, type PagedResult } from "../../../../lib/api";
+import { RegisterPager } from "../../../../components/register-pager";
 import { filterLabels } from "../../../../lib/adaptive";
 import { ClientCredentialsPanel, type OneTimeCredentials } from "./client-credentials-panel";
 
@@ -23,6 +24,11 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  // Server-side paging: one bounded page per request, whole-table counts from summary.
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState<ClientListSummary | null>(null);
+  const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   // One-time plaintext credential (create or reset). Cleared on dismissal; never refetchable.
@@ -121,8 +127,14 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
     [locale]
   );
 
-  const activeCount = useMemo(() => clients.filter((item) => item.user.isActive).length, [clients]);
-  const contactReadyCount = useMemo(() => clients.filter((item) => Boolean(item.phone)).length, [clients]);
+  // Debounced search: typing does not fire a request per keystroke; a new query starts at page 1.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setQuery(search.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     if (mode === "create") {
@@ -130,15 +142,19 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
       return;
     }
     setLoading(true);
+    const params = new URLSearchParams({ page: String(page), pageSize: String(REGISTER_PAGE_SIZE) });
+    if (query) params.set("search", query);
     const request =
       mode === "list"
-        ? apiRequest<ClientRecord[]>(`/admin/clients${search ? `?search=${encodeURIComponent(search)}` : ""}`).then(
-          setClients
-        )
+        ? apiRequest<PagedResult<ClientRecord, ClientListSummary>>(`/admin/clients?${params.toString()}`).then((result) => {
+          setClients(result.items);
+          setTotal(result.total);
+          setSummary(result.summary);
+        })
         : apiRequest<ClientRecord>(`/admin/clients/${id}`).then(setRecord);
 
     request.catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
-  }, [id, mode, search]);
+  }, [id, mode, page, query]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -220,10 +236,10 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
         {!loading && (
           <OperationsPanel className="client-account-ledger" aria-label={ar ? "حالة الوصول" : "Access state"}>
             <OperationsGrid columns="repeat(4, minmax(150px, 1fr))">
-              <OperationsMetric tone="navy" label={labels.total} value={<bdi>{clients.length}</bdi>} />
-              <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{activeCount}</bdi>} />
-              <OperationsMetric tone="warning" label={labels.inactiveCount} value={<bdi>{clients.length - activeCount}</bdi>} />
-              <OperationsMetric tone="neutral" label={labels.contactReady} value={<bdi>{contactReadyCount}</bdi>} />
+              <OperationsMetric tone="navy" label={labels.total} value={<bdi>{summary?.total ?? 0}</bdi>} />
+              <OperationsMetric tone="success" label={labels.activeCount} value={<bdi>{summary?.active ?? 0}</bdi>} />
+              <OperationsMetric tone="warning" label={labels.inactiveCount} value={<bdi>{summary?.inactive ?? 0}</bdi>} />
+              <OperationsMetric tone="neutral" label={labels.contactReady} value={<bdi>{summary?.contactReady ?? 0}</bdi>} />
             </OperationsGrid>
           </OperationsPanel>
         )}
@@ -232,7 +248,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
             className="register-filters"
             labels={filterLabels(locale)}
             search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={labels.search} /></label>}
-            meta={!loading ? <span><bdi>{clients.length}</bdi> {ar ? "عميل" : "clients"}</span> : undefined}
+            meta={!loading ? <span><bdi>{total}</bdi> {ar ? "عميل" : "clients"}</span> : undefined}
           />
           {error ? <div className="form-error">{error}</div> : null}
           {loading ? <LoadingState label={labels.loadingLabel} /> : null}
@@ -279,6 +295,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
               })}
             </Register>
           ) : null}
+          {!loading ? <RegisterPager page={page} pageSize={REGISTER_PAGE_SIZE} total={total} locale={locale} onPage={setPage} /> : null}
         </OperationsSurface>
       </section>
     );

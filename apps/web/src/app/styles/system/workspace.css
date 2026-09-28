@@ -246,7 +246,7 @@
   }
 
   /* ------------------------------- tablet ------------------------------- */
-  @media (max-width: 1099.98px) {
+  @container app (max-width: 1059.98px) {
     .project-context__facts {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -453,7 +453,7 @@
     font-weight: 700;
   }
 
-  @media (max-width: 1279.98px) {
+  @container app (max-width: 1047.98px) {
     .ops-stage-path__item {
       flex-direction: column;
       align-items: center;

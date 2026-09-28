@@ -13,6 +13,7 @@ config({ path: resolve(__dirname, "../../../.env"), quiet: true });
 // Pin the login throttle low BEFORE AppModule is imported so the burst test sees 429s;
 // test-database-env.ts's high default is intended for the role-matrix suites, not this one.
 process.env.AUTH_LOGIN_RATE_LIMIT = "8";
+process.env.AUTH_LOGIN_IP_RATE_LIMIT = "30";
 process.env.STORAGE_ROOT = `.codex-sec-qa/test-storage-${Date.now()}`;
 
 const TRUSTED_ORIGIN = process.env.WEB_ORIGIN ?? "http://localhost:3000";
@@ -184,11 +185,26 @@ describe("Security hardening: origin protection, login rate limiting, uploads, s
     expect(response.body.checkedAt).toBeTypeOf("string");
   });
 
-  it("enforces the login rate limit and returns a clean 429", async () => {
-    // Earlier tests consumed part of this file's 8/minute budget; a burst well above it
-    // must end in 429s while earlier attempts still pass through as normal auth failures.
+  it("throttles repeated attempts against one account without blocking other accounts", async () => {
+    const RLM = String.fromCharCode(0x200f);
     const statuses: number[] = [];
-    for (let index = 0; index < 14; index += 1) {
+    const target = `one-account${testDomain}`;
+    for (let index = 0; index < 10; index += 1) {
+      const response = await request(app.getHttpServer()).post("/auth/login").send({ email: target, password: `wrong-${index}` });
+      statuses.push(response.status);
+    }
+    // 8 per account per minute: the 9th and 10th attempt on the same account are refused.
+    expect(statuses.slice(0, 8).every((status) => status === 401)).toBe(true);
+    expect(statuses.slice(8)).toEqual([429, 429]);
+    // Case/invisible-mark variations of the same email share that budget.
+    await request(app.getHttpServer()).post("/auth/login").send({ email: `${RLM}ONE-ACCOUNT${testDomain.toUpperCase()}`, password: "x" }).expect(429);
+  });
+
+  it("enforces the per-IP ceiling across many accounts (spraying) with a clean 429", async () => {
+    // Earlier tests consumed part of this file's 30/minute IP budget; a burst across
+    // different accounts must end in 429s while earlier attempts pass as auth failures.
+    const statuses: number[] = [];
+    for (let index = 0; index < 24; index += 1) {
       const response = await request(app.getHttpServer())
         .post("/auth/login")
         .send({ email: `nobody-${index}${testDomain}`, password: "wrong" });

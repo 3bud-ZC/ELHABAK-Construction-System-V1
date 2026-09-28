@@ -12,7 +12,8 @@ import { passwordPolicyIssue } from "@elhabak/validation";
 import { canonicalGeneratedTemporaryPassword } from "./temporary-password";
 import { PrismaService } from "../../shared/prisma.service";
 import type { RequestUser } from "../../shared/http.types";
-import { compare, hash } from "bcryptjs";
+// bcrypt runs on a worker_threads pool so sign-in waves never block the event loop.
+import { comparePassword as compare, hashPassword as bcryptHash } from "../../shared/password-hasher";
 import { createHmac, randomBytes } from "node:crypto";
 
 type CookieOptions = {
@@ -47,7 +48,7 @@ export class AuthService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    return hash(password, 12);
+    return bcryptHash(password, 12);
   }
 
   async login(email: string, password: string): Promise<{ token: string; user: RequestUser }> {

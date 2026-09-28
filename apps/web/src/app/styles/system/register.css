@@ -188,7 +188,7 @@
   }
 
   /* ------------------------ tablet: tighter columns ------------------------ */
-  @media (min-width: 1024px) and (max-width: 1439.98px) {
+  @container app (min-width: 900px) and (max-width: 1199.98px) {
     .ops-register__head,
     .ops-register__row {
       gap: var(--space-3);
@@ -222,14 +222,14 @@
   }
 
   /* ------------------- tablet portrait + phone: record cards ------------------- */
-  @media (min-width: 768px) and (max-width: 1023.98px) {
+  @container app (min-width: 720px) and (max-width: 899.98px) {
     .ops-register {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: start;
     }
   }
 
-  @media (max-width: 1023.98px) {
+  @container app (max-width: 899.98px) {
     .ops-register {
       display: grid;
       gap: var(--space-3);
@@ -372,6 +372,48 @@
     .ops-register--projects .project-register-cell--action {
       grid-column: 2;
       align-self: end;
+    }
+  }
+
+  /* ---------------------------- server-side pager ---------------------------- */
+  .register-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--border-soft);
+    color: var(--muted);
+    font-size: var(--fs-label);
+  }
+
+  .register-pager__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .register-pager__actions .ui-button {
+    min-height: var(--control-height-touch);
+  }
+
+  .register-pager__page {
+    min-width: 4rem;
+    text-align: center;
+    color: var(--text-strong);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 767.98px) {
+    .register-pager {
+      justify-content: center;
+    }
+
+    .register-pager__actions {
+      width: 100%;
+      justify-content: space-between;
     }
   }
 }

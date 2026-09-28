@@ -5,6 +5,7 @@ import { Roles } from "../auth/roles.decorator";
 import { RolesGuard } from "../auth/roles.guard";
 import type { RequestUser } from "../../shared/http.types";
 import { AdminClientsService } from "./admin-clients.service";
+import { parsePageRequest } from "../../shared/paging";
 
 @UseGuards(AuthGuard, RolesGuard)
 @Roles("ADMIN")
@@ -13,8 +14,14 @@ export class AdminClientsController {
   constructor(private readonly clientsService: AdminClientsService) {}
 
   @Get()
-  list(@Query("search") search?: string) {
-    return this.clientsService.list(search);
+  list(
+    @Query("search") search?: string,
+    @Query("page") page?: string,
+    @Query("pageSize") pageSize?: string,
+    @Query("status") status?: string
+  ) {
+    const filter = status === "ACTIVE" || status === "INACTIVE" ? status : undefined;
+    return this.clientsService.list(search, parsePageRequest(page, pageSize), filter);
   }
 
   @Get(":id")

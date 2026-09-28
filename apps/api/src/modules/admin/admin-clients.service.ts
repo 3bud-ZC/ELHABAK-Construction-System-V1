@@ -8,6 +8,7 @@ import { PrismaService } from "../../shared/prisma.service";
 import { AuditService } from "./audit.service";
 import { parseBody } from "../../shared/zod";
 import { RealtimeGateway } from "../realtime/realtime.gateway";
+import type { PageRequest } from "../../shared/paging";
 
 const clientUserSelect = {
   id: true,
@@ -30,7 +31,12 @@ export class AdminClientsService {
     private readonly realtime: RealtimeGateway
   ) {}
 
-  async list(search?: string) {
+  /**
+   * Without `paging` returns the full array (project-form pickers). With `paging` the
+   * Clients register gets one bounded page, server-side search/status filtering, a
+   * stable order and whole-table summary counts, so it scales past a few hundred rows.
+   */
+  async list(search?: string, paging?: PageRequest | null, status?: "ACTIVE" | "INACTIVE") {
     const trimmedSearch = search?.trim();
     const where: Prisma.ClientProfileWhereInput = {};
 
@@ -41,6 +47,8 @@ export class AdminClientsService {
         { phone: { contains: trimmedSearch, mode: "insensitive" } }
       ];
     }
+    if (status === "ACTIVE") where.user = { isActive: true, archivedAt: null };
+    if (status === "INACTIVE") where.user = { OR: [{ isActive: false }, { archivedAt: { not: null } }] };
 
     const clients = await this.prisma.clientProfile.findMany({
       where,
@@ -48,10 +56,11 @@ export class AdminClientsService {
         user: { select: clientUserSelect },
         projects: { select: { id: true, status: true, updatedAt: true } }
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      ...(paging ? { skip: paging.skip, take: paging.pageSize } : {})
     });
 
-    return clients.map((client) => {
+    const rows = clients.map((client) => {
       const response = toClientResponse(client);
       const activeProjects = client.projects.filter((project) => project.status === "ACTIVE").length;
       const lastActivity = client.projects.reduce<Date | null>(
@@ -65,6 +74,21 @@ export class AdminClientsService {
         lastProjectActivityAt: lastActivity?.toISOString() ?? null
       };
     });
+    if (!paging) return rows;
+
+    const [total, all, active, contactReady] = await Promise.all([
+      this.prisma.clientProfile.count({ where }),
+      this.prisma.clientProfile.count(),
+      this.prisma.clientProfile.count({ where: { user: { isActive: true, archivedAt: null } } }),
+      this.prisma.clientProfile.count({ where: { phone: { not: null } } })
+    ]);
+    return {
+      items: rows,
+      total,
+      page: paging.page,
+      pageSize: paging.pageSize,
+      summary: { total: all, active, inactive: all - active, contactReady }
+    };
   }
 
   async get(id: string) {

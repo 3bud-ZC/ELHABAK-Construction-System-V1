@@ -322,7 +322,7 @@
   }
 
   /* -------------------------------- tablet -------------------------------- */
-  @media (max-width: 1099.98px) {
+  @container app (max-width: 1059.98px) {
     .project-form-system {
       grid-template-columns: minmax(0, 1fr);
     }

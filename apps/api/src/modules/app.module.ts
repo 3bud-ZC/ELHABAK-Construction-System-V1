@@ -5,6 +5,7 @@ import { parseApiEnv } from "@elhabak/config";
 import { DatabaseModule } from "../shared/database.module";
 import { OriginGuard } from "../shared/origin.guard";
 import { RequestContextMiddleware } from "../shared/request-context.middleware";
+import { UploadSlotMiddleware } from "../shared/upload-slot.middleware";
 import { AdminModule } from "./admin/admin.module";
 import { AuthModule } from "./auth/auth.module";
 import { HealthController } from "./health.controller";
@@ -47,5 +48,6 @@ import { DataOpsModule } from "./dataops/dataops.module";
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(RequestContextMiddleware).forRoutes("*");
+    consumer.apply(UploadSlotMiddleware).forRoutes("*");
   }
 }

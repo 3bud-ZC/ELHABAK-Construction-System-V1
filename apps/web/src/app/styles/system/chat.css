@@ -30,7 +30,7 @@
      toolbar lets the dynamic viewport extend underneath the toolbar while fixed
      elements stop above it, so a 100dvh column ran behind the navigation and hid
      the composer. Fixed `inset: 0` lines both up in every engine. */
-  @media (max-width: 1099.98px) {
+  @media (max-width: 1199.98px) {
     .app-main:has(> .chat-page) {
       position: fixed;
       inset: 0;

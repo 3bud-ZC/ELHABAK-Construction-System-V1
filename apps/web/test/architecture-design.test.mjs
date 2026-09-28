@@ -59,3 +59,33 @@ test("canonical company phone stays the single source of truth", () => {
   assert.match(contracts, /phoneE164: "\+201130666726"/);
   assert.match(contracts, /whatsappNumber: "201130666726"/);
 });
+
+test("shell and layouts respond to the real content width, not the viewport", () => {
+  const shell = source("app/styles/system/shell.css");
+  const register = source("app/styles/system/register.css");
+  const dashboard = source("app/styles/system/dashboard.css");
+  const chat = source("app/styles/system/chat.css");
+  // Permanent sidebar only from 1200px (it needs 232px + ~920px of content).
+  assert.match(shell, /@media \(max-width: 1199\.98px\) \{\s*\.app-shell \{/);
+  assert.match(chat, /@media \(max-width: 1199\.98px\) \{\s*\.app-main:has\(> \.chat-page\)/);
+  assert.match(shell, /container: app \/ inline-size;/);
+  // Registers and the dashboard body switch on container width.
+  assert.match(register, /@container app \(min-width: 900px\) and \(max-width: 1199\.98px\)/);
+  assert.match(register, /@container app \(max-width: 899\.98px\)/);
+  assert.doesNotMatch(register, /@media \(min-width: 1024px\) and \(max-width: 1439\.98px\)/);
+  assert.match(dashboard, /@container app \(max-width: 1179\.98px\) \{\s*\.dashboard-body \{/);
+  assert.match(dashboard, /container: dash-finance \/ inline-size;/);
+});
+
+test("search results stack vertically (list is not a flex row)", () => {
+  const legacy = source("app/styles/legacy.css");
+  assert.match(legacy, /\.search-results \{\s*display: grid;/);
+  assert.match(legacy, /\.search-result \{\s*display: flex;/);
+});
+
+test("public motion avoids layout-triggering and blanket transitions", () => {
+  assert.doesNotMatch(publicHome, /transition: all/);
+  assert.doesNotMatch(publicHome, /will-change/);
+  assert.doesNotMatch(publicCss, /transition: width/);
+  assert.match(publicCss, /\.bp-art \.bp-faint\.bp-d \{[^}]*animation-name: bp-fade;/);
+});

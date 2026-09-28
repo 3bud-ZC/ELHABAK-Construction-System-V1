@@ -657,7 +657,8 @@
   }
 
   /* ------------------------------- tablet ------------------------------- */
-  @media (max-width: 1279.98px) {
+  /* Two columns only while the register keeps ≥ ~750px beside the 360px aside. */
+  @container app (max-width: 1179.98px) {
     .dashboard-body {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -935,8 +936,14 @@
     color: var(--warning);
   }
 
+  /* The finance figures sit two by two whenever their own panel is too narrow for
+     four across, so amounts never wrap (panel width, not viewport). */
+  .dashboard-finance-panel {
+    container: dash-finance / inline-size;
+  }
+
   /* below wide desktop: the finance figures sit two by two so amounts never wrap */
-  @media (max-width: 1439.98px) {
+  @container dash-finance (max-width: 859.98px) {
     .dashboard-finance-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

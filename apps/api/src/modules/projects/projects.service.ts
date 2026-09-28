@@ -19,6 +19,9 @@ import { ProjectAccessService } from "./project-access.service";
 import { projectHeaderInclude, projectIncludeFor, toProjectResponse } from "./project-response";
 import { StorageService } from "./storage.service";
 
+const TIMELINE_DEFAULT_LIMIT = 100;
+const TIMELINE_MAX_LIMIT = 200;
+
 @Injectable()
 export class ProjectsService {
   constructor(
@@ -617,18 +620,31 @@ export class ProjectsService {
     };
   }
 
-  async getTimeline(user: RequestUser, projectId: string, filterType?: string) {
+  /**
+   * Newest-first project activity, bounded: at most `limit` events (default 100, max
+   * 200) older than the optional `before` cursor (ISO timestamp of the last event the
+   * client already has). Each source is read with take = limit + 1 and merged, so a
+   * page is exact across site updates and lifecycle audit events.
+   */
+  async getTimeline(user: RequestUser, projectId: string, filterType?: string, options: { limit?: number; before?: string } = {}) {
     await this.access.assertCanRead(user, projectId);
 
     const isClient = user.role === "CLIENT";
+    const requested = options.limit !== undefined && Number.isFinite(options.limit) ? Math.trunc(options.limit) : TIMELINE_DEFAULT_LIMIT;
+    const limit = Math.min(Math.max(requested, 1), TIMELINE_MAX_LIMIT);
+    const beforeDate = options.before ? new Date(options.before) : null;
+    if (beforeDate && Number.isNaN(beforeDate.getTime())) throw new BadRequestException("Invalid timeline cursor.");
+    const createdAt = beforeDate ? { lt: beforeDate } : undefined;
 
     const [siteUpdates, auditLogs] = await Promise.all([
       this.prisma.siteUpdate.findMany({
         where: {
           projectId,
+          ...(createdAt ? { createdAt } : {}),
           ...(isClient ? { isClientVisible: true } : {}),
           ...(filterType && filterType !== "ALL" ? { type: filterType as SiteUpdateType } : {})
         },
+        take: limit + 1,
 
         include: {
           author: true,
@@ -639,6 +655,7 @@ export class ProjectsService {
       this.prisma.auditLog.findMany({
         where: {
           projectId,
+          ...(createdAt ? { createdAt } : {}),
           action: {
             in: isClient
               ? ["project.created", "project.phase_changed", "project.progress_changed"]
@@ -646,7 +663,8 @@ export class ProjectsService {
           }
         },
         include: { actor: true },
-        orderBy: { createdAt: "desc" }
+        orderBy: { createdAt: "desc" },
+        take: limit + 1
       })
     ]);
 
@@ -738,7 +756,24 @@ export class ProjectsService {
 
     events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    return events;
+    return events.slice(0, limit);
+  }
+
+  /** Whole-project activity counts for the site-operations KPIs (independent of paging). */
+  async getTimelineSummary(user: RequestUser, projectId: string) {
+    await this.access.assertCanRead(user, projectId);
+    const visibility = user.role === "CLIENT" ? { isClientVisible: true } : {};
+    const [byType, mediaCount, latest] = await Promise.all([
+      this.prisma.siteUpdate.groupBy({ by: ["type"], where: { projectId, ...visibility }, _count: { _all: true } }),
+      this.prisma.siteMedia.count({ where: { projectId, siteUpdate: visibility } }),
+      this.prisma.siteUpdate.findFirst({ where: { projectId, ...visibility }, orderBy: { createdAt: "desc" }, select: { createdAt: true } })
+    ]);
+    return {
+      totalUpdates: byType.reduce((sum, row) => sum + row._count._all, 0),
+      byType: Object.fromEntries(byType.map((row) => [row.type, row._count._all])),
+      mediaCount,
+      lastUpdateAt: latest?.createdAt.toISOString() ?? null
+    };
   }
 
   async getMediaForUser(user: RequestUser, projectId: string, mediaId: string) {

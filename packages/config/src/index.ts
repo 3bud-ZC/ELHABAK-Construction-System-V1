@@ -29,9 +29,12 @@ export const apiEnvSchema = z.object({
   AUTH_SESSION_SECRET: z.string().min(32),
   SESSION_COOKIE_NAME: z.string().min(1).default("elhabak_session"),
   SESSION_EXPIRES_DAYS: z.coerce.number().int().min(1).max(30).default(7),
-  // Login brute-force ceiling: attempts per 60s window per real client IP. Test harnesses
-  // raise this via env so repeated suite logins never flake; production leaves the default.
+  // Credential-endpoint throttles (60s windows). AUTH_LOGIN_RATE_LIMIT caps attempts per
+  // client IP + account (brute force against one login); AUTH_LOGIN_IP_RATE_LIMIT caps all
+  // attempts from one IP (spraying many accounts) while leaving room for an office whose
+  // staff share one NAT address. Test harnesses raise both via env.
   AUTH_LOGIN_RATE_LIMIT: z.coerce.number().int().min(1).max(1000).default(8),
+  AUTH_LOGIN_IP_RATE_LIMIT: z.coerce.number().int().min(1).max(5000).default(40),
   STORAGE_ROOT: z.string().trim().min(1).default("storage"),
   MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(100).default(25),
   ALLOWED_UPLOAD_MIME_TYPES: z.string().trim().min(1).default("image/jpeg,image/png,image/webp,video/mp4,video/webm,application/pdf")

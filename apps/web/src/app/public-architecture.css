@@ -75,6 +75,21 @@
   letter-spacing: 0.04em;
 }
 
+/* Grid/faint lines only fade in: dash-drawing ~40 background strokes would cost a
+   repaint per frame on phones for no visible benefit. */
+.bp-art .bp-faint.bp-d {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  opacity: 0;
+  animation-name: bp-fade;
+  animation-duration: 1.2s;
+}
+
+/* Keep each drawing's repaints inside its own box. */
+.bp-art {
+  contain: paint;
+}
+
 .bp-art.is-live .bp-d,
 .bp-art.is-live .bp-t,
 .bp-art.is-visible .bp-d,
@@ -134,7 +149,7 @@
 }
 
 @media (scripting: none) {
-  .bp-art .bp-d { animation: none; stroke-dashoffset: 0; }
+  .bp-art .bp-d { animation: none; stroke-dashoffset: 0; opacity: 1; }
   .bp-art .bp-t { animation: none; opacity: 1; }
 }
 
@@ -912,15 +927,21 @@
 
 .service-card__idx::after {
   content: "";
-  width: 2.5rem;
+  width: 4rem;
   height: 1px;
   background: currentColor;
   opacity: 0.6;
-  transition: width 0.45s var(--arch-ease);
+  transform: scaleX(0.625);
+  transform-origin: left center;
+  transition: transform 0.45s var(--arch-ease);
+}
+
+[dir="rtl"] .service-card__idx::after {
+  transform-origin: right center;
 }
 
 .service-card:hover .service-card__idx::after {
-  width: 4rem;
+  transform: scaleX(1);
 }
 
 .service-card__title {
@@ -1469,7 +1490,7 @@
     animation: none !important;
   }
 
-  .bp-art .bp-d { stroke-dashoffset: 0; }
+  .bp-art .bp-d { stroke-dashoffset: 0; opacity: 1; }
   .bp-art .bp-t { opacity: 1; }
   .process-stage__line { transform: none; transition: none; }
   .service-card,
