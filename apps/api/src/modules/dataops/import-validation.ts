@@ -1,7 +1,8 @@
 import {
   computeLineTotalMinor,
   decimalToMinorUnits,
-  minorUnitsToDecimal
+  minorUnitsToDecimal,
+  normalizeEgyptianMobile
 } from "@elhabak/validation";
 
 /**
@@ -97,7 +98,7 @@ export const CLIENT_FIELD_ALIASES: Record<string, string[]> = {
 export type ClientImportRow = {
   name: string;
   email: string;
-  phone: string | null;
+  phone: string;
   notes: string | null;
   isActive: boolean;
 };
@@ -134,10 +135,16 @@ export function validateClientRow(
 
   const phoneRaw = (record.phone ?? "").trim();
   let phone: string | null = null;
-  if (phoneRaw) {
-    phone = normalizePhone(phoneRaw);
+  if (!phoneRaw) {
+    issues.push({ field: "phone", code: "required", message: "Client phone number is required for account creation." });
+  } else {
+    phone = normalizeEgyptianMobile(phoneRaw);
     if (!phone) {
-      issues.push({ field: "phone", code: "invalid_phone", message: "Enter a valid phone number (digits and +()-./ only)." });
+      issues.push({
+        field: "phone",
+        code: "invalid_phone",
+        message: "Enter a valid Egyptian mobile number (010, 011, 012 or 015 followed by 8 digits)."
+      });
     }
   }
 
@@ -184,7 +191,7 @@ export function validateClientRow(
     index,
     status: fatal ? "error" : rowStatus,
     issues,
-    data: fatal ? null : { name, email, phone, notes, isActive }
+    data: fatal ? null : { name, email, phone: phone!, notes, isActive }
   };
 }
 

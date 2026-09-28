@@ -1523,6 +1523,13 @@ export type DataOpsPreview = {
   };
 };
 
+export type DataOpsImportedCredential = {
+  name: string;
+  email: string;
+  phone: string;
+  temporaryPassword: string;
+};
+
 export type DataOpsCommitResult = {
   ok: boolean;
   type: DataOpsImportType;
@@ -1532,6 +1539,7 @@ export type DataOpsCommitResult = {
   skipped: number;
   failed: number;
   failures: Array<{ index: number; message: string }>;
+  createdClients?: DataOpsImportedCredential[];
 };
 
 export type DataOpsOverview = {

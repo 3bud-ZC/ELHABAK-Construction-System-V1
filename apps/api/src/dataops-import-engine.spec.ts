@@ -202,11 +202,27 @@ describe("validation: client rows", () => {
   it("accepts a clean row", () => {
     const result = validateClientRow(2, { name: " Ahmed ", email: "A@B.COM", phone: "01005551234", notes: "", active: "yes" }, [], ctx, new Map());
     expect(result.status).toBe("valid");
-    expect(result.data).toEqual({ name: "Ahmed", email: "a@b.com", phone: "01005551234", notes: null, isActive: true });
+    expect(result.data).toEqual({ name: "Ahmed", email: "a@b.com", phone: "+201005551234", notes: null, isActive: true });
+  });
+
+  it("enforces required and valid Egyptian mobile phones", () => {
+    const missing = validateClientRow(2, { name: "Ahmed", email: "a@b.com" }, [], ctx, new Map());
+    expect(missing.status).toBe("error");
+    expect(missing.data).toBeNull();
+    expect(missing.issues.map((i) => i.code)).toContain("required");
+
+    const invalid = validateClientRow(2, { name: "Ahmed", email: "a@b.com", phone: "12345" }, [], ctx, new Map());
+    expect(invalid.status).toBe("error");
+    expect(invalid.data).toBeNull();
+    expect(invalid.issues.map((i) => i.code)).toContain("invalid_phone");
+
+    const formatted = validateClientRow(2, { name: "Ahmed", email: "a@b.com", phone: "+20 11 3066 6726" }, [], ctx, new Map());
+    expect(formatted.status).toBe("valid");
+    expect(formatted.data?.phone).toBe("+201130666726");
   });
 
   it("rejects missing name and malformed email", () => {
-    const result = validateClientRow(2, { name: "", email: "nope" }, [], ctx, new Map());
+    const result = validateClientRow(2, { name: "", email: "nope", phone: "01005551234" }, [], ctx, new Map());
     expect(result.status).toBe("error");
     expect(result.data).toBeNull();
     expect(result.issues.map((i) => i.code)).toEqual(expect.arrayContaining(["required", "invalid_email"]));
@@ -214,27 +230,27 @@ describe("validation: client rows", () => {
 
   it("marks existing accounts and in-file repeats as duplicates", () => {
     const withClient = { ...ctx, existingClients: new Map([["a@b.com", "cp1"]]) };
-    const dup = validateClientRow(2, { name: "A", email: "a@b.com" }, [], withClient, new Map());
+    const dup = validateClientRow(2, { name: "A", email: "a@b.com", phone: "01005551234" }, [], withClient, new Map());
     expect(dup.status).toBe("duplicate");
     expect(dup.issues[0]!.code).toBe("existing_client");
 
-    const inFile = validateClientRow(3, { name: "A", email: "a@b.com" }, [], ctx, new Map([["a@b.com", 2]]));
+    const inFile = validateClientRow(3, { name: "A", email: "a@b.com", phone: "01005551234" }, [], ctx, new Map([["a@b.com", 2]]));
     expect(inFile.status).toBe("duplicate");
     expect(inFile.issues[0]!.code).toBe("duplicate_in_file");
 
-    const first = validateClientRow(2, { name: "A", email: "a@b.com" }, [], ctx, new Map([["a@b.com", 2]]));
+    const first = validateClientRow(2, { name: "A", email: "a@b.com", phone: "01005551234" }, [], ctx, new Map([["a@b.com", 2]]));
     expect(first.status).toBe("valid");
   });
 
   it("keeps a real error as error even when the email is a duplicate", () => {
     const withClient = { ...ctx, existingClients: new Map([["a@b.com", "cp1"]]) };
-    const result = validateClientRow(2, { name: "", email: "a@b.com" }, [], withClient, new Map());
+    const result = validateClientRow(2, { name: "", email: "a@b.com", phone: "01005551234" }, [], withClient, new Map());
     expect(result.status).toBe("error");
     expect(result.data).toBeNull();
   });
 
   it("flags formula cells as errors", () => {
-    const result = validateClientRow(2, { name: "A", email: "a@b.com" }, ["email"], ctx, new Map());
+    const result = validateClientRow(2, { name: "A", email: "a@b.com", phone: "01005551234" }, ["email"], ctx, new Map());
     expect(result.status).toBe("error");
     expect(result.issues[0]!.code).toBe("formula");
   });

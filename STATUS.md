@@ -1461,3 +1461,31 @@
   - Submit `https://elhabak.com/sitemap.xml` to Google Search Console and request indexing for `/`, `/about`, `/contact`.
   - Re-query Google Search / Google Gemini after search indexation has taken place.
 
+### 2026-09-28 — ELHABAK CLIENT PASSWORD LIFECYCLE FINAL CLOSURE: DATA OPERATIONS & IMPORT CONSISTENCY
+- **Scope & Canonical Rule Closed**: Eliminated the final password lifecycle inconsistency across ELHABAK Construction. Every newly-created CLIENT account—regardless of creation path (Admin Create Client UI, CSV import, Excel import, Data Operations batch import)—now strictly uses the same canonical temporary-password generator (`generateClientTemporaryPassword`), canonical Egyptian mobile normalizer (`normalizeEgyptianMobile`), sets `mustChangePassword=true`, and returns secure one-time credentials for distribution.
+- **Validation Consistency (`apps/api/src/modules/dataops/import-validation.ts`)**:
+  - Phone is now strictly required for client imports (`requiredFieldsFor("clients") = ["name", "email", "phone"]`).
+  - Implements `normalizeEgyptianMobile`: accepts all valid domestic and international Egyptian mobile formats (`010`, `011`, `012`, `015`, Arabic-Indic digits, spaces/dashes), normalizing to canonical E.164 (`+201XXXXXXXXX`).
+  - Missing, invalid, foreign, or landline phone numbers immediately flag row validation error (`status: "error"`, `data: null`), completely preventing partial or orphan client account creation.
+- **Import Engine & Credentials Handling (`apps/api/src/modules/dataops/dataops.service.ts`)**:
+  - Replaced unusable random byte strings with canonical `generateClientTemporaryPassword(row.data.phone)`.
+  - Generated credential format: `EH-<last4>-XXXXX-XXXXX` drawn from unambiguous 31-symbol charset (~49.5 bits entropy).
+  - Pre-hashed with `AuthService.hashPassword` (bcrypt(12)) before database transaction; stored with `mustChangePassword=true`.
+  - Duplicate Client protection: when strategy is `update` or `skip`, existing clients' password and passwordHash are strictly untouched (zero password rotation on duplicate import).
+  - Security & zero leakage: Plaintext credentials held only in memory for the single commit response (`createdClients: ImportedClientCredential[]`). Plaintext and hashes are completely excluded from database persistence, audit logs (`data_import.clients`), and server logs.
+- **Web UI One-Time Credentials Panel (`apps/web/src/app/app/data/import-wizard.tsx` & `apps/web/src/lib/api.ts`)**:
+  - Updated field schema: Phone marked required with clear AR/EN indicators.
+  - Dedicated one-time credentials panel rendered on successful import commit displaying Client Name, Email, Phone, and Temporary Password.
+  - Instant in-memory copy handlers: "Copy All Credentials" and row-level "Copy Password".
+  - In-memory CSV export generated entirely client-side via `Blob` (`URL.createObjectURL`), never sent or saved to the server.
+  - React state purge: dismiss/restart/file clear immediately purges plaintext credentials from browser memory.
+- **Automated Test Verification**:
+  - Dedicated integration suite `apps/api/src/dataops-client-credentials.spec.ts`: **8/8 tests PASS** (covering all 15 points: CSV import, Excel-equivalent parsing, canonical password shape, normalized mobile, login verification, forced password change gate, client profile creation, invalid phone rejection, duplicate non-rotation, password change flow, audit log secrecy, and RBAC authorization).
+  - DataOps import engine unit suite `apps/api/src/dataops-import-engine.spec.ts`: **36/36 tests PASS**.
+  - Client password lifecycle suite `apps/api/src/client-password-lifecycle.spec.ts`: **19/19 tests PASS**.
+  - Web contracts & components test suite `apps/web/test/*.test.mjs`: **40/40 tests PASS**.
+  - Workspace quality gates: `pnpm lint` (0 errors), `pnpm typecheck` (0 errors), `pnpm build` (all packages & 33 Next.js routes built), `git diff --check` (clean).
+- **Manual Owner Action Reminder**:
+  - MANUAL OWNER ACTION REQUIRED: Open the Client account created 2026-09-27 in the Admin Portal and click "Generate new temporary password" to re-issue credentials.
+
+

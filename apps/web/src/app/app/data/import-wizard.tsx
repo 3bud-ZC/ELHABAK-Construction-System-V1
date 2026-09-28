@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
+  Copy,
   Download,
   FileSpreadsheet,
+  KeyRound,
   Upload,
   XCircle
 } from "lucide-react";
@@ -30,7 +33,7 @@ const FIELDS: Record<DataOpsImportType, FieldSpec[]> = {
   clients: [
     { key: "name", required: true, labelAr: "الاسم", labelEn: "Name" },
     { key: "email", required: true, labelAr: "البريد الإلكتروني", labelEn: "Email" },
-    { key: "phone", required: false, labelAr: "الهاتف", labelEn: "Phone" },
+    { key: "phone", required: true, labelAr: "الهاتف", labelEn: "Phone" },
     { key: "notes", required: false, labelAr: "ملاحظات", labelEn: "Notes" },
     { key: "active", required: false, labelAr: "نشط", labelEn: "Active" }
   ],
@@ -98,6 +101,17 @@ type WizardLabels = {
   selectProject: string;
   previewRows: string;
   rePreview: string;
+  credentialsTitle: string;
+  credentialsWarning: string;
+  copyAllCredentials: string;
+  allCredentialsCopied: string;
+  copyPassword: string;
+  passwordCopied: string;
+  downloadCsv: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  clientPassword: string;
 };
 
 function labelsFor(locale: "ar" | "en"): WizardLabels {
@@ -139,7 +153,18 @@ function labelsFor(locale: "ar" | "en"): WizardLabels {
       errorNote: "لا يمكن التنفيذ ووجود صفوف بها أخطاء. صحّح الملف وأعد المحاولة.",
       selectProject: "المشروع المستهدف",
       previewRows: "أول 100 صف معروضة",
-      rePreview: "تحديث المعاينة"
+      rePreview: "تحديث المعاينة",
+      credentialsTitle: "بيانات الدخول المؤقتة للحسابات المنشأة",
+      credentialsWarning: "هذه البيانات تظهر لمرة واحدة فقط لأغراض التوزيع على العملاء. لن يتم حفظ كلمة المرور بصيغتها النصية، ولن يمكن استرجاعها بعد إغلاق هذه الصفحة.",
+      copyAllCredentials: "نسخ كافة البيانات",
+      allCredentialsCopied: "تم نسخ كافة البيانات!",
+      copyPassword: "نسخ كلمة المرور",
+      passwordCopied: "تم النسخ!",
+      downloadCsv: "تنزيل بيانات الدخول (CSV)",
+      clientName: "اسم العميل",
+      clientEmail: "البريد / اسم الدخول",
+      clientPhone: "رقم الهاتف",
+      clientPassword: "كلمة المرور المؤقتة"
     };
   }
   return {
@@ -179,7 +204,18 @@ function labelsFor(locale: "ar" | "en"): WizardLabels {
     errorNote: "Cannot commit while rows contain errors. Fix the file and retry.",
     selectProject: "Target project",
     previewRows: "First 100 rows shown",
-    rePreview: "Refresh preview"
+    rePreview: "Refresh preview",
+    credentialsTitle: "One-Time Temporary Client Credentials",
+    credentialsWarning: "These credentials are shown once for distribution to clients. Plaintext passwords are not stored and cannot be retrieved after leaving this page.",
+    copyAllCredentials: "Copy all credentials",
+    allCredentialsCopied: "All credentials copied!",
+    copyPassword: "Copy password",
+    passwordCopied: "Copied!",
+    downloadCsv: "Download credentials (CSV)",
+    clientName: "Client name",
+    clientEmail: "Login ID / Email",
+    clientPhone: "Phone",
+    clientPassword: "Temporary Password"
   };
 }
 
@@ -205,7 +241,46 @@ export function ImportWizard({ type, locale, projects, onDone }: ImportWizardPro
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const previewRequest = useRef(0);
+
+  const copyAllCredentials = useCallback(() => {
+    if (!result?.createdClients?.length) return;
+    const text = result.createdClients
+      .map(
+        (c) =>
+          `${c.name}\n${locale === "ar" ? "البريد" : "Email"}: ${c.email}\n${locale === "ar" ? "الهاتف" : "Phone"}: ${c.phone}\n${locale === "ar" ? "كلمة المرور المؤقتة" : "Temporary Password"}: ${c.temporaryPassword}`
+      )
+      .join("\n---\n");
+    void navigator.clipboard.writeText(text);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2500);
+  }, [result, locale]);
+
+  const copyRowPassword = useCallback((index: number, password: string) => {
+    void navigator.clipboard.writeText(password);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2500);
+  }, []);
+
+  const downloadCredentialsCsv = useCallback(() => {
+    if (!result?.createdClients?.length) return;
+    const header = "Name,Email,Phone,Temporary Password\r\n";
+    const rows = result.createdClients
+      .map(
+        (c) =>
+          `"${c.name.replace(/"/g, '""')}","${c.email.replace(/"/g, '""')}","${c.phone.replace(/"/g, '""')}","${c.temporaryPassword.replace(/"/g, '""')}"`
+      )
+      .join("\r\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `client-credentials-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [result]);
 
   const needsProject = type === "boq";
 
@@ -257,6 +332,8 @@ export function ImportWizard({ type, locale, projects, onDone }: ImportWizardPro
     setError(null);
     setMapping({});
     setSheet("");
+    setCopiedAll(false);
+    setCopiedIndex(null);
     setStep(next ? "map" : "file");
   }
 
@@ -572,6 +649,84 @@ export function ImportWizard({ type, locale, projects, onDone }: ImportWizardPro
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {result.createdClients && result.createdClients.length > 0 && (
+            <div className="import-credentials-panel" style={{ marginTop: "1.5rem" }}>
+              <div
+                className="import-credentials-header"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "0.75rem",
+                  marginBottom: "0.75rem"
+                }}
+              >
+                <div>
+                  <h4
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      margin: 0,
+                      fontSize: "1rem",
+                      fontWeight: 700
+                    }}
+                  >
+                    <KeyRound size={16} /> {labels.credentialsTitle}
+                  </h4>
+                  <p className="field-hint" style={{ margin: "0.25rem 0 0" }}>
+                    {labels.credentialsWarning}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <button type="button" className="ui-button ui-button--secondary" onClick={copyAllCredentials}>
+                    {copiedAll ? <Check size={14} /> : <Copy size={14} />}{" "}
+                    {copiedAll ? labels.allCredentialsCopied : labels.copyAllCredentials}
+                  </button>
+                  <button type="button" className="ui-button ui-button--secondary" onClick={downloadCredentialsCsv}>
+                    <Download size={14} /> {labels.downloadCsv}
+                  </button>
+                </div>
+              </div>
+              <div className="import-preview-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{labels.clientName}</th>
+                      <th>{labels.clientEmail}</th>
+                      <th>{labels.clientPhone}</th>
+                      <th>{labels.clientPassword}</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.createdClients.map((client, idx) => (
+                      <tr key={idx}>
+                        <td>{client.name}</td>
+                        <td className="mono">{client.email}</td>
+                        <td className="mono">{client.phone}</td>
+                        <td className="mono" style={{ fontWeight: 600 }}>
+                          {client.temporaryPassword}
+                        </td>
+                        <td style={{ textAlign: "end" }}>
+                          <button
+                            type="button"
+                            className="ui-button ui-button--secondary"
+                            style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
+                            onClick={() => copyRowPassword(idx, client.temporaryPassword)}
+                          >
+                            {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}{" "}
+                            {copiedIndex === idx ? labels.passwordCopied : labels.copyPassword}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
           <div className="form-actions-bar">

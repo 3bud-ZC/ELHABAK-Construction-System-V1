@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException
 } from "@nestjs/common";
-import { randomBytes } from "node:crypto";
+import { generateClientTemporaryPassword } from "../auth/temporary-password";
 import type { SiteUpdateType } from "@elhabak/database";
 import { PrismaService } from "../../shared/prisma.service";
 import type { RequestUser } from "../../shared/http.types";
@@ -75,6 +75,13 @@ export type ImportPreview = {
   };
 };
 
+export type ImportedClientCredential = {
+  name: string;
+  email: string;
+  phone: string;
+  temporaryPassword: string;
+};
+
 export type ImportCommitResult = {
   ok: boolean;
   type: ImportType;
@@ -84,6 +91,7 @@ export type ImportCommitResult = {
   skipped: number;
   failed: number;
   failures: Array<{ index: number; message: string }>;
+  createdClients?: ImportedClientCredential[];
 };
 
 const SITE_UPDATE_TYPES: SiteUpdateType[] = ["PROGRESS", "INSPECTION", "ISSUE", "MATERIAL", "GENERAL"];
@@ -227,15 +235,19 @@ export class DataOpsService {
     let skipped = 0;
     const failures: Array<{ index: number; message: string }> = [];
 
-    // Hash a fresh random password for each new account before entering the transaction;
+    // Hash a fresh canonical client temporary password for each new account before entering the transaction;
     // bcrypt is deliberately slow and must not run inside the DB transaction window.
+    const temporaryPasswords = new Map<number, string>();
     const passwordHashes = new Map<number, string>();
     for (const row of rows) {
       if (row.status === "valid" && row.data) {
-        const temporary = randomBytes(12).toString("base64url");
+        const temporary = generateClientTemporaryPassword(row.data.phone);
+        temporaryPasswords.set(row.index, temporary);
         passwordHashes.set(row.index, await this.auth.hashPassword(temporary));
       }
     }
+
+    const createdClients: ImportedClientCredential[] = [];
 
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -280,12 +292,19 @@ export class DataOpsService {
                   displayName: data.name,
                   role: "CLIENT",
                   isActive: data.isActive,
-                  passwordHash: passwordHashes.get(row.index)!
+                  passwordHash: passwordHashes.get(row.index)!,
+                  mustChangePassword: true
                 }
               }
             }
           });
           created += 1;
+          createdClients.push({
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            temporaryPassword: temporaryPasswords.get(row.index)!
+          });
         }
       });
     } catch (error) {
@@ -313,7 +332,8 @@ export class DataOpsService {
       updated,
       skipped,
       failed: failures.length,
-      failures
+      failures,
+      createdClients
     };
   }
 
@@ -1285,7 +1305,7 @@ function aliasesFor(type: ImportType): Record<string, string[]> {
 }
 
 function requiredFieldsFor(type: ImportType): string[] {
-  if (type === "clients") return ["name", "email"];
+  if (type === "clients") return ["name", "email", "phone"];
   if (type === "projects") return ["code", "name", "category", "clientEmail", "engineerEmail"];
   return ["code", "description", "unit", "quantity", "unitRate"];
 }
