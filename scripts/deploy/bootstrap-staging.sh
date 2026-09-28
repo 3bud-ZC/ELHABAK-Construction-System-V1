@@ -29,6 +29,7 @@ CRED="/root/elhabak-staging-credentials.txt"
 PROD_ENV="/var/www/elhabak/shared/.env"
 SITE="/etc/nginx/sites-available/elhabak-staging"
 HTPASSWD="/etc/nginx/elhabak-staging.htpasswd"
+OBSERVABILITY="/etc/nginx/conf.d/elhabak-observability.conf"
 
 rand() { openssl rand -base64 64 | tr -dc 'A-Za-z0-9' | head -c "$1"; }
 step() { echo ">> $1"; }
@@ -157,7 +158,19 @@ fi
 chown root:www-data "$HTPASSWD"
 chmod 640 "$HTPASSWD"
 
+write_observability() {
+  cat > "$OBSERVABILITY" <<'NGINX'
+# ELHABAK request timing log format. Reused by production and staging sites.
+log_format elhabak_timed '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
+                          'rt=$request_time uct=$upstream_connect_time '
+                          'uht=$upstream_header_time urt=$upstream_response_time '
+                          'upstream="$upstream_addr" gzip="$gzip_ratio"';
+NGINX
+}
+
 write_http_only() {
+  write_observability
   cat > "$SITE" <<'NGINX'
 # ELHABAK staging — ACME bootstrap (replaced by the HTTPS site once the certificate exists)
 server {
@@ -171,6 +184,7 @@ NGINX
 }
 
 write_https() {
+  write_observability
   cat > "$SITE" <<'NGINX'
 # ELHABAK staging — staging.elhabak.com
 # Web 127.0.0.1:3100, API 127.0.0.1:4100. Password-protected and never indexed.
@@ -194,6 +208,7 @@ server {
     ssl_protocols       TLSv1.2 TLSv1.3;
 
     server_tokens off;
+    access_log /var/log/nginx/elhabak-staging.access.log elhabak_timed;
     client_max_body_size 30m;
     client_body_timeout 60s;
     gzip on;
