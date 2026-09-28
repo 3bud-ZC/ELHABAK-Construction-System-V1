@@ -39,6 +39,7 @@ test("line art is decorative, deterministic and motion-safe", () => {
   assert.match(publicCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.bp-art \.bp-d/);
   assert.match(publicCss, /@media \(scripting: none\)[\s\S]*?stroke-dashoffset: 0/);
   assert.match(systemCss, /@media \(prefers-reduced-motion: no-preference\)/);
+  assert.match(publicCss, /\.bp-art \{[^}]*direction: ltr;/, "annotations stay LTR on Arabic pages");
 });
 
 test("internal entrance motion never transforms page children (fixed bars stay anchored)", () => {

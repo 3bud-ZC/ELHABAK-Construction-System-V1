@@ -51,6 +51,9 @@
   display: block;
   overflow: visible;
   font-family: var(--arch-mono);
+  /* Drawing annotations (+14.40, 24.00, R-01) are always read left-to-right. */
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .bp-art .bp-d {
