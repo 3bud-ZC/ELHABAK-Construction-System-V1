@@ -159,14 +159,17 @@ export function SearchField({
 function useOverlayBehavior(open: boolean, onClose: () => void) {
   useEffect(() => {
     if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // Lock on <html>: it has overflow-x: clip, so a body-level lock would not propagate to
+    // the viewport and would turn <body> into the scroll container (the sticky sidebar
+    // would then jump while a dialog is open).
+    const previous = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
     }
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previous;
+      document.documentElement.style.overflow = previous;
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose]);

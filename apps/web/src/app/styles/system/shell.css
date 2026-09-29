@@ -18,7 +18,14 @@
   }
 
   /* ------------------------------ sidebar ------------------------------ */
+  /* The rail is pinned to the viewport while the document scrolls: a sticky
+     100dvh grid item (it previously scrolled away with long pages). Brand and
+     account footer stay fixed inside it; only the navigation list scrolls when
+     the rail is taller than the viewport. */
   .app-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
     display: flex;
     flex-direction: column;
     height: 100dvh;
@@ -29,12 +36,13 @@
     border-inline-end: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: none;
     color: rgba(255, 255, 255, 0.86);
-    /* Short laptop screens: the rail scrolls itself instead of extending
-       the document below the viewport. */
-    overflow-y: auto;
+    overflow: hidden;
     overscroll-behavior: contain;
-    /* Sized to fit a 768px-tall laptop; on anything shorter it still scrolls, without a bar. */
-    scrollbar-width: none;
+  }
+
+  .app-sidebar > .app-brand-block,
+  .app-sidebar > .app-sidebar-footer {
+    flex: 0 0 auto;
   }
 
   .app-sidebar::-webkit-scrollbar {
@@ -76,7 +84,12 @@
     gap: var(--space-3);
     padding-block: var(--space-3);
     align-content: start;
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
   }
 
   .app-nav-group {

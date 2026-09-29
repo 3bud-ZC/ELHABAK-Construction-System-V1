@@ -6,32 +6,29 @@ import { compare, hash } from "bcryptjs";
 import { normalizeEgyptianMobile, passwordPolicyIssue } from "@elhabak/validation";
 import { ApiExceptionFilter } from "./shared/api-exception.filter";
 import { PrismaService } from "./shared/prisma.service";
-import {
-  TEMPORARY_PASSWORD_ALPHABET,
-  canonicalGeneratedTemporaryPassword,
-  generateClientTemporaryPassword
-} from "./modules/auth/temporary-password";
+import { canonicalGeneratedTemporaryPassword, generateClientTemporaryPassword } from "./modules/auth/temporary-password";
 
-const AMBIGUOUS = /[01OIL]/;
-const RANDOM_GROUP = `[${TEMPORARY_PASSWORD_ALPHABET}]{5}`;
+const EIGHT_DIGITS = /^[0-9]{8}$/;
 
 describe("client temporary password generation and phone normalization (unit)", () => {
-  it("A: generates the documented shape with the mobile label and no look-alike characters", () => {
-    const password = generateClientTemporaryPassword("01130666726");
-    expect(password).toMatch(new RegExp(`^EH-6726-${RANDOM_GROUP}-${RANDOM_GROUP}$`));
-    expect(password.slice("EH-6726-".length)).not.toMatch(AMBIGUOUS);
-    // Missing/invalid phone: label omitted, strength unchanged.
-    expect(generateClientTemporaryPassword(null)).toMatch(new RegExp(`^EH-${RANDOM_GROUP}-${RANDOM_GROUP}$`));
-    expect(generateClientTemporaryPassword("not a phone")).toMatch(new RegExp(`^EH-${RANDOM_GROUP}-${RANDOM_GROUP}$`));
+  it("A: generates exactly 8 decimal digits with no fixed prefix", () => {
+    const samples = Array.from({ length: 2000 }, () => generateClientTemporaryPassword());
+    for (const password of samples) expect(password).toMatch(EIGHT_DIGITS);
+    // Every position takes more than one value (no fixed prefix, no constant digit).
+    for (let position = 0; position < 8; position += 1) {
+      expect(new Set(samples.map((password) => password[position])).size).toBeGreaterThan(5);
+    }
+    // Leading zeros are kept (uniform over 00000000-99999999, left-padded).
+    expect(samples.some((password) => password.startsWith("0"))).toBe(true);
   });
 
-  it("B: never repeats for the same phone and is not derivable from the phone alone", () => {
-    const generated = new Set(Array.from({ length: 500 }, () => generateClientTemporaryPassword("+201130666726")));
-    expect(generated.size).toBe(500);
+  it("B: consecutive passwords are not deterministic and not sequential", () => {
+    const generated = Array.from({ length: 500 }, () => generateClientTemporaryPassword());
+    expect(new Set(generated).size).toBeGreaterThanOrEqual(499);
+    const sequential = generated.slice(1).filter((password, index) => Number(password) === Number(generated[index]) + 1);
+    expect(sequential.length).toBe(0);
     for (const password of generated) {
-      expect(password).not.toBe("01130666726");
-      expect(password).not.toContain("01130666726");
-      expect(password).not.toContain("1130666726");
+      expect("01130666726").not.toContain(password.slice(0, 6));
     }
   });
 
@@ -58,7 +55,13 @@ describe("client temporary password generation and phone normalization (unit)", 
     }
   });
 
-  it("folds only generated-credential input drift (case, separators, invisible marks)", () => {
+  it("folds only generated-credential input drift (separators, Arabic digits, invisible marks)", () => {
+    expect(canonicalGeneratedTemporaryPassword("4827 3160")).toBe("48273160");
+    expect(canonicalGeneratedTemporaryPassword("٤٨٢٧٣١٦٠")).toBe("48273160");
+    expect(canonicalGeneratedTemporaryPassword("⁦4827-3160⁩")).toBe("48273160");
+    expect(canonicalGeneratedTemporaryPassword("4827316")).toBeNull();
+    expect(canonicalGeneratedTemporaryPassword("482731601")).toBeNull();
+    // Credentials issued before the numeric policy keep their tolerance until changed.
     expect(canonicalGeneratedTemporaryPassword("eh-6726-k7p4q-9zxma")).toBe("EH-6726-K7P4Q-9ZXMA");
     expect(canonicalGeneratedTemporaryPassword(" EH 6726 K7P4Q 9ZXMA ")).toBe("EH-6726-K7P4Q-9ZXMA");
     expect(canonicalGeneratedTemporaryPassword("⁦EH–6726—K7P4Q-9ZXMA⁩\n")).toBe("EH-6726-K7P4Q-9ZXMA");
@@ -69,7 +72,16 @@ describe("client temporary password generation and phone normalization (unit)", 
     expect(canonicalGeneratedTemporaryPassword("EH-6726-K7P4Q-9ZXM0")).toBeNull();
   });
 
-  it("I (unit): the shared password policy rejects weak or unreproducible passwords", () => {
+  it("I (unit): client policy is length-only (8+); staff policy is unchanged", () => {
+    expect(passwordPolicyIssue("12345678", "client")).toBeNull();
+    expect(passwordPolicyIssue("abcdefgh", "client")).toBeNull();
+    expect(passwordPolicyIssue("1234567", "client")).toBe("too_short");
+    expect(passwordPolicyIssue(" 12345678", "client")).toBe("edge_whitespace");
+    expect(passwordPolicyIssue("x".repeat(129), "client")).toBe("too_long");
+    expect(passwordPolicyIssue("12345678")).toBe("too_short");
+  });
+
+  it("I (unit): the staff password policy rejects weak or unreproducible passwords", () => {
     expect(passwordPolicyIssue("short1")).toBe("too_short");
     expect(passwordPolicyIssue("onlyletterspassword")).toBe("needs_letter_and_number");
     expect(passwordPolicyIssue("12345678901234")).toBe("needs_letter_and_number");
@@ -197,7 +209,7 @@ describe("client password lifecycle (API, isolated test database)", () => {
 
     expect(created.body.phone).toBe("+201130666726");
     expect(created.body.generatedCredentials.phone).toBe("+201130666726");
-    expect(temporaryPassword).toMatch(new RegExp(`^EH-6726-${RANDOM_GROUP}-${RANDOM_GROUP}$`));
+    expect(temporaryPassword).toMatch(EIGHT_DIGITS);
     expect(created.body.user.mustChangePassword).toBe(true);
     expect(JSON.stringify(created.body)).not.toContain("passwordHash");
 
@@ -222,9 +234,10 @@ describe("client password lifecycle (API, isolated test database)", () => {
   });
 
   it("E (mobile): pasted/retyped generated credential drift is tolerated; clipboard CR/LF too", async () => {
+    const arabicIndic = temporaryPassword.replace(/[0-9]/g, (digit) => String.fromCharCode(0x0660 + Number(digit)));
     const drifted = [
-      temporaryPassword.toLowerCase(),
-      temporaryPassword.replace(/-/g, " "),
+      arabicIndic,
+      `${temporaryPassword.slice(0, 4)} ${temporaryPassword.slice(4)}`,
       `‏${temporaryPassword}‎`,
       `${temporaryPassword}\r\n`
     ];
@@ -235,7 +248,7 @@ describe("client password lifecycle (API, isolated test database)", () => {
 
   it("G: wrong and near-miss passwords are rejected", async () => {
     const server = app.getHttpServer();
-    const nearMiss = temporaryPassword.slice(0, -1) + (temporaryPassword.endsWith("A") ? "B" : "A");
+    const nearMiss = temporaryPassword.slice(0, -1) + (temporaryPassword.endsWith("1") ? "2" : "1");
     for (const password of ["wrong-password", nearMiss, "01130666726", "+201130666726"]) {
       await request(server).post("/auth/login").send({ email: clientEmail, password }).expect(401);
     }
@@ -259,7 +272,8 @@ describe("client password lifecycle (API, isolated test database)", () => {
     await request(server).get("/auth/me").set("Cookie", cookie).expect(200);
 
     // I: weak / unreproducible / unchanged passwords rejected server-side.
-    for (const weak of ["short1", "onlyletterspassword", "12345678901234", " Leading-space-9"]) {
+    // Clients: length-only policy - 7 characters and edge whitespace are refused.
+    for (const weak of ["short1", "1234567", " Leading-space-9"]) {
       const response = await request(server)
         .post("/auth/password/change")
         .set("Cookie", cookie)
@@ -298,7 +312,7 @@ describe("client password lifecycle (API, isolated test database)", () => {
   it("K: after the change the temporary password (and its drift variants) fail; the new one works", async () => {
     const server = app.getHttpServer();
     await request(server).post("/auth/login").send({ email: clientEmail, password: temporaryPassword }).expect(401);
-    await request(server).post("/auth/login").send({ email: clientEmail, password: temporaryPassword.toLowerCase() }).expect(401);
+    await request(server).post("/auth/login").send({ email: clientEmail, password: `${temporaryPassword.slice(0, 4)} ${temporaryPassword.slice(4)}` }).expect(401);
     await login(clientEmail, chosenPassword);
   });
 
@@ -334,7 +348,7 @@ describe("client password lifecycle (API, isolated test database)", () => {
     expect(reset.headers["cache-control"]).toBe("no-store");
     resetPassword = reset.body.temporaryPassword;
     secrets.push(resetPassword);
-    expect(resetPassword).toMatch(new RegExp(`^EH-6726-${RANDOM_GROUP}-${RANDOM_GROUP}$`));
+    expect(resetPassword).toMatch(EIGHT_DIGITS);
     expect(resetPassword).not.toBe(temporaryPassword);
     expect(reset.body.email).toBe(clientEmail);
     expect(reset.body.sessionsRevoked).toBeGreaterThanOrEqual(1);
@@ -406,7 +420,7 @@ describe("client password lifecycle (API, isolated test database)", () => {
     const server = app.getHttpServer();
     await request(server).patch(`/admin/clients/${clientId}`).set("Cookie", adminCookie).send({ isActive: false }).expect(200);
     await request(server).post("/auth/login").send({ email: clientEmail, password: resetPassword }).expect(401);
-    await request(server).post("/auth/login").send({ email: clientEmail, password: resetPassword.toLowerCase() }).expect(401);
+    await request(server).post("/auth/login").send({ email: clientEmail, password: `${resetPassword.slice(0, 4)} ${resetPassword.slice(4)}` }).expect(401);
     // A reset while suspended is allowed but does not reopen login.
     const whileSuspended = await request(server).post(`/admin/clients/${clientId}/reset-password`).set("Cookie", adminCookie).send({}).expect(200);
     secrets.push(whileSuspended.body.temporaryPassword);

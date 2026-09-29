@@ -13,6 +13,7 @@ import {
   FileStack,
   FolderKanban,
   Info,
+  Layers,
   MessageSquare,
   Ruler,
   Wallet
@@ -25,11 +26,14 @@ import {
   formatMoney,
   designStatusLabel,
   designStatusTone,
+  executionStatusLabel,
+  executionStatusTone,
   phaseLabel,
   statusLabel,
   statusTone,
   siteUpdateTypeLabel,
   siteUpdateTypeTone,
+  type ExecutionOverview,
   type ProjectOverviewRecord,
   type ProjectRecord
 } from "../../../lib/api";
@@ -45,6 +49,7 @@ export function ProjectPortal({ projectId }: PortalProps) {
   const user = useCurrentUser();
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [overview, setOverview] = useState<ProjectOverviewRecord | null>(null);
+  const [execution, setExecution] = useState<ExecutionOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -96,6 +101,20 @@ export function ProjectPortal({ projectId }: PortalProps) {
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [projectId]);
+
+  // Execution control summary: only while the project is in lifecycle phase 04.
+  const overviewPhase = overview?.project.phase;
+  useEffect(() => {
+    if (!projectId || overviewPhase !== "EXECUTION" || user.role === "ACCOUNTANT") {
+      setExecution(null);
+      return;
+    }
+    let alive = true;
+    apiRequest<ExecutionOverview>(`/projects/${projectId}/execution`)
+      .then((result) => { if (alive) setExecution(result); })
+      .catch(() => { if (alive) setExecution(null); });
+    return () => { alive = false; };
+  }, [projectId, overviewPhase, user.role]);
 
   function href(path: string) { return locale === "ar" ? path : `${path}${path.includes("?") ? "&" : "?"}lang=en`; }
   function formatDate(value: string | null) {
@@ -225,6 +244,40 @@ export function ProjectPortal({ projectId }: PortalProps) {
             </div>
             <Lifecycle phase={project.phase} locale={locale} />
           </section>
+
+          {execution && (
+            <section className="overview-execution" aria-labelledby="overview-execution-title">
+              <div className="overview-execution__head">
+                <div>
+                  <span className="section-kicker">{locale === "ar" ? "التحكم في التنفيذ" : "Execution control"}</span>
+                  <h2 id="overview-execution-title">{locale === "ar" ? "حزم أعمال التنفيذ" : "Execution work packages"}</h2>
+                </div>
+                <Link className="ui-button ui-button--secondary ui-button--sm" href={href(`/app/projects/${project.id}/execution`)}>
+                  <Layers size={15} aria-hidden="true" /> {locale === "ar" ? "فتح التنفيذ" : "Open execution"}
+                </Link>
+              </div>
+              <dl className="overview-execution__stats">
+                <div><dt>{locale === "ar" ? "تقدم التنفيذ" : "Execution progress"}</dt><dd dir="ltr">{execution.summary.executionProgress === null ? "—" : `${execution.summary.executionProgress}%`}</dd></div>
+                <div><dt>{locale === "ar" ? "حزم الأعمال" : "Work packages"}</dt><dd>{execution.summary.total}</dd></div>
+                {execution.summary.assignedEngineers !== undefined && <div><dt>{locale === "ar" ? "المهندسون" : "Engineers"}</dt><dd>{execution.summary.assignedEngineers}</dd></div>}
+                {execution.summary.assignedWorkers !== undefined && <div><dt>{locale === "ar" ? "العمال" : "Workers"}</dt><dd>{execution.summary.assignedWorkers}</dd></div>}
+                <div data-tone={execution.summary.blocked > 0 ? "danger" : undefined}><dt>{locale === "ar" ? "متوقفة" : "Blocked"}</dt><dd>{execution.summary.blocked}</dd></div>
+                <div><dt>{locale === "ar" ? "مكتملة" : "Completed"}</dt><dd>{execution.summary.completed}</dd></div>
+              </dl>
+              {execution.stages.length > 0 && (
+                <ol className="overview-execution__list">
+                  {execution.stages.slice(0, 6).map((stage) => (
+                    <li key={stage.id}>
+                      <strong dir="auto">{stage.name}</strong>
+                      <Badge tone={executionStatusTone(stage.status)}>{executionStatusLabel(stage.status, locale)}</Badge>
+                      <ProgressBar value={stage.progress} tone={stage.progress >= 70 ? "success" : "orange"} aria-label={stage.name} />
+                      <span className="mono" dir="ltr">{stage.progress}%</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          )}
 
           <section className="overview-modules-section" aria-labelledby="overview-modules-title">
             <div className="overview-section-heading">

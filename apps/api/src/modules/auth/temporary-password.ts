@@ -1,71 +1,77 @@
 import { randomInt } from "node:crypto";
-import { normalizeEgyptianMobile } from "@elhabak/validation";
+
+/** Client temporary passwords are exactly this many decimal digits (owner policy). */
+export const TEMPORARY_PASSWORD_DIGITS = 8;
+const TEMPORARY_PASSWORD_SPACE = 10 ** TEMPORARY_PASSWORD_DIGITS;
 
 /**
- * Unambiguous alphabet for Admin-generated temporary credentials: uppercase letters and
- * digits minus the look-alikes 0/O, 1/I/L. Uppercase-only survives mobile keyboards that
- * auto-capitalize, and nothing here is a WhatsApp formatting marker (`_`, `*`, `~`).
+ * Generates a client temporary password: 8 decimal digits (e.g. `48273160`), drawn as one
+ * uniform value in [0, 10^8) with `crypto.randomInt` (CSPRNG, rejection-sampled, no modulo
+ * bias) and left-padded, so leading zeros are as likely as any other digit.
+ *
+ * Nothing about the client is an input: no phone digits, no prefix, no sequence. The
+ * credential is only a one-time hand-over secret - it is bcrypt-hashed, forces a password
+ * change at first sign-in, and every attempt passes the per-account and per-IP login
+ * throttles, which is what bounds guessing against the 10^8 space.
  */
-export const TEMPORARY_PASSWORD_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-const RANDOM_GROUPS = 2;
-const RANDOM_GROUP_LENGTH = 5;
-const PREFIX = "EH";
-const PHONE_FRAGMENT_LENGTH = 4;
-
-/** Random symbols per credential; 10 symbols over a 31-symbol alphabet ~= 49.5 bits. */
-export const TEMPORARY_PASSWORD_RANDOM_SYMBOLS = RANDOM_GROUPS * RANDOM_GROUP_LENGTH;
-
-/**
- * Generates a client temporary password such as `EH-6726-K7P4Q-9ZXMA`:
- *  - `EH` and the last four digits of the client's canonical mobile number are only a
- *    human-recognizable label so the Admin and the client can tell credentials apart;
- *  - all of the secret strength comes from ten symbols drawn with `crypto.randomInt`
- *    (CSPRNG, rejection-sampled, no modulo bias).
- * Knowing the phone number therefore gives an attacker nothing beyond the public label.
- * When the stored phone is missing or not a valid mobile the label is simply omitted.
- */
-export function generateClientTemporaryPassword(phone: string | null | undefined): string {
-  const mobile = normalizeEgyptianMobile(phone);
-  const groups = Array.from({ length: RANDOM_GROUPS }, () =>
-    Array.from({ length: RANDOM_GROUP_LENGTH }, () => TEMPORARY_PASSWORD_ALPHABET[randomInt(TEMPORARY_PASSWORD_ALPHABET.length)]).join("")
-  );
-  return [PREFIX, mobile ? mobile.slice(-PHONE_FRAGMENT_LENGTH) : null, ...groups].filter(Boolean).join("-");
+export function generateClientTemporaryPassword(): string {
+  return String(randomInt(TEMPORARY_PASSWORD_SPACE)).padStart(TEMPORARY_PASSWORD_DIGITS, "0");
 }
 
-const GENERATED_COMPACT = new RegExp(
-  `^${PREFIX}([0-9]{${PHONE_FRAGMENT_LENGTH}})?([${TEMPORARY_PASSWORD_ALPHABET}]{${TEMPORARY_PASSWORD_RANDOM_SYMBOLS}})$`
-);
+function isInvisibleMark(code: number) {
+  return (
+    (code >= 0x200b && code <= 0x200f) ||
+    (code >= 0x202a && code <= 0x202e) ||
+    (code >= 0x2066 && code <= 0x2069) ||
+    code === 0xfeff ||
+    code === 0x061c
+  );
+}
+
+function isSeparator(ch: string, code: number) {
+  return /\s/u.test(ch) || ch === "-" || (code >= 0x2010 && code <= 0x2015) || code === 0x2212;
+}
+
+/** Arabic-Indic (U+0660-0669) and Extended Arabic-Indic (U+06F0-06F9) digits to ASCII. */
+function foldDigit(ch: string, code: number) {
+  if (code >= 0x0660 && code <= 0x0669) return String(code - 0x0660);
+  if (code >= 0x06f0 && code <= 0x06f9) return String(code - 0x06f0);
+  return ch;
+}
+
+function compact(input: string) {
+  return Array.from(input)
+    .filter((ch) => {
+      const code = ch.codePointAt(0) as number;
+      return !isInvisibleMark(code) && !isSeparator(ch, code);
+    })
+    .map((ch) => foldDigit(ch, ch.codePointAt(0) as number))
+    .join("");
+}
+
+/**
+ * Credentials issued before the numeric policy (`EH-6726-K7P4Q-9ZXMA`) are still valid until
+ * their holders change them, so their relay tolerance is kept for accounts that still hold
+ * a temporary credential.
+ */
+const LEGACY_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+const LEGACY_COMPACT = new RegExp(`^EH([0-9]{4})?([${LEGACY_ALPHABET}]{10})$`);
+const NUMERIC_COMPACT = new RegExp(`^[0-9]{${TEMPORARY_PASSWORD_DIGITS}}$`);
 
 /**
  * Copy/paste and retyping tolerance scoped strictly to generated temporary credentials.
- * A credential relayed through WhatsApp or read aloud is often re-entered in lowercase,
- * with spaces or "smart" dashes instead of hyphens, or wrapped in the invisible bidi marks
- * an Arabic message carries. Returns the canonical generated form when the input is such
- * a credential modulo case, separators and invisible marks - otherwise null, so every
- * other password keeps exact semantics. The alphabet is uppercase-only, so case folding
- * costs no entropy.
+ * A credential relayed through WhatsApp or typed on an Arabic phone keyboard often arrives
+ * with spaces, Arabic-Indic digits or invisible bidi marks. Returns the canonical generated
+ * form when the input is such a credential modulo those differences - otherwise null, so
+ * every other password keeps exact semantics. The caller only accepts the canonical form
+ * for an account that still holds its temporary credential.
  */
 export function canonicalGeneratedTemporaryPassword(input: string): string | null {
   if (input.length > 64) return null;
-  const compact = Array.from(input)
-    .filter((ch) => {
-      const code = ch.codePointAt(0) as number;
-      const invisible =
-        (code >= 0x200b && code <= 0x200f) ||
-        (code >= 0x202a && code <= 0x202e) ||
-        (code >= 0x2066 && code <= 0x2069) ||
-        code === 0xfeff ||
-        code === 0x061c;
-      const separator = /\s/u.test(ch) || ch === "-" || (code >= 0x2010 && code <= 0x2015) || code === 0x2212;
-      return !invisible && !separator;
-    })
-    .join("")
-    .toUpperCase();
-  const match = GENERATED_COMPACT.exec(compact);
-  if (!match) return null;
-  const random = match[2] as string;
-  const groups = Array.from({ length: RANDOM_GROUPS }, (_, index) =>
-    random.slice(index * RANDOM_GROUP_LENGTH, (index + 1) * RANDOM_GROUP_LENGTH)
-  );
-  return [PREFIX, match[1] ?? null, ...groups].filter(Boolean).join("-");
+  const folded = compact(input);
+  if (NUMERIC_COMPACT.test(folded)) return folded;
+  const legacy = LEGACY_COMPACT.exec(folded.toUpperCase());
+  if (!legacy) return null;
+  const random = legacy[2] as string;
+  return ["EH", legacy[1] ?? null, random.slice(0, 5), random.slice(5)].filter(Boolean).join("-");
 }

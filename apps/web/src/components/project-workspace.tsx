@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { AdaptiveDisclosure, Badge, ProgressBar } from "@elhabak/ui";
-import { Activity, ArrowRight, Building2, CalendarDays, CalendarRange, ClipboardList, FileStack, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
+import { Activity, ArrowRight, Building2, CalendarDays, CalendarRange, ClipboardList, FileStack, HardHat, Layers, MapPin, MessageSquare, Pencil, UserRound, UsersRound, Wallet } from "lucide-react";
 import {
   categoryLabel,
   formatAppDate,
@@ -18,7 +18,7 @@ import {
   type UserRole
 } from "../lib/api";
 
-type WorkspaceSection = "overview" | "design" | "site" | "finance" | "documents" | "chat";
+type WorkspaceSection = "overview" | "design" | "execution" | "site" | "finance" | "documents" | "chat";
 
 /** The subset of a project every workspace header needs - satisfied by the full ProjectRecord and by the lightweight finance project-context response alike. */
 export type ProjectHeaderRecord = {
@@ -35,6 +35,7 @@ export type ProjectHeaderRecord = {
   workers?: UserRecord[];
   client: { id: string; user: UserRecord } | null;
   engineer: UserRecord | null;
+  engineers?: Array<UserRecord & { isLead?: boolean }>;
 };
 
 type ProjectWorkspaceProps = {
@@ -53,6 +54,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       location: "الموقع",
       client: "العميل",
       engineer: "المهندس المسؤول",
+      engineers: "مهندسون آخرون",
+      execution: "التنفيذ",
       overview: "نظرة عامة",
       design: "التصميمات",
       site: "نشاط الموقع",
@@ -78,6 +81,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       location: "Location",
       client: "Client",
       engineer: "Responsible engineer",
+      engineers: "Other engineers",
+      execution: "Execution",
       overview: "Overview",
       design: "Design Hub",
       site: "Site Activity",
@@ -114,6 +119,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
     ...(role === "ADMIN" || role === "ENGINEER" || role === "CLIENT"
       ? [{ id: "design" as const, label: labels.design, href: `${base}/design`, icon: Pencil }]
       : []),
+    ...(role === "ACCOUNTANT" ? [] : [{ id: "execution" as const, label: labels.execution, href: `${base}/execution`, icon: Layers }]),
     ...(role === "ACCOUNTANT" ? [] : [{ id: "site" as const, label: labels.site, href: `${base}/site-activity`, icon: Activity }]),
     ...(role === "ADMIN" || role === "ACCOUNTANT"
       ? [{ id: "finance" as const, label: labels.finance, href: `${base}/finance`, icon: Wallet }]
@@ -133,6 +139,7 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
     current?.scrollIntoView({ block: "nearest", inline: "center" });
   }, [active]);
 
+  const otherEngineers = (project.engineers ?? []).filter((engineer) => !engineer.isLead && engineer.id !== project.engineer?.id);
   const isOverview = active === "overview";
   const TitleTag = isOverview ? "h1" : "p";
   const detailsSummary = [project.client?.user.displayName, project.location].filter(Boolean).join(" · ");
@@ -180,7 +187,8 @@ export function ProjectWorkspace({ project, locale, role, active }: ProjectWorks
       <AdaptiveDisclosure className="project-context__details" label={labels.details} summary={detailsSummary || undefined}>
         <dl className="project-context__facts">
           <div><UsersRound size={16} aria-hidden="true" /><dt>{labels.client}</dt><dd dir="auto">{project.client?.user.displayName ?? labels.unset}</dd></div>
-          <div><UserRound size={16} aria-hidden="true" /><dt>{labels.engineer}</dt><dd dir="auto">{project.engineer?.displayName ?? labels.unset}</dd></div>
+          <div><UserRound size={16} aria-hidden="true" /><dt>{labels.engineer}</dt><dd dir="auto">{project.engineer?.displayName ?? labels.unset}{project.engineer?.specialty ? ` · ${project.engineer.specialty}` : ""}</dd></div>
+          {otherEngineers.length > 0 ? <div><HardHat size={16} aria-hidden="true" /><dt>{labels.engineers}</dt><dd dir="auto">{otherEngineers.map((engineer) => (engineer.specialty ? `${engineer.displayName} (${engineer.specialty})` : engineer.displayName)).join(ar ? "، " : ", ")}</dd></div> : null}
           <div><MapPin size={16} aria-hidden="true" /><dt>{labels.location}</dt><dd dir="auto">{project.location ?? labels.unset}</dd></div>
           <div><CalendarDays size={16} aria-hidden="true" /><dt>{labels.target}</dt><dd><bdi>{formatDate(project.targetDate)}</bdi></dd></div>
           {project.workers?.length ? <div><Building2 size={16} aria-hidden="true" /><dt>{labels.team}</dt><dd dir="auto">{team}</dd></div> : null}

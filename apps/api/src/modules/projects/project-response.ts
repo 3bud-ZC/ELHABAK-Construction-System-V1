@@ -1,7 +1,7 @@
 import type { Prisma } from "@elhabak/database";
 import { toRequestUser } from "../auth/auth.service";
 
-const userSummarySelect = { id: true, email: true, displayName: true, role: true, isActive: true } satisfies Prisma.UserSelect;
+const userSummarySelect = { id: true, email: true, displayName: true, role: true, isActive: true, specialty: true } satisfies Prisma.UserSelect;
 
 /**
  * Header-only include: everything a project context bar, register row, or list card needs.
@@ -58,8 +58,12 @@ export function toProjectResponse(project: ProjectWithRelations | ProjectHeaderP
           user: toRequestUser(project.client.user)
         }
       : null,
-    engineer: project.engineer ? toRequestUser(project.engineer) : null,
-    workers: project.assignments.filter((assignment) => assignment.user.role === "WORKER").map((assignment) => toRequestUser(assignment.user)),
+    engineer: project.engineer ? { ...toRequestUser(project.engineer), specialty: project.engineer.specialty } : null,
+    // Every engineer on the project team, lead first (Project.engineerId stays the lead pointer).
+    engineers: projectEngineers(project),
+    workers: project.assignments
+      .filter((assignment) => assignment.user.role === "WORKER")
+      .map((assignment) => ({ ...toRequestUser(assignment.user), specialty: assignment.user.specialty, responsibility: assignment.responsibility })),
     ...(siteUpdates
       ? {
           siteUpdates: siteUpdates
@@ -88,3 +92,18 @@ export function toProjectResponse(project: ProjectWithRelations | ProjectHeaderP
   };
 }
 
+
+function projectEngineers(project: ProjectHeaderPayload) {
+  const rows = project.assignments
+    .filter((assignment) => assignment.user.role === "ENGINEER")
+    .map((assignment) => ({
+      ...toRequestUser(assignment.user),
+      specialty: assignment.user.specialty,
+      responsibility: assignment.responsibility,
+      isLead: assignment.userId === project.engineerId
+    }));
+  if (project.engineer && !rows.some((row) => row.id === project.engineer?.id)) {
+    rows.push({ ...toRequestUser(project.engineer), specialty: project.engineer.specialty, responsibility: null, isLead: true });
+  }
+  return rows.sort((a, b) => Number(b.isLead) - Number(a.isLead));
+}

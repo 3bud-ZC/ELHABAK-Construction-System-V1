@@ -18,7 +18,8 @@ export {
   DocumentCategory,
   DocumentRecordStatus,
   ChatMessageType,
-  NotificationType
+  NotificationType,
+  ExecutionStageStatus
 } from "@prisma/client";
 export type {
   User,
@@ -42,6 +43,8 @@ export type {
   ProjectDocumentVersion,
   ProjectMessage,
   ProjectChatReadState,
-  Notification
+  Notification,
+  ExecutionStage,
+  ExecutionStageAssignment
 } from "@prisma/client";
 

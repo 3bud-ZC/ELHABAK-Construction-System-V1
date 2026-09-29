@@ -241,7 +241,7 @@ export class DataOpsService {
     const passwordHashes = new Map<number, string>();
     for (const row of rows) {
       if (row.status === "valid" && row.data) {
-        const temporary = generateClientTemporaryPassword(row.data.phone);
+        const temporary = generateClientTemporaryPassword();
         temporaryPasswords.set(row.index, temporary);
         passwordHashes.set(row.index, await this.auth.hashPassword(temporary));
       }
@@ -391,6 +391,13 @@ export class DataOpsService {
                   notes: data.notes
                 }
               });
+              // Keep the lead-engineer team row in step with Project.engineerId.
+              await tx.projectAssignment.updateMany({ where: { projectId: existingId, isLead: true, userId: { not: data.engineerId } }, data: { isLead: false } });
+              await tx.projectAssignment.upsert({
+                where: { projectId_userId: { projectId: existingId, userId: data.engineerId } },
+                update: { isLead: true },
+                create: { projectId: existingId, userId: data.engineerId, isLead: true }
+              });
               updated += 1;
               continue;
             }
@@ -410,7 +417,8 @@ export class DataOpsService {
               phase: data.phase,
               progress: data.progress,
               status: data.status,
-              notes: data.notes
+              notes: data.notes,
+              assignments: { create: { user: { connect: { id: data.engineerId } }, isLead: true } }
             }
           });
           created += 1;

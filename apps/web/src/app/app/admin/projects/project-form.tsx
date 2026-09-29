@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, EmptyState, LoadingState, PageHeader, AdaptiveDisclosure } from "@elhabak/ui";
-import { Building2, Calendar, MapPin, UserRound, Users } from "lucide-react";
+import { Building2, Calendar, MapPin, Trash2, UserRound, Users } from "lucide-react";
 import {
   apiRequest,
   categoryLabel,
@@ -21,6 +21,7 @@ import {
   type UserRecord
 } from "../../../../lib/api";
 import { Lifecycle } from "../../../../components/lifecycle";
+import { PermanentDeleteDialog } from "../../../../components/permanent-delete-dialog";
 
 type ProjectFormProps = {
   mode: "create" | "edit";
@@ -33,6 +34,8 @@ type FormState = {
   category: ProjectCategory;
   clientId: string;
   engineerId: string;
+  /** Additional engineers besides the lead. */
+  engineerIds: string[];
   workerIds: string[];
   location: string;
   startDate: string;
@@ -59,6 +62,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
     category: "MIXED",
     clientId: mode === "create" ? searchParams.get("clientId") ?? "" : "",
     engineerId: "",
+    engineerIds: [],
     workerIds: [],
     location: "",
     startDate: "",
@@ -72,6 +76,8 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const router = useRouter();
 
   const labels = useMemo(
     () =>
@@ -92,6 +98,11 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             category: "الفئة",
             client: "العميل",
             engineer: "المهندس المسؤول",
+            leadEngineer: "المهندس الرئيسي",
+            engineers: "المهندسون",
+            additionalEngineers: "مهندسون إضافيون",
+            additionalHint: "تخصصات أخرى على المشروع: كهرباء، ميكانيكا، إنشائي...",
+            noOtherEngineers: "لا يوجد مهندسون آخرون نشطون.",
             workers: "العمال / المقاولون",
             location: "الموقع",
             startDate: "تاريخ البدء",
@@ -120,7 +131,10 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             filesUnit: "ملف",
             record: "سجل المشروع",
             recordHint: "مراجعة مباشرة للبيانات قبل الحفظ.",
-            unassigned: "غير محدد"
+            unassigned: "غير محدد",
+            dangerZone: "حذف نهائي",
+            dangerLead: "الأرشفة والإيقاف متاحان من الحالة. الحذف النهائي يزيل المشروع وكل بياناته وملفاته ولا يمكن التراجع عنه.",
+            deletePermanently: "حذف المشروع نهائياً"
           }
         : {
             createTitle: "Create Project",
@@ -138,6 +152,11 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             category: "Category",
             client: "Client",
             engineer: "Responsible engineer",
+            leadEngineer: "Lead engineer",
+            engineers: "Engineers",
+            additionalEngineers: "Additional engineers",
+            additionalHint: "Other disciplines on the project: electrical, mechanical, structural...",
+            noOtherEngineers: "No other active engineers.",
             workers: "Workers / contractors",
             location: "Location",
             startDate: "Start date",
@@ -166,7 +185,10 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             filesUnit: "file",
             record: "Project record",
             recordHint: "A live review of the record before saving.",
-            unassigned: "Unassigned"
+            unassigned: "Unassigned",
+            dangerZone: "Permanent deletion",
+            dangerLead: "Archive and hold are available through the status. Permanent deletion removes the project with all its data and files and cannot be undone.",
+            deletePermanently: "Delete project permanently"
           },
     [locale]
   );
@@ -191,6 +213,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             category: projectRow.category,
             clientId: projectRow.client?.id ?? "",
             engineerId: projectRow.engineer?.id ?? "",
+            engineerIds: (projectRow.engineers ?? []).filter((engineer) => !engineer.isLead && engineer.id !== projectRow.engineer?.id).map((engineer) => engineer.id),
             workerIds: projectRow.workers.map((worker) => worker.id),
             location: projectRow.location ?? "",
             startDate: projectRow.startDate?.slice(0, 10) ?? "",
@@ -222,7 +245,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
       return;
     }
     setSaving(true);
-    const payload = { ...form, progress: Number(form.progress) };
+    const payload = { ...form, engineerIds: form.engineerIds.filter((id) => id !== form.engineerId), progress: Number(form.progress) };
     try {
       const saved = await apiRequest<ProjectRecord>(mode === "create" ? "/admin/projects" : `/admin/projects/${projectId}`, {
         method: mode === "create" ? "POST" : "PATCH",
@@ -239,6 +262,18 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
 
   const engineers = users.filter((user) => user.role === "ENGINEER" && user.isActive);
   const workers = users.filter((user) => user.role === "WORKER" && user.isActive);
+
+  function setExtraEngineer(engineerId: string, checked: boolean) {
+    setForm((current) => ({
+      ...current,
+      engineerIds: checked ? [...current.engineerIds, engineerId] : current.engineerIds.filter((id) => id !== engineerId)
+    }));
+  }
+
+  const withSpecialty = (user: UserRecord) => (user.specialty ? `${user.displayName} — ${user.specialty}` : user.displayName);
+  const leadEngineer = engineers.find((engineer) => engineer.id === form.engineerId);
+  const extraEngineers = engineers.filter((engineer) => form.engineerIds.includes(engineer.id) && engineer.id !== form.engineerId);
+  const clampedProgress = Math.max(0, Math.min(100, Number(form.progress) || 0));
 
   function setWorker(workerId: string, checked: boolean) {
     setForm((current) => ({
@@ -323,7 +358,7 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                     <Building2 size={14} /> {labels.engineer}
                   </span>
                   <strong>{project.engineer?.displayName ?? labels.noEngineer}</strong>
-                  <span>{project.engineer?.email ?? ""}</span>
+                  <span>{(project.engineers ?? []).filter((engineer) => !engineer.isLead).map((engineer) => engineer.displayName).join("، ") || (project.engineer?.email ?? "")}</span>
                 </div>
                 <div className="overview-module">
                   <span className="overview-module__label">
@@ -410,27 +445,43 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </select>
                 </label>
                 <label className="ui-field">
-                  <span>{labels.engineer} <strong className="required-star">*</strong></span>
-                  <select value={form.engineerId} onChange={(event) => setForm({ ...form, engineerId: event.target.value })} required>
+                  <span>{labels.leadEngineer} <strong className="required-star">*</strong></span>
+                  <select value={form.engineerId} onChange={(event) => setForm({ ...form, engineerId: event.target.value, engineerIds: form.engineerIds.filter((id) => id !== event.target.value) })} required>
                     <option value="">-</option>
                     {engineers.map((engineer) => (
                       <option value={engineer.id} key={engineer.id}>
-                        {engineer.displayName} - {roleLabel(engineer.role, locale)}
+                        {withSpecialty(engineer)}
                       </option>
                     ))}
                   </select>
                 </label>
-                <label className="ui-field full-span">
-                  <span>{labels.workers}</span>
+                <fieldset className="ui-field full-span team-picker">
+                  <legend>{labels.additionalEngineers}</legend>
+                  <small>{labels.additionalHint}</small>
+                  {engineers.filter((engineer) => engineer.id !== form.engineerId).length === 0 ? (
+                    <p className="team-picker__empty">{labels.noOtherEngineers}</p>
+                  ) : (
+                    <div className="checkbox-grid">
+                      {engineers.filter((engineer) => engineer.id !== form.engineerId).map((engineer) => (
+                        <label className="check-field team-picker__option" key={engineer.id}>
+                          <input type="checkbox" checked={form.engineerIds.includes(engineer.id)} onChange={(event) => setExtraEngineer(engineer.id, event.target.checked)} />
+                          <span><strong>{engineer.displayName}</strong>{engineer.specialty ? <small>{engineer.specialty}</small> : null}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </fieldset>
+                <fieldset className="ui-field full-span team-picker">
+                  <legend>{labels.workers}</legend>
                   <div className="checkbox-grid">
                     {workers.map((worker) => (
-                      <label className="check-field" key={worker.id}>
+                      <label className="check-field team-picker__option" key={worker.id}>
                         <input type="checkbox" checked={form.workerIds.includes(worker.id)} onChange={(event) => setWorker(worker.id, event.target.checked)} />
-                        {worker.displayName}
+                        <span><strong>{worker.displayName}</strong>{worker.specialty ? <small>{worker.specialty}</small> : null}</span>
                       </label>
                     ))}
                   </div>
-                </label>
+                </fieldset>
               </div>
             </div>
 
@@ -489,17 +540,28 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
             <aside className="project-form-rail">
               <AdaptiveDisclosure className="project-form-preview" label={locale === "ar" ? "معاينة المشروع" : "Project preview"} summary={<bdi>{form.code || "PRJ-XXXX"}</bdi>}>
               <div className="project-form-summary">
-                <span className="project-form-summary__kicker">{labels.record}</span>
-                <strong className="project-form-summary__name">{form.name || labels.name}</strong>
-                <span className="project-form-summary__code mono"><bdi>{form.code || "PRJ-XXXX"}</bdi></span>
+                <header className="project-form-summary__head">
+                  <span className="project-form-summary__kicker">{labels.record}</span>
+                  <strong className="project-form-summary__name" dir="auto">{form.name || labels.name}</strong>
+                  <bdi className="project-form-summary__code mono" dir="ltr">{form.code || "PRJ-XXXX"}</bdi>
+                </header>
                 <dl className="project-form-summary__facts">
                   <div>
                     <dt>{labels.client}</dt>
-                    <dd>{clients.find((client) => client.id === form.clientId)?.user.displayName ?? labels.unassigned}</dd>
+                    <dd dir="auto">{clients.find((client) => client.id === form.clientId)?.user.displayName ?? labels.unassigned}</dd>
                   </div>
-                  <div>
-                    <dt>{labels.engineer}</dt>
-                    <dd>{engineers.find((engineer) => engineer.id === form.engineerId)?.displayName ?? labels.unassigned}</dd>
+                  <div className="project-form-summary__fact--stack">
+                    <dt>{labels.engineers}</dt>
+                    <dd>
+                      {leadEngineer ? (
+                        <ul className="project-form-summary__people">
+                          <li><span dir="auto">{leadEngineer.displayName}</span><em>{labels.leadEngineer}</em></li>
+                          {extraEngineers.map((engineer) => (
+                            <li key={engineer.id}><span dir="auto">{engineer.displayName}</span>{engineer.specialty ? <em dir="auto">{engineer.specialty}</em> : null}</li>
+                          ))}
+                        </ul>
+                      ) : labels.unassigned}
+                    </dd>
                   </div>
                   <div>
                     <dt>{labels.category}</dt>
@@ -515,8 +577,8 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
                   </div>
                 </dl>
                 <div className="project-form-summary__progress">
-                  <div><span>{labels.progress}</span><strong className="mono"><bdi>{Math.max(0, Math.min(100, Number(form.progress) || 0))}%</bdi></strong></div>
-                  <div className="progress-track progress-track--orange"><span style={{ width: `${Math.max(0, Math.min(100, Number(form.progress) || 0))}%` }} /></div>
+                  <div><span>{labels.progress}</span><strong className="mono"><bdi>{clampedProgress}%</bdi></strong></div>
+                  <div className="project-form-summary__track" role="presentation"><span style={{ inlineSize: `${clampedProgress}%` }} /></div>
                 </div>
                 <p className="project-form-summary__hint">{labels.recordHint}</p>
               </div>
@@ -531,6 +593,25 @@ export function ProjectForm({ mode, projectId }: ProjectFormProps) {
               </div>
             </aside>
           </form>
+
+          {mode === "edit" && project && (
+            <section className="danger-zone" aria-labelledby="project-danger-title">
+              <div>
+                <h2 id="project-danger-title">{labels.dangerZone}</h2>
+                <p>{labels.dangerLead}</p>
+              </div>
+              <button type="button" className="ui-button ui-button--danger" onClick={() => setDeleteOpen(true)}>
+                <Trash2 size={16} aria-hidden="true" /> {labels.deletePermanently}
+              </button>
+              <PermanentDeleteDialog
+                target={{ kind: "project", id: project.id }}
+                locale={locale}
+                open={deleteOpen}
+                onClose={() => setDeleteOpen(false)}
+                onDeleted={() => router.replace(locale === "ar" ? "/app/admin/projects?deleted=1" : "/app/admin/projects?lang=en&deleted=1")}
+              />
+            </section>
+          )}
 
           {project && (
             <section className="updates-panel">

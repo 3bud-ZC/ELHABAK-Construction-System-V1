@@ -37,6 +37,8 @@ export type UserRecord = {
   role: UserRole;
   isActive: boolean;
   mustChangePassword?: boolean;
+  /** Free-text professional specialty / trade (Engineers and Workers). */
+  specialty?: string | null;
   status?: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
   archivedAt?: string | null;
   impersonation?: {
@@ -76,6 +78,8 @@ export type ClientPasswordReset = ClientCredentials & {
   sessionsRevoked: number;
 };
 
+export type ProjectTeamMember = UserRecord & { isLead?: boolean; responsibility?: string | null };
+
 export type ProjectRecord = {
   id: string;
   code: string | null;
@@ -92,7 +96,9 @@ export type ProjectRecord = {
   updatedAt: string;
   client: { id: string; phone: string | null; user: UserRecord } | null;
   engineer: UserRecord | null;
-  workers: UserRecord[];
+  /** Every engineer on the project team, lead first. */
+  engineers?: ProjectTeamMember[];
+  workers: ProjectTeamMember[];
   /** Only present on the admin project-edit payload; list/detail responses omit update history. */
   siteUpdates?: SiteUpdateRecord[];
 };
@@ -1448,6 +1454,17 @@ export function actionLabel(action: string, locale: "ar" | "en"): string {
     "project.engineer_assigned": { ar: "تم تعيين مهندس مسؤول", en: "Engineer assigned" },
     "project.worker_assigned": { ar: "تم تعيين عامل/مقاول", en: "Worker assigned" },
     "project.worker_removed": { ar: "تمت إزالة عامل/مقاول", en: "Worker removed" },
+    "project.engineers_added": { ar: "تمت إضافة مهندسين للمشروع", en: "Engineers added to the project" },
+    "project.engineers_removed": { ar: "تمت إزالة مهندسين من المشروع", en: "Engineers removed from the project" },
+    "project.team_member_added": { ar: "انضم عضو لفريق المشروع", en: "Team member joined the project" },
+    "project.deleted_permanently": { ar: "تم حذف مشروع نهائياً", en: "Project permanently deleted" },
+    "client.deleted_permanently": { ar: "تم حذف عميل نهائياً", en: "Client permanently deleted" },
+    "execution.stage_created": { ar: "تمت إضافة مرحلة تنفيذ", en: "Execution stage added" },
+    "execution.stage_updated": { ar: "تم تعديل مرحلة تنفيذ", en: "Execution stage edited" },
+    "execution.stage_progress_updated": { ar: "تم تحديث تقدم مرحلة تنفيذ", en: "Execution stage progress updated" },
+    "execution.stage_team_updated": { ar: "تم تحديث فريق مرحلة تنفيذ", en: "Execution stage team updated" },
+    "execution.stage_deleted": { ar: "تم حذف مرحلة تنفيذ", en: "Execution stage removed" },
+    "execution.stages_reordered": { ar: "تم ترتيب مراحل التنفيذ", en: "Execution stages reordered" },
     "site_update.submitted": { ar: "تحديث موقع جديد", en: "New site update" },
     "design.created": { ar: "تم إنشاء تصميم جديد", en: "New design created" },
     "design.updated": { ar: "تم تحديث بيانات تصميم", en: "Design details updated" },
@@ -1471,6 +1488,7 @@ export function actionLabel(action: string, locale: "ar" | "en"): string {
     "user.restored": { ar: "تمت استعادة حساب مستخدم", en: "User restored" },
     "user.deleted": { ar: "تم حذف مستخدم", en: "User deleted" },
     "user.password_reset": { ar: "تمت إعادة تعيين كلمة مرور", en: "Password reset" },
+    "user.password_changed": { ar: "غيّر مستخدم كلمة مروره", en: "User changed their password" },
     "user.impersonation_started": {
       ar: "بدأت جلسة استعراض بصلاحيات مستخدم",
       en: "Impersonation session started"
@@ -1490,6 +1508,145 @@ export function activityLabel(action: string, locale: "ar" | "en"): string {
   if (action.startsWith("documents.")) return documentActionLabel(action, locale);
   return actionLabel(action, locale);
 }
+
+/* ---------------------------- Execution work packages ---------------------------- */
+
+export type ExecutionStageStatus = "PLANNED" | "READY" | "IN_PROGRESS" | "BLOCKED" | "COMPLETED";
+export const EXECUTION_STAGE_STATUSES: ExecutionStageStatus[] = ["PLANNED", "READY", "IN_PROGRESS", "BLOCKED", "COMPLETED"];
+
+export type ExecutionMember = { id: string; displayName: string; role: UserRole; specialty: string | null; isActive: boolean };
+
+export type ExecutionStageRecord = {
+  id: string;
+  name: string;
+  code: string | null;
+  sortOrder: number;
+  status: ExecutionStageStatus;
+  progress: number;
+  plannedStartDate: string | null;
+  plannedEndDate: string | null;
+  actualStartDate: string | null;
+  actualEndDate: string | null;
+  updatedAt: string;
+  /** Absent for Client viewers (high-level progress only). */
+  description?: string | null;
+  engineers?: ExecutionMember[];
+  workers?: ExecutionMember[];
+  siteUpdateCount?: number;
+  assignedToMe?: boolean;
+  canUpdate?: boolean;
+};
+
+export type ExecutionOverview = {
+  projectId: string;
+  phase: ProjectPhase;
+  projectProgress: number;
+  permissions: { manage: boolean; updateAny: boolean };
+  summary: {
+    total: number;
+    planned: number;
+    ready: number;
+    inProgress: number;
+    blocked: number;
+    completed: number;
+    /** Equal-weight average of stage progress; null without stages. */
+    executionProgress: number | null;
+    weighting: "EQUAL";
+    assignedEngineers?: number;
+    assignedWorkers?: number;
+  };
+  stages: ExecutionStageRecord[];
+};
+
+export type ExecutionStageDetail = {
+  stage: ExecutionStageRecord;
+  siteUpdates: Array<{
+    id: string;
+    type: SiteUpdateType;
+    note: string | null;
+    createdAt: string;
+    isClientVisible: boolean;
+    author: { id: string; displayName: string; role: UserRole };
+    mediaCount: number;
+  }>;
+  history: Array<{
+    id: string;
+    action: string;
+    actorName: string | null;
+    createdAt: string;
+    changes: { fromStatus?: string; status?: string; fromProgress?: number; progress?: number; added?: number; removed?: number };
+  }>;
+};
+
+export function executionStatusLabel(status: ExecutionStageStatus, locale: "ar" | "en") {
+  const labels: Record<ExecutionStageStatus, { ar: string; en: string }> = {
+    PLANNED: { ar: "مخطط", en: "Planned" },
+    READY: { ar: "جاهز للبدء", en: "Ready" },
+    IN_PROGRESS: { ar: "قيد التنفيذ", en: "In progress" },
+    BLOCKED: { ar: "متوقف", en: "Blocked" },
+    COMPLETED: { ar: "مكتمل", en: "Completed" }
+  };
+  return labels[status][locale];
+}
+
+export function executionStatusTone(status: ExecutionStageStatus): BadgeTone {
+  if (status === "COMPLETED") return "success";
+  if (status === "IN_PROGRESS") return "orange";
+  if (status === "BLOCKED") return "danger";
+  if (status === "READY") return "info";
+  return "neutral";
+}
+
+/* ------------------------------ Permanent deletion ------------------------------ */
+
+export type DeletionImpact = {
+  projects: number;
+  executionStages: number;
+  executionStageAssignments: number;
+  teamAssignments: number;
+  siteUpdates: number;
+  siteMedia: number;
+  designs: number;
+  designRevisions: number;
+  designEvents: number;
+  documents: number;
+  documentVersions: number;
+  financialProfiles: number;
+  costEstimates: number;
+  costEstimateItems: number;
+  boqItems: number;
+  expenses: number;
+  clientPayments: number;
+  contractorPayments: number;
+  financialAttachments: number;
+  chatMessages: number;
+  chatReadStates: number;
+  notifications: number;
+  activityEntries: number;
+  files: number;
+  fileBytes: number;
+  userAccounts?: number;
+  sessions?: number;
+};
+
+export type ProjectDeletionPreflight = {
+  project: { id: string; code: string | null; name: string; clientName: string | null };
+  confirmationPhrase: string;
+  impact: DeletionImpact;
+};
+
+export type ClientDeletionPreflight = {
+  client: { id: string; displayName: string; email: string };
+  projects: Array<{ id: string; code: string | null; name: string }>;
+  confirmationPhrase: string;
+  impact: DeletionImpact;
+  blockers: { designEvents: number; chatMessages: number; siteUpdates: number; documents: number; total: number };
+};
+
+export type DeletionResult = {
+  impact: DeletionImpact;
+  storage: { status: "complete" | "partial"; filesRemoved: number; failedPaths: string[] };
+};
 
 /* ------------------------------ Data Operations ------------------------------ */
 

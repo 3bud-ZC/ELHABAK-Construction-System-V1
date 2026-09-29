@@ -268,6 +268,7 @@ export function AppShell({ children }: AppShellProps) {
     return (
       <ForcePasswordChange
         locale={locale}
+        audience={user.role === "CLIENT" ? "client" : "staff"}
         onDone={() => setUser({ ...user, mustChangePassword: false })}
       />
     );

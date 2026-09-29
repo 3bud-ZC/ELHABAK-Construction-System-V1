@@ -9,7 +9,8 @@
 #   production  /var/www/elhabak          pm2 elhabak-{api,web}          db elhabak
 #   staging     /var/www/elhabak-staging  pm2 elhabak-staging-{api,web}  db elhabak_staging
 #               (staging also applies committed migrations automatically; production
-#                migrations stay a manual, backed-up step)
+#                migrations are applied only with ELHABAK_APPLY_MIGRATIONS=1 and a
+#                DB + storage backup newer than 60 minutes)
 #
 # Safe order (the /current symlink is touched only after every gate passes):
 #   1. extract to timestamped release dir
@@ -81,6 +82,19 @@ echo ">> full preflight (env + sanity + build output)"
 
 if [ "$TARGET_ENV" = "staging" ]; then
   echo ">> staging: apply committed migrations to $DB_NAME"
+  pnpm db:migrate:deploy
+elif [ "${ELHABAK_APPLY_MIGRATIONS:-0}" = "1" ]; then
+  # Production migrations are opt-in and only with a database + storage backup taken in
+  # the last 60 minutes (scripts/ops/backup.sh). Applied before the switch: committed
+  # migrations are additive, so the still-running previous release keeps working.
+  BACKUP_DIR="$SHARED/backups"
+  FRESH_DB="$(find "$BACKUP_DIR" -maxdepth 1 -name 'elhabak-*.dump' -size +0 -mmin -60 2>/dev/null | head -1)"
+  FRESH_STORAGE="$(find "$BACKUP_DIR" -maxdepth 1 -name 'storage-*.tar.gz' -size +0 -mmin -60 2>/dev/null | head -1)"
+  if [ -z "$FRESH_DB" ] || [ -z "$FRESH_STORAGE" ]; then
+    echo "FATAL: ELHABAK_APPLY_MIGRATIONS=1 needs a DB dump and a storage archive newer than 60 min in $BACKUP_DIR"
+    exit 1
+  fi
+  echo ">> production: backups $FRESH_DB + $FRESH_STORAGE; applying committed migrations to $DB_NAME"
   pnpm db:migrate:deploy
 fi
 

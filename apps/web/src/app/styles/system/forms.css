@@ -221,19 +221,39 @@
     gap: var(--space-3);
   }
 
+  /* Project record rail: white card, hairline rows, navy text, orange datum.
+     (Replaces the dark slabs a legacy dark-rail rule used to paint.) */
   .project-form-summary {
+    position: relative;
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-3);
     padding: var(--space-4);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     background: var(--white);
     color: var(--text);
-    box-shadow: none;
+    box-shadow: var(--shadow-xs);
+  }
+
+  .project-form-summary::before {
+    content: "";
+    position: absolute;
+    inset-block-start: -1px;
+    inset-inline-start: var(--space-4);
+    width: 48px;
+    height: 2px;
+    background: var(--orange);
+  }
+
+  .project-form-summary__head {
+    display: grid;
+    gap: 4px;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-soft);
   }
 
   .project-form-summary__kicker {
-    color: var(--orange);
+    color: var(--orange-ink, var(--orange));
     font-size: var(--fs-caption);
     font-weight: 800;
   }
@@ -241,52 +261,96 @@
   .project-form-summary__name {
     color: var(--text-strong);
     font-size: var(--fs-title-sm);
+    line-height: 1.35;
     overflow-wrap: anywhere;
   }
 
   .project-form-summary__code {
+    justify-self: start;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
     color: var(--navy-mid);
-    font-size: var(--fs-label);
+    font-size: var(--fs-caption);
   }
 
   .project-form-summary__facts {
     display: grid;
-    margin: var(--space-2) 0 0;
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius-md);
+    margin: 0;
+    border: 0;
   }
 
   .project-form-summary__facts > div {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     gap: var(--space-3);
-    min-height: 38px;
-    padding: 0 var(--space-3);
-    border-bottom: 1px solid var(--border-soft);
+    min-width: 0;
+    min-height: 40px;
+    padding: var(--space-2) 0;
+    border-bottom: 1px dashed var(--border-soft);
+    background: none;
   }
 
   .project-form-summary__facts > div:last-child {
     border-bottom: 0;
   }
 
+  .project-form-summary__facts > .project-form-summary__fact--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-1);
+  }
+
   .project-form-summary__facts dt {
+    flex: 0 0 auto;
     color: var(--muted);
     font-size: var(--fs-label);
+    font-weight: 700;
   }
 
   .project-form-summary__facts dd {
+    min-width: 0;
     margin: 0;
-    color: var(--text-strong);
+    overflow: hidden;
+    color: var(--navy);
     font-size: var(--fs-label);
-    font-weight: 700;
+    font-weight: 800;
     text-align: end;
+    text-overflow: ellipsis;
+  }
+
+  .project-form-summary__fact--stack dd {
+    text-align: start;
+  }
+
+  .project-form-summary__people {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .project-form-summary__people li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .project-form-summary__people em {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    font-style: normal;
+    font-weight: 700;
   }
 
   .project-form-summary__progress {
     display: grid;
     gap: 6px;
-    margin-top: var(--space-1);
   }
 
   .project-form-summary__progress > div:first-child {
@@ -294,12 +358,233 @@
     justify-content: space-between;
     color: var(--muted);
     font-size: var(--fs-label);
+    font-weight: 700;
+  }
+
+  .project-form-summary__progress strong {
+    color: var(--navy);
+    font-size: var(--fs-label);
+  }
+
+  .project-form-summary__track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--border-soft);
+  }
+
+  .project-form-summary__track > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--orange);
+    transition: inline-size var(--dur) var(--ease);
   }
 
   .project-form-summary__hint {
     margin: 0;
     color: var(--muted);
     font-size: var(--fs-caption);
+  }
+
+  /* Team pickers (lead select + additional engineers + workers). */
+  .team-picker {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .team-picker legend {
+    padding: 0;
+    margin-bottom: var(--space-1);
+    color: var(--text-strong);
+    font-size: var(--fs-label);
+    font-weight: 800;
+  }
+
+  .team-picker > small,
+  .team-picker__empty {
+    display: block;
+    margin: 0 0 var(--space-2);
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  .team-picker__option > span {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .team-picker__option strong {
+    color: var(--text-strong);
+    font-size: var(--fs-label);
+  }
+
+  .team-picker__option small {
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  /* Permanent deletion zone (edit pages) + confirmation dialog. */
+  .danger-zone {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--danger) 4%, var(--white));
+  }
+
+  .danger-zone h2 {
+    margin: 0;
+    color: var(--danger);
+    font-size: var(--fs-body-lg);
+  }
+
+  .danger-zone p {
+    max-width: 68ch;
+    margin: var(--space-1) 0 0;
+    color: var(--text-soft);
+    font-size: var(--fs-label);
+    line-height: 1.7;
+  }
+
+  .permanent-delete__warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--border));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--danger) 7%, var(--white));
+    color: var(--danger);
+  }
+
+  .permanent-delete__warning > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .permanent-delete__warning strong {
+    font-size: var(--fs-body);
+    font-weight: 900;
+  }
+
+  .permanent-delete__warning span {
+    font-size: var(--fs-caption);
+    font-weight: 800;
+  }
+
+  .permanent-delete__lead,
+  .permanent-delete__loading {
+    margin: var(--space-3) 0 0;
+    color: var(--text-soft);
+    font-size: var(--fs-label);
+    line-height: 1.7;
+  }
+
+  .permanent-delete__subject {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .permanent-delete__subject strong {
+    color: var(--navy);
+    font-size: var(--fs-body);
+  }
+
+  .permanent-delete__subject bdi,
+  .permanent-delete__projects bdi {
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  .permanent-delete__projects {
+    margin-top: var(--space-3);
+    color: var(--danger);
+    font-size: var(--fs-label);
+  }
+
+  .permanent-delete__projects ul {
+    display: grid;
+    gap: 4px;
+    margin: var(--space-2) 0 0;
+    padding-inline-start: var(--space-5);
+    color: var(--text-strong);
+  }
+
+  .permanent-delete__impact {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    font-size: var(--fs-label);
+  }
+
+  .permanent-delete__impact > span {
+    color: var(--text-strong);
+    font-weight: 800;
+  }
+
+  .permanent-delete__impact dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--space-4);
+    margin: 0;
+  }
+
+  .permanent-delete__impact dl > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border-soft);
+  }
+
+  .permanent-delete__impact dt {
+    color: var(--text-soft);
+  }
+
+  .permanent-delete__impact dd {
+    margin: 0;
+    color: var(--danger);
+    font-weight: 800;
+  }
+
+  .permanent-delete__impact small {
+    color: var(--muted);
+    font-size: var(--fs-caption);
+  }
+
+  .permanent-delete__confirm {
+    margin-top: var(--space-4);
+  }
+
+  @media (max-width: 767.98px) {
+    .permanent-delete__impact dl {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .danger-zone {
+      padding: var(--space-4);
+    }
+
+    .danger-zone .ui-button {
+      width: 100%;
+    }
   }
 
   .project-form-actions {
@@ -327,9 +612,9 @@
       grid-template-columns: minmax(0, 1fr);
     }
 
+    /* Summary follows the form: the fields come first on narrower screens. */
     .project-form-rail {
       position: static;
-      order: -1;
     }
 
     .project-form-summary__facts {

@@ -110,11 +110,15 @@ export const userPublicSchema = z.object({
   updatedAt: z.string()
 });
 
+/** Free-text professional specialty / trade ("Electrical Engineer", "Plumber"); never a fixed list. */
+export const specialtySchema = z.string().trim().max(80).optional().or(z.literal(""));
+
 export const createUserSchema = z.object({
   email: emailSchema,
   displayName: nonEmptyStringSchema,
   role: userRoleSchema,
   isActive: z.boolean().default(true),
+  specialty: specialtySchema,
   temporaryPassword: z.string().min(10).max(128)
 });
 
@@ -124,6 +128,7 @@ export const updateUserSchema = z
     displayName: nonEmptyStringSchema.optional(),
     role: userRoleSchema.optional(),
     isActive: z.boolean().optional(),
+    specialty: specialtySchema,
     temporaryPassword: z.string().min(10).max(128).optional()
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
@@ -187,7 +192,9 @@ export const createProjectSchema = z.object({
   category: projectCategorySchema,
   clientId: z.string().trim().min(1),
   engineerId: z.string().trim().min(1),
-  workerIds: z.array(z.string().trim().min(1)).default([]),
+  /** Additional engineers besides the lead (engineerId). */
+  engineerIds: z.array(z.string().trim().min(1)).max(50).default([]),
+  workerIds: z.array(z.string().trim().min(1)).max(200).default([]),
   location: z.string().trim().max(500).optional().or(z.literal("")),
   startDate: optionalDateSchema,
   targetDate: optionalDateSchema,
@@ -204,7 +211,8 @@ export const updateProjectSchema = z
     category: projectCategorySchema.optional(),
     clientId: z.string().trim().min(1).optional(),
     engineerId: z.string().trim().min(1).optional(),
-    workerIds: z.array(z.string().trim().min(1)).optional(),
+    engineerIds: z.array(z.string().trim().min(1)).max(50).optional(),
+    workerIds: z.array(z.string().trim().min(1)).max(200).optional(),
     location: z.string().trim().max(500).optional().or(z.literal("")),
     startDate: optionalDateSchema,
     targetDate: optionalDateSchema,
@@ -241,8 +249,57 @@ export const createSiteUpdateSchema = z.object({
   note: z.string().trim().max(1000).optional().or(z.literal("")),
   type: siteUpdateTypeSchema.default("GENERAL"),
   progressImpact: z.coerce.number().int().min(0).max(100).optional(),
-  isClientVisible: booleanWithDefaultTrueSchema.default(true)
+  isClientVisible: booleanWithDefaultTrueSchema.default(true),
+  /** Optional execution work package this field activity belongs to (same project only). */
+  executionStageId: z.string().trim().max(64).optional().or(z.literal(""))
 });
+
+// Execution work packages (inside lifecycle phase EXECUTION). Names are free text.
+export const executionStageStatusSchema = z.enum(["PLANNED", "READY", "IN_PROGRESS", "BLOCKED", "COMPLETED"]);
+const stageDateSchema = z.string().trim().date().optional().or(z.literal(""));
+const stageProgressSchema = z.coerce.number().int().min(0).max(100);
+
+export const createExecutionStageSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    code: z.string().trim().max(32).optional().or(z.literal("")),
+    description: z.string().trim().max(3000).optional().or(z.literal("")),
+    status: executionStageStatusSchema.default("PLANNED"),
+    progress: stageProgressSchema.default(0),
+    plannedStartDate: stageDateSchema,
+    plannedEndDate: stageDateSchema,
+    actualStartDate: stageDateSchema,
+    actualEndDate: stageDateSchema
+  })
+  .strict();
+
+export const updateExecutionStageSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120).optional(),
+    code: z.string().trim().max(32).optional().or(z.literal("")),
+    description: z.string().trim().max(3000).optional().or(z.literal("")),
+    status: executionStageStatusSchema.optional(),
+    progress: stageProgressSchema.optional(),
+    plannedStartDate: stageDateSchema,
+    plannedEndDate: stageDateSchema,
+    actualStartDate: stageDateSchema,
+    actualEndDate: stageDateSchema
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, "At least one field is required.");
+
+export const reorderExecutionStagesSchema = z
+  .object({ stageIds: z.array(z.string().trim().min(1).max(64)).min(1).max(300) })
+  .strict()
+  .refine((value) => new Set(value.stageIds).size === value.stageIds.length, "Duplicate stages are not allowed.");
+
+export const setExecutionStageTeamSchema = z
+  .object({ userIds: z.array(z.string().trim().min(1).max(64)).max(150) })
+  .strict()
+  .refine((value) => new Set(value.userIds).size === value.userIds.length, "Duplicate team members are not allowed.");
+
+/** Permanent deletion must be confirmed by retyping an explicit phrase (project code / DELETE). */
+export const permanentDeleteSchema = z.object({ confirmation: z.string().trim().min(1).max(200) }).strict();
 
 export const updateProjectProgressSchema = z.object({
   progress: z.coerce.number().int().min(0).max(100),

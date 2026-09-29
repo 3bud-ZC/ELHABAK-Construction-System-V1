@@ -111,6 +111,11 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [showPhaseModal, setShowPhaseModal] = useState(false);
 
+  // Execution work packages the viewer may report against (workers: only their own).
+  const [stageOptions, setStageOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [reportStageId, setReportStageId] = useState("");
+  const [workerStageId, setWorkerStageId] = useState("");
+
   // Form states for Field Report
   const [reportType, setReportType] = useState<SiteUpdateType>("PROGRESS");
   const [reportNote, setReportNote] = useState("");
@@ -340,6 +345,30 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
         };
   }, [ar]);
 
+  useEffect(() => {
+    if (user.role === "CLIENT" || user.role === "ACCOUNTANT") return;
+    let alive = true;
+    apiRequest<{ stages: Array<{ id: string; name: string }> }>(`/projects/${projectId}/execution`)
+      .then((result) => { if (alive) setStageOptions(result.stages.map((stage) => ({ id: stage.id, name: stage.name }))); })
+      .catch(() => { if (alive) setStageOptions([]); });
+    return () => { alive = false; };
+  }, [projectId, user.role]);
+
+  function stageSelect(id: string, value: string, onChange: (value: string) => void) {
+    if (stageOptions.length === 0) return null;
+    return (
+      <div className="ui-field">
+        <label htmlFor={id}>{locale === "ar" ? "مرحلة التنفيذ (اختياري)" : "Execution stage (optional)"}</label>
+        <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+          <option value="">{locale === "ar" ? "بدون ربط بمرحلة" : "Not linked to a stage"}</option>
+          {stageOptions.map((stage) => (
+            <option key={stage.id} value={stage.id}>{stage.name}</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
   const loadData = useCallback(async () => {
     try {
       const [projectData, timelineData, summary] = await Promise.all([
@@ -548,10 +577,10 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
   useEffect(() => {
     if (!lightboxOpen) return;
     lightboxCloseRef.current?.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.documentElement.style.overflow = previousOverflow;
       lightboxRestoreFocus.current?.focus?.();
     };
   }, [lightboxOpen]);
@@ -574,6 +603,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
       body.set("progressImpact", reportProgressImpact.trim());
     }
     body.set("isClientVisible", String(reportIsClientVisible));
+    if (reportStageId) body.set("executionStageId", reportStageId);
     reportMedia.forEach((item) => body.append("media", item.file));
 
     try {
@@ -611,6 +641,7 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
     body.set("type", workerType);
     body.set("note", workerNote.trim());
     body.set("isClientVisible", "true");
+    if (workerStageId) body.set("executionStageId", workerStageId);
     workerMedia.forEach((item) => body.append("media", item.file));
 
     try {
@@ -735,6 +766,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
             ))}
           </div>
         </div>
+
+        {stageSelect(`${cameraInputRef === workerCameraInputRef ? "worker" : "sheet"}-stage`, workerStageId, setWorkerStageId)}
 
         {/* Media sources: camera capture and gallery/files are separate controls — a
             single input with capture="environment" forces camera-only on mobile and
@@ -1314,6 +1347,8 @@ export function SiteOperations({ projectId }: SiteOperationsProps) {
                     ))}
                   </select>
                 </div>
+
+                {stageSelect("report-stage", reportStageId, setReportStageId)}
 
                 {/* Media: capture/browse first, preview grid second */}
                 <div className="ui-field">

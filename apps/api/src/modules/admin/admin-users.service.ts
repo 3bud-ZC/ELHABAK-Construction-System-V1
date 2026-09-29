@@ -19,6 +19,7 @@ const userResponseSelect = {
   displayName: true,
   role: true,
   isActive: true,
+  specialty: true,
   archivedAt: true,
   createdAt: true,
   updatedAt: true
@@ -43,7 +44,8 @@ const linkedHistorySelect = {
   documentVersionsUploaded: true,
   projectMessages: true,
   chatReadStates: true,
-  notifications: true
+  notifications: true,
+  executionStageAssignments: true
 } satisfies Prisma.UserCountOutputTypeSelect;
 
 type AccountStatus = "ACTIVE" | "SUSPENDED" | "ARCHIVED";
@@ -125,6 +127,7 @@ export class AdminUsersService {
           displayName: input.displayName.trim(),
           role: input.role,
           isActive: input.isActive,
+          specialty: emptyToNull(input.specialty),
           passwordHash,
           mustChangePassword: true
         },
@@ -160,6 +163,7 @@ export class AdminUsersService {
       data.role = input.role;
     }
     if (input.isActive !== undefined) data.isActive = input.isActive;
+    if (input.specialty !== undefined) data.specialty = emptyToNull(input.specialty);
     if (input.temporaryPassword !== undefined) {
       data.passwordHash = await this.authService.hashPassword(input.temporaryPassword);
       data.mustChangePassword = true;
@@ -318,6 +322,7 @@ type UserWithDates = {
   role: UserRole;
   isActive: boolean;
   archivedAt: Date | null;
+  specialty?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -325,6 +330,7 @@ type UserWithDates = {
 function toUserResponse(user: UserWithDates) {
   return {
     ...toRequestUser(user),
+    specialty: user.specialty ?? null,
     status: accountStatus(user),
     archivedAt: user.archivedAt?.toISOString() ?? null,
     createdAt: user.createdAt.toISOString(),
@@ -335,6 +341,11 @@ function toUserResponse(user: UserWithDates) {
 function accountStatus(user: Pick<UserWithDates, "isActive" | "archivedAt">): AccountStatus {
   if (user.archivedAt) return "ARCHIVED";
   return user.isActive ? "ACTIVE" : "SUSPENDED";
+}
+
+function emptyToNull(value: string | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed.length === 0 ? null : trimmed;
 }
 
 function handleUniqueEmail(error: unknown): never {

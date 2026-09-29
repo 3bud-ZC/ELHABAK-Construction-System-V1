@@ -18,6 +18,7 @@ import { NotificationService } from "../notifications/notification.service";
 import { ProjectAccessService } from "./project-access.service";
 import { projectHeaderInclude, projectIncludeFor, toProjectResponse } from "./project-response";
 import { StorageService } from "./storage.service";
+import { ExecutionService } from "./execution.service";
 
 const TIMELINE_DEFAULT_LIMIT = 100;
 const TIMELINE_MAX_LIMIT = 200;
@@ -29,7 +30,8 @@ export class ProjectsService {
     private readonly audit: AuditService,
     private readonly access: ProjectAccessService,
     private readonly storage: StorageService,
-    private readonly notifications: NotificationService
+    private readonly notifications: NotificationService,
+    private readonly execution: ExecutionService
   ) {}
 
   async adminList(search?: string, status?: Prisma.EnumProjectStatusFilter["equals"], phase?: Prisma.EnumProjectPhaseFilter["equals"]) {
@@ -360,6 +362,8 @@ export class ProjectsService {
     const input = parseBody(createProjectSchema, rawBody);
     await this.assertClient(input.clientId);
     await this.assertUserRole(input.engineerId, "ENGINEER");
+    const extraEngineerIds = uniqueExcluding(input.engineerIds, input.engineerId);
+    await this.assertUsersWithRole(extraEngineerIds, "ENGINEER");
     await this.assertWorkerIds(input.workerIds);
 
     const requestedCode = input.code?.trim().toUpperCase() || null;
@@ -380,12 +384,18 @@ export class ProjectsService {
             progress: input.progress,
             status: input.status,
             notes: emptyToNullValue(input.notes),
-            assignments: { create: input.workerIds.map((userId) => ({ user: { connect: { id: userId } } })) }
+            assignments: {
+              create: [
+                { user: { connect: { id: input.engineerId } }, isLead: true },
+                ...extraEngineerIds.map((userId) => ({ user: { connect: { id: userId } } })),
+                ...input.workerIds.map((userId) => ({ user: { connect: { id: userId } } }))
+              ]
+            }
           },
           include: projectIncludeFor()
         });
         await this.audit.record(actorId, "project.created", { projectId: project.id, code: project.code ?? "" }, project.id);
-        if (input.engineerId) await this.audit.record(actorId, "project.engineer_assigned", { engineerId: input.engineerId }, project.id);
+        if (input.engineerId) await this.audit.record(actorId, "project.engineer_assigned", { engineerId: input.engineerId, engineerIds: extraEngineerIds }, project.id);
         if (input.workerIds.length > 0) await this.audit.record(actorId, "project.worker_assigned", { workerIds: input.workerIds }, project.id);
         return toProjectResponse(project);
       } catch (error) {
@@ -400,7 +410,7 @@ export class ProjectsService {
     const input = parseBody(updateProjectSchema, rawBody);
     const existing = await this.prisma.project.findUnique({
       where: { id },
-      include: { assignments: true }
+      include: { assignments: { include: { user: { select: { id: true, role: true } } } } }
     });
     if (!existing) throw new NotFoundException("Project not found.");
     if (input.clientId) await this.assertClient(input.clientId);
@@ -420,15 +430,48 @@ export class ProjectsService {
     if (input.progress !== undefined) data.progress = input.progress;
     if (input.status !== undefined) data.status = input.status;
     if (input.notes !== undefined) data.notes = emptyToNullValue(input.notes);
-    if (input.workerIds !== undefined) {
-      data.assignments = {
-        deleteMany: {},
-        create: input.workerIds.map((userId) => ({ user: { connect: { id: userId } } }))
-      };
-    }
+
+    // Team: lead engineer (Project.engineerId, mirrored as the isLead assignment row),
+    // additional engineers and workers. Fields that are not sent keep their current members.
+    const teamChanged = input.engineerId !== undefined || input.engineerIds !== undefined || input.workerIds !== undefined;
+    const leadId = input.engineerId ?? existing.engineerId;
+    const currentExtraEngineers = existing.assignments
+      .filter((assignment) => assignment.user.role === "ENGINEER" && assignment.userId !== existing.engineerId)
+      .map((assignment) => assignment.userId);
+    const extraEngineerIds = uniqueExcluding(input.engineerIds ?? currentExtraEngineers, leadId);
+    if (input.engineerIds !== undefined) await this.assertUsersWithRole(extraEngineerIds, "ENGINEER");
+    const workerIds =
+      input.workerIds ?? existing.assignments.filter((assignment) => assignment.user.role === "WORKER").map((assignment) => assignment.userId);
+    const desired = new Map<string, boolean>();
+    for (const userId of [...extraEngineerIds, ...workerIds]) desired.set(userId, false);
+    if (leadId) desired.set(leadId, true);
+    const existingByUser = new Map(existing.assignments.map((assignment) => [assignment.userId, assignment]));
+    const removedIds = teamChanged
+      ? existing.assignments.filter((assignment) => !desired.has(assignment.userId)).map((assignment) => assignment.userId)
+      : [];
+    const addedIds = teamChanged ? [...desired.keys()].filter((userId) => !existingByUser.has(userId)) : [];
 
     try {
-      const project = await this.prisma.project.update({ where: { id }, data, include: projectIncludeFor() });
+      await this.prisma.$transaction(async (tx) => {
+        await tx.project.update({ where: { id }, data });
+        if (!teamChanged) return;
+        if (removedIds.length > 0) {
+          await tx.projectAssignment.deleteMany({ where: { projectId: id, userId: { in: removedIds } } });
+          // Leaving the project team also ends every execution-stage assignment on it.
+          await tx.executionStageAssignment.deleteMany({ where: { userId: { in: removedIds }, stage: { projectId: id } } });
+        }
+        if (addedIds.length > 0) {
+          await tx.projectAssignment.createMany({
+            data: addedIds.map((userId) => ({ projectId: id, userId, isLead: desired.get(userId) ?? false }))
+          });
+        }
+        await tx.projectAssignment.updateMany({
+          where: { projectId: id, isLead: true, ...(leadId ? { userId: { not: leadId } } : {}) },
+          data: { isLead: false }
+        });
+        if (leadId) await tx.projectAssignment.updateMany({ where: { projectId: id, userId: leadId }, data: { isLead: true } });
+      });
+      const project = await this.prisma.project.findUniqueOrThrow({ where: { id }, include: projectIncludeFor() });
       await this.audit.record(actorId, "project.edited", { projectId: id }, id);
       if (input.phase !== undefined && input.phase !== existing.phase) {
         await this.audit.record(actorId, "project.phase_changed", { from: existing.phase, to: input.phase }, id);
@@ -439,14 +482,15 @@ export class ProjectsService {
       if (input.engineerId !== undefined && input.engineerId !== existing.engineerId) {
         await this.audit.record(actorId, "project.engineer_assigned", { engineerId: input.engineerId }, id);
       }
-      if (input.workerIds !== undefined) {
-        const before = new Set(existing.assignments.map((assignment) => assignment.userId));
-        const after = new Set(input.workerIds);
-        const added = input.workerIds.filter((userId) => !before.has(userId));
-        const removed = [...before].filter((userId) => !after.has(userId));
-        if (added.length > 0) await this.audit.record(actorId, "project.worker_assigned", { workerIds: added }, id);
-        if (removed.length > 0) await this.audit.record(actorId, "project.worker_removed", { workerIds: removed }, id);
-      }
+      const roleOf = (userId: string) => existingByUser.get(userId)?.user.role;
+      const addedWorkers = addedIds.filter((userId) => workerIds.includes(userId));
+      const removedWorkers = removedIds.filter((userId) => roleOf(userId) === "WORKER");
+      const addedEngineers = addedIds.filter((userId) => extraEngineerIds.includes(userId));
+      const removedEngineers = removedIds.filter((userId) => roleOf(userId) === "ENGINEER");
+      if (addedWorkers.length > 0) await this.audit.record(actorId, "project.worker_assigned", { workerIds: addedWorkers }, id);
+      if (removedWorkers.length > 0) await this.audit.record(actorId, "project.worker_removed", { workerIds: removedWorkers }, id);
+      if (addedEngineers.length > 0) await this.audit.record(actorId, "project.engineers_added", { engineerIds: addedEngineers }, id);
+      if (removedEngineers.length > 0) await this.audit.record(actorId, "project.engineers_removed", { engineerIds: removedEngineers }, id);
       return toProjectResponse(project);
     } catch (error) {
       handleProjectUnique(error);
@@ -537,6 +581,8 @@ export class ProjectsService {
     }
 
     const input = parseBody(createSiteUpdateSchema, rawBody);
+    const executionStageId = input.executionStageId?.trim() || null;
+    if (executionStageId) await this.execution.assertStageForSiteUpdate(user, projectId, executionStageId);
     const storedFiles = await Promise.all(files.map((file) => this.storage.store(projectId, file)));
 
     const canSetProgress = user.role === "ADMIN" || user.role === "ENGINEER";
@@ -551,6 +597,7 @@ export class ProjectsService {
         progressImpact,
         isClientVisible: input.isClientVisible,
         note: emptyToNullValue(input.note),
+        executionStageId,
         media: {
           create: storedFiles.map((stored, index) => ({
             projectId,
@@ -803,6 +850,12 @@ export class ProjectsService {
     }
   }
 
+  private async assertUsersWithRole(userIds: string[], role: UserRole) {
+    if (userIds.length === 0) return;
+    const users = await this.prisma.user.findMany({ where: { id: { in: userIds }, role, isActive: true }, select: { id: true } });
+    if (users.length !== userIds.length) throw new BadRequestException(`User must be active ${role}.`);
+  }
+
   private async assertWorkerIds(workerIds: string[]) {
     const unique = [...new Set(workerIds)];
     if (unique.length !== workerIds.length) throw new BadRequestException("Duplicate workers are not allowed.");
@@ -815,6 +868,11 @@ export class ProjectsService {
       throw new BadRequestException("User must be active WORKER.");
     }
   }
+}
+
+/** Distinct ids, without `exclude` (the lead engineer is never also an "additional" engineer). */
+function uniqueExcluding(ids: string[], exclude: string | null | undefined) {
+  return [...new Set(ids)].filter((userId) => userId !== exclude);
 }
 
 function emptyToNullValue(value: string | undefined): string | null {

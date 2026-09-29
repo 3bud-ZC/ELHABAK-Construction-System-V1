@@ -8,6 +8,122 @@
  *          in or immediately after the first phone viewport.
  */
 @layer system {
+  /* One width for the whole hub (it used to stop at 1100px while the page
+     header ran the full content width), one vertical rhythm, and Export +
+     History side by side on wide content so no dead canvas is left below. */
+  .dataops-console {
+    max-width: none;
+    gap: var(--space-5);
+  }
+
+  .dataops-section {
+    align-content: start;
+    gap: var(--space-3);
+  }
+
+  .dataops-section__head {
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .dataops-lower {
+    display: grid;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  @container app (min-width: 1100px) {
+    .dataops-lower {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    }
+
+    .dataops-lower--single {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dataops-tools {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    /* In the half-width column the export card stacks: icon | copy, action under the copy. */
+    .dataops-lower .dataops-export {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-areas:
+        "icon body"
+        ".    action";
+      align-items: start;
+      column-gap: var(--space-4);
+      row-gap: var(--space-3);
+    }
+
+    .dataops-lower .dataops-export > .dataops-tool__icon {
+      grid-area: icon;
+    }
+
+    .dataops-lower .dataops-export > .dataops-export__body {
+      grid-area: body;
+    }
+
+    .dataops-lower .dataops-export > .ui-button {
+      grid-area: action;
+      justify-self: start;
+    }
+  }
+
+  /* Shared engineering card language for tools, export and history. */
+  .dataops-tool,
+  .dataops-export,
+  .dataops-empty,
+  .jobs-register {
+    border-radius: var(--radius-md);
+  }
+
+  .dataops-tool {
+    grid-template-rows: auto 1fr auto;
+    align-content: stretch;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+
+  .dataops-tool:hover {
+    transform: translateY(-1px);
+  }
+
+  .dataops-tool__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dataops-tool__body h3,
+  .dataops-export__body h3 {
+    font-size: var(--fs-body-lg);
+    font-weight: 800;
+  }
+
+  .dataops-tool__foot {
+    align-self: end;
+  }
+
+  .dataops-empty {
+    border-style: dashed;
+    background:
+      var(--blueprint-grid-light, none),
+      var(--surface-soft);
+    padding: var(--space-5);
+  }
+
+  .dataops-empty__icon {
+    width: 40px;
+    height: 40px;
+    color: var(--navy);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dataops-tool:hover {
+      transform: none;
+    }
+  }
+
   .dataops-workflow-path.ops-stage-path {
     grid-template-columns: repeat(8, minmax(0, 1fr));
     margin: 0;

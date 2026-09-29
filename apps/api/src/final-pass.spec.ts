@@ -405,7 +405,7 @@ describe("Final pass - finance control, reports, client lifecycle, data ops", ()
       .expect(201);
     expect(created.body.generatedCredentials.email).toMatch(/^fp\.portal\.client(\.\d+)?@elhabak\.com$/);
     const tempPassword = created.body.generatedCredentials.temporaryPassword;
-    expect(tempPassword.length).toBeGreaterThanOrEqual(10);
+    expect(tempPassword).toMatch(/^[0-9]{8}$/);
 
     const persisted = await prisma.user.findUniqueOrThrow({
       where: { email: created.body.generatedCredentials.email }

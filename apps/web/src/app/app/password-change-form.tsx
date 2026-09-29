@@ -2,7 +2,7 @@
 
 import { type FormEvent, useId, useState } from "react";
 import { Check, Circle, Eye, EyeOff, KeyRound } from "lucide-react";
-import { passwordPolicyIssue, PASSWORD_MIN_LENGTH } from "@elhabak/validation/password-policy";
+import { passwordMinLength, passwordPolicyIssue, type PasswordPolicyAudience } from "@elhabak/validation/password-policy";
 import { ApiError, apiRequest } from "../../lib/api";
 
 type Locale = "ar" | "en";
@@ -63,6 +63,8 @@ type Props = {
   variant: "settings" | "first-login";
   onChanged?: () => void;
   submitLabel?: string;
+  /** Clients choose any 8+ character password; staff keep the stronger rule. */
+  audience: PasswordPolicyAudience;
 };
 
 /**
@@ -70,7 +72,7 @@ type Props = {
  * policy gives a live checklist, but the API re-validates everything; server error codes
  * map to precise localized messages instead of a generic failure.
  */
-export function PasswordChangeForm({ locale, variant, onChanged, submitLabel }: Props) {
+export function PasswordChangeForm({ locale, variant, onChanged, submitLabel, audience }: Props) {
   const ar = locale === "ar";
   const rulesId = useId();
   const [currentPassword, setCurrentPassword] = useState("");
@@ -80,8 +82,10 @@ export function PasswordChangeForm({ locale, variant, onChanged, submitLabel }: 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const issue = passwordPolicyIssue(newPassword);
-  const lengthOk = Array.from(newPassword).length >= PASSWORD_MIN_LENGTH;
+  const minLength = passwordMinLength(audience);
+  const needsMix = audience === "staff";
+  const issue = passwordPolicyIssue(newPassword, audience);
+  const lengthOk = Array.from(newPassword).length >= minLength;
   const mixOk = newPassword.length > 0 && /\p{L}/u.test(newPassword) && /[\p{N}\p{P}\p{S}]/u.test(newPassword);
   const edgeOk = newPassword.length > 0 && newPassword === newPassword.trim();
   const matches = confirmation.length > 0 && confirmation === newPassword;
@@ -91,7 +95,7 @@ export function PasswordChangeForm({ locale, variant, onChanged, submitLabel }: 
         current: variant === "first-login" ? "كلمة المرور المؤقتة" : "كلمة المرور الحالية",
         next: "كلمة المرور الجديدة",
         confirm: "تأكيد كلمة المرور الجديدة",
-        ruleLength: `${PASSWORD_MIN_LENGTH} أحرف على الأقل`,
+        ruleLength: `${minLength} أحرف أو أرقام على الأقل`,
         ruleMix: "حرف واحد على الأقل ورقم أو رمز",
         ruleEdge: "بدون مسافات في البداية أو النهاية",
         ruleMatch: "التأكيد مطابق",
@@ -108,7 +112,7 @@ export function PasswordChangeForm({ locale, variant, onChanged, submitLabel }: 
         current: variant === "first-login" ? "Temporary password" : "Current password",
         next: "New password",
         confirm: "Confirm new password",
-        ruleLength: `At least ${PASSWORD_MIN_LENGTH} characters`,
+        ruleLength: `At least ${minLength} characters`,
         ruleMix: "At least one letter and one number or symbol",
         ruleEdge: "No spaces at the start or end",
         ruleMatch: "Confirmation matches",
@@ -159,7 +163,7 @@ export function PasswordChangeForm({ locale, variant, onChanged, submitLabel }: 
       <PasswordField label={t.confirm} name="confirmation" value={confirmation} onChange={setConfirmation} autoComplete="new-password" locale={locale} invalid={confirmation.length > 0 && !matches} disabled={busy} />
       <ul className="password-rules" id={rulesId} aria-live="polite">
         <Rule ok={lengthOk} label={t.ruleLength} />
-        <Rule ok={mixOk} label={t.ruleMix} />
+        {needsMix ? <Rule ok={mixOk} label={t.ruleMix} /> : null}
         <Rule ok={edgeOk} label={t.ruleEdge} />
         <Rule ok={matches} label={t.ruleMatch} />
       </ul>

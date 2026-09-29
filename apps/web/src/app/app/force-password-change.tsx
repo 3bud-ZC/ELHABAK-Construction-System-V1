@@ -9,6 +9,7 @@ import { PasswordChangeForm } from "./password-change-form";
 
 type Props = {
   locale: "ar" | "en";
+  audience: "client" | "staff";
   onDone: () => void;
 };
 
@@ -17,7 +18,7 @@ type Props = {
  * place of the whole app shell; the API independently confines the session to
  * /auth/me, /auth/password/change, and /auth/logout until the flag clears.
  */
-export function ForcePasswordChange({ locale, onDone }: Props) {
+export function ForcePasswordChange({ locale, audience, onDone }: Props) {
   const router = useRouter();
   const ar = locale === "ar";
 
@@ -55,7 +56,7 @@ export function ForcePasswordChange({ locale, onDone }: Props) {
         </span>
         <h1>{labels.title}</h1>
         <p className="force-password__lead">{labels.lead}</p>
-        <PasswordChangeForm locale={locale} variant="first-login" submitLabel={labels.submit} onChanged={onDone} />
+        <PasswordChangeForm locale={locale} variant="first-login" audience={audience} submitLabel={labels.submit} onChanged={onDone} />
         <p className="force-password__note">{labels.note}</p>
         <button type="button" className="force-password__logout" onClick={() => void logout()}>
           <LogOut size={14} /> {labels.logout}

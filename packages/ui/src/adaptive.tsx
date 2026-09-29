@@ -1,15 +1,18 @@
 "use client";
 
 import {
+  type CSSProperties,
   type ReactNode,
   type RefObject,
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore
 } from "react";
+import { createPortal } from "react-dom";
 
 /* ---------------------------------------------------------------------------
  * ELHABAK adaptive primitives.
@@ -48,14 +51,17 @@ export function useIsPhone(): boolean {
 function useOverlay(open: boolean, onClose: () => void) {
   useEffect(() => {
     if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // Lock on <html>: it has overflow-x: clip, so a body-level lock would not propagate to
+    // the viewport and would turn <body> into the scroll container (the sticky sidebar
+    // would then jump while a dialog is open).
+    const previous = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
     }
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previous;
+      document.documentElement.style.overflow = previous;
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose]);
@@ -222,6 +228,62 @@ export function AdaptiveFilters({
   );
 }
 
+/* ----------------------------- Anchored popover ---------------------------- */
+
+export type AnchoredPosition = { top: number; left: number; minWidth: number; placement: "below" | "above"; direction: "rtl" | "ltr" };
+
+const useLayoutEffectSafe = typeof window === "undefined" ? useEffect : useLayoutEffect;
+const VIEWPORT_MARGIN = 8;
+const ANCHOR_GAP = 6;
+
+/**
+ * Positions a floating element (rendered in a portal on <body>) against its trigger:
+ * below it, flipped above when there is no room, aligned to the trigger's inline-start
+ * edge (right in Arabic, left in English) and clamped inside the viewport. Because the
+ * popover lives outside the page tree, no ancestor overflow, stacking context or
+ * transform can clip or cover it, and it never takes part in document layout.
+ */
+export function useAnchoredPosition(open: boolean, anchor: RefObject<HTMLElement | null>, floating: RefObject<HTMLElement | null>) {
+  const [position, setPosition] = useState<AnchoredPosition | null>(null);
+
+  const update = useCallback(() => {
+    const trigger = anchor.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const direction = getComputedStyle(trigger).direction === "rtl" ? "rtl" : "ltr";
+    const width = floating.current?.offsetWidth ?? rect.width;
+    const height = floating.current?.offsetHeight ?? 0;
+    const viewportWidth = document.documentElement.clientWidth;
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom - ANCHOR_GAP - VIEWPORT_MARGIN;
+    const spaceAbove = rect.top - ANCHOR_GAP - VIEWPORT_MARGIN;
+    const placement = height > spaceBelow && spaceAbove > spaceBelow ? "above" : "below";
+    const top = placement === "below" ? rect.bottom + ANCHOR_GAP : Math.max(VIEWPORT_MARGIN, rect.top - ANCHOR_GAP - height);
+    const preferredLeft = direction === "rtl" ? rect.right - Math.max(width, rect.width) : rect.left;
+    const left = Math.min(Math.max(VIEWPORT_MARGIN, preferredLeft), Math.max(VIEWPORT_MARGIN, viewportWidth - width - VIEWPORT_MARGIN));
+    setPosition({ top, left, minWidth: rect.width, placement, direction });
+  }, [anchor, floating]);
+
+  useLayoutEffectSafe(() => {
+    if (!open) {
+      setPosition(null);
+      return;
+    }
+    update();
+    // Second pass once the popover has its real size.
+    const frame = requestAnimationFrame(update);
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, update]);
+
+  return position;
+}
+
 /* -------------------------------- ActionMenu ------------------------------- */
 
 export type ActionMenuItem = {
@@ -235,8 +297,10 @@ export type ActionMenuItem = {
 };
 
 /**
- * A single trigger that groups secondary actions (exports, overflow). Opens as
- * a popover on desktop and as a bottom sheet on phones.
+ * A single trigger that groups secondary actions (exports, overflow). Opens as an
+ * anchored floating menu on desktop/tablet and as a bottom sheet on phones; both are
+ * portaled to <body>, so the menu floats above KPI cards, registers and panels instead
+ * of being covered or clipped by them.
  */
 export function ActionMenu({
   label,
@@ -259,83 +323,108 @@ export function ActionMenu({
   const isPhone = useIsPhone();
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
+  const position = useAnchoredPosition(open && !isPhone, triggerRef, listRef);
   useOverlay(open && isPhone, close);
   useFocusTrap(open, listRef);
 
   useEffect(() => {
     if (!open || isPhone) return;
-    function onPointer(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    function onPointer(event: PointerEvent) {
+      const target = event.target as Node;
+      if (!rootRef.current?.contains(target) && !listRef.current?.contains(target)) setOpen(false);
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     }
-    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("pointerdown", onPointer);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
     };
   }, [open, isPhone]);
 
+  const floatingStyle: CSSProperties | undefined = isPhone
+    ? undefined
+    : position
+      ? { top: position.top, left: position.left, minWidth: Math.max(220, position.minWidth) }
+      : { top: 0, left: 0, visibility: "hidden" };
+
+  const menu = open ? (
+    <>
+      {isPhone && <button type="button" className="action-menu__backdrop" aria-label={closeLabel} onClick={close} tabIndex={-1} />}
+      <div
+        className={`action-menu__list${isPhone ? " action-menu__list--sheet" : " action-menu__list--floating"}`}
+        data-placement={position?.placement}
+        role="menu"
+        id={menuId}
+        ref={listRef}
+        dir={position?.direction}
+        style={floatingStyle}
+      >
+        {isPhone && (
+          <header className="action-menu__head">
+            <strong>{title ?? label}</strong>
+            <button type="button" className="adaptive-icon-button" onClick={close} aria-label={closeLabel}><CloseIcon /></button>
+          </header>
+        )}
+        {items.map((item) =>
+          item.href ? (
+            <a
+              key={item.key}
+              role="menuitem"
+              className="action-menu__item"
+              href={item.href}
+              download={item.download ? "" : undefined}
+              aria-disabled={item.disabled || undefined}
+              onClick={() => setOpen(false)}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </a>
+          ) : (
+            <button
+              key={item.key}
+              type="button"
+              role="menuitem"
+              className="action-menu__item"
+              disabled={item.disabled}
+              onClick={() => {
+                setOpen(false);
+                item.onSelect?.();
+              }}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          )
+        )}
+      </div>
+    </>
+  ) : null;
+
   return (
     <div className={`action-menu${open ? " is-open" : ""} ${className}`.trim()} ref={rootRef}>
       <button
+        ref={triggerRef}
         type="button"
         className={`ui-button ui-button--${variant} action-menu__trigger`}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-controls={menuId}
+        aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((value) => !value)}
       >
         {icon}
         <span>{label}</span>
         <svg className="action-menu__caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
       </button>
-      {open && isPhone && <button type="button" className="action-menu__backdrop" aria-label={closeLabel} onClick={close} tabIndex={-1} />}
-      {open && (
-        <div className="action-menu__list" role="menu" id={menuId} ref={listRef}>
-          {isPhone && (
-            <header className="action-menu__head">
-              <strong>{title ?? label}</strong>
-              <button type="button" className="adaptive-icon-button" onClick={close} aria-label={closeLabel}><CloseIcon /></button>
-            </header>
-          )}
-          {items.map((item) =>
-            item.href ? (
-              <a
-                key={item.key}
-                role="menuitem"
-                className="action-menu__item"
-                href={item.href}
-                download={item.download ? "" : undefined}
-                aria-disabled={item.disabled || undefined}
-                onClick={() => setOpen(false)}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </a>
-            ) : (
-              <button
-                key={item.key}
-                type="button"
-                role="menuitem"
-                className="action-menu__item"
-                disabled={item.disabled}
-                onClick={() => {
-                  setOpen(false);
-                  item.onSelect?.();
-                }}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            )
-          )}
-        </div>
-      )}
+      {menu && typeof document !== "undefined" ? createPortal(menu, document.body) : null}
     </div>
   );
 }

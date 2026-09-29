@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { parseApiEnv } from "@elhabak/config";
 import { createReadStream } from "node:fs";
-import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
-import { basename, extname, join, resolve, sep } from "node:path";
+import { lstat, mkdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
+import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { ReadStream } from "node:fs";
 import { pipeline } from "node:stream";
@@ -26,6 +26,16 @@ export type StoredDocumentFile = {
   extension: string;
   checksumSha256: string;
 };
+
+/** Files moved aside for a permanent deletion, relative to STORAGE_ROOT. */
+export type StorageQuarantine = {
+  deletionId: string;
+  moves: Array<{ from: string; to: string }>;
+};
+
+/** Record ids (cuid) and deletion ids (uuid): no separators, no dots, nothing path-like. */
+const SAFE_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
+const QUARANTINE_DIR = ".deleted";
 
 export type StoredVoiceNote = {
   storedFilename: string;
@@ -205,6 +215,93 @@ export class StorageService {
 
   async remove(storagePath: string) {
     await unlink(this.absolutePath(storagePath)).catch(() => undefined);
+  }
+
+  /**
+   * Permanent-deletion step 1 (before the database transaction): moves everything a project
+   * owns on disk into `<STORAGE_ROOT>/.deleted/<deletionId>/` with same-filesystem renames,
+   * which are atomic and reversible. `projectIds` come from database rows (never from the
+   * browser) and must be plain record ids; `extraPaths` are database `storagePath` values
+   * that live outside `projects/<id>/` (none are written today - defensive). Every source
+   * and target is resolved and checked to stay strictly inside STORAGE_ROOT.
+   */
+  async quarantine(deletionId: string, projectIds: string[], extraPaths: string[] = []): Promise<StorageQuarantine> {
+    if (!SAFE_SEGMENT.test(deletionId)) throw new BadRequestException("Invalid deletion id.");
+    const base = join(QUARANTINE_DIR, deletionId);
+    const moves: Array<{ from: string; to: string }> = [];
+    const quarantine: StorageQuarantine = { deletionId, moves };
+    try {
+      for (const projectId of projectIds) {
+        if (!SAFE_SEGMENT.test(projectId)) throw new BadRequestException("Invalid project id.");
+        await this.moveIfPresent(join("projects", projectId), join(base, "projects", projectId), moves);
+      }
+      for (const storagePath of extraPaths) {
+        const relative = storagePath.replace(/\\/g, "/");
+        if (projectIds.some((projectId) => relative.startsWith(`projects/${projectId}/`))) continue;
+        await this.moveIfPresent(relative, join(base, "files", String(moves.length), basename(relative)), moves);
+      }
+    } catch (error) {
+      await this.restoreQuarantine(quarantine);
+      throw error;
+    }
+    return quarantine;
+  }
+
+  /** Database transaction failed: put every moved path back exactly where it was. */
+  async restoreQuarantine(quarantine: StorageQuarantine): Promise<string[]> {
+    const failures: string[] = [];
+    for (const move of [...quarantine.moves].reverse()) {
+      try {
+        await mkdir(dirname(this.absolutePath(move.from)), { recursive: true });
+        await rename(this.absolutePath(move.to), this.absolutePath(move.from));
+      } catch {
+        failures.push(move.from);
+      }
+    }
+    await rm(this.absolutePath(join(QUARANTINE_DIR, quarantine.deletionId)), { recursive: true, force: true }).catch(() => undefined);
+    return failures;
+  }
+
+  /**
+   * Database transaction committed: remove the quarantined files for good, then sweep any
+   * project directory an in-flight upload re-created in the meantime. Failures are
+   * returned (not thrown) so the caller can report storage cleanup as partial; the
+   * quarantine stays on disk for a manual retry and nothing is silently orphaned.
+   */
+  async purgeQuarantine(quarantine: StorageQuarantine, projectIds: string[]): Promise<{ removed: number; failed: string[] }> {
+    const failed: string[] = [];
+    try {
+      await rm(this.absolutePath(join(QUARANTINE_DIR, quarantine.deletionId)), { recursive: true, force: true });
+    } catch {
+      failed.push(join(QUARANTINE_DIR, quarantine.deletionId).replace(/\\/g, "/"));
+    }
+    for (const projectId of projectIds) {
+      if (!SAFE_SEGMENT.test(projectId)) continue;
+      const relative = join("projects", projectId);
+      try {
+        await rm(this.absolutePath(relative), { recursive: true, force: true });
+      } catch {
+        failed.push(relative.replace(/\\/g, "/"));
+      }
+    }
+    return { removed: quarantine.moves.length, failed };
+  }
+
+  /** True when the stored file is on disk (used by tests and deletion reports). */
+  async exists(storagePath: string): Promise<boolean> {
+    const stats = await stat(this.absolutePath(storagePath)).catch(() => null);
+    return Boolean(stats);
+  }
+
+  private async moveIfPresent(fromRelative: string, toRelative: string, moves: Array<{ from: string; to: string }>) {
+    const from = this.absolutePath(fromRelative);
+    const to = this.absolutePath(toRelative);
+    if (from === this.root) throw new BadRequestException("Invalid storage path.");
+    const present = await lstat(from).catch(() => null);
+    if (!present) return;
+    await mkdir(dirname(to), { recursive: true });
+    await rename(from, to);
+    moves.push({ from: fromRelative.replace(/\\/g, "/"), to: toRelative.replace(/\\/g, "/") });
   }
 
   /**

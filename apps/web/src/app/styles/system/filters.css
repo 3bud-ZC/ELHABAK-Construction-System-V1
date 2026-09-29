@@ -289,11 +289,12 @@
     transform: rotate(180deg);
   }
 
+  /* The menu is portaled to <body> and positioned by useAnchoredPosition
+     (fixed, viewport coordinates): it floats above cards and registers and
+     never adds height to the page. */
   .action-menu__list {
-    position: absolute;
-    top: calc(100% + 6px);
-    inset-inline-end: 0;
-    z-index: var(--z-overlay);
+    position: fixed;
+    z-index: var(--z-dialog);
     display: grid;
     min-width: 220px;
     padding: var(--space-1);
@@ -353,6 +354,42 @@
     border: 0;
     padding: 0;
     background: rgba(11, 19, 43, 0.48);
+  }
+
+  .action-menu__list--floating {
+    max-height: min(420px, calc(100dvh - 16px));
+    overflow-y: auto;
+    transform-origin: top center;
+    animation: action-menu-in var(--dur) var(--ease) both;
+  }
+
+  .action-menu__list--floating[data-placement="above"] {
+    transform-origin: bottom center;
+  }
+
+  @keyframes action-menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+  }
+
+  .action-menu__list--sheet {
+    animation: action-sheet-in var(--dur) var(--ease) both;
+  }
+
+  @keyframes action-sheet-in {
+    from {
+      opacity: 0.6;
+      transform: translateY(24px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .action-menu__list--floating,
+    .action-menu__list--sheet {
+      animation: none;
+    }
   }
 
   @media (max-width: 767.98px) {

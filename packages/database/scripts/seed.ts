@@ -187,6 +187,12 @@ async function main() {
   });
 
   await prisma.projectAssignment.upsert({
+    where: { projectId_userId: { projectId: demoProject.id, userId: demoEngineer.id } },
+    update: { isLead: true },
+    create: { projectId: demoProject.id, userId: demoEngineer.id, isLead: true }
+  });
+
+  await prisma.projectAssignment.upsert({
     where: { projectId_userId: { projectId: demoProject.id, userId: demoWorker.id } },
     update: {},
     create: { projectId: demoProject.id, userId: demoWorker.id }

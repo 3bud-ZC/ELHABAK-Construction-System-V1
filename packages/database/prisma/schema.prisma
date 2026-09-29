@@ -152,6 +152,16 @@ enum ChatMessageType {
   VOICE
 }
 
+// Execution work packages (second-level structure inside lifecycle phase 04 EXECUTION).
+// Stages are per-project and fully custom: names are free text, never a fixed list.
+enum ExecutionStageStatus {
+  PLANNED
+  READY
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
 enum NotificationType {
   CHAT_MESSAGE
   VOICE_MESSAGE
@@ -170,6 +180,8 @@ model User {
   role         UserRole
   passwordHash String?
   mustChangePassword Boolean        @default(false)
+  /// Free-text professional specialty or trade (e.g. "Electrical Engineer", "Plumber").
+  specialty    String?
   isActive     Boolean             @default(true)
   archivedAt   DateTime?
   clientProfile ClientProfile?
@@ -194,6 +206,8 @@ model User {
   projectMessages           ProjectMessage[]          @relation("ProjectMessageAuthor")
   chatReadStates            ProjectChatReadState[]
   notifications             Notification[]
+  executionStagesCreated    ExecutionStage[]          @relation("ExecutionStageCreatedBy")
+  executionStageAssignments ExecutionStageAssignment[]
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 
@@ -262,6 +276,7 @@ model Project {
   messages             ProjectMessage[]
   chatReadStates       ProjectChatReadState[]
   notifications        Notification[]
+  executionStages      ExecutionStage[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
@@ -272,13 +287,18 @@ model Project {
   @@index([updatedAt])
 }
 
+/// Project team membership for ENGINEER and WORKER users. `Project.engineerId` remains the
+/// lead-engineer pointer (backward compatible); the lead also has a row here with isLead=true.
 model ProjectAssignment {
-  id        String   @id @default(cuid())
-  projectId String
-  userId    String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  projectId      String
+  userId         String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isLead         Boolean  @default(false)
+  /// Optional per-project responsibility, e.g. "MEP coordination".
+  responsibility String?
+  createdAt      DateTime @default(now())
 
   @@unique([projectId, userId])
   @@index([userId])
@@ -295,6 +315,8 @@ model SiteUpdate {
   progressImpact  Int?
   isClientVisible Boolean        @default(true)
   note            String?
+  executionStageId String?
+  executionStage   ExecutionStage? @relation(fields: [executionStageId], references: [id], onDelete: SetNull)
   media           SiteMedia[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @default(now()) @updatedAt
@@ -302,6 +324,7 @@ model SiteUpdate {
   @@index([projectId, createdAt])
   @@index([projectId, type, createdAt])
   @@index([authorId])
+  @@index([executionStageId])
 }
 
 model SiteMedia {
@@ -662,4 +685,44 @@ model Notification {
   @@index([userId, readAt])
   @@index([userId, createdAt])
   @@index([projectId])
+}
+
+/// One execution work package (e.g. "Electrical Works") inside a project's EXECUTION phase.
+/// Progress is an integer 0-100; it never overwrites Project.progress.
+model ExecutionStage {
+  id               String                     @id @default(cuid())
+  projectId        String
+  project          Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name             String
+  code             String?
+  description      String?
+  sortOrder        Int                        @default(0)
+  status           ExecutionStageStatus       @default(PLANNED)
+  progress         Int                        @default(0)
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+  createdById      String?
+  createdBy        User?                      @relation("ExecutionStageCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  assignments      ExecutionStageAssignment[]
+  siteUpdates      SiteUpdate[]
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  @@index([projectId, sortOrder])
+  @@index([projectId, status])
+}
+
+/// Engineers and workers assigned to one execution stage (persisted relation, not labels).
+model ExecutionStageAssignment {
+  id        String         @id @default(cuid())
+  stageId   String
+  stage     ExecutionStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  @@unique([stageId, userId])
+  @@index([userId])
 }

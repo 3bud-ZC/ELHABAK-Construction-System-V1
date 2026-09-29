@@ -6,10 +6,7 @@ import { hash } from "bcryptjs";
 import ExcelJS from "exceljs";
 import { ApiExceptionFilter } from "./shared/api-exception.filter";
 import { PrismaService } from "./shared/prisma.service";
-import { TEMPORARY_PASSWORD_ALPHABET } from "./modules/auth/temporary-password";
 
-const AMBIGUOUS = /[01OIL]/;
-const RANDOM_GROUP = `[${TEMPORARY_PASSWORD_ALPHABET}]{5}`;
 
 describe("data-ops: client import password lifecycle & credentials (isolated test DB)", () => {
   let app: INestApplication;
@@ -139,8 +136,7 @@ describe("data-ops: client import password lifecycle & credentials (isolated tes
     expect(created.name).toBe("CSV Client One");
     expect(created.email).toBe(csvClientEmail);
     expect(created.phone).toBe("+201130666726"); // Normalized to E.164
-    expect(created.temporaryPassword).toMatch(new RegExp(`^EH-6726-${RANDOM_GROUP}-${RANDOM_GROUP}$`));
-    expect(created.temporaryPassword.slice("EH-6726-".length)).not.toMatch(AMBIGUOUS);
+    expect(created.temporaryPassword).toMatch(/^[0-9]{8}$/);
 
     csvTemporaryPassword = created.temporaryPassword;
 
@@ -180,7 +176,7 @@ describe("data-ops: client import password lifecycle & credentials (isolated tes
     const created = res.body.createdClients[0];
     expect(created.email).toBe(xlsxClientEmail);
     expect(created.phone).toBe("+201005551234");
-    expect(created.temporaryPassword).toMatch(new RegExp(`^EH-1234-${RANDOM_GROUP}-${RANDOM_GROUP}$`));
+    expect(created.temporaryPassword).toMatch(/^[0-9]{8}$/);
 
     xlsxTemporaryPassword = created.temporaryPassword;
 

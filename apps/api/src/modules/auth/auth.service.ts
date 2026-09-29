@@ -222,7 +222,7 @@ export class AuthService {
     if (user.impersonation) {
       throw new ForbiddenException({ code: "PASSWORD_CHANGE_IMPERSONATION", message: "Exit user view before changing a password." });
     }
-    const policyIssue = passwordPolicyIssue(newPassword);
+    const policyIssue = passwordPolicyIssue(newPassword, user.role === "CLIENT" ? "client" : "staff");
     if (policyIssue) {
       throw new BadRequestException({ code: "PASSWORD_POLICY", reason: policyIssue, message: "New password does not meet the password policy." });
     }

@@ -352,8 +352,9 @@ export function DataOpsClient() {
             </section>
           )}
 
+          <div className={`dataops-lower${canExport ? "" : " dataops-lower--single"}`}>
           {canExport && (
-            <section className="dataops-section" aria-labelledby="dataops-export-h">
+            <section className="dataops-section dataops-section--export" aria-labelledby="dataops-export-h">
               <header className="dataops-section__head">
                 <div>
                   <h2 id="dataops-export-h">{labels.exportGroup}</h2>
@@ -379,7 +380,7 @@ export function DataOpsClient() {
             </section>
           )}
 
-          <section className="dataops-section" aria-labelledby="dataops-history-h">
+          <section className="dataops-section dataops-section--history" aria-labelledby="dataops-history-h">
             <header className="dataops-section__head">
               <div>
                 <h2 id="dataops-history-h">{labels.jobs}</h2>
@@ -447,6 +448,7 @@ export function DataOpsClient() {
               </div>
             )}
           </section>
+          </div>
         </div>
       )}
 

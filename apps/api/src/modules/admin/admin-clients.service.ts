@@ -107,7 +107,7 @@ export class AdminClientsService {
   async create(actorId: string, rawBody: unknown) {
     const input = parseBody(createClientSchema, rawBody);
     const displayName = input.displayName.trim();
-    const generatedPassword = generateClientTemporaryPassword(input.phone);
+    const generatedPassword = generateClientTemporaryPassword();
     const baseEmail = input.email?.trim() ? normalizeEmail(input.email) : await this.nextGeneratedEmail(displayName);
     const passwordHash = await this.authService.hashPassword(generatedPassword);
 
@@ -247,7 +247,7 @@ export class AdminClientsService {
       throw new ConflictException("Restore the archived client account before resetting its password.");
     }
 
-    const temporaryPassword = generateClientTemporaryPassword(existing.phone);
+    const temporaryPassword = generateClientTemporaryPassword();
     await this.prisma.user.update({
       where: { id: existing.userId },
       data: { passwordHash: await this.authService.hashPassword(temporaryPassword), mustChangePassword: true }

@@ -52,7 +52,7 @@ export function SettingsClient() {
             <p>{ar ? "تغيير كلمة المرور يلغي جميع الجلسات الأخرى على الأجهزة الأخرى." : "Changing your password signs out every other session."}</p>
           </div>
         </header>
-        <PasswordChangeForm locale={locale} variant="settings" />
+        <PasswordChangeForm locale={locale} variant="settings" audience={user.role === "CLIENT" ? "client" : "staff"} />
       </section>
     </div>
   </section>;

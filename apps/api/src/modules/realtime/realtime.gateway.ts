@@ -106,6 +106,11 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayDisconnect {
     this.server?.in(userRoom(userId)).disconnectSockets(true);
   }
 
+  /** After a permanent project deletion no socket may stay subscribed to its room. */
+  evictProjectRoom(projectId: string) {
+    this.server?.in(projectRoom(projectId)).socketsLeave(projectRoom(projectId));
+  }
+
   /** Mirrors ProjectAccessService's read rule, kept self-contained here to avoid a module dependency cycle with ProjectsModule/NotificationsModule. Accountant never gets project chat access. */
   private async canAccessProjectChat(user: RequestUser, projectId: string): Promise<boolean> {
     const currentUser = await this.prisma.user.findUnique({

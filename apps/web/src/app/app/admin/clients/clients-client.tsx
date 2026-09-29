@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { normalizeEgyptianMobile } from "@elhabak/contracts";
 import { AdaptiveFilters, Badge, ConfirmDialog, EmptyState, LoadingState, OperationsGrid, OperationsHeader, OperationsMetric, OperationsPanel, OperationsSurface, PageHeader, Register, RegisterCell, RegisterRow } from "@elhabak/ui";
-import { ArrowLeft, ArrowRight, Download, KeyRound, UploadCloud, UserRoundCog } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download, KeyRound, Trash2, UploadCloud, UserRoundCog } from "lucide-react";
 import { accountStatusTone, apiRequest, dataOpsExportUrl, REGISTER_PAGE_SIZE, type ClientListSummary, type ClientPasswordReset, type ClientRecord, type PagedResult } from "../../../../lib/api";
 import { RegisterPager } from "../../../../components/register-pager";
+import { PermanentDeleteDialog } from "../../../../components/permanent-delete-dialog";
 import { filterLabels } from "../../../../lib/adaptive";
 import { ClientCredentialsPanel, type OneTimeCredentials } from "./client-credentials-panel";
 
@@ -34,6 +35,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
   // One-time plaintext credential (create or reset). Cleared on dismissal; never refetchable.
   const [credentials, setCredentials] = useState<OneTimeCredentials | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
   const router = useRouter();
   const locale = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ar";
@@ -416,7 +418,7 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
               ) : mode === "create" ? (
                 <div className="ui-field full-span field-hint">
                   <span>{labels.password}</span>
-                  <p>{ar ? "تُنشأ كلمة مرور مؤقتة آمنة تلقائياً (آخر 4 أرقام من الموبايل تظهر فيها كعلامة تعريف فقط) وتُعرض مرة واحدة بعد الحفظ." : "A secure temporary password is generated automatically (the last 4 mobile digits appear only as a recognizable label) and shown once after saving."}</p>
+                  <p>{ar ? "تُنشأ كلمة مرور مؤقتة من 8 أرقام عشوائية تلقائياً وتُعرض مرة واحدة بعد الحفظ." : "A random 8-digit temporary password is generated automatically and shown once after saving."}</p>
                 </div>
               ) : null}
             </div>
@@ -448,6 +450,28 @@ export function ClientsClient({ mode, id }: ClientsClientProps) {
           </div>
         </form>
       )}
+      {mode === "edit" && record && !loading ? (
+        <section className="danger-zone" aria-labelledby="client-danger-title">
+          <div>
+            <h2 id="client-danger-title">{ar ? "حذف نهائي" : "Permanent deletion"}</h2>
+            <p>
+              {ar
+                ? "الإيقاف والأرشفة متاحان من حالة الحساب. الحذف النهائي يزيل ملف العميل وحساب دخوله وجلساته وكل المشاريع التي يملكها مع بياناتها وملفاتها، ولا يمكن التراجع عنه."
+                : "Suspend and archive are available through the account state. Permanent deletion removes the client profile, their sign-in account and sessions, and every project they own with its data and files. It cannot be undone."}
+            </p>
+          </div>
+          <button type="button" className="ui-button ui-button--danger" onClick={() => setDeleteOpen(true)}>
+            <Trash2 size={16} aria-hidden="true" /> {ar ? "حذف العميل نهائياً" : "Delete client permanently"}
+          </button>
+          <PermanentDeleteDialog
+            target={{ kind: "client", id: record.id }}
+            locale={locale}
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            onDeleted={() => router.replace(ar ? "/app/admin/clients?deleted=1" : "/app/admin/clients?lang=en&deleted=1")}
+          />
+        </section>
+      ) : null}
       <ConfirmDialog
         open={resetOpen}
         onClose={() => (resetBusy ? undefined : setResetOpen(false))}

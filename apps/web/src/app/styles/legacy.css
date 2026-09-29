@@ -5879,56 +5879,7 @@ html[dir="rtl"] .revision-list>button.active {
   font-size: clamp(1.35rem, 2.4vw, 1.9rem);
 }
 
-.project-form-summary__facts>div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-width: 0;
-  background: rgba(10, 22, 46, 0.55);
-  padding: 0.5rem 0.65rem;
-}
-
-.project-form-summary__facts dt {
-  flex: 0 0 auto;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: var(--fs-caption);
-  font-weight: 700;
-}
-
-.project-form-summary__facts dd {
-  margin: 0;
-  overflow: hidden;
-  color: var(--white);
-  font-size: var(--fs-caption);
-  font-weight: 700;
-  text-align: end;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.project-form-summary__facts dd .ui-badge {
-  font-size: var(--fs-caption);
-}
-
-.project-form-summary__progress>div:first-child {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: var(--fs-caption);
-  font-weight: 700;
-}
-
-.project-form-summary__progress strong {
-  color: var(--white);
-  font-size: var(--fs-label);
-}
-
-.project-form-summary__progress .progress-track {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.14);
-}
+/* project-form-summary: the old dark-rail rules lived here; the light card is in system/forms.css. */
 
 @media (max-width: 1300px) {
 

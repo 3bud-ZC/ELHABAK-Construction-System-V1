@@ -42,12 +42,12 @@ export function ClientCredentialsPanel({ credentials, locale, kind, onDone, done
         login: "معرّف الدخول",
         phone: "الهاتف",
         password: "كلمة المرور المؤقتة",
-        copyLogin: "نسخ معرّف الدخول",
+        copyLogin: "نسخ البريد",
         copyPassword: "نسخ كلمة المرور",
-        copyAll: "نسخ بيانات الدخول كاملة",
+        copyAll: "نسخ بيانات الدخول",
         copied: "تم النسخ",
         copyFailed: "تعذر النسخ تلقائياً. حدّد النص وانسخه يدوياً.",
-        hint: "لا تحتوي كلمة المرور على الأحرف المتشابهة مثل 0 و O أو 1 و I و L.",
+        hint: "٨ أرقام فقط.",
         done: doneLabel ?? "تم — إخفاء كلمة المرور"
       }
     : {
@@ -60,40 +60,39 @@ export function ClientCredentialsPanel({ credentials, locale, kind, onDone, done
         login: "Login ID",
         phone: "Phone",
         password: "Temporary password",
-        copyLogin: "Copy login",
-        copyPassword: "Copy password",
-        copyAll: "Copy full credentials",
+        copyLogin: "Copy email",
+        copyPassword: "Copy Password",
+        copyAll: "Copy Credentials",
         copied: "Copied",
         copyFailed: "Automatic copy failed. Select the text and copy it manually.",
-        hint: "The password avoids look-alike characters such as 0/O and 1/I/L.",
+        hint: "8 digits only.",
         done: doneLabel ?? "Done — hide password"
       };
 
-  const loginUrl = typeof window !== "undefined" ? `${window.location.origin}/login` : "/login";
-  // Values sit on their own lines so the client can long-press copy just the value from a
-  // WhatsApp message without dragging Arabic text or bidi marks along with it.
+  // The message the Admin pastes into WhatsApp: plain words, no technical wording, and each
+  // value on its own line so the client can long-press copy just that value.
   const fullText = ar
     ? [
-        "بيانات الدخول إلى نظام الحباك",
-        `العميل: ${credentials.displayName}`,
-        "رابط الدخول:",
-        loginUrl,
-        "معرّف الدخول:",
+        "بيانات دخول العميل",
+        "",
+        "البريد:",
         credentials.email,
+        "",
         "كلمة المرور المؤقتة:",
         credentials.temporaryPassword,
-        "سيُطلب منك تعيين كلمة مرور جديدة خاصة بك عند أول دخول."
+        "",
+        "يمكنك تغيير كلمة المرور بعد تسجيل الدخول."
       ].join("\n")
     : [
-        "ELHABAK system sign-in details",
-        `Client: ${credentials.displayName}`,
-        "Sign-in link:",
-        loginUrl,
-        "Login ID:",
+        "Client sign-in details",
+        "",
+        "Email:",
         credentials.email,
+        "",
         "Temporary password:",
         credentials.temporaryPassword,
-        "You will be asked to set your own password at first sign-in."
+        "",
+        "You can change your password after signing in."
       ].join("\n");
 
   async function copy(target: CopyTarget, text: string) {
