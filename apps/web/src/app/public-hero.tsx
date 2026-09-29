@@ -100,7 +100,7 @@ export function PublicHero({
 
         {/* Visual column: animated axonometric structure with the site photo pinned
             to it as a drawing sheet (title block + registration marks). */}
-        <div className="hero-visual-composition" aria-hidden="true">
+        <div className="hero-visual-composition hero-living-drawing" aria-hidden="true">
           <BlueprintAxonometric live className="hero-axo" />
           <div className="hero-visual-frame hero-sheet">
             <div className="hero-visual-frame__inner">
@@ -121,6 +121,11 @@ export function PublicHero({
               ))}
             </div>
             <svg className="hero-cad-overlay" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                className="hero-trace-route"
+                d="M42 340 H170 C210 340 205 292 246 292 H382 C420 292 414 240 454 240 H558"
+                pathLength={1}
+              />
               <line x1="40" y1="370" x2="560" y2="370" className="hero-svg-line" />
               <circle cx="40" cy="370" r="3" />
               <circle cx="560" cy="370" r="3" />

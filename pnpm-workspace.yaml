@@ -1,6 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+overrides:
+  deepmerge-ts: "^8.0.2"
+  multer: "^2.4.0"
 onlyBuiltDependencies:
   - "@prisma/client"
   - "@prisma/engines"

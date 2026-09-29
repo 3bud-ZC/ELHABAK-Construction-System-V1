@@ -721,6 +721,43 @@ a {
   z-index: 3;
 }
 
+.hero-living-drawing {
+  perspective: 1000px;
+  transform: translate3d(0, 0, 0);
+}
+
+.hero-living-drawing .hero-axo {
+  position: absolute;
+  inset: -18% -10% auto auto;
+  width: 84%;
+  max-width: 560px;
+  opacity: 0.34;
+  transform: translate3d(4%, -8%, 0) rotate(-2deg);
+  z-index: 0;
+}
+
+.hero-living-drawing .hero-sheet {
+  z-index: 2;
+  transform: translate3d(0, 0, 0);
+}
+
+.hero-trace-route {
+  stroke: var(--public-orange-500);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 8px rgba(234, 88, 12, 0.55));
+  animation: heroTraceRoute 7.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes heroTraceRoute {
+  0%, 12% { stroke-dashoffset: 1; opacity: 0; }
+  22%, 72% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -1; opacity: 0; }
+}
+
 /* Smartphone Device Mockup Standing in Front */
 .hero-phone-mockup {
   position: absolute;
@@ -1093,6 +1130,140 @@ a {
   }
 }
 
+/* Blueprint to reality bridge: drawing sheet clipped over an honest site image. */
+.blueprint-reality {
+  position: relative;
+  padding: 5rem 0;
+  background:
+    linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    var(--public-surface);
+  background-size: 72px 72px;
+  border-bottom: 1px solid var(--public-border);
+  overflow: hidden;
+}
+
+.blueprint-reality__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: 3rem;
+  align-items: center;
+}
+
+.blueprint-reality__copy {
+  max-width: 34rem;
+}
+
+.blueprint-reality__title {
+  margin: 0 0 1rem;
+  color: var(--public-navy-900);
+  font-size: clamp(1.7rem, 2.7vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.blueprint-reality__lead {
+  margin: 0;
+  color: var(--public-text-secondary);
+  font-size: 1.02rem;
+  line-height: 1.85;
+}
+
+.blueprint-reality__visual {
+  position: relative;
+  min-height: 360px;
+  border: 1px solid var(--public-border);
+  border-radius: var(--public-radius-lg);
+  background: var(--public-navy-900);
+  box-shadow: var(--public-shadow-xl);
+  overflow: hidden;
+}
+
+.blueprint-reality__image,
+.blueprint-reality__drawing {
+  position: absolute;
+  inset: 0;
+}
+
+.blueprint-reality__img {
+  object-fit: cover;
+  filter: saturate(0.88) contrast(1.02);
+}
+
+.blueprint-reality__drawing {
+  width: 58%;
+  background:
+    linear-gradient(90deg, rgba(7, 13, 24, 0.98), rgba(7, 13, 24, 0.88)),
+    linear-gradient(to right, rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+  background-size: auto, 36px 36px, 36px 36px;
+  border-inline-end: 2px solid var(--public-orange-500);
+  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%);
+  display: grid;
+  place-items: center;
+  transform: translate3d(0, 0, 0);
+}
+
+[dir="rtl"] .blueprint-reality__drawing {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  border-inline-end: 0;
+  border-inline-start: 2px solid var(--public-orange-500);
+  clip-path: polygon(8% 0, 100% 0, 100% 100%, 8% 100%, 0 50%);
+}
+
+.blueprint-reality__plan {
+  width: min(92%, 430px);
+  opacity: 0.82;
+}
+
+.blueprint-reality__label {
+  position: absolute;
+  inset-inline-start: 1rem;
+  bottom: 1rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(234, 88, 12, 0.35);
+  border-radius: var(--public-radius-sm);
+  background: rgba(4, 8, 17, 0.82);
+  color: #FDBA74;
+  font: 800 0.72rem/1.2 var(--font-mono, monospace);
+}
+
+@media (max-width: 980px) {
+  .blueprint-reality__inner {
+    grid-template-columns: 1fr;
+  }
+
+  .blueprint-reality__copy {
+    max-width: 42rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .blueprint-reality {
+    padding: 3.25rem 0;
+    background-size: 44px 44px;
+  }
+
+  .blueprint-reality__visual {
+    min-height: 320px;
+  }
+
+  .blueprint-reality__drawing {
+    width: 100%;
+    height: 54%;
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 50% 100%, 0 88%);
+    border-inline: 0;
+    border-bottom: 2px solid var(--public-orange-500);
+  }
+
+  [dir="rtl"] .blueprint-reality__drawing {
+    border-inline: 0;
+    border-bottom: 2px solid var(--public-orange-500);
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 50% 100%, 0 88%);
+  }
+}
+
 /* ==========================================================================
    03 // 5 CANONICAL SERVICES
    ========================================================================== */
@@ -1127,6 +1298,49 @@ a {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+.service-register {
+  position: relative;
+}
+
+.service-register::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1.5rem;
+  top: -1.25rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(234, 88, 12, 0.55), transparent);
+}
+
+.service-register .service-card {
+  border-radius: var(--public-radius-md);
+}
+
+.service-register .service-card__idx {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.service-register .service-card__idx::after {
+  content: "";
+  display: inline-block;
+  width: 3.1rem;
+  height: 1px;
+  background: var(--public-orange-500);
+}
+
+.service-register .service-card__body::before {
+  content: "DISCIPLINE REGISTER";
+  align-self: flex-start;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: var(--public-radius-sm);
+  color: var(--public-text-muted);
+  font: 800 0.66rem/1 var(--font-mono, monospace);
 }
 
 /* Featured Service Card (Architectural & Interior Design) */
@@ -1431,6 +1645,40 @@ a {
   -webkit-backdrop-filter: blur(12px);
 }
 
+.process-route {
+  position: relative;
+  overflow: hidden;
+}
+
+.process-route::before {
+  content: "";
+  position: absolute;
+  inset-inline: 2.5rem;
+  top: 4.35rem;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(234, 88, 12, 0), rgba(234, 88, 12, 0.8), rgba(234, 88, 12, 0));
+  transform: translate3d(0, 0, 0);
+}
+
+.process-route::after {
+  content: "";
+  position: absolute;
+  top: 3.95rem;
+  inset-inline-start: 2.5rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid var(--public-orange-500);
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(234, 88, 12, 0.7);
+  animation: processSurveyNode 8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes processSurveyNode {
+  0% { transform: translate3d(0, 0, 0); opacity: 0.5; }
+  50% { transform: translate3d(calc(100vw - 17rem), 0, 0); opacity: 1; }
+  100% { transform: translate3d(0, 0, 0); opacity: 0.5; }
+}
+
 .process-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1504,12 +1752,30 @@ a {
   .process-panel {
     padding: 1.75rem 1.25rem;
   }
+  .process-route::before,
+  .process-route::after {
+    display: none;
+  }
   .process-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem 1rem;
   }
+  .process-stage {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.85rem;
+  }
   .process-stage__connector {
+    grid-row: 1 / span 2;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 0.75rem;
+  }
+  .process-stage__line {
+    width: 1px;
+    min-height: 3.25rem;
+    margin-inline-start: 0;
+    margin-top: 0.45rem;
   }
   .process-stage__node {
     font-size: 1.375rem;
@@ -1640,6 +1906,39 @@ a {
   justify-content: center;
 }
 
+.platform-callout-rail {
+  position: absolute;
+  inset-inline-start: -1rem;
+  top: 12%;
+  z-index: 4;
+  display: grid;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.platform-callout-rail span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: 13rem;
+  padding: 0.52rem 0.72rem;
+  border: 1px solid rgba(234, 88, 12, 0.28);
+  border-radius: var(--public-radius-sm);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--public-navy-900);
+  box-shadow: var(--public-shadow-sm);
+  font: 800 0.68rem/1.2 var(--font-mono, monospace);
+  transform: translate3d(0, 0, 0);
+}
+
+.platform-callout-rail span::before {
+  content: "";
+  width: 2.2rem;
+  height: 1px;
+  background: var(--public-orange-500);
+}
+
 .platform-device--desktop {
   width: 100%;
 }
@@ -1701,6 +2000,21 @@ a {
   .platform-features-list {
     grid-template-columns: 1fr;
   }
+  .platform-callout-rail {
+    inset-inline-start: 0.75rem;
+    top: -0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: calc(100% - 1.5rem);
+  }
+  .platform-callout-rail span {
+    width: auto;
+    justify-content: center;
+    font-size: 0.62rem;
+    padding: 0.42rem 0.35rem;
+  }
+  .platform-callout-rail span::before {
+    display: none;
+  }
   .platform-device--mobile {
     width: 44%;
     bottom: -1rem;
@@ -1722,6 +2036,10 @@ a {
   grid-template-columns: 1.15fr 0.85fr;
   gap: 4rem;
   align-items: center;
+}
+
+.faq-register {
+  align-items: start;
 }
 
 .faq-content {
@@ -1758,7 +2076,7 @@ a {
 .faq-accordion-item {
   background: var(--public-surface);
   border: 1px solid var(--public-border);
-  border-radius: var(--public-radius-lg);
+  border-radius: var(--public-radius-md);
   overflow: hidden;
   transition: border-color var(--public-transition), box-shadow var(--public-transition);
 }
@@ -1772,7 +2090,7 @@ a {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
   padding: 1.125rem 1.25rem;
   background: transparent;
   border: none;
@@ -1782,6 +2100,12 @@ a {
   color: var(--public-navy-900);
   font-size: 1rem;
   font-weight: 700;
+}
+
+.faq-accordion-index {
+  color: var(--public-orange-600);
+  font: 800 0.74rem/1 var(--font-mono, monospace);
+  white-space: nowrap;
 }
 
 .faq-accordion-icon {
@@ -1812,11 +2136,11 @@ a {
 }
 
 .faq-accordion-panel {
-  padding: 0 1.25rem 1.25rem 3.75rem;
+  padding: 0 1.25rem 1.25rem 6.35rem;
 }
 
 [dir="rtl"] .faq-accordion-panel {
-  padding: 0 3.75rem 1.25rem 1.25rem;
+  padding: 0 6.35rem 1.25rem 1.25rem;
 }
 
 .faq-accordion-answer {
@@ -1907,6 +2231,17 @@ a {
 @media (max-width: 640px) {
   .faq-section {
     padding: 3.5rem 0;
+  }
+  .faq-accordion-trigger {
+    align-items: flex-start;
+    padding: 1rem;
+  }
+  .faq-accordion-panel,
+  [dir="rtl"] .faq-accordion-panel {
+    padding: 0 1rem 1rem;
+  }
+  .faq-accordion-index {
+    padding-top: 0.2rem;
   }
 }
 
@@ -2262,6 +2597,16 @@ a {
     transform: none !important;
     transition: none !important;
   }
+
+  .hero-trace-route,
+  .process-route::after {
+    animation: none !important;
+  }
+
+  .hero-trace-route {
+    stroke-dashoffset: 0;
+    opacity: 0.86;
+  }
 }
 
 .hero-system-note {
@@ -2441,7 +2786,7 @@ a {
   font-weight: 800;
   line-height: 1.25;
   color: var(--public-navy-900);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .lp-hero__lead {

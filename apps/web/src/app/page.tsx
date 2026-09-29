@@ -398,6 +398,44 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </section>
 
+      {/* ============ 02B // BLUEPRINT TO REALITY BRIDGE ============ */}
+      <section className="blueprint-reality" aria-labelledby="blueprint-reality-title">
+        <div className="container blueprint-reality__inner">
+          <div className="blueprint-reality__copy" data-reveal="up">
+            <span className="section-eyebrow-tag">
+              {locale === "ar" ? "من الرسم إلى التنفيذ" : "BLUEPRINT TO REALITY"}
+            </span>
+            <h2 id="blueprint-reality-title" className="blueprint-reality__title">
+              {locale === "ar"
+                ? "نربط القرار الهندسي بالموقع والمنصة"
+                : "Engineering decisions connected to site and platform"}
+            </h2>
+            <p className="blueprint-reality__lead">
+              {locale === "ar"
+                ? "كل مرحلة تبدأ بمخطط واضح، ثم تتحول إلى تنفيذ موثق وقرارات متابعة يمكن الرجوع إليها داخل مساحة المشروع."
+                : "Each stage begins with a clear drawing, then becomes documented execution and traceable project-control decisions."}
+            </p>
+          </div>
+          <div className="blueprint-reality__visual" data-reveal="mask">
+            <div className="blueprint-reality__image">
+              <Image
+                src="/marketing/about-site.webp"
+                alt={locale === "ar" ? "موقع تنفيذ تحت المتابعة الهندسية" : "Construction site under engineering supervision"}
+                fill
+                sizes="(max-width: 980px) 100vw, 46vw"
+                className="blueprint-reality__img"
+              />
+            </div>
+            <div className="blueprint-reality__drawing" aria-hidden="true">
+              <BlueprintPlan live className="blueprint-reality__plan" />
+              <span className="blueprint-reality__label">
+                {locale === "ar" ? "مخطط + موقع + متابعة" : "DRAWING + SITE + CONTROL"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ============ 03 // 5 CANONICAL SERVICES ============ */}
       <section id="services" className="services-section" aria-labelledby="services-title">
         <div className="container">
@@ -407,7 +445,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <p className="services-head__lead">{t.home.servicesLead}</p>
           </div>
 
-          <div className="services-showcase" data-reveal-group>
+          <div className="services-showcase service-register" data-reveal-group>
             {/* Featured Primary Service: Design */}
             {t.services.length > 0 && (
               <article className="service-card service-card--featured" data-reveal="up">
@@ -499,7 +537,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             <p className="process-head__lead">{t.home.processLead}</p>
           </div>
 
-          <div className="process-panel" data-reveal="up">
+          <div className="process-panel process-route" data-reveal="up">
             <ol className="process-grid" data-reveal-group>
               {t.process.map(([title, body], index) => (
                 <li className="process-stage" key={title} data-reveal="stage">
@@ -559,6 +597,11 @@ export default async function HomePage({ searchParams }: PageProps) {
             </div>
 
             <div className="platform-showcase" data-reveal="mask">
+              <div className="platform-callout-rail" aria-hidden="true">
+                <span>{locale === "ar" ? "نشاط الموقع" : "SITE ACTIVITY"}</span>
+                <span>{locale === "ar" ? "اعتمادات" : "APPROVALS"}</span>
+                <span>{locale === "ar" ? "تقارير" : "REPORTS"}</span>
+              </div>
               <div className="platform-device platform-device--desktop">
                 <div className="platform-device__frame">
                   <Image
@@ -589,7 +632,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       {/* ============ 06 // FAQ, CONTACT BANNER & FOOTER ============ */}
       <section id="faq" className="faq-section" aria-labelledby="faq-title">
         <div className="container">
-          <div className="faq-layout">
+          <div className="faq-layout faq-register">
             <div className="faq-content" data-reveal="up">
               <span className="section-eyebrow-tag">{t.home.faqEyebrow}</span>
               <h2 id="faq-title" className="faq-title">{t.home.faqTitle}</h2>

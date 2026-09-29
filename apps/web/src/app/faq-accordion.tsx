@@ -37,6 +37,9 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
               aria-expanded={isOpen}
               aria-controls={itemId}
             >
+              <span className="faq-accordion-index" aria-hidden="true">
+                Q.{String(index + 1).padStart(2, "0")}
+              </span>
               <span className="faq-accordion-icon" aria-hidden="true">
                 <Plus size={18} className={isOpen ? "faq-accordion-icon--rotated" : ""} />
               </span>

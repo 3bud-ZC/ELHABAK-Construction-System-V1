@@ -177,7 +177,7 @@ describe("Final pass - finance control, reports, client lifecycle, data ops", ()
     // ALL scope includes every project in the database (e.g. a seeded demo project), so
     // combined totals are asserted as an exact minor-unit delta over this baseline.
     const baseline = await request(server).get("/finance/portfolio").set("Cookie", accountantCookie).expect(200);
-    const minor = (value: string) => BigInt(value.replace(".", ""));
+    const minor = (value: string | null) => (value === null ? 0n : BigInt(value.replace(".", "")));
     const baselinePayments = minor(baseline.body.totals.clientPaymentsTotal as string);
     const baselineContract = minor(baseline.body.totals.contractValue as string);
     await request(server)

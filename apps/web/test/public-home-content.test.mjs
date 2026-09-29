@@ -72,6 +72,35 @@ test("public website keeps the delivery process compact", () => {
   assert.doesNotMatch(css, /min-height:\s*214px/);
 });
 
+test("final handover public art direction has premium architectural storytelling markers", () => {
+  const hero = readFileSync(new URL("../src/app/public-hero.tsx", import.meta.url), "utf8");
+  assert.match(hero, /hero-living-drawing/);
+  assert.match(hero, /hero-trace-route/);
+  assert.match(page, /blueprint-reality/);
+  assert.match(page, /service-register/);
+  assert.match(page, /process-route/);
+  assert.match(page, /platform-callout-rail/);
+  assert.match(page, /faq-register/);
+});
+
+test("final handover public css uses restrained architectural motion and mobile-specific composition", () => {
+  for (const selector of [
+    ".hero-living-drawing",
+    ".hero-trace-route",
+    ".blueprint-reality",
+    ".service-register",
+    ".process-route",
+    ".platform-callout-rail",
+    ".faq-register"
+  ]) {
+    assert.ok(css.includes(selector), selector);
+  }
+  assert.match(css, /prefers-reduced-motion:\s*reduce/);
+  assert.match(css, /stroke-dashoffset/);
+  assert.match(css, /transform:\s*translate3d/);
+  assert.match(css, /@media \(max-width:\s*640px\)[\s\S]*\.blueprint-reality/);
+});
+
 test("public website syncs document direction before paint on language changes", () => {
   assert.match(directionSync, /useLayoutEffect/);
   assert.match(layout, /elhabak-lang-boot/);
