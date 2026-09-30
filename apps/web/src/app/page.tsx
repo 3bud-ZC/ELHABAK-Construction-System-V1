@@ -597,32 +597,43 @@ export default async function HomePage({ searchParams }: PageProps) {
             </div>
 
             <div className="platform-showcase" data-reveal="mask">
+              <div className="platform-stage">
+                <div className="platform-device platform-device--desktop">
+                  <div className="platform-device__frame">
+                    <Image
+                      src="/marketing/platform-desktop.webp"
+                      alt="ELHABAK Dashboard Desktop"
+                      width={720}
+                      height={450}
+                      className="platform-device__img"
+                    />
+                  </div>
+                </div>
+                <div className="platform-device platform-device--mobile">
+                  <div className="platform-device__phone-frame">
+                    <Image
+                      src="/marketing/platform-mobile.webp"
+                      alt="ELHABAK Project Tracking Mobile"
+                      width={220}
+                      height={460}
+                      className="platform-device__phone-img"
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="platform-callout-rail" aria-hidden="true">
-                <span>{locale === "ar" ? "نشاط الموقع" : "SITE ACTIVITY"}</span>
-                <span>{locale === "ar" ? "اعتمادات" : "APPROVALS"}</span>
-                <span>{locale === "ar" ? "تقارير" : "REPORTS"}</span>
-              </div>
-              <div className="platform-device platform-device--desktop">
-                <div className="platform-device__frame">
-                  <Image
-                    src="/marketing/platform-desktop.webp"
-                    alt="ELHABAK Dashboard Desktop"
-                    width={720}
-                    height={450}
-                    className="platform-device__img"
-                  />
-                </div>
-              </div>
-              <div className="platform-device platform-device--mobile">
-                <div className="platform-device__phone-frame">
-                  <Image
-                    src="/marketing/platform-mobile.webp"
-                    alt="ELHABAK Project Tracking Mobile"
-                    width={220}
-                    height={460}
-                    className="platform-device__phone-img"
-                  />
-                </div>
+                <span className="platform-callout-item">
+                  <i className="platform-callout-item__datum" />
+                  <span className="platform-callout-item__text">{locale === "ar" ? "نشاط الموقع" : "SITE ACTIVITY"}</span>
+                </span>
+                <span className="platform-callout-item">
+                  <i className="platform-callout-item__datum" />
+                  <span className="platform-callout-item__text">{locale === "ar" ? "اعتمادات" : "APPROVALS"}</span>
+                </span>
+                <span className="platform-callout-item">
+                  <i className="platform-callout-item__datum" />
+                  <span className="platform-callout-item__text">{locale === "ar" ? "تقارير" : "REPORTS"}</span>
+                </span>
               </div>
             </div>
           </div>

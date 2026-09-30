@@ -126,3 +126,21 @@ test("seo route files exist", () => {
   assert.match(robots, /sitemap\.xml/);
   assert.match(robots, /disallow/);
 });
+
+test("final public UI correction prevents duplicate FAQ indices and mechanical clipping", () => {
+  const faqAccordion = readFileSync(new URL("../src/app/faq-accordion.tsx", import.meta.url), "utf8");
+  const archCss = readFileSync(new URL("../src/app/public-architecture.css", import.meta.url), "utf8");
+
+  // Single FAQ index in JSX, zero CSS counter duplication
+  assert.match(faqAccordion, /faq-accordion-index/);
+  assert.doesNotMatch(archCss, /counter-increment:\s*faq/);
+  assert.doesNotMatch(archCss, /counter\(faq\)/);
+
+  // Platform showcase uses isolated stage and non-obscuring callout rail
+  assert.match(page, /platform-stage/);
+  assert.match(page, /platform-callout-rail/);
+
+  // Blueprint to reality uses soft architectural dissolve without crude chevron clip-path
+  assert.doesNotMatch(css, /clip-path:\s*polygon\(0 0,\s*92% 0,\s*100% 50%/);
+  assert.match(css, /mask-image:\s*linear-gradient/);
+});

@@ -115,6 +115,16 @@
   animation: bp-node-pulse 3.2s ease-in-out infinite;
 }
 
+.blueprint-reality__plan.bp-art .bp-d {
+  stroke-dashoffset: 0 !important;
+  opacity: 1 !important;
+  animation: none !important;
+}
+.blueprint-reality__plan.bp-art .bp-t {
+  opacity: 1 !important;
+  animation: none !important;
+}
+
 .bp-scan {
   fill: rgba(232, 118, 37, 0.07);
   stroke: rgba(232, 118, 37, 0.55);
@@ -351,10 +361,19 @@
 }
 
 .hero-layout {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
-  gap: clamp(2rem, 4vw, 4rem);
-  min-height: min(680px, calc(100svh - 11rem));
-  padding-block: 1rem 3rem;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr);
+  gap: clamp(1.5rem, 3.5vw, 3rem);
+  max-width: 1240px;
+  margin-inline: auto;
+  align-items: center;
+  min-height: auto;
+  padding-block: clamp(0.5rem, 1.5vh, 1.25rem) clamp(1rem, 2vh, 1.75rem);
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  max-width: 36rem;
 }
 
 .hero-tag__bar {
@@ -384,15 +403,17 @@
 
 .hero-copy h1 {
   color: #ffffff;
-  font-size: clamp(2.5rem, 1.5rem + 3.2vw, 4.5rem);
-  line-height: 1.08;
+  font-size: clamp(2.2rem, 1.4rem + 2.4vw, 3.8rem);
+  line-height: 1.12;
   letter-spacing: -0.01em;
+  margin-bottom: clamp(0.75rem, 1.5vh, 1.15rem);
 }
 
 [dir="rtl"] .hero-copy h1 {
   letter-spacing: 0;
   line-height: 1.22;
-  font-size: clamp(2.1rem, 1.3rem + 2.1vw, 3.1rem);
+  font-size: clamp(1.85rem, 1.35rem + 1.4vw, 2.65rem);
+  max-width: 32rem;
 }
 
 .hero-title__brand {
@@ -405,12 +426,22 @@
 
 .hero-subtitle {
   color: var(--arch-ink);
-  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);
-  max-width: 38rem;
+  font-size: clamp(0.9375rem, 0.875rem + 0.25vw, 1.0625rem);
+  line-height: 1.62;
+  max-width: 31rem;
+  margin: 0 0 clamp(1rem, 1.8vh, 1.5rem) 0;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: clamp(1rem, 2vh, 1.5rem);
+  flex-wrap: wrap;
 }
 
 .hero-cta {
-  min-height: 52px;
+  min-height: 48px;
   border-radius: 4px;
   font-weight: 800;
   transition: transform 0.3s var(--arch-ease), background-color 0.3s var(--arch-ease), border-color 0.3s var(--arch-ease), box-shadow 0.3s var(--arch-ease);
@@ -447,6 +478,9 @@
   border-inline-start: 2px solid var(--public-orange-500);
   border-radius: 4px;
   box-shadow: none;
+  padding: 0.55rem 0.85rem;
+  margin-bottom: clamp(1rem, 2vh, 1.5rem);
+  max-width: 32rem;
 }
 
 .hero-system-note strong {
@@ -466,11 +500,12 @@
 
 .hero-capabilities {
   border-top: 1px solid var(--arch-line);
+  padding-block: clamp(0.75rem, 1.5vh, 1rem) 0;
   gap: 0;
 }
 
 .hero-cap-item {
-  padding-block: 1rem 0.25rem;
+  padding-block: 0.75rem 0.25rem;
   padding-inline: 1rem;
   border-inline-start: 1px solid var(--arch-line);
 }
@@ -498,9 +533,9 @@
 /* Visual column */
 .hero-visual-composition {
   position: relative;
-  aspect-ratio: 720 / 620;
+  aspect-ratio: 16 / 13;
   width: 100%;
-  max-width: 720px;
+  max-width: 560px;
   justify-self: center;
 }
 
@@ -509,24 +544,25 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  opacity: 0.75;
 }
 
 .hero-sheet {
   position: absolute;
-  left: 0;
-  top: 2%;
-  width: 46%;
+  inset-inline-start: 7%;
+  top: 6%;
+  width: 86%;
   z-index: 2;
-  padding: 6px 6px 0;
-  border-radius: 2px;
+  padding: 7px 7px 0;
+  border-radius: 3px;
   background: #ffffff;
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 50px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.15);
   animation: arch-sheet-in 1.1s var(--arch-ease) 0.6s both;
 }
 
 .hero-sheet .hero-visual-frame__inner {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 11;
   border-radius: 0;
   overflow: hidden;
   background: var(--arch-navy-800);
@@ -539,10 +575,10 @@
 
 .hero-sheet .hero-cad-overlay {
   position: absolute;
-  inset: 6px 6px auto;
-  width: calc(100% - 12px);
+  inset: 7px 7px auto;
+  width: calc(100% - 14px);
   height: auto;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 11;
   pointer-events: none;
 }
 
@@ -683,7 +719,9 @@
   }
 
   .hero-sheet {
-    width: 52%;
+    width: 84%;
+    inset-inline-start: 8%;
+    top: 4%;
   }
 
   .hero-sheet__titleblock {
@@ -697,6 +735,68 @@
   .hero-rail__inner {
     overflow-x: auto;
     scrollbar-width: none;
+  }
+}
+
+@media (max-height: 800px) and (min-width: 981px) {
+  .hero {
+    padding-top: 3.5rem;
+  }
+
+  .hero-layout {
+    padding-block: 0.25rem 0.5rem;
+    gap: 1.5rem;
+  }
+
+  .hero-tag {
+    margin-bottom: 0.4rem;
+  }
+
+  .hero-eyebrow {
+    margin-bottom: 0.3rem;
+  }
+
+  [dir="rtl"] .hero-copy h1 {
+    font-size: clamp(1.65rem, 1.2rem + 1vw, 2.15rem);
+    margin-bottom: 0.45rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(1.9rem, 1.2rem + 1.6vw, 2.6rem);
+    margin-bottom: 0.45rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin-bottom: 0.65rem;
+  }
+
+  .hero-actions {
+    margin-bottom: 0.65rem;
+  }
+
+  .hero-cta {
+    min-height: 44px;
+    padding: 0.55rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  .hero-system-note {
+    padding: 0.45rem 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .hero-capabilities {
+    padding-block: 0.45rem 0;
+  }
+
+  .hero-cap-item {
+    padding-block: 0.45rem 0;
+  }
+
+  .hero-visual-composition {
+    max-width: 480px;
   }
 }
 
@@ -1136,17 +1236,77 @@
   border-radius: 4px;
 }
 
+.platform-showcase {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.platform-callout-rail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2.25rem;
+  width: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.platform-callout-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--arch-rule);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--arch-navy);
+  box-shadow: 0 4px 12px rgba(11, 19, 43, 0.08);
+  font: 700 0.8125rem/1.2 var(--font-arabic, sans-serif);
+  white-space: nowrap;
+}
+
+[lang="en"] .platform-callout-item {
+  font-family: var(--arch-mono, monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.platform-callout-item__datum {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--public-orange-500);
+  box-shadow: 0 0 0 2px rgba(232, 118, 37, 0.25);
+  flex-shrink: 0;
+}
+
+.platform-callout-item__text {
+  font-weight: 700;
+  color: var(--arch-navy);
+  direction: inherit;
+  unicode-bidi: isolate;
+}
+
+@media (max-width: 980px) {
+  .platform-callout-rail {
+    margin-top: 3.25rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
 /* ==========================================================================
    FAQ — numbered technical list + plan sheet
    ========================================================================== */
 .faq-accordion-list {
-  counter-reset: faq;
   gap: 0;
   border-top: 1px solid var(--arch-rule);
 }
 
 .faq-accordion-item {
-  counter-increment: faq;
   border: 0;
   border-bottom: 1px solid var(--arch-rule);
   border-radius: 0;
@@ -1181,28 +1341,55 @@
 }
 
 .faq-accordion-trigger {
-  padding: 1.25rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  padding: 1.15rem 1rem;
   color: var(--arch-navy);
   min-height: 3.5rem;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: start;
+  font-family: inherit;
 }
 
-.faq-accordion-trigger::before {
-  content: "Q." counter(faq, decimal-leading-zero);
+.faq-accordion-index {
   flex: 0 0 auto;
   font-family: var(--arch-mono);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--arch-orange-ink);
   letter-spacing: 0.04em;
   direction: ltr;
+  unicode-bidi: isolate;
+  line-height: 1;
+  min-width: 2.75rem;
+}
+
+.faq-accordion-question {
+  flex: 1 1 auto;
+  text-align: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--arch-navy);
+  line-height: 1.5;
 }
 
 .faq-accordion-icon {
-  order: 3;
+  flex: 0 0 auto;
+  margin-inline-start: auto;
   border-radius: 2px;
   background: transparent;
   border: 1px solid var(--arch-rule);
   color: var(--arch-navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  transition: transform 0.25s var(--arch-ease), background-color 0.25s var(--arch-ease), color 0.25s var(--arch-ease);
 }
 
 .faq-accordion-item--open .faq-accordion-icon {
@@ -1211,13 +1398,9 @@
   color: #ffffff;
 }
 
-.faq-accordion-question {
-  order: 2;
-}
-
 .faq-accordion-panel,
 [dir="rtl"] .faq-accordion-panel {
-  padding-inline: 4.1rem 1rem;
+  padding-inline: calc(1rem + 2.75rem + 1.15rem) 1rem;
   padding-block: 0 1.25rem;
 }
 
