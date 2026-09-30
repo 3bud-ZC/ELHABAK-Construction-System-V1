@@ -1596,3 +1596,50 @@
 - **Staging load gate**: seeded isolated staging-only synthetic data (`LOADTEST_ALLOW_DB=elhabak_staging`) with 501 users, 450 clients, 200 projects, 8,000 site updates, 12,000 messages, 15,030 notifications, 1,000 documents, and 600 designs; then cleaned it up and verified zero `@loadtest.elhabak.local` users, zero `LT-*` projects, and no `lt-shared` storage directory remained. Evidence directory: `/var/tmp/elhabak-qa/709fc57997f2e8468082ebc7d892a58c22553a4d/load-20260930-020455`. Results: login 50 VUs / 100 requests / 0 errors; read 50 VUs / 2,952 requests / 48 rps / p95 48.5ms / 0 errors; mixed 50 VUs / 2,953 requests / 48.1 rps / p95 75.3ms / 0 errors / 47 realtime sockets connected / 0 join denials; files 30 VUs / 1,819 requests / 541.2 MB transferred / p95 92.1ms / 0 errors. Peak sampled API RSS 267 MB, web RSS 432 MB, DB connections 9, minimum available memory 5,653 MB.
 - **Backup and restore proof before production promotion**: created fresh production backup as `elhabak-20260930-021049.dump` (108K) and `storage-20260930-021049.tar.gz` (652K, 5 files). `scripts/ops/restore-check.sh` restored into isolated throwaway DB `elhabak_restore_check`, matched live counts (`9 users, 2 projects, 2 site updates, 1 documents, 3 messages, 12 migrations`), restored 5 storage files, and removed temporary DB/files.
 - **Final release status at this checkpoint**: **READY FOR PRODUCTION PROMOTION**, pending packaging/deploy of the final docs/provenance commit that contains this evidence entry.
+
+
+### 2026-10-01 — ELHABAK FINAL PUBLIC UI CORRECTION — PRODUCTION PASS
+- **Scope & Objective**: Completed live deployment and full verification of the approved public UI correction release to VPS `5.189.151.43`, promoting from staging to production with zero data mutation and full rollback preservation.
+- **Commit & Provenance**:
+  - Target Commit SHA: `76a25a2a77db0245fe2b339c6d515de9a8d02b32`
+  - Previous Production SHA: `6a142b12220291d0cc89f8977ab662a407fc16cf`
+  - Branch: `main` (clean working tree, origin/main in sync)
+  - Release Package Archive SHA256: `af845d767246c579f4b287eede552bd2365bffd4af772ff3d6cc1f505e0bf6dd`
+  - Provenance Checksum Validation: PASS on both staging and production via `release-preflight.sh`
+- **Backup Verification Before Promotion**:
+  - Pre-deployment snapshot created: `/var/www/elhabak/shared/backups/elhabak-20261001-004817.dump` (108K) + `/var/www/elhabak/shared/backups/storage-20261001-004817.tar.gz` (652K, 5 files).
+- **Staging Deployment & Verification**:
+  - Release Directory: `/var/www/elhabak-staging/releases/20261001-004315`
+  - Previous Staging Directory: `/var/www/elhabak-staging/releases/20260930-021318`
+  - Preflight & Build: `pnpm install --frozen-lockfile` (clean), `pnpm build` (PASS), `release-preflight.sh` (PASS)
+  - Migration check: 12 migrations found, 0 pending
+  - Health & Services: `https://staging.elhabak.com/api/health` -> HTTP 200, status `ok`, database `connected`, commit `76a25a2a77db0245fe2b339c6d515de9a8d02b32`
+  - Web & Auth: Home (`/`) HTTP 200, `/login` HTTP 200, Socket.IO polling HTTP 200
+  - PM2: `elhabak-staging-api` (online), `elhabak-staging-web` (online)
+  - Visual Smoke Test (Playwright/Chrome on 1920, 1440, 1024, 768, 390, 360):
+    - Hero: verified (living drawing + responsive constrained grid)
+    - Blueprint -> Reality: verified (soft gradient dissolve + datum line, no mechanical chevron)
+    - Platform callout rail: verified (isolated device stage + lower non-overlapping annotation rail)
+    - FAQ single indices: verified (exact single Q.01–Q.06 indices, 0 duplicates)
+    - Horizontal Overflow: 0px overflow across all 6 viewports, 0 console errors.
+- **Production Deployment & Verification**:
+  - Release Directory: `/var/www/elhabak/releases/20261001-004843`
+  - Rollback Directory Preserved: `/var/www/elhabak/releases/20260930-021453`
+  - Rollback Command: `ln -sfn /var/www/elhabak/releases/20260930-021453 /var/www/elhabak/current && su -s /bin/bash elhabak -c 'pm2 restart elhabak-api elhabak-web'`
+  - Preflight & Build: `pnpm install --frozen-lockfile` (clean), `pnpm build` (PASS), `release-preflight.sh` (PASS)
+  - Health & Services:
+    - `https://elhabak.com` = HTTP 200
+    - `https://elhabak.com/login` = HTTP 200
+    - `https://elhabak.com/api/health` = HTTP 200 (`{"status":"ok","service":"elhabak-api","database":"connected","commit":"76a25a2a77db0245fe2b339c6d515de9a8d02b32"}`)
+    - Socket.IO polling GET = HTTP 200 (`0{"sid":...}`)
+    - Nginx: configuration test syntax ok & test successful (`nginx -t` PASS), active
+    - PM2: `elhabak-api` (online, pid 6025), `elhabak-web` (online, pid 6038)
+  - Visual Smoke Test (Playwright/Chrome on live `https://elhabak.com` across 1920, 1440, 1024, 768, 390, 360):
+    - Hero composition: PASS
+    - Blueprint -> Reality transition: PASS
+    - Platform callout rail: PASS
+    - FAQ single Q.01–Q.06 indexes: PASS
+    - Zero horizontal overflow across all viewports: PASS
+    - Console/page errors: 0
+- **Data Integrity**: Zero seed, zero `db push`, zero database reset, zero destructive QA, zero mutation to production business data.
+- **Final Verdict**: **ELHABAK FINAL PUBLIC UI CORRECTION — PRODUCTION PASS**.
