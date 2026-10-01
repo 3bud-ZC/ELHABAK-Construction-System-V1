@@ -133,8 +133,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             <p className="footer-slogan">{t.home.footerTagline}</p>
             <p className="footer-entity">
               <bdi>{t.home.footerText}</bdi>
-              <span aria-hidden="true"> · </span>
-              <bdi>{ar ? "ELHABAK Construction" : "الحباك للمقاولات والاستشارات الهندسية"}</bdi>
+              <bdi lang={ar ? "en" : "ar"}>{ar ? "ELHABAK Construction" : "الحباك للمقاولات والاستشارات الهندسية"}</bdi>
             </p>
           </div>
           <nav className="footer-col" aria-label={t.home.footerNav}>

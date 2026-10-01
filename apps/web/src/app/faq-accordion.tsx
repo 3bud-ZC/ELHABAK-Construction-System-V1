@@ -38,7 +38,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
               aria-controls={itemId}
             >
               <span className="faq-accordion-index" dir="ltr" aria-hidden="true">
-                <bdi>Q.{String(index + 1).padStart(2, "0")}</bdi>
+                <bdi>{String(index + 1).padStart(2, "0")}</bdi>
               </span>
               <span className="faq-accordion-question">{question}</span>
               <span className="faq-accordion-icon" aria-hidden="true">
@@ -50,9 +50,11 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
               role="region"
               aria-labelledby={headerId}
               className="faq-accordion-panel"
-              hidden={!isOpen}
+              inert={!isOpen}
             >
-              <p className="faq-accordion-answer">{answer}</p>
+              <div className="faq-accordion-panel__inner">
+                <p className="faq-accordion-answer">{answer}</p>
+              </div>
             </div>
           </div>
         );

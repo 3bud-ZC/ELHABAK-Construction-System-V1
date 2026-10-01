@@ -29,12 +29,13 @@ test("design tokens define the blueprint grounds and AA orange ink", () => {
 });
 
 test("line art is decorative, deterministic and motion-safe", () => {
-  assert.match(art, /export function BlueprintAxonometric/);
+  assert.match(art, /export function BlueprintElevationDraft/);
+  assert.match(art, /export function BlueprintElevationAxes/);
+  assert.match(art, /export function BlueprintBuildSequence/);
   assert.match(art, /export function BlueprintPlan/);
-  assert.match(art, /export function BlueprintSection/);
   assert.match(art, /aria-hidden="true"/);
   assert.doesNotMatch(art, /Math\.random|Date\.now/, "geometry must render identically on server and client");
-  assert.match(hero, /<BlueprintAxonometric live/);
+  assert.match(hero, /<BlueprintElevationDraft /);
   assert.match(motion, /\.bp-art:not\(\.is-live\)/);
   assert.match(publicCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.bp-art \.bp-d/);
   assert.match(publicCss, /@media \(scripting: none\)[\s\S]*?stroke-dashoffset: 0/);

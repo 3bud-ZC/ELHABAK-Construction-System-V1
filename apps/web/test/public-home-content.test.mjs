@@ -8,6 +8,11 @@ const layout = readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "
 const translations = readFileSync(new URL("../src/i18n/translations.ts", import.meta.url), "utf8");
 const directionSync = readFileSync(new URL("../src/app/direction-sync.tsx", import.meta.url), "utf8");
 const proxy = readFileSync(new URL("../src/proxy.ts", import.meta.url), "utf8");
+const hero = readFileSync(new URL("../src/app/public-hero.tsx", import.meta.url), "utf8");
+const processRoute = readFileSync(new URL("../src/app/process-route.tsx", import.meta.url), "utf8");
+const faqAccordion = readFileSync(new URL("../src/app/faq-accordion.tsx", import.meta.url), "utf8");
+const archCss = readFileSync(new URL("../src/app/public-architecture.css", import.meta.url), "utf8");
+const publicSources = [page, hero, processRoute, css, archCss].join("\n");
 
 test("public website exposes stronger conversion routes", () => {
   assert.match(page, /whatsappHref/);
@@ -64,41 +69,61 @@ test("public website has responsive styles for the new conversion surfaces", () 
   assert.match(css, /whatsapp/);
 });
 
-test("public website keeps the delivery process compact", () => {
-  assert.match(page, /process-panel/);
-  assert.match(page, /process-grid/);
-  assert.match(css, /\.process-grid/);
-  assert.doesNotMatch(css, /grid-template-columns:\s*repeat\(6,\s*minmax\(0,\s*1fr\)\)/);
-  assert.doesNotMatch(css, /min-height:\s*214px/);
+test("delivery process keeps the six canonical stages on one connected route", () => {
+  const arabicStages = ["المعاينة", "التصميم", "المقايسة التقريبية", "التنفيذ", "التسليم الابتدائي", "التسليم النهائي"];
+  let cursor = translations.indexOf("process: [");
+  assert.ok(cursor > -1, "process stages exist in the dictionary");
+  for (const stage of arabicStages) {
+    const next = translations.indexOf(`["${stage}",`, cursor);
+    assert.ok(next > -1, `stage "${stage}" present and in canonical order`);
+    cursor = next + 1;
+  }
+  const englishBlock = translations.slice(translations.lastIndexOf("process: ["));
+  const englishStages = englishBlock.slice(0, englishBlock.search(/\],\r?\n\s+contact/));
+  assert.equal((englishStages.match(/^\s+\["/gm) ?? []).length, 6, "English keeps six stages too");
+
+  assert.match(page, /<ProcessRoute\s+stages=\{t\.process\}/);
+  assert.equal((page.match(/processLayers\s*=/g) ?? []).length, 1);
+  // Every stage is real list content: number, title and description stay in the DOM.
+  assert.match(processRoute, /<ol className="process-stations"/);
+  assert.match(processRoute, /stages\.map\(\(\[title, body\], index\)/);
+  assert.match(processRoute, /<h3>\{title\}<\/h3>\s*<p>\{body\}<\/p>/);
+  // The drawing is complete by default, so it never depends on scripts or motion.
+  assert.match(processRoute, /useState\(total\)/);
+  assert.match(processRoute, /prefers-reduced-motion: reduce/);
 });
 
-test("final handover public art direction has premium architectural storytelling markers", () => {
-  const hero = readFileSync(new URL("../src/app/public-hero.tsx", import.meta.url), "utf8");
-  assert.match(hero, /hero-living-drawing/);
-  assert.match(hero, /hero-trace-route/);
+test("homepage keeps every required section and its engineering composition", () => {
+  assert.match(hero, /hero-board/);
+  assert.match(hero, /BlueprintElevationDraft/);
+  assert.match(hero, /BlueprintElevationAxes/);
   assert.match(page, /blueprint-reality/);
-  assert.match(page, /service-register/);
-  assert.match(page, /process-route/);
-  assert.match(page, /platform-callout-rail/);
+  assert.match(page, /services-showcase/);
+  assert.match(page, /ProcessRoute/);
+  assert.match(page, /platform-pipeline/);
   assert.match(page, /faq-register/);
+  assert.match(page, /cta-banner-section/);
+  assert.match(page, /<SiteFooter locale=\{locale\} \/>/);
+  // Real copy keeps coming from the dictionary rather than being hard-coded away.
+  for (const key of ["heroTitle", "heroSubtitle", "aboutLead", "servicesTitle", "processTitle", "digitalTitle", "digitalNote", "faqTitle", "ctaTitle"]) {
+    assert.ok(page.includes(`t.home.${key}`), `t.home.${key} is rendered`);
+  }
+  assert.match(page, /t\.services\.slice\(1\)\.map/);
+  assert.match(page, /t\.home\.digitalFeatures\.map/);
 });
 
-test("final handover public css uses restrained architectural motion and mobile-specific composition", () => {
-  for (const selector of [
-    ".hero-living-drawing",
-    ".hero-trace-route",
-    ".blueprint-reality",
-    ".service-register",
-    ".process-route",
-    ".platform-callout-rail",
-    ".faq-register"
-  ]) {
-    assert.ok(css.includes(selector), selector);
+test("public css keeps restrained, reduced-motion-safe architectural motion", () => {
+  for (const selector of [".hero-board", ".hero-built", ".blueprint-reality", ".process-route", ".bp-seq", ".platform-pipeline", ".faq-accordion-panel"]) {
+    assert.ok(archCss.includes(selector), selector);
   }
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.match(css, /stroke-dashoffset/);
-  assert.match(css, /transform:\s*translate3d/);
-  assert.match(css, /@media \(max-width:\s*640px\)[\s\S]*\.blueprint-reality/);
+  assert.match(archCss, /stroke-dashoffset/);
+  assert.match(archCss, /mask-image:\s*linear-gradient/);
+  assert.match(archCss, /@media \(max-width:\s*640px\)[\s\S]*\.blueprint-reality/);
+  const reduced = archCss.slice(archCss.lastIndexOf("@media (prefers-reduced-motion: reduce)"));
+  for (const selector of [".hero-built__reveal", ".hero-built__ground", ".hero-cut", ".bp-seq__s", ".process-board__art", ".platform-device", ".platform-pipeline", ".faq-accordion-panel"]) {
+    assert.ok(reduced.includes(selector), `reduced motion covers ${selector}`);
+  }
 });
 
 test("public website syncs document direction before paint on language changes", () => {
@@ -127,48 +152,85 @@ test("seo route files exist", () => {
   assert.match(robots, /disallow/);
 });
 
-test("final public UI correction prevents duplicate FAQ indices and mechanical clipping", () => {
-  const faqAccordion = readFileSync(new URL("../src/app/faq-accordion.tsx", import.meta.url), "utf8");
-  const archCss = readFileSync(new URL("../src/app/public-architecture.css", import.meta.url), "utf8");
-
+test("FAQ indexing stays single-sourced and the accordion stays accessible", () => {
   // Single FAQ index in JSX, zero CSS counter duplication
-  assert.match(faqAccordion, /faq-accordion-index/);
+  assert.equal((faqAccordion.match(/faq-accordion-index/g) ?? []).length, 1);
+  assert.match(faqAccordion, /String\(index \+ 1\)\.padStart\(2, "0"\)/);
   assert.doesNotMatch(archCss, /counter-increment:\s*faq/);
   assert.doesNotMatch(archCss, /counter\(faq\)/);
+  assert.match(faqAccordion, /aria-expanded=\{isOpen\}/);
+  assert.match(faqAccordion, /aria-controls=\{itemId\}/);
+  assert.match(faqAccordion, /inert=\{!isOpen\}/);
+  assert.match(page, /<FaqAccordion items=\{t\.faq\} \/>/);
+});
 
-  // Platform showcase uses isolated stage and non-obscuring callout rail
+test("digital platform keeps the real product screenshots as the proof", () => {
   assert.match(page, /platform-stage/);
-  assert.match(page, /platform-callout-rail/);
-
-  // Blueprint to reality uses soft architectural dissolve without crude chevron clip-path
-  assert.doesNotMatch(css, /clip-path:\s*polygon\(0 0,\s*92% 0,\s*100% 50%/);
-  assert.match(css, /mask-image:\s*linear-gradient/);
+  assert.match(page, /src="\/marketing\/platform-desktop\.webp"/);
+  assert.match(page, /src="\/marketing\/platform-mobile\.webp"/);
+  // One information pipeline with five stations, fed by the four real channels.
+  const pipeline = page.slice(page.indexOf("const platformPipeline = ["), page.indexOf("const platformChannelNodes"));
+  assert.equal((pipeline.match(/key: "/g) ?? []).length, 5);
+  assert.match(page, /className="platform-channels"/);
+  assert.match(page, /platform-channel--primary/);
+  // Nothing is drawn over the screenshots and no invented figures appear around them.
+  assert.doesNotMatch(page, /platform-callout|platform-control-field/);
+  assert.doesNotMatch(css + archCss, /content:\s*"LIVE PROJECT CONTROL"/);
 });
 
-test("homepage refinement keeps one coherent engineering motion system", () => {
-  const hero = readFileSync(new URL("../src/app/public-hero.tsx", import.meta.url), "utf8");
-  const archCss = readFileSync(new URL("../src/app/public-architecture.css", import.meta.url), "utf8");
-
-  assert.match(hero, /hero-survey-field/);
-  assert.match(hero, /hero-visual-datum/);
-  assert.match(page, /process-route-map__active/);
-  assert.match(page, /process-stage__phase/);
-  assert.match(page, /platform-control-field__path/);
-  assert.match(page, /data-channel="01"/);
-  assert.match(archCss, /prefers-reduced-motion:\s*reduce[\s\S]*process-route-map__active/);
-  assert.match(archCss, /prefers-reduced-motion:\s*reduce[\s\S]*platform-control-field__path/);
+test("the retired moving-beam language does not come back", () => {
+  for (const retired of [
+    "hero-trace-route",
+    "heroTraceRoute",
+    "hero-survey-field__scan",
+    "hero-survey-sweep",
+    "hero-datum-travel",
+    "process-route-map",
+    "process-route-signal",
+    "processSurveyNode",
+    "platform-control-field",
+    "platform-scanner",
+    "platform-screen-scan",
+    "bp-scan"
+  ]) {
+    assert.ok(!publicSources.includes(retired), `${retired} must stay retired`);
+  }
+  // No invented engineering figures: level tags are neutral references, plan dimensions carry no numbers.
+  const art = readFileSync(new URL("../src/app/blueprint-art.tsx", import.meta.url), "utf8");
+  assert.deepEqual([...art.matchAll(/text: "([^"]+)" }/g)].map((match) => match[1]), ["ROOF", "L02", "L01", "L00"]);
+  assert.doesNotMatch(art, /text: "[^"]*d+.d+/, "no decimal measurements in drawing text");
+  assert.doesNotMatch(art, /PLAN_LABELS/);
+  assert.doesNotMatch(art, /["'][+±]d/, "no signed elevation values");
+  // No generated drawing / sheet numbers (A-01 …) on section labels.
+  assert.doesNotMatch(archCss, /content:s*"A-"/);
+  assert.doesNotMatch(archCss, /counter-(increment|reset):s*sheet/);
+  // Decorative technical captions that were not tied to real geometry stay out too.
+  for (const label of ["DATUM 00", "GRID A–D", "GRID A–07", "SECTION 03", "DISCIPLINE REGISTER", "18.40 m", "SHEET <bdi>"]) {
+    assert.ok(!publicSources.includes(label), `${label} must not be rendered`);
+  }
 });
 
-test("homepage hero keeps the blueprint dominant and the photo subordinate", () => {
-  const hero = readFileSync(new URL("../src/app/public-hero.tsx", import.meta.url), "utf8");
-  const archCss = readFileSync(new URL("../src/app/public-architecture.css", import.meta.url), "utf8");
+test("homepage hero is one building read as drawing, structure and delivery", () => {
+  assert.match(page, /image="\/marketing\/hero-delivery\.webp"/);
+  const states = page.slice(page.indexOf("const heroStates = ["), page.indexOf("// 5 Canonical Services"));
+  assert.deepEqual([...states.matchAll(/key: "(\w+)" as const/g)].map((match) => match[1]), ["design", "execution", "delivery"]);
 
-  assert.match(hero, /hero-blueprint-field/);
-  assert.match(hero, /data-visual-role="supporting-artifact"/);
+  // The drawing sits under the photo and the reference marks above it.
+  const draft = hero.indexOf("<BlueprintElevationDraft");
+  const built = hero.indexOf('className="hero-built"');
+  const axes = hero.indexOf("<BlueprintElevationAxes");
+  assert.ok(draft > -1 && draft < built && built < axes, "draft → built photo → axes stacking order");
+  assert.match(hero, /data-state=\{current\?\.key\}/);
+  assert.match(hero, /aria-pressed=\{index === active\}/);
 
-  const desktopPhotoWidth = Number(archCss.match(/--hero-photo-width:\s*([\d.]+)%/)?.[1]);
-  const blueprintOpacity = Number(archCss.match(/--hero-blueprint-opacity:\s*([\d.]+)/)?.[1]);
-  assert.ok(desktopPhotoWidth <= 62, `hero photo width must stay subordinate, received ${desktopPhotoWidth}%`);
-  assert.ok(blueprintOpacity >= 0.9, `hero blueprint opacity must stay dominant, received ${blueprintOpacity}`);
-  assert.match(archCss, /\.hero-sheet\[data-visual-role="supporting-artifact"\][\s\S]*mask-image:/);
+  // The photo is cut along the roofline and revealed across the section cut; never darkened.
+  const builtRule = archCss.match(/\.hero-built \{[^}]*\}/)?.[0] ?? "";
+  assert.match(builtRule, /clip-path:\s*polygon\(/);
+  assert.match(archCss, /\.hero-built__reveal \{[^}]*mask-image:\s*linear-gradient/);
+  // The reveal animates transforms only: window and photo counter-slide in sync.
+  assert.match(archCss, /\.hero-built__reveal \{[^}]*transform:\s*translate3d\(calc\(\(var\(--cut\) - 8\) \* 1%\)/);
+  assert.match(archCss, /\.hero-built__ground \{[^}]*transform:\s*translate3d\(calc\(\(var\(--cut\) - 8\) \* -1%\)/);
+  const brightness = Number(archCss.match(/\.hero-built__img \{[^}]*brightness\(([\d.]+)\)/)?.[1]);
+  assert.ok(brightness >= 1, `hero photo must not be darkened, received brightness(${brightness})`);
+  assert.doesNotMatch(archCss, /@property/, "no main-thread custom-property animation");
 });

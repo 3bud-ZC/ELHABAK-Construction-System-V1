@@ -1,9 +1,10 @@
 /**
- * ELHABAK architectural line art — axonometric structure, floor plan and building
- * section drawn as SVG and animated with CSS only (stroke draw-in via pathLength=1,
- * a slow level-scan plane, pulsing survey nodes). Geometry is computed
- * deterministically at module load so server and client markup are identical.
- * All art is decorative (aria-hidden) and fully static under reduced motion.
+ * ELHABAK architectural line art — the hero elevation (traced over the delivery
+ * photo so drawing and building register exactly), the six-stage axonometric build
+ * sequence and the floor plan. Everything is SVG animated with
+ * CSS only (stroke draw-in via pathLength=1). Geometry is computed deterministically
+ * at module load so server and client markup are identical. All art is decorative
+ * (aria-hidden) and fully static under reduced motion.
  */
 import type { CSSProperties } from "react";
 
@@ -20,191 +21,364 @@ function projector(scale: number, ox: number, oy: number) {
 const d = (points: Pt[], close = false) =>
   `M${points.map(([x, y]) => `${x} ${y}`).join(" L")}${close ? " Z" : ""}`;
 
-type Stroke = { d: string; kind: "faint" | "line" | "strong" | "accent" | "hidden" | "dim" };
-type Label = { x: number; y: number; text: string; rotate?: number; kind?: "accent" | "muted"; anchor?: "start" | "middle" | "end" };
-type Node = { x: number; y: number; r: number; kind?: "accent" | "bubble" };
 
 const vars = (i: number) => ({ "--i": i }) as CSSProperties;
 
+type ArtProps = { className?: string; live?: boolean };
+
 /* ------------------------------------------------------------------ */
-/* Axonometric structure (hero)                                        */
+/* Elevation (hero)                                                    */
+/* Coordinates are the pixels of /marketing/hero-delivery.webp scaled  */
+/* to 2000×1128, so every stroke lands on a real edge of the building. */
 /* ------------------------------------------------------------------ */
 
-const SLAB_H = 1.2;
-const LEVELS = [0, 1, 2, 3, 4].map((n) => n * SLAB_H);
+export const ELEVATION_VIEWBOX = { width: 2000, height: 1128 } as const;
 
-function buildAxonometric() {
-  const p = projector(42, 340, 318);
-  const strokes: Stroke[] = [];
-  const labels: Label[] = [];
-  const nodes: Node[] = [];
+const ELEV_STRONG = [
+  "M0 880 H2000",
+  "M0 838 H1150",
+  "M942 165 H1358 V197 H942 Z",
+  "M482 334 H945 V364 H496 Z",
+  "M1285 340 H1760 V370 H1285",
+  "M0 570 H548 L588 600 V626 L560 640 H0",
+  "M750 593 H997 V637 H750 Z"
+];
+
+const ELEV_LINE = [
+  // Tower: soffit, piers and glazing frame.
+  "M1358 197 L1300 252 H1000 L960 197",
+  "M945 197 V334",
+  "M997 252 V838",
+  "M1283 252 V838",
+  "M1025 270 H1253 V790 H1025 Z",
+  "M1025 445 H1253",
+  "M1025 705 H1253",
+  // Two-storey block.
+  "M496 364 L545 396 H945",
+  "M545 396 V838",
+  "M800 396 V593",
+  "M628 407 H708 V605 H628 Z",
+  "M808 452 H990 V592 H808 Z",
+  "M752 637 V838",
+  "M572 657 H737 V792 H572 Z",
+  "M812 688 H990 V838 H812 Z",
+  // Single-storey wing.
+  "M92 640 V838",
+  "M540 640 V838",
+  "M186 640 H320 V830 H186 Z",
+  // Terrace wing.
+  "M1760 370 L1700 402 H1285",
+  "M1360 418 H1608 V522 H1360 Z",
+  "M1283 528 H1800 V800",
+  "M1755 525 V385 H1868 V525",
+  // Podium planter and ramp wall.
+  "M1000 812 H1333 V838",
+  "M1150 848 L1900 795 V862"
+];
+
+const ELEV_FAINT = [
+  "M1088 270 V790 M1194 270 V790",
+  "M868 452 V592 M932 452 V592",
+  "M613 657 V792 M697 657 V792",
+  "M872 688 V838 M934 688 V838 M775 637 V838",
+  "M252 640 V830 M186 680 H320",
+  "M1430 418 V522 M1482 418 V522 M1545 418 V522 M1283 450 H1770 M1755 415 H1868",
+  "M1290 590 H1795 M1290 650 H1795 M1290 710 H1795 M1290 770 H1795",
+  Array.from({ length: 33 }, (_, index) => `M${40 + index * 60} 884 l-22 26`).join(" ")
+];
+
+const ELEV_AXES = [92, 545, 997, 1283, 1800];
+const ELEV_LEVELS: { y: number; text: string }[] = [
+  { y: 165, text: "ROOF" },
+  { y: 337, text: "L02" },
+  { y: 597, text: "L01" },
+  { y: 838, text: "L00" }
+];
+/** Surveyed roof corners, as percentages of the elevation canvas (for HTML markers). */
+export const ELEVATION_SURVEY_POINTS = (
+  [
+    [942, 165],
+    [1358, 165],
+    [482, 334],
+    [1760, 340]
+  ] as const
+).map(([x, y]) => ({
+  left: `${round((x / ELEVATION_VIEWBOX.width) * 100)}%`,
+  top: `${round((y / ELEVATION_VIEWBOX.height) * 100)}%`
+}));
+
+/** The measured drawing that sits under the photo: every wall, slab and mullion. */
+export function BlueprintElevationDraft({ className = "" }: ArtProps) {
+  let i = 0;
+  return (
+    <svg
+      className={`bp-art bp-art--elevation is-live ${className}`.trim()}
+      viewBox={`0 0 ${ELEVATION_VIEWBOX.width} ${ELEVATION_VIEWBOX.height}`}
+      preserveAspectRatio="none"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {ELEV_STRONG.map((path) => <path key={path} className="bp-d bp-strong" d={path} pathLength={1} style={vars(i++)} />)}
+      {ELEV_LINE.map((path) => <path key={path} className="bp-d bp-line" d={path} pathLength={1} style={vars(i++)} />)}
+      {ELEV_FAINT.map((path) => <path key={path} className="bp-d bp-faint" d={path} style={vars(i++)} />)}
+    </svg>
+  );
+}
+
+/** Structural axes and level datums — stays above drawing and photo. */
+export function BlueprintElevationAxes({ className = "" }: ArtProps) {
+  return (
+    <svg
+      className={`bp-art bp-art--axes is-live ${className}`.trim()}
+      viewBox={`0 0 ${ELEVATION_VIEWBOX.width} ${ELEVATION_VIEWBOX.height}`}
+      preserveAspectRatio="none"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <linearGradient id="bp-level-fade" gradientUnits="userSpaceOnUse" x1="-150" y1="0" x2="2150" y2="0">
+          <stop offset="0" stopColor="currentColor" stopOpacity="0" />
+          <stop offset="0.14" stopColor="currentColor" stopOpacity="1" />
+          <stop offset="0.9" stopColor="currentColor" stopOpacity="1" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {ELEV_LEVELS.map((level, index) => (
+        <g key={level.y}>
+          {/* 0.01 rise keeps the gradient's bounding box non-degenerate. */}
+          <path
+            className="bp-d bp-level"
+            d={`M-150 ${level.y} L2150 ${level.y + 0.01}`}
+            stroke="url(#bp-level-fade)"
+            pathLength={1}
+            style={vars(index * 3)}
+          />
+          <path className="bp-level-mark" d={`M1948 ${level.y - 30} h34 l-17 24 Z`} style={vars(index * 3 + 10)} />
+          <text className="bp-t bp-t--level" x={1936} y={level.y - 9} textAnchor="end" style={vars(index * 3 + 10)}>
+            {level.text}
+          </text>
+        </g>
+      ))}
+      {ELEV_AXES.map((x, index) => (
+        <g key={x}>
+          <path className="bp-d bp-axis" d={`M${x} 96 V968`} pathLength={1} style={vars(index * 3 + 4)} />
+          <circle className="bp-d bp-bubble" cx={x} cy={62} r={30} pathLength={1} style={vars(index * 3 + 6)} />
+          <text className="bp-t bp-t--bubble" x={x} y={73} textAnchor="middle" style={vars(index * 3 + 8)}>
+            {String.fromCharCode(65 + index)}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Build sequence (delivery process)                                   */
+/* One axonometric project drawn in six layers; each layer belongs to  */
+/* a delivery stage and is revealed by `data-stage` on a parent.       */
+/* ------------------------------------------------------------------ */
+
+type SeqItem = {
+  d: string;
+  stage: 1 | 2 | 3 | 4 | 5 | 6;
+  kind: "grid" | "site" | "axis" | "design" | "dim" | "tick" | "hatch" | "frame" | "slab" | "crane" | "skin" | "seal";
+  order: number;
+};
+
+const STOREY = 1.2;
+const FLOORS = [0, 1, 2, 3, 4].map((n) => n * STOREY);
+const ROOF = FLOORS[4] as number;
+const COLUMNS: readonly (readonly [number, number])[] = [
+  [0, 0], [2, 0], [4, 0], [6, 0], [6, 2], [6, 4], [4, 4], [2, 4], [0, 4], [0, 2]
+];
+
+function buildSequence() {
+  const p = projector(46, 318, 372);
+  const items: SeqItem[] = [];
+  const bubbles: { x: number; y: number; text: string; back?: boolean }[] = [];
+  const stations: Pt[] = [];
+  const checks: Pt[] = [];
+  const faces: { d: string; side: "front" | "flank" | "roof" }[] = [];
   const box = (x0: number, x1: number, y0: number, y1: number, z: number): Pt[] => [
     p([x0, y0, z]),
     p([x1, y0, z]),
     p([x1, y1, z]),
     p([x0, y1, z])
   ];
+  const push = (stage: SeqItem["stage"], kind: SeqItem["kind"], path: string, order: number) =>
+    items.push({ d: path, stage, kind, order });
 
-  // Ground survey grid.
-  for (let x = -1; x <= 7; x += 1) strokes.push({ d: d([p([x, -1.6, 0]), p([x, 5.6, 0])]), kind: "faint" });
-  for (let y = -1; y <= 5; y += 1) strokes.push({ d: d([p([-1.6, y, 0]), p([7.6, y, 0])]), kind: "faint" });
-
-  // Structural axes with bubbles (A–D along x, 1–3 along y).
+  // 01 — Survey: ground grid, plot boundary, stations and structural axes.
+  let order = 0;
+  for (let x = -1; x <= 7; x += 1) push(1, "grid", d([p([x, -1.4, 0]), p([x, 5.4, 0])]), order++);
+  for (let y = -1; y <= 5; y += 1) push(1, "grid", d([p([-1.4, y, 0]), p([7.4, y, 0])]), order++);
+  push(1, "site", d(box(-0.7, 6.7, -0.7, 4.7, 0), true), order++);
+  for (const [x, y] of [[-0.7, -0.7], [6.7, -0.7], [6.7, 4.7], [-0.7, 4.7]] as const) {
+    const point = p([x, y, 0]);
+    stations.push(point);
+    push(1, "tick", `M${point[0] - 11} ${point[1]} h22 M${point[0]} ${point[1] - 11} v22`, order++);
+  }
   ["A", "B", "C", "D"].forEach((name, index) => {
     const x = index * 2;
-    const [bx, by] = p([x, -2.3, 0]);
-    strokes.push({ d: d([p([x, -1.95, 0]), p([x, 0, 0])]), kind: "dim" });
-    nodes.push({ x: bx, y: by, r: 10, kind: "bubble" });
-    labels.push({ x: bx, y: by + 3.5, text: name, anchor: "middle" });
+    const [bx, by] = p([x, -2.25, 0]);
+    push(1, "axis", d([p([x, -1.85, 0]), p([x, 4.4, 0])]), order++);
+    bubbles.push({ x: bx, y: by, text: name, back: true });
   });
   ["1", "2", "3"].forEach((name, index) => {
     const y = index * 2;
-    const [bx, by] = p([8.3, y, 0]);
-    strokes.push({ d: d([p([6, y, 0]), p([7.95, y, 0])]), kind: "dim" });
-    nodes.push({ x: bx, y: by, r: 10, kind: "bubble" });
-    labels.push({ x: bx, y: by + 3.5, text: name, anchor: "middle" });
+    const [bx, by] = p([8.15, y, 0]);
+    push(1, "axis", d([p([-0.4, y, 0]), p([7.75, y, 0])]), order++);
+    bubbles.push({ x: bx, y: by, text: name });
   });
 
-  // Floor slabs, ground slab heavier.
-  LEVELS.forEach((z, index) => strokes.push({ d: d(box(0, 6, 0, 4, z), true), kind: index === 0 ? "strong" : "line" }));
-
-  // Perimeter columns.
-  for (const [x, y] of [[0, 0], [2, 0], [4, 0], [6, 0], [6, 2], [6, 4], [4, 4], [2, 4], [0, 4], [0, 2]] as const) {
-    strokes.push({ d: d([p([x, y, 0]), p([x, y, LEVELS[4] as number])]), kind: x === 0 && y === 0 ? "hidden" : "line" });
-  }
-
-  // Core (hidden lines).
-  for (const z of [0, 6]) strokes.push({ d: d(box(2.4, 3.6, 1.3, 2.7, z), true), kind: "hidden" });
+  // 02 — Design: the intended volume as thin drafting linework.
+  order = 0;
+  FLOORS.forEach((z) => push(2, "design", d(box(0, 6, 0, 4, z), true), order++));
+  COLUMNS.forEach(([x, y]) => push(2, "design", d([p([x, y, 0]), p([x, y, ROOF])]), order++));
+  push(2, "design", d(box(2.4, 3.6, 1.3, 2.7, ROOF + 0.7), true), order++);
   for (const [x, y] of [[2.4, 1.3], [3.6, 1.3], [3.6, 2.7], [2.4, 2.7]] as const) {
-    strokes.push({ d: d([p([x, y, 0]), p([x, y, 6])]), kind: "hidden" });
+    push(2, "design", d([p([x, y, ROOF]), p([x, y, ROOF + 0.7])]), order++);
   }
 
-  // Facade mullions on the two visible faces.
+  // 03 — Bill of quantities: measured edges, level marks and the area take-off hatch.
+  order = 0;
+  const dimY = 5.35;
+  push(3, "dim", d([p([0, 4.2, 0]), p([0, dimY + 0.3, 0])]), order++);
+  push(3, "dim", d([p([6, 4.2, 0]), p([6, dimY + 0.3, 0])]), order++);
+  push(3, "dim", d([p([0, dimY, 0]), p([6, dimY, 0])]), order++);
+  for (const x of [0, 2, 4, 6]) push(3, "tick", d([p([x - 0.14, dimY - 0.14, 0]), p([x + 0.14, dimY + 0.14, 0])]), order++);
+  const dimX = 7.25;
+  push(3, "dim", d([p([6.2, 0, 0]), p([dimX + 0.3, 0, 0])]), order++);
+  push(3, "dim", d([p([6.2, 4, 0]), p([dimX + 0.3, 4, 0])]), order++);
+  push(3, "dim", d([p([dimX, 0, 0]), p([dimX, 4, 0])]), order++);
+  for (const y of [0, 2, 4]) push(3, "tick", d([p([dimX - 0.14, y + 0.14, 0]), p([dimX + 0.14, y - 0.14, 0])]), order++);
+  const hx = 7.25;
+  const hy = -0.75;
+  push(3, "dim", d([p([hx, hy, 0]), p([hx, hy, ROOF])]), order++);
+  FLOORS.forEach((z) => push(3, "tick", d([p([hx - 0.2, hy, z]), p([hx + 0.2, hy, z])]), order++));
+  for (let k = 1; k < 10; k += 1) {
+    const t = k;
+    const a: P3 = t <= 4 ? [0, t, 0] : [t - 4, 4, 0];
+    const b: P3 = t <= 6 ? [t, 0, 0] : [6, t - 6, 0];
+    push(3, "hatch", d([p(a), p(b)]), order++);
+  }
+
+  // 04 — Execution: frame and slabs rise storey by storey beside the tower crane.
+  order = 0;
+  push(4, "slab", d(box(0, 6, 0, 4, 0), true), order++);
   for (let level = 0; level < 4; level += 1) {
-    const z0 = level * SLAB_H;
-    const z1 = z0 + SLAB_H;
-    for (const x of [1, 3, 5]) strokes.push({ d: d([p([x, 4, z0]), p([x, 4, z1])]), kind: "faint" });
-    for (const y of [1, 3]) strokes.push({ d: d([p([6, y, z0]), p([6, y, z1])]), kind: "faint" });
+    const z0 = FLOORS[level] as number;
+    const z1 = FLOORS[level + 1] as number;
+    COLUMNS.forEach(([x, y]) => push(4, "frame", d([p([x, y, z0]), p([x, y, z1])]), order));
+    order += 4;
+    push(4, "slab", d(box(0, 6, 0, 4, z1), true), order);
+    order += 4;
   }
-
-  // Cantilevered crown volume (accent).
-  const top = LEVELS[4] as number;
-  strokes.push({ d: d(box(3, 7.4, -0.8, 2.6, top), true), kind: "accent" });
-  strokes.push({ d: d(box(3, 7.4, -0.8, 2.6, top + SLAB_H), true), kind: "accent" });
-  for (const [x, y] of [[3, -0.8], [7.4, -0.8], [7.4, 2.6], [3, 2.6]] as const) {
-    strokes.push({ d: d([p([x, y, top]), p([x, y, top + SLAB_H])]), kind: "accent" });
+  push(4, "frame", d(box(2.4, 3.6, 1.3, 2.7, ROOF + 0.7), true), order++);
+  for (const [x, y] of [[3.6, 1.3], [3.6, 2.7], [2.4, 2.7]] as const) {
+    push(4, "frame", d([p([x, y, ROOF]), p([x, y, ROOF + 0.7])]), order);
   }
+  faces.push({ d: d([p([0, 4, 0]), p([6, 4, 0]), p([6, 4, ROOF]), p([0, 4, ROOF])], true), side: "front" });
+  faces.push({ d: d([p([6, 0, 0]), p([6, 4, 0]), p([6, 4, ROOF]), p([6, 0, ROOF])], true), side: "flank" });
+  faces.push({ d: d(box(0, 6, 0, 4, ROOF), true), side: "roof" });
 
-  // Plan dimension along x (front-left edge).
-  const dimY = 5.3;
-  strokes.push({ d: d([p([0, 4.15, 0]), p([0, dimY + 0.3, 0])]), kind: "dim" });
-  strokes.push({ d: d([p([6, 4.15, 0]), p([6, dimY + 0.3, 0])]), kind: "dim" });
-  strokes.push({ d: d([p([0, dimY, 0]), p([6, dimY, 0])]), kind: "dim" });
-  for (const x of [0, 2, 4, 6]) strokes.push({ d: d([p([x - 0.12, dimY - 0.12, 0]), p([x + 0.12, dimY + 0.12, 0])]), kind: "accent" });
-  const [lx, ly] = p([3, dimY + 0.55, 0]);
-  labels.push({ x: lx, y: ly, text: "24.00", rotate: -30, anchor: "middle" });
-
-  // Height dimension off the right-hand corner (axis D / 1), with level marks.
-  const hx = 7.4;
-  const hy = -0.7;
-  strokes.push({ d: d([p([hx, hy, 0]), p([hx, hy, top])]), kind: "dim" });
-  LEVELS.forEach((z) => {
-    strokes.push({ d: d([p([6.15, -0.05, z]), p([hx + 0.25, hy - 0.05, z])]), kind: "dim" });
-    const [tx, ty] = p([hx + 0.3, hy, z]);
-    labels.push({ x: tx + 8, y: ty + 4, text: `+${(z * 3).toFixed(2)}`, kind: "muted" });
-  });
-  const [ex, ey] = p([hx + 0.3, hy, top + SLAB_H * 1.6]);
-  labels.push({ x: ex + 8, y: ey, text: "EL +14.40", kind: "accent" });
-
-  // Section cut A–A through axis x = 3.
-  strokes.push({ d: d([p([3, -1.9, 0]), p([3, 5.9, 0])]), kind: "accent" });
-  const [sa, sb] = [p([3, -2.35, 0]), p([3, 6.35, 0])];
-  nodes.push({ x: sa[0], y: sa[1], r: 5, kind: "accent" }, { x: sb[0], y: sb[1], r: 5, kind: "accent" });
-
-  // Survey nodes on slab corners.
-  for (const pt of [p([0, 0, top]), p([6, 0, top]), p([6, 4, top]), p([0, 4, top]), p([6, 4, 0]), p([0, 4, 0])]) {
-    nodes.push({ x: pt[0], y: pt[1], r: 3.2, kind: "accent" });
+  const mast: P3 = [-0.55, 5.35, 0];
+  const jibZ = 7.05;
+  const [mx, my] = p(mast);
+  const [, topY] = p([mast[0], mast[1], jibZ]);
+  push(4, "crane", `M${mx - 5} ${my} V${topY} M${mx + 5} ${my} V${topY}`, 0);
+  let brace = "";
+  for (let y = my, flip = 0; y - 22 > topY; y -= 22, flip += 1) {
+    brace += `M${mx + (flip % 2 ? 5 : -5)} ${y} L${mx + (flip % 2 ? -5 : 5)} ${round(y - 22)} `;
   }
+  push(4, "crane", brace.trim(), 2);
+  const jibEnd = p([5.1, mast[1], jibZ]);
+  const counter = p([-1.9, mast[1], jibZ]);
+  const apex: Pt = [mx, round(topY - 30)];
+  push(4, "crane", d([counter, jibEnd]), 4);
+  push(4, "crane", d([counter, apex, jibEnd]), 6);
+  const hookTop = p([3.2, mast[1], jibZ]);
+  const hookEnd = p([3.2, mast[1], ROOF + 1.1]);
+  push(4, "crane", d([hookTop, hookEnd]), 8);
+  push(4, "crane", `M${hookEnd[0] - 7} ${hookEnd[1]} h14 v8 h-14 Z`, 9);
 
-  const scan = d(box(-0.25, 6.25, -0.25, 4.25, 0), true);
-  return { strokes, labels, nodes, scan, scanTravel: round(top * 42) };
+  // 05 — Preliminary handover: envelope closed, every level inspected.
+  order = 0;
+  for (let level = 0; level < 4; level += 1) {
+    const z0 = FLOORS[level] as number;
+    const z1 = FLOORS[level + 1] as number;
+    for (const x of [1, 3, 5]) push(5, "skin", d([p([x, 4, z0]), p([x, 4, z1])]), order++);
+    for (const y of [1, 3]) push(5, "skin", d([p([6, y, z0]), p([6, y, z1])]), order++);
+    const mid = z0 + STOREY * 0.5;
+    push(5, "skin", d([p([0, 4, mid]), p([6, 4, mid]), p([6, 0, mid])]), order++);
+    checks.push(p([6, 4, z1]));
+  }
+  checks.push(p([0, 4, ROOF]), p([6, 0, ROOF]));
+
+  // 06 — Final handover: sealed perimeter and the as-built document set.
+  push(6, "seal", d(box(-0.35, 6.35, -0.35, 4.35, 0), true), 0);
+  push(6, "seal", d(box(0, 6, 0, 4, ROOF), true), 3);
+  const anchor = p([6, 0, ROOF]);
+  const sheet: Pt = [round(anchor[0] + 92), round(anchor[1] - 140)];
+  push(6, "seal", `M${anchor[0]} ${anchor[1]} L${sheet[0] - 7} ${sheet[1] + 36}`, 6);
+
+  return { items, bubbles, stations, checks, faces, sheet };
 }
 
-const AXO = buildAxonometric();
+const SEQ = buildSequence();
 
-type ArtProps = { className?: string; live?: boolean };
-
-export function BlueprintAxonometric({ className = "", live = false }: ArtProps) {
+export function BlueprintBuildSequence({ className = "" }: ArtProps) {
+  const [sx, sy] = SEQ.sheet;
   return (
     <svg
-      className={`bp-art bp-art--axo${live ? " is-live" : ""} ${className}`.trim()}
-      viewBox="0 0 720 620"
+      className={`bp-seq ${className}`.trim()}
+      viewBox="0 0 760 700"
       fill="none"
       aria-hidden="true"
       focusable="false"
-      style={{ "--scan-travel": `${-AXO.scanTravel}px` } as CSSProperties}
     >
-      <path className="bp-scan" d={AXO.scan} />
-      {AXO.strokes.map((stroke, index) => (
-        <path key={index} className={`bp-d bp-${stroke.kind}`} d={stroke.d} pathLength={1} style={vars(index)} />
+      {SEQ.faces.map((face) => (
+        <path key={face.side} className={`bp-seq__face bp-seq__face--${face.side}`} d={face.d} />
       ))}
-      {AXO.nodes.map((node, index) => (
-        <circle
-          key={`n${index}`}
-          className={node.kind === "bubble" ? "bp-d bp-bubble" : "bp-node"}
-          cx={node.x}
-          cy={node.y}
-          r={node.r}
+      {SEQ.items.map((item, index) => (
+        <path
+          key={index}
+          className={`bp-seq__s bp-seq__s--${item.stage} bp-seq__${item.kind}`}
+          d={item.d}
           pathLength={1}
-          style={vars(index + 20)}
+          style={vars(item.order)}
         />
       ))}
-      {AXO.labels.map((label, index) => (
-        <text
-          key={`t${index}`}
-          className={`bp-t${label.kind ? ` bp-t--${label.kind}` : ""}`}
-          x={label.x}
-          y={label.y}
-          textAnchor={label.anchor ?? "start"}
-          transform={label.rotate ? `rotate(${label.rotate} ${label.x} ${label.y})` : undefined}
-          style={vars(index + 30)}
+      {SEQ.bubbles.map((bubble, index) => (
+        <g
+          key={bubble.text}
+          className={`bp-seq__s bp-seq__s--1 bp-seq__bubble${bubble.back ? " bp-seq__bubble--back" : ""}`}
+          style={vars(22 + index)}
         >
-          {label.text}
-        </text>
+          <circle cx={bubble.x} cy={bubble.y} r={11} />
+          <text x={bubble.x} y={bubble.y + 4} textAnchor="middle">{bubble.text}</text>
+        </g>
       ))}
-      <ScaleBar x={40} y={586} />
-      <NorthArrow x={668} y={60} />
+      {SEQ.stations.map(([x, y], index) => (
+        <circle key={`st${index}`} className="bp-seq__s bp-seq__s--1 bp-seq__station" cx={x} cy={y} r={5} style={vars(18 + index)} />
+      ))}
+      {SEQ.checks.map(([x, y], index) => (
+        <circle key={`ck${index}`} className="bp-seq__s bp-seq__s--5 bp-seq__check" cx={x} cy={y} r={5.5} style={vars(14 + index * 2)} />
+      ))}
+      <g className="bp-seq__s bp-seq__s--6 bp-seq__sheet" style={vars(8)} transform={`translate(${sx} ${sy})`}>
+        <path className="bp-seq__sheet-body" d="M0 0 h34 l12 12 v46 h-46 Z" />
+        <path className="bp-seq__sheet-fold" d="M34 0 v12 h12" />
+        <path className="bp-seq__sheet-lines" d="M9 22 h20 M9 31 h28 M9 40 h14" />
+        <path className="bp-seq__sheet-check" d="M24 44 l6 6 l11 -13" />
+      </g>
     </svg>
   );
 }
 
-function ScaleBar({ x, y }: { x: number; y: number }) {
-  return (
-    <g className="bp-scale" transform={`translate(${x} ${y})`}>
-      {[0, 1, 2, 3].map((index) => (
-        <rect key={index} x={index * 26} y={0} width={26} height={5} className={index % 2 === 0 ? "bp-scale__fill" : "bp-scale__void"} />
-      ))}
-      {["0", "2", "4", "6", "8m"].map((value, index) => (
-        <text key={value} className="bp-t bp-t--muted" x={index * 26} y={18} textAnchor="middle" style={vars(60)}>
-          {value}
-        </text>
-      ))}
-    </g>
-  );
-}
-
-function NorthArrow({ x, y }: { x: number; y: number }) {
-  return (
-    <g className="bp-north" transform={`translate(${x} ${y})`}>
-      <circle className="bp-d bp-dim" r={18} pathLength={1} style={vars(40)} />
-      <path className="bp-north__arrow" d="M0 -14 L6 8 L0 3 L-6 8 Z" />
-      <text className="bp-t bp-t--accent" x={0} y={-24} textAnchor="middle" style={vars(62)}>N</text>
-    </g>
-  );
-}
-
 /* ------------------------------------------------------------------ */
-/* Floor plan (FAQ / contact)                                          */
+/* Floor plan (drawing-to-site bridge, FAQ)                            */
 /* ------------------------------------------------------------------ */
 
 const PLAN_WALLS = [
@@ -230,16 +404,6 @@ const PLAN_DIMS = [
   "M496 190 H508",
   "M496 360 H508"
 ];
-const PLAN_LABELS: Label[] = [
-  { x: 145, y: 12, text: "10.50", anchor: "middle" },
-  { x: 365, y: 12, text: "11.50", anchor: "middle" },
-  { x: 516, y: 118, text: "7.50", anchor: "start" },
-  { x: 516, y: 278, text: "8.50", anchor: "start" },
-  { x: 150, y: 124, text: "R-01  32.4 m²", anchor: "middle", kind: "muted" },
-  { x: 360, y: 120, text: "R-02  28.8 m²", anchor: "middle", kind: "muted" },
-  { x: 260, y: 290, text: "R-03  21.6 m²", anchor: "middle", kind: "muted" },
-  { x: 410, y: 300, text: "R-04", anchor: "middle", kind: "muted" }
-];
 
 export function BlueprintPlan({ className = "", live = false }: ArtProps) {
   let i = 0;
@@ -255,60 +419,6 @@ export function BlueprintPlan({ className = "", live = false }: ArtProps) {
       {PLAN_WINDOWS.map((win) => <path key={win} className="bp-d bp-window" d={win} pathLength={1} style={vars(i++)} />)}
       {PLAN_DOORS.map((door) => <path key={door} className="bp-d bp-accent" d={door} pathLength={1} style={vars(i++)} />)}
       {PLAN_DIMS.map((dim) => <path key={dim} className="bp-d bp-dim" d={dim} pathLength={1} style={vars(i++)} />)}
-      <path className="bp-d bp-accent bp-cut" d="M20 210 H540" pathLength={1} style={vars(i++)} />
-      <circle className="bp-node" cx={20} cy={210} r={5} />
-      <circle className="bp-node" cx={540} cy={210} r={5} />
-      {PLAN_LABELS.map((label, index) => (
-        <text
-          key={label.text}
-          className={`bp-t${label.kind ? ` bp-t--${label.kind}` : ""}`}
-          x={label.x}
-          y={label.y}
-          textAnchor={label.anchor ?? "start"}
-          style={vars(index + 24)}
-        >
-          {label.text}
-        </text>
-      ))}
-    </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Building section (process band background)                          */
-/* ------------------------------------------------------------------ */
-
-function buildSection() {
-  const strokes: Stroke[] = [];
-  const ground = 330;
-  strokes.push({ d: `M0 ${ground} H1200`, kind: "strong" });
-  for (let x = 0; x < 1200; x += 18) strokes.push({ d: `M${x} ${ground + 4} L${x - 12} ${ground + 16}`, kind: "faint" });
-  const bays = [140, 300, 460, 620, 780, 940, 1060];
-  const floors = [ground, 270, 210, 150, 90];
-  floors.forEach((y, index) => strokes.push({ d: `M${bays[0]} ${y} H${bays[bays.length - 1]}`, kind: index === 0 ? "strong" : "line" }));
-  bays.forEach((x) => strokes.push({ d: `M${x} ${ground} V${floors[floors.length - 1]}`, kind: "line" }));
-  bays.forEach((x) => strokes.push({ d: `M${x} ${ground} V${ground + 44} M${x - 22} ${ground + 44} H${x + 22}`, kind: "hidden" }));
-  strokes.push({ d: "M460 90 L620 40 L780 90", kind: "accent" });
-  bays.forEach((x) => strokes.push({ d: `M${x} 70 V20`, kind: "dim" }));
-  strokes.push({ d: "M1110 90 V330 M1102 90 H1118 M1102 150 H1118 M1102 210 H1118 M1102 270 H1118 M1102 330 H1118", kind: "dim" });
-  return strokes;
-}
-
-const SECTION = buildSection();
-
-export function BlueprintSection({ className = "", live = false }: ArtProps) {
-  return (
-    <svg
-      className={`bp-art bp-art--section${live ? " is-live" : ""} ${className}`.trim()}
-      viewBox="0 0 1200 400"
-      preserveAspectRatio="xMidYMid slice"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {SECTION.map((stroke, index) => (
-        <path key={index} className={`bp-d bp-${stroke.kind}`} d={stroke.d} pathLength={1} style={vars(Math.min(index, 60))} />
-      ))}
     </svg>
   );
 }

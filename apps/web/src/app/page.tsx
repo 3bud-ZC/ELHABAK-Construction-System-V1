@@ -7,6 +7,7 @@ import {
   Award,
   BarChart3,
   Building2,
+  ClipboardCheck,
   Compass,
   Eye,
   FileText,
@@ -17,7 +18,6 @@ import {
   MessageSquare,
   PaintBucket,
   Phone,
-  Sofa,
   Target
 } from "lucide-react";
 import { Button } from "@elhabak/ui";
@@ -28,7 +28,8 @@ import { PublicHeader } from "./public-header";
 import { PublicHero } from "./public-hero";
 import { PublicMotion } from "./public-motion";
 import { FaqAccordion } from "./faq-accordion";
-import { BlueprintPlan, BlueprintSection } from "./blueprint-art";
+import { BlueprintPlan } from "./blueprint-art";
+import { ProcessRoute } from "./process-route";
 import { MobileContactBar, publicNavItems, SiteFooter } from "./seo-page";
 
 type PageProps = {
@@ -206,32 +207,21 @@ export default async function HomePage({ searchParams }: PageProps) {
     ]
   };
 
+  // One building, three readings of it: the drawing, the half-built frame, the handover.
   const heroStates = [
-    {
-      key: "execution" as const,
-      image: "/marketing/hero-engineers-site.webp",
-      label: locale === "ar" ? "التنفيذ" : "EXECUTION"
-    },
-    {
-      key: "design" as const,
-      image: "/marketing/hero-design.webp",
-      label: locale === "ar" ? "التصميم" : "DESIGN"
-    },
-    {
-      key: "delivery" as const,
-      image: "/marketing/hero-delivery.webp",
-      label: locale === "ar" ? "التسليم" : "DELIVERY"
-    }
+    { key: "design" as const, label: locale === "ar" ? "التصميم" : "Design" },
+    { key: "execution" as const, label: locale === "ar" ? "التنفيذ" : "Execution" },
+    { key: "delivery" as const, label: locale === "ar" ? "التسليم" : "Delivery" }
   ];
 
   // 5 Canonical Services configuration
-  const serviceIcons = [Compass, HardHat, PaintBucket, Building2, Sofa];
+  const serviceIcons = [Compass, ClipboardCheck, HardHat, Building2, PaintBucket];
   const serviceImages = [
-    "/marketing/services-feature.webp",
-    "/marketing/about-site.webp",
-    "/marketing/service-finishing.webp",
+    "/marketing/service-design.webp",
+    "/marketing/hero-engineers-site.webp",
+    "/marketing/hero-execution.webp",
     "/marketing/service-contracting.webp",
-    "/marketing/service-furnishing.webp"
+    "/marketing/service-finishing.webp"
   ];
   const serviceHrefs = [
     "/architectural-design",
@@ -240,6 +230,37 @@ export default async function HomePage({ searchParams }: PageProps) {
     "/services",
     "/services"
   ];
+  const serviceDetails = locale === "ar" ? "تفاصيل الخدمة" : "Service details";
+
+  // What the delivery drawing gains at each of the six stages.
+  const processLayers =
+    locale === "ar"
+      ? [
+          "الرفع المساحي ومحاور الموقع",
+          "خطوط التصميم المعماري والإنشائي",
+          "الأبعاد وحصر الكميات",
+          "الهيكل الإنشائي دوراً بدور",
+          "إغلاق الواجهات ونقاط الفحص",
+          "اعتماد نهائي ومستندات المشروع"
+        ]
+      : [
+          "Site survey and setting-out axes",
+          "Architectural and structural linework",
+          "Dimensions and quantity take-off",
+          "Structure rising floor by floor",
+          "Envelope closed, inspection points",
+          "Final approval and project documents"
+        ];
+
+  // How project information travels: from the site to the client's reports.
+  const platformPipeline = [
+    { key: "site", label: locale === "ar" ? "الموقع" : "Site" },
+    { key: "documentation", label: locale === "ar" ? "التوثيق" : "Documentation" },
+    { key: "approval", label: locale === "ar" ? "الاعتماد" : "Approval" },
+    { key: "platform", label: locale === "ar" ? "المنصة" : "Platform" },
+    { key: "reports", label: locale === "ar" ? "التقارير" : "Reports" }
+  ];
+  const platformChannelNodes = ["site", "approval", "reports", "platform"];
 
   const headerNavLabels = {
     about: t.nav.about,
@@ -281,33 +302,20 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       {/* ============ 01 // HERO EXPERIENCE ============ */}
       <PublicHero
+        image="/marketing/hero-delivery.webp"
         states={heroStates}
-        tag={t.home.heroTag}
-        sideLabel={t.home.heroRailText}
-        signals={t.home.capabilities}
-        railEnd={
-          locale === "ar"
-            ? "قرار هندسي واضح من أول مقابلة حتى التسليم"
-            : "Clear engineering decisions from first meeting to handover"
-        }
-        scopeIndex={locale === "ar" ? "نطاق متكامل" : "INTEGRATED SCOPE"}
-        scopeTitle={locale === "ar" ? "تصميم وتنفيذ متصل" : "Connected Design & Execution"}
-        scopeText={
-          locale === "ar"
-            ? "من المخطط الأول حتى تسليم المفتاح"
-            : "From initial concept to turnkey delivery"
-        }
+        capabilities={t.home.capabilities}
+        stepperLabel={locale === "ar" ? "من المخطط إلى المبنى" : "From drawing to building"}
         alt={
           locale === "ar"
-            ? "مهندسون في موقع البناء يراجعون المخططات الهندسية وقت الغروب"
-            : "Engineers reviewing architectural blueprints on a construction site at sunset"
+            ? "واجهة مبنى سكني مكتمل تظهر تدريجياً فوق مخططه الهندسي"
+            : "A completed residential building resolving out of its engineering elevation drawing"
         }
       >
         <div className="hero-eyebrow">
-          <span className="hero-eyebrow__index" aria-hidden="true">
-            {locale === "ar" ? "الهندسة والمقاولات" : "ENGINEERING & CONSTRUCTION"}
-          </span>
-          <span className="hero-eyebrow__brand">ELHABAK Construction</span>
+          <span className="hero-eyebrow__mark" aria-hidden="true" />
+          <span className="hero-eyebrow__text">{t.home.heroTag}</span>
+          <span className="hero-eyebrow__brand" dir="ltr">ELHABAK Construction</span>
         </div>
         <h1 aria-label={t.home.heroTitle}>
           {locale === "ar" ? (
@@ -318,7 +326,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           ) : (
             <>
               <span className="hero-title__brand">ELHABAK</span>{" "}
-              <span className="hero-title__line hero-title__line--en">CONSTRUCTION</span>
+              <span className="hero-title__line hero-title__line--en">Construction</span>
             </>
           )}
         </h1>
@@ -337,13 +345,13 @@ export default async function HomePage({ searchParams }: PageProps) {
             {t.home.secondaryCta} {arrow}
           </Button>
         </div>
-        <div className="hero-system-note" data-reveal="up">
+        <a className="hero-system-note" href={`${langHref(locale)}#platform`}>
           <span className="hero-system-note__signal" aria-hidden="true"><Activity size={16} /></span>
-          <div>
-            <strong>{locale === "ar" ? "منصة تشغيل المشروع" : "PROJECT OPERATIONS PLATFORM"}</strong>
-            <p>{locale === "ar" ? "متابعة التصميم والتنفيذ والمالية من مساحة عمل واحدة." : "Design, execution, finance, and client visibility in one workspace."}</p>
-          </div>
-        </div>
+          <span className="hero-system-note__text">
+            <strong>{locale === "ar" ? "منصة تشغيل المشروع" : "Project operations platform"}</strong>
+            <span>{locale === "ar" ? "متابعة التصميم والتنفيذ والمالية من مساحة عمل واحدة." : "Design, execution, finance, and client visibility in one workspace."}</span>
+          </span>
+        </a>
       </PublicHero>
 
       {/* ============ 02 // ABOUT & ENGINEERING POSITION ============ */}
@@ -416,23 +424,28 @@ export default async function HomePage({ searchParams }: PageProps) {
                 : "Each stage begins with a clear drawing, then becomes documented execution and traceable project-control decisions."}
             </p>
           </div>
-          <div className="blueprint-reality__visual" data-reveal="mask">
-            <div className="blueprint-reality__image">
-              <Image
-                src="/marketing/about-site.webp"
-                alt={locale === "ar" ? "موقع تنفيذ تحت المتابعة الهندسية" : "Construction site under engineering supervision"}
-                fill
-                sizes="(max-width: 980px) 100vw, 46vw"
-                className="blueprint-reality__img"
-              />
+          <figure className="blueprint-reality__visual" data-reveal="mask">
+            <div className="blueprint-reality__frame">
+              <div className="blueprint-reality__image">
+                <Image
+                  src="/marketing/about-site.webp"
+                  alt={locale === "ar" ? "موقع تنفيذ تحت المتابعة الهندسية" : "Construction site under engineering supervision"}
+                  fill
+                  sizes="(max-width: 980px) 100vw, 46vw"
+                  className="blueprint-reality__img"
+                />
+              </div>
+              <div className="blueprint-reality__drawing" aria-hidden="true">
+                <BlueprintPlan className="blueprint-reality__plan" />
+              </div>
+              <span className="blueprint-reality__cut" aria-hidden="true" />
             </div>
-            <div className="blueprint-reality__drawing" aria-hidden="true">
-              <BlueprintPlan live className="blueprint-reality__plan" />
-              <span className="blueprint-reality__label">
-                {locale === "ar" ? "مخطط + موقع + متابعة" : "DRAWING + SITE + CONTROL"}
-              </span>
-            </div>
-          </div>
+            <figcaption className="blueprint-reality__caption">
+              <span>{locale === "ar" ? "المخطط المعتمد" : "Approved drawing"}</span>
+              <i aria-hidden="true" />
+              <span>{locale === "ar" ? "التنفيذ في الموقع" : "Execution on site"}</span>
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -451,7 +464,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               <article className="service-card service-card--featured" data-reveal="up">
                 <div className="service-card__thumb">
                   <Image
-                    src={serviceImages[0] ?? "/marketing/services-feature.webp"}
+                    src={serviceImages[0] ?? "/marketing/service-design.webp"}
                     alt={t.services[0][0]}
                     fill
                     sizes="(max-width: 980px) 100vw, 50vw"
@@ -459,7 +472,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                   />
                   <div className="service-card__badge-tag">
                     <Compass size={18} />
-                    <span>{locale === "ar" ? "خدمة رئيسية" : "FEATURED"}</span>
+                    <span>{t.home.servicesFeaturedBadge}</span>
                   </div>
                 </div>
                 <div className="service-card__body">
@@ -469,9 +482,9 @@ export default async function HomePage({ searchParams }: PageProps) {
                   <a
                     href={langHref(locale, serviceHrefs[0] ?? "/services")}
                     className="service-card__action"
-                    aria-label={`${t.services[0][0]} - ${locale === "ar" ? "تفاصيل الخدمة" : "service details"}`}
+                    aria-label={`${t.services[0][0]} - ${serviceDetails}`}
                   >
-                    <span>{locale === "ar" ? "تفاصيل الخدمة" : "Service details"}</span>
+                    <span>{serviceDetails}</span>
                     {arrow}
                   </a>
                 </div>
@@ -506,9 +519,9 @@ export default async function HomePage({ searchParams }: PageProps) {
                       <a
                         href={langHref(locale, serviceHrefs[index] ?? "/services")}
                         className="service-card__link"
-                        aria-label={`${title} - ${t.home.primaryCta}`}
+                        aria-label={`${title} - ${serviceDetails}`}
                       >
-                        <span>{locale === "ar" ? "طلب استشارة" : "Consult"}</span>
+                        <span>{serviceDetails}</span>
                         {arrow}
                       </a>
                     </div>
@@ -522,49 +535,21 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       {/* ============ 04 // 6-STAGE ENGINEERING DELIVERY PROCESS ============ */}
       <section id="process" className="process-section" aria-labelledby="process-title">
-        <div className="process-bg-media" aria-hidden="true" data-reveal="fade">
-          <BlueprintSection className="process-bg-media__art" />
-          <div className="process-bg-overlay" />
-          <span className="process-watermark">{t.home.processWatermark}</span>
-        </div>
-
-        <div className="container process-content-wrap">
-          <div className="process-head" data-reveal="up">
-            <span className="section-eyebrow-tag section-eyebrow-tag--light">
-              {t.home.processEyebrow}
-            </span>
-            <h2 id="process-title" className="process-head__title">{t.home.processTitle}</h2>
-            <p className="process-head__lead">{t.home.processLead}</p>
-          </div>
-
-          <div className="process-panel process-route" data-reveal="up">
-            <div className="process-route-map" aria-hidden="true">
-              <svg viewBox="0 0 1000 360" preserveAspectRatio="none">
-                <path className="process-route-map__base" d="M110 78 H890 V282 H110" pathLength="1" />
-                <path className="process-route-map__active" d="M110 78 H890 V282 H110" pathLength="1" />
-              </svg>
+        <div className="container">
+          <ProcessRoute
+            stages={t.process}
+            layers={processLayers}
+            stageWord={locale === "ar" ? "المرحلة" : "Stage"}
+            boardLabel={locale === "ar" ? "مشروع واحد عبر ست مراحل" : "One project across six stages"}
+          >
+            <div className="process-head" data-reveal="up">
+              <span className="section-eyebrow-tag section-eyebrow-tag--light">
+                {t.home.processEyebrow}
+              </span>
+              <h2 id="process-title" className="process-head__title">{t.home.processTitle}</h2>
+              <p className="process-head__lead">{t.home.processLead}</p>
             </div>
-            <ol className="process-grid" data-reveal-group>
-              {t.process.map(([title, body], index) => (
-                <li className="process-stage" key={title} data-reveal="stage">
-                  <div className="process-stage__connector" aria-hidden="true">
-                    <span className="process-stage__dot" />
-                    <span className="process-stage__line" />
-                  </div>
-                  <span className="process-stage__node">
-                    <bdi>{String(index + 1).padStart(2, "0")}</bdi>
-                  </span>
-                  <div className="process-stage__content">
-                    <span className="process-stage__phase" aria-hidden="true">
-                      {locale === "ar" ? "مرحلة" : "PHASE"} <bdi>{String(index + 1).padStart(2, "0")}</bdi>
-                    </span>
-                    <h3>{title}</h3>
-                    <p>{body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
+          </ProcessRoute>
         </div>
       </section>
 
@@ -577,22 +562,27 @@ export default async function HomePage({ searchParams }: PageProps) {
               <h2 id="platform-title" className="platform-title">{t.home.digitalTitle}</h2>
               <p className="platform-lead">{t.home.digitalLead}</p>
 
-              <div className="platform-features-list">
+              {/* One primary control layer, then the three supporting channels. */}
+              <ul className="platform-channels">
                 {t.home.digitalFeatures.map((feat, idx) => {
                   const IconComponent = [Activity, FileText, BarChart3, MessageSquare][idx] ?? Activity;
                   return (
-                    <div className="platform-feature-card" key={feat.title}>
-                      <div className="platform-feature-card__icon">
-                        <IconComponent size={20} />
-                      </div>
-                      <div className="platform-feature-card__text">
+                    <li
+                      className={`platform-channel${idx === 0 ? " platform-channel--primary" : ""}`}
+                      key={feat.title}
+                      data-node={platformChannelNodes[idx]}
+                    >
+                      <span className="platform-channel__icon" aria-hidden="true">
+                        <IconComponent size={idx === 0 ? 22 : 18} />
+                      </span>
+                      <div className="platform-channel__text">
                         <strong>{feat.title}</strong>
                         <p>{feat.desc}</p>
                       </div>
-                    </div>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
 
               <div className="platform-actions">
                 <Button
@@ -602,35 +592,21 @@ export default async function HomePage({ searchParams }: PageProps) {
                 >
                   {t.home.digitalCta} {arrow}
                 </Button>
+                <p className="platform-note">{t.home.digitalNote}</p>
               </div>
             </div>
 
             <div className="platform-showcase" data-reveal="mask">
-              <div className="platform-control-field" aria-hidden="true">
-                <svg viewBox="0 0 800 540" preserveAspectRatio="none">
-                  <path className="platform-control-field__path platform-control-field__path--one" d="M28 112 H178 V188 H392" pathLength="1" />
-                  <path className="platform-control-field__path platform-control-field__path--two" d="M772 90 H650 V250 H520" pathLength="1" />
-                  <path className="platform-control-field__path platform-control-field__path--three" d="M70 470 H250 V378 H442" pathLength="1" />
-                  <circle cx="28" cy="112" r="5" />
-                  <circle cx="772" cy="90" r="5" />
-                  <circle cx="70" cy="470" r="5" />
-                </svg>
-                <span className="platform-control-field__label platform-control-field__label--site">
-                  {locale === "ar" ? "مدخلات الموقع" : "FIELD INPUT"}
-                </span>
-                <span className="platform-control-field__label platform-control-field__label--control">
-                  {locale === "ar" ? "مركز التحكم" : "CONTROL CORE"}
-                </span>
-                <span className="platform-control-field__scanner" />
-              </div>
               <div className="platform-stage">
+                <div className="platform-stage__floor" aria-hidden="true" />
                 <div className="platform-device platform-device--desktop">
                   <div className="platform-device__frame">
                     <Image
                       src="/marketing/platform-desktop.webp"
-                      alt="ELHABAK Dashboard Desktop"
+                      alt={locale === "ar" ? "لوحة التحكم في منصة الحباك على سطح المكتب" : "ELHABAK platform dashboard on desktop"}
                       width={720}
                       height={450}
+                      sizes="(max-width: 980px) 100vw, 64vw"
                       className="platform-device__img"
                     />
                   </div>
@@ -639,28 +615,26 @@ export default async function HomePage({ searchParams }: PageProps) {
                   <div className="platform-device__phone-frame">
                     <Image
                       src="/marketing/platform-mobile.webp"
-                      alt="ELHABAK Project Tracking Mobile"
+                      alt={locale === "ar" ? "متابعة المشروع من الهاتف على منصة الحباك" : "ELHABAK project tracking on mobile"}
                       width={220}
-                      height={460}
+                      height={476}
+                      sizes="(max-width: 640px) 34vw, 200px"
                       className="platform-device__phone-img"
                     />
                   </div>
                 </div>
               </div>
-              <div className="platform-callout-rail" aria-hidden="true">
-                <span className="platform-callout-item" data-channel="01">
-                  <i className="platform-callout-item__datum" />
-                  <span className="platform-callout-item__text">{locale === "ar" ? "نشاط الموقع" : "SITE ACTIVITY"}</span>
-                </span>
-                <span className="platform-callout-item" data-channel="02">
-                  <i className="platform-callout-item__datum" />
-                  <span className="platform-callout-item__text">{locale === "ar" ? "اعتمادات" : "APPROVALS"}</span>
-                </span>
-                <span className="platform-callout-item" data-channel="03">
-                  <i className="platform-callout-item__datum" />
-                  <span className="platform-callout-item__text">{locale === "ar" ? "تقارير" : "REPORTS"}</span>
-                </span>
-              </div>
+              <ol
+                className="platform-pipeline"
+                aria-label={locale === "ar" ? "مسار معلومات المشروع" : "Project information flow"}
+              >
+                {platformPipeline.map((node) => (
+                  <li className="platform-pipeline__node" key={node.key} data-node={node.key}>
+                    <i className="platform-pipeline__dot" aria-hidden="true" />
+                    <span>{node.label}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
         </div>
@@ -678,8 +652,14 @@ export default async function HomePage({ searchParams }: PageProps) {
               <div className="faq-items-wrap">
                 <FaqAccordion items={t.faq} />
               </div>
+            </div>
 
+            <aside className="faq-visual" data-reveal="mask">
+              <div className="faq-technical-card faq-technical-card--plan" aria-hidden="true">
+                <BlueprintPlan className="faq-technical-plan" />
+              </div>
               <div className="faq-direct-action">
+                <p className="faq-direct-action__lead">{t.home.contactLead}</p>
                 <Button
                   href={whatsapp}
                   target="_blank"
@@ -692,18 +672,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                   {arrow}
                 </Button>
               </div>
-            </div>
-
-            <div className="faq-visual" data-reveal="mask">
-              <div className="faq-technical-card faq-technical-card--plan">
-                <BlueprintPlan className="faq-technical-plan" />
-                <div className="faq-technical-overlay">
-                  <span className="faq-technical-tag">
-                    {locale === "ar" ? "مخطط تشغيل هندسي متكامل" : "INTEGRATED ENGINEERING BLUEPRINT"}
-                  </span>
-                </div>
-              </div>
-            </div>
+            </aside>
           </div>
         </div>
       </section>
@@ -719,7 +688,6 @@ export default async function HomePage({ searchParams }: PageProps) {
             className="cta-banner-bg__img"
           />
           <div className="cta-banner-overlay" />
-          <BlueprintPlan className="cta-banner-plan" />
         </div>
 
         <div className="container cta-banner-inner" data-reveal="up">
