@@ -1676,6 +1676,8 @@
 
 /* Hero: architectural board first, material image second. */
 .hero {
+  --hero-photo-width: 56%;
+  --hero-blueprint-opacity: 0.96;
   min-height: min(760px, calc(100svh - 68px));
   display: flex;
   flex-direction: column;
@@ -1684,6 +1686,10 @@
 
 .hero-grid-bg {
   inset: -48px;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 0.5px), rgba(188, 206, 240, 0.18) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(180deg, transparent calc(28% - 0.5px), rgba(188, 206, 240, 0.2) 28%, transparent calc(28% + 0.5px)),
+    var(--arch-grid-navy);
   animation: arch-grid-in 1.6s var(--arch-ease) both, hero-grid-drift 32s linear infinite;
   will-change: transform;
 }
@@ -1708,7 +1714,7 @@
 
 .hero-survey-field__axis {
   position: absolute;
-  opacity: 0.65;
+  opacity: 0.82;
 }
 
 .hero-survey-field__axis--x {
@@ -1773,22 +1779,28 @@
 }
 
 .hero-living-drawing .hero-axo {
-  inset: -8% -5% -10% -5%;
-  width: 110%;
+  inset: -13% -10% -14%;
+  width: 120%;
   max-width: none;
-  opacity: 0.82;
+  opacity: var(--hero-blueprint-opacity);
   transform: translate3d(0, 0, 0);
   z-index: 1;
-  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.18));
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.12));
 }
 
-.hero-sheet {
-  inset-inline-start: 5%;
-  top: 24%;
-  width: 72%;
-  padding: 5px 5px 0;
-  background: rgba(245, 248, 255, 0.92);
-  box-shadow: 0 24px 52px -18px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.14);
+.hero-sheet[data-visual-role="supporting-artifact"] {
+  inset-inline-start: auto;
+  inset-inline-end: 4%;
+  top: 34%;
+  width: var(--hero-photo-width);
+  padding: 4px 4px 0;
+  border: 1px solid rgba(188, 206, 240, 0.34);
+  background: rgba(12, 26, 58, 0.5);
+  box-shadow: 0 18px 38px -22px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  -webkit-mask-image: linear-gradient(135deg, #000 0%, #000 76%, rgba(0, 0, 0, 0.88) 100%);
+  mask-image: linear-gradient(135deg, #000 0%, #000 76%, rgba(0, 0, 0, 0.88) 100%);
 }
 
 .hero-sheet .hero-visual-frame__inner {
@@ -1806,14 +1818,29 @@
   inset: 0;
   z-index: 2;
   background:
-    linear-gradient(90deg, rgba(5, 11, 28, 0.45), transparent 42%),
-    linear-gradient(180deg, rgba(5, 11, 28, 0.08), rgba(5, 11, 28, 0.35));
+    linear-gradient(90deg, rgba(5, 11, 28, 0.64), rgba(12, 32, 72, 0.16) 48%, rgba(5, 11, 28, 0.34)),
+    linear-gradient(180deg, rgba(5, 11, 28, 0.18), rgba(5, 11, 28, 0.52));
   pointer-events: none;
 }
 
 .hero-sheet .hero-media__layer img {
-  opacity: 0.82;
-  filter: saturate(0.72) contrast(1.08);
+  opacity: 0.64;
+  filter: saturate(0.6) contrast(1.08) brightness(0.9);
+}
+
+.hero-sheet[data-visual-role="supporting-artifact"] .hero-sheet__titleblock {
+  border-color: rgba(188, 206, 240, 0.2);
+  color: var(--arch-ink-muted);
+  background: rgba(5, 11, 28, 0.82);
+}
+
+.hero-sheet[data-visual-role="supporting-artifact"] .hero-sheet__cell {
+  border-color: rgba(188, 206, 240, 0.16);
+}
+
+.hero-sheet[data-visual-role="supporting-artifact"] .hero-sheet__cell--brand,
+.hero-sheet[data-visual-role="supporting-artifact"] .hero-sheet__cell--state {
+  color: #ffffff;
 }
 
 .hero-sheet__material-key {
@@ -2227,8 +2254,8 @@
 }
 
 @media (max-width: 1180px) {
-  .hero-sheet {
-    width: 76%;
+  .hero {
+    --hero-photo-width: 58%;
   }
 
   .hero-sheet__material-key {
@@ -2243,6 +2270,7 @@
 
 @media (max-width: 980px) {
   .hero {
+    --hero-photo-width: 56%;
     min-height: 0;
   }
 
@@ -2252,10 +2280,6 @@
 
   .hero-visual-composition {
     width: min(100%, 600px);
-  }
-
-  .hero-sheet {
-    width: 70%;
   }
 
   .platform-layout {
@@ -2343,6 +2367,11 @@
 }
 
 @media (max-width: 640px) {
+  .hero {
+    --hero-photo-width: 64%;
+    --hero-blueprint-opacity: 0.92;
+  }
+
   .hero-survey-field {
     inset: 0.75rem 0.75rem 4.5rem;
   }
@@ -2358,14 +2387,13 @@
   }
 
   .hero-living-drawing .hero-axo {
-    inset: -5%;
-    width: 110%;
+    inset: -9%;
+    width: 118%;
   }
 
-  .hero-sheet {
-    top: 27%;
-    inset-inline-start: 5%;
-    width: 78%;
+  .hero-sheet[data-visual-role="supporting-artifact"] {
+    top: 38%;
+    inset-inline-end: 3%;
   }
 
   .hero-sheet__titleblock {

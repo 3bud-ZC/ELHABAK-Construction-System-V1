@@ -1661,3 +1661,13 @@
 - **Production public-home acceptance**: Read-only real-Chrome smoke passed **8/8** runs: Arabic and English at 1440×900 and 390×844 in normal and reduced-motion modes. Blueprint-led Hero, workflow route, digital-platform engineering motion, RTL/LTR direction, product proof readability, static reduced-motion presentation, 0px horizontal overflow, and 0 console/page errors all passed.
 - **Safety and secrets**: Production business-data mutation = **NONE**. No seed, `db push`, reset, destructive test, schema migration, or manual release patch was performed. Staging Basic Auth remained server-side/in-process and was never written to Git, `STATUS.md`, QA output, or command output. Temporary local QA screenshots/browser artifacts were excluded from the application commit and cleaned after verification.
 - **Final verdict**: **ELHABAK HOMEPAGE ARCHITECTURAL MOTION REFINEMENT — PRODUCTION PASS**.
+
+
+### 2026-10-01 — PUBLIC HERO BLUEPRINT PRIORITY CORRECTION — LOCAL PASS
+- **Scope**: First public-homepage hero only. No navigation, footer, authenticated UI, backend/API, database, auth, or business logic changes.
+- **Hero correction**: Strengthened the full-width grid, datum axes, survey rail, and axonometric blueprint field; reduced the building photo to a smaller, darker, softly masked architectural insert so it supports rather than blocks the engineering drawing.
+- **Typography and actions**: Preserved the approved Arabic/English copy, CTA hierarchy, project-platform callout, and responsive RTL/LTR composition without Arabic letter-spacing changes.
+- **Visual verification**: Local Chromium passed Arabic RTL and English LTR at 1440×900 and 390×844. Blueprint hierarchy, supporting-photo treatment, CTA readability, navigation and adjacent hero spacing passed with 0px horizontal overflow and 0 console errors.
+- **Reduced motion**: Verified at desktop and mobile: added hero animation names resolve to `none`, while the blueprint, photo insert, axes, and content remain visible as a complete static presentation.
+- **Gates**: `pnpm lint` PASS; `pnpm typecheck` PASS; `pnpm build` PASS; `pnpm --filter @elhabak/web test` PASS (**63/63**); `git diff --check` PASS.
+- **Release boundary / blocker**: Local implementation and verification only; not committed, pushed, or deployed in this task. Remaining genuine blocker: **NONE**.

@@ -158,3 +158,17 @@ test("homepage refinement keeps one coherent engineering motion system", () => {
   assert.match(archCss, /prefers-reduced-motion:\s*reduce[\s\S]*process-route-map__active/);
   assert.match(archCss, /prefers-reduced-motion:\s*reduce[\s\S]*platform-control-field__path/);
 });
+
+test("homepage hero keeps the blueprint dominant and the photo subordinate", () => {
+  const hero = readFileSync(new URL("../src/app/public-hero.tsx", import.meta.url), "utf8");
+  const archCss = readFileSync(new URL("../src/app/public-architecture.css", import.meta.url), "utf8");
+
+  assert.match(hero, /hero-blueprint-field/);
+  assert.match(hero, /data-visual-role="supporting-artifact"/);
+
+  const desktopPhotoWidth = Number(archCss.match(/--hero-photo-width:\s*([\d.]+)%/)?.[1]);
+  const blueprintOpacity = Number(archCss.match(/--hero-blueprint-opacity:\s*([\d.]+)/)?.[1]);
+  assert.ok(desktopPhotoWidth <= 62, `hero photo width must stay subordinate, received ${desktopPhotoWidth}%`);
+  assert.ok(blueprintOpacity >= 0.9, `hero blueprint opacity must stay dominant, received ${blueprintOpacity}`);
+  assert.match(archCss, /\.hero-sheet\[data-visual-role="supporting-artifact"\][\s\S]*mask-image:/);
+});

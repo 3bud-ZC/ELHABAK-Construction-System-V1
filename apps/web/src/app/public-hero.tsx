@@ -108,8 +108,8 @@ export function PublicHero({
         {/* Visual column: animated axonometric structure with the site photo pinned
             to it as a drawing sheet (title block + registration marks). */}
         <div className="hero-visual-composition hero-living-drawing" aria-hidden="true">
-          <BlueprintAxonometric live className="hero-axo" />
-          <div className="hero-visual-frame hero-sheet">
+          <BlueprintAxonometric live className="hero-axo hero-blueprint-field" />
+          <div className="hero-visual-frame hero-sheet" data-visual-role="supporting-artifact">
             <div className="hero-sheet__material-key">
               <span>{states[active]?.label}</span>
               <i aria-hidden="true" />
@@ -126,7 +126,7 @@ export function PublicHero({
                     fill
                     priority={index === 0}
                     loading={index === 0 ? undefined : "lazy"}
-                    sizes="(max-width: 980px) 60vw, 26vw"
+                    sizes="(max-width: 640px) 64vw, (max-width: 980px) 48vw, 20vw"
                   />
                 </div>
               ))}
