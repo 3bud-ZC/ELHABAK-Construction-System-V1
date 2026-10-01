@@ -64,6 +64,13 @@ export function PublicHero({
       {/* Blueprint ground: minor/major technical grid + registration frame */}
       <div className="hero-grid-bg" aria-hidden="true" />
       <div className="hero-frame-marks" aria-hidden="true" />
+      <div className="hero-survey-field" aria-hidden="true">
+        <span className="hero-survey-field__axis hero-survey-field__axis--x" />
+        <span className="hero-survey-field__axis hero-survey-field__axis--y" />
+        <span className="hero-survey-field__scan" />
+        <span className="hero-survey-field__datum hero-survey-field__datum--start">DATUM 00</span>
+        <span className="hero-survey-field__datum hero-survey-field__datum--end">GRID A–D</span>
+      </div>
 
       <div className="container hero-layout">
         {/* Copy Column */}
@@ -103,6 +110,10 @@ export function PublicHero({
         <div className="hero-visual-composition hero-living-drawing" aria-hidden="true">
           <BlueprintAxonometric live className="hero-axo" />
           <div className="hero-visual-frame hero-sheet">
+            <div className="hero-sheet__material-key">
+              <span>{states[active]?.label}</span>
+              <i aria-hidden="true" />
+            </div>
             <div className="hero-visual-frame__inner">
               {states.map((state, index) => (
                 <div
@@ -138,6 +149,11 @@ export function PublicHero({
               <span className="hero-sheet__cell hero-sheet__cell--state">{states[active]?.label}</span>
               <span className="hero-sheet__cell">1:100</span>
             </div>
+          </div>
+          <div className="hero-visual-datum" aria-hidden="true">
+            <span>01</span>
+            <i />
+            <span>03</span>
           </div>
         </div>
       </div>

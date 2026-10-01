@@ -538,6 +538,12 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
 
           <div className="process-panel process-route" data-reveal="up">
+            <div className="process-route-map" aria-hidden="true">
+              <svg viewBox="0 0 1000 360" preserveAspectRatio="none">
+                <path className="process-route-map__base" d="M110 78 H890 V282 H110" pathLength="1" />
+                <path className="process-route-map__active" d="M110 78 H890 V282 H110" pathLength="1" />
+              </svg>
+            </div>
             <ol className="process-grid" data-reveal-group>
               {t.process.map(([title, body], index) => (
                 <li className="process-stage" key={title} data-reveal="stage">
@@ -549,6 +555,9 @@ export default async function HomePage({ searchParams }: PageProps) {
                     <bdi>{String(index + 1).padStart(2, "0")}</bdi>
                   </span>
                   <div className="process-stage__content">
+                    <span className="process-stage__phase" aria-hidden="true">
+                      {locale === "ar" ? "مرحلة" : "PHASE"} <bdi>{String(index + 1).padStart(2, "0")}</bdi>
+                    </span>
                     <h3>{title}</h3>
                     <p>{body}</p>
                   </div>
@@ -597,6 +606,23 @@ export default async function HomePage({ searchParams }: PageProps) {
             </div>
 
             <div className="platform-showcase" data-reveal="mask">
+              <div className="platform-control-field" aria-hidden="true">
+                <svg viewBox="0 0 800 540" preserveAspectRatio="none">
+                  <path className="platform-control-field__path platform-control-field__path--one" d="M28 112 H178 V188 H392" pathLength="1" />
+                  <path className="platform-control-field__path platform-control-field__path--two" d="M772 90 H650 V250 H520" pathLength="1" />
+                  <path className="platform-control-field__path platform-control-field__path--three" d="M70 470 H250 V378 H442" pathLength="1" />
+                  <circle cx="28" cy="112" r="5" />
+                  <circle cx="772" cy="90" r="5" />
+                  <circle cx="70" cy="470" r="5" />
+                </svg>
+                <span className="platform-control-field__label platform-control-field__label--site">
+                  {locale === "ar" ? "مدخلات الموقع" : "FIELD INPUT"}
+                </span>
+                <span className="platform-control-field__label platform-control-field__label--control">
+                  {locale === "ar" ? "مركز التحكم" : "CONTROL CORE"}
+                </span>
+                <span className="platform-control-field__scanner" />
+              </div>
               <div className="platform-stage">
                 <div className="platform-device platform-device--desktop">
                   <div className="platform-device__frame">
@@ -622,15 +648,15 @@ export default async function HomePage({ searchParams }: PageProps) {
                 </div>
               </div>
               <div className="platform-callout-rail" aria-hidden="true">
-                <span className="platform-callout-item">
+                <span className="platform-callout-item" data-channel="01">
                   <i className="platform-callout-item__datum" />
                   <span className="platform-callout-item__text">{locale === "ar" ? "نشاط الموقع" : "SITE ACTIVITY"}</span>
                 </span>
-                <span className="platform-callout-item">
+                <span className="platform-callout-item" data-channel="02">
                   <i className="platform-callout-item__datum" />
                   <span className="platform-callout-item__text">{locale === "ar" ? "اعتمادات" : "APPROVALS"}</span>
                 </span>
-                <span className="platform-callout-item">
+                <span className="platform-callout-item" data-channel="03">
                   <i className="platform-callout-item__datum" />
                   <span className="platform-callout-item__text">{locale === "ar" ? "تقارير" : "REPORTS"}</span>
                 </span>

@@ -1643,3 +1643,14 @@
     - Console/page errors: 0
 - **Data Integrity**: Zero seed, zero `db push`, zero database reset, zero destructive QA, zero mutation to production business data.
 - **Final Verdict**: **ELHABAK FINAL PUBLIC UI CORRECTION — PRODUCTION PASS**.
+
+
+### 2026-10-01 — PUBLIC HOMEPAGE ARCHITECTURAL MOTION REFINEMENT — LOCAL PASS
+- **Scope**: Bounded public-homepage refinement only (`page.tsx`, `public-hero.tsx`, `public-architecture.css`, focused public-home test). Authenticated screens, API contracts, Prisma/database, RBAC, finance, project logic, chat, documents, sessions, and production data were not changed.
+- **Hero**: Rebalanced into a blueprint-led drawing board with stronger structural linework, survey axes, datum rail, slow grid/scan motion, and a smaller masked material-photo sheet; existing Arabic/English content and CTAs remain unchanged.
+- **Engineering workflow**: Rebuilt the six approved stages as one connected measured route with RTL/LTR-aware sequencing, progressive path/stage activation, technical phase labels, and a dedicated vertical mobile sequence.
+- **Digital platform**: Kept desktop/mobile product screenshots readable while adding field-to-control paths, status nodes, scanner motion, numbered module channels, and a calmer engineering-control environment.
+- **Motion and continuity**: One transform/opacity/SVG-stroke motion language across hero, workflow, and platform; technical section rails and anchor offsets improve continuity. `prefers-reduced-motion` disables every added animation and keeps all content/paths visible as a complete static composition.
+- **Responsive/browser QA**: Local Chromium checked at 1920×1080, 1440×900, 1366×768, 1280×800, 1024×768, 768×1024, 430×932, 390×844, 375×812, and 360×800 in Arabic/RTL, plus representative English/LTR desktop and phone views. Result: 0px horizontal overflow, no primary-content collisions, readable product proof, working anchors/navigation, 0 new console/page errors. Arabic leaf-text scan found zero non-zero letter spacing.
+- **Gates**: `pnpm lint` PASS; `pnpm typecheck` PASS; `pnpm build` PASS; `pnpm --filter @elhabak/web test` PASS (**62/62**); `git diff --check` PASS (existing CRLF notice only).
+- **Release boundary**: Local implementation and browser verification only. No commit, push, deployment, migration, seed, or production mutation performed.

@@ -144,3 +144,17 @@ test("final public UI correction prevents duplicate FAQ indices and mechanical c
   assert.doesNotMatch(css, /clip-path:\s*polygon\(0 0,\s*92% 0,\s*100% 50%/);
   assert.match(css, /mask-image:\s*linear-gradient/);
 });
+
+test("homepage refinement keeps one coherent engineering motion system", () => {
+  const hero = readFileSync(new URL("../src/app/public-hero.tsx", import.meta.url), "utf8");
+  const archCss = readFileSync(new URL("../src/app/public-architecture.css", import.meta.url), "utf8");
+
+  assert.match(hero, /hero-survey-field/);
+  assert.match(hero, /hero-visual-datum/);
+  assert.match(page, /process-route-map__active/);
+  assert.match(page, /process-stage__phase/);
+  assert.match(page, /platform-control-field__path/);
+  assert.match(page, /data-channel="01"/);
+  assert.match(archCss, /prefers-reduced-motion:\s*reduce[\s\S]*process-route-map__active/);
+  assert.match(archCss, /prefers-reduced-motion:\s*reduce[\s\S]*platform-control-field__path/);
+});
