@@ -371,9 +371,9 @@
 }
 
 .hero-layout {
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr);
-  gap: clamp(1.5rem, 3.5vw, 3rem);
-  max-width: 1240px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.75rem, 3vw, 3.5rem);
+  max-width: 1520px;
   margin-inline: auto;
   align-items: center;
   min-height: auto;
@@ -1676,7 +1676,7 @@
 
 /* Hero: architectural board first, material image second. */
 .hero {
-  --hero-photo-width: 56%;
+  --hero-photo-width: 48%;
   --hero-blueprint-opacity: 0.96;
   min-height: min(760px, calc(100svh - 68px));
   display: flex;
@@ -1774,8 +1774,58 @@
 }
 
 .hero-visual-composition {
-  aspect-ratio: 16 / 12;
-  max-width: 590px;
+  aspect-ratio: 16 / 10.5;
+  max-width: 760px;
+  justify-self: stretch;
+}
+
+.hero-projection-field {
+  position: absolute;
+  inset: 1% -2% 2%;
+  z-index: 0;
+  width: 104%;
+  height: 97%;
+  overflow: visible;
+  color: var(--arch-ink-muted);
+  direction: ltr;
+  pointer-events: none;
+}
+
+.hero-projection-field path {
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-projection-field__rail,
+.hero-projection-field__station {
+  stroke: rgba(188, 206, 240, 0.2);
+  stroke-width: 1;
+  stroke-dasharray: 2 8;
+}
+
+.hero-projection-field__trace {
+  stroke: rgba(188, 206, 240, 0.36);
+  stroke-width: 1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: hero-projection-draw 2.4s var(--arch-ease-draw) 0.35s both;
+}
+
+.hero-projection-field__cross {
+  stroke: rgba(232, 118, 37, 0.72);
+  stroke-width: 1;
+}
+
+.hero-projection-field__node {
+  fill: var(--arch-navy-900);
+  stroke: var(--public-orange-500);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-projection-field text {
+  fill: currentColor;
+  font: 700 10px/1 var(--arch-mono);
+  letter-spacing: 0.04em;
 }
 
 .hero-living-drawing .hero-axo {
@@ -1791,7 +1841,7 @@
 .hero-sheet[data-visual-role="supporting-artifact"] {
   inset-inline-start: auto;
   inset-inline-end: 4%;
-  top: 34%;
+  top: 38%;
   width: var(--hero-photo-width);
   padding: 4px 4px 0;
   border: 1px solid rgba(188, 206, 240, 0.34);
@@ -1902,6 +1952,10 @@
   20% { opacity: 1; }
   78% { opacity: 1; }
   100% { transform: translate3d(calc(92vw - 4rem), -50%, 0); opacity: 0; }
+}
+
+@keyframes hero-projection-draw {
+  to { stroke-dashoffset: 0; }
 }
 
 /* Process: one measured route, six readable decisions. */
@@ -2255,7 +2309,7 @@
 
 @media (max-width: 1180px) {
   .hero {
-    --hero-photo-width: 58%;
+    --hero-photo-width: 52%;
   }
 
   .hero-sheet__material-key {
@@ -2280,6 +2334,13 @@
 
   .hero-visual-composition {
     width: min(100%, 600px);
+    justify-self: center;
+  }
+
+  .hero-projection-field {
+    inset-inline: 0;
+    width: 100%;
+    opacity: 0.72;
   }
 
   .platform-layout {
@@ -2430,6 +2491,7 @@
   .hero-grid-bg::after,
   .hero-sheet,
   .hero-survey-field__scan,
+  .hero-projection-field__trace,
   .process-route-map__active,
   .process-stage,
   .process-stage__dot,
@@ -2441,6 +2503,7 @@
 
   .bp-art .bp-d { stroke-dashoffset: 0; opacity: 1; }
   .bp-art .bp-t { opacity: 1; }
+  .hero-projection-field__trace { stroke-dashoffset: 0; }
   .process-stage__line { transform: none; transition: none; }
   .process-route-map__active { stroke-dashoffset: 0; opacity: 0.75; }
   .process-stage[data-reveal="stage"] { opacity: 1; transform: none; }

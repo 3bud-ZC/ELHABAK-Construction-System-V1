@@ -1679,3 +1679,14 @@
 - **Production Hero visual acceptance**: Read-only real-Chromium homepage QA passed the same **11/11** matrix, including Arabic/English desktop and mobile plus reduced-motion desktop/mobile. The blueprint is the focal system, the photo remains a subordinate insert, CTAs and the platform callout are intact, horizontal overflow is 0px, Arabic letter-spacing violations are zero, and console/page errors are zero.
 - **Safety, secrets, and blocker**: Production business-data mutation = **NONE**. No seed, `db push`, schema migration, reset, truncate, destructive QA, or manual release patch was performed. Staging Basic Auth stayed server-side and no password, private key, environment value, token, or production data was written to Git, QA reports, or command output. Remaining genuine blocker: **NONE**.
 - **Final verdict**: **ELHABAK PUBLIC HERO BLUEPRINT PRIORITY CORRECTION — PRODUCTION PASS**.
+
+
+### 2026-10-01 — PUBLIC HERO ENGINEERING COMPOSITION CORRECTION — LOCAL PASS
+- **Scope**: First public-homepage hero only. No navigation, footer, authenticated UI, backend/API, database, auth, or business-logic changes.
+- **Correction**: Expanded the desktop drawing board from the former narrow 1240px composition to a 1520px engineering field, increased the blueprint stage to 760px, and added restrained projection rails, stations, traces, survey nodes, and drawing references to use the previously empty left-side space intentionally.
+- **Image hierarchy**: Reduced the site-photo insert from 56% to 48% of the desktop drawing stage, moved it lower in the field, and retained the dark masked treatment so the axonometric structure and drafting system remain the primary visual layer.
+- **Responsive and motion QA**: Local Chromium passed Arabic RTL at 1732×771, 1440×900, 1024×768, 390×844, and 360×800; English LTR at 1440×900 and 390×844; plus reduced-motion desktop and mobile. Result: 0px horizontal overflow, no desktop copy/drawing collisions, correct RTL/LTR direction, natural Arabic letter spacing, 0 console/page errors, and all added motion disabled with a complete static presentation under `prefers-reduced-motion`.
+- **Measured desktop result**: At 1732×771 the engineering stage increased from 512.8px to 760px, occupies 50% of the content board, and the photo occupies 48% of that stage.
+- **Gates**: `pnpm lint` PASS; `pnpm typecheck` PASS; `pnpm build` PASS; `pnpm --filter @elhabak/web test` PASS (**63/63**); `git diff --check` PASS.
+- **Temporary QA evidence**: Local Playwright measurement scripts and screenshots were removed before commit; none are application source or release content.
+- **Release boundary**: This entry records the verified local checkpoint before staging and production promotion. Production business-data mutation: **NONE**.

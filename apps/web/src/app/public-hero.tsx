@@ -108,6 +108,28 @@ export function PublicHero({
         {/* Visual column: animated axonometric structure with the site photo pinned
             to it as a drawing sheet (title block + registration marks). */}
         <div className="hero-visual-composition hero-living-drawing" aria-hidden="true">
+          <svg
+            className="hero-projection-field"
+            viewBox="0 0 920 560"
+            preserveAspectRatio="none"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path className="hero-projection-field__rail" d="M28 96H892M28 454H892" />
+            <path className="hero-projection-field__station" d="M116 58V500M808 58V500" />
+            <path
+              className="hero-projection-field__trace"
+              d="M72 420L312 254L472 142L694 242L856 126M138 482L334 352L536 220L814 390"
+              pathLength={1}
+            />
+            <path className="hero-projection-field__cross" d="M103 96H129M116 83V109M795 454H821M808 441V467" />
+            <circle className="hero-projection-field__node" cx="312" cy="254" r="4" />
+            <circle className="hero-projection-field__node" cx="694" cy="242" r="4" />
+            <circle className="hero-projection-field__node" cx="536" cy="220" r="4" />
+            <text x="28" y="82">GRID A–07</text>
+            <text x="814" y="112">EL +14.40</text>
+            <text x="28" y="476">SECTION 03</text>
+          </svg>
           <BlueprintAxonometric live className="hero-axo hero-blueprint-field" />
           <div className="hero-visual-frame hero-sheet" data-visual-role="supporting-artifact">
             <div className="hero-sheet__material-key">
