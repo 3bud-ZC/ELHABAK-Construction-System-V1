@@ -221,13 +221,19 @@ function AdminFinancePanels({ projectId, locale }: { projectId: string; locale: 
     loadSummary();
   }, [loadSummary]);
 
+  const subtabsRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    // Keep the active section visible inside the horizontally-scrolling phone rail.
+    subtabsRef.current?.querySelector<HTMLElement>("button.active")?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [tab]);
+
   return (
     <>
-      <nav className="finance-subtabs finance-module-tabs" aria-label={ar ? "أقسام الشؤون المالية" : "Finance sections"}>
+      <nav ref={subtabsRef} className="finance-subtabs finance-module-tabs" aria-label={ar ? "أقسام الشؤون المالية" : "Finance sections"}>
         {tabs.map((item) => {
           const Icon = item.icon;
           return (
-            <button key={item.id} type="button" className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}>
+            <button key={item.id} type="button" className={tab === item.id ? "active" : ""} aria-pressed={tab === item.id} onClick={() => setTab(item.id)}>
               <Icon size={14} /> {item.label}
             </button>
           );

@@ -28,7 +28,8 @@
   --arch-rule-soft: rgba(22, 35, 75, 0.05);
   /* Orange for small text on white — AA contrast (the bright orange is for fills/lines). */
   --arch-orange-ink: #b9520d;
-  --arch-mono: "SFMono-Regular", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  /* Arabic glyphs fall through to the brand Arabic face (mono faces cannot join Arabic). */
+  --arch-mono: "SFMono-Regular", "Roboto Mono", Consolas, "Liberation Mono", Menlo, var(--font-arabic), monospace;
   --arch-ease: cubic-bezier(0.22, 0.8, 0.24, 1);
   --arch-ease-draw: cubic-bezier(0.65, 0, 0.35, 1);
 

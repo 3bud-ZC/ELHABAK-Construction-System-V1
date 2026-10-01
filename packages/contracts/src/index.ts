@@ -23,6 +23,19 @@ export const companyContact = {
 export type ContactChannels = typeof companyContact;
 
 /**
+ * Official ELHABAK social profiles, exactly as supplied by the company. Do not normalize,
+ * shorten or replace these with guessed handles: they are the published destinations
+ * (footer, contact area) and the Organization `sameAs` entries in structured data.
+ */
+export const companySocialProfiles = [
+  { id: "instagram", name: "Instagram", url: "https://www.instagram.com/elhabak.construction?stkn=N2lhYTFmbHBkNmVy" },
+  { id: "tiktok", name: "TikTok", url: "https://www.tiktok.com/@elhabak.construct" },
+  { id: "facebook", name: "Facebook", url: "https://www.facebook.com/share/19rKHm9jSV/" }
+] as const;
+
+export type SocialProfile = (typeof companySocialProfiles)[number];
+
+/**
  * Normalizes an Egyptian phone number to E.164 ("+20XXXXXXXXXX"). Handles the formats the
  * number is realistically encountered in: "(+20) 011 306 667 26", "+20 113 066 6726",
  * "011 306 667 26", "00201130666726", or a bare national number. Returns null for empty,

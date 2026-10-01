@@ -140,7 +140,7 @@ export function LoginForm({ locale, labels }: LoginFormProps) {
           </button>
         </span>
       </label>
-      {error && <p className="form-error">{error}</p>}
+      {error && <p className="form-error" role="alert">{error}</p>}
       <button className="ui-button ui-button--primary login-submit" type="submit" disabled={loading}>
         {loading ? (locale === "ar" ? "جاري الدخول..." : "Signing in...") : labels.submit}
       </button>

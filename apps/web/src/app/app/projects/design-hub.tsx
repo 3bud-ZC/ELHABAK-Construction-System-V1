@@ -63,14 +63,14 @@ export function DesignHub({ projectId }: { projectId: string }) {
   const ar = locale === "ar";
   const labels = useMemo(() => ar ? {
     title: "سجل المخططات والتصميمات", lead: "مركز مراقبة المستندات الهندسية ومراجعات الرسومات واعتمادات العميل.",
-    upload: "إضافة تصميم جديد", search: "بحث بالكود أو العنوان أو اسم الملف...", allStatuses: "كل الحالات", allDisciplines: "كل التخصصات الهندسية", clear: "مسح المرشحات", results: "نتائج",
+    upload: "إضافة تصميم جديد", search: "بحث بالكود أو العنوان أو اسم الملف...", allStatuses: "كل الحالات", allDisciplines: "كل التخصصات الهندسية", clear: "مسح المرشحات", results: "النتائج",
     empty: "لا توجد تصميمات مسجلة", emptyHint: "ابدأ بتسجيل أول مستند تصميم لهذا المشروع.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
     design: "كود ومسمى المخطط", discipline: "التخصص", revision: "المراجعة", status: "حالة الاعتماد", updated: "تاريخ التحديث", owner: "المسؤول", action: "الإجراء", open: "فتح المخطط",
     formatSize: "الملف والحجم", authorDate: "الرافع والتاريخ",
     pending: "بانتظار الاعتماد", inReview: "قيد الفحص والمراجعة", pendingHint: "مستندات جاهزة للمعاينة وتسجيل القرار.", total: "إجمالي المخططات", approved: "معتمد نهائياً", loading: "جاري تحميل سجل المخططات..."
   } : {
     title: "Drawing & Design Register", lead: "Engineering document control center for drawings, technical revisions, and client sign-offs.",
-    upload: "Add New Design", search: "Search by code, title, or filename...", allStatuses: "All Statuses", allDisciplines: "All Disciplines", clear: "Clear filters", results: "results",
+    upload: "Add New Design", search: "Search by code, title, or filename...", allStatuses: "All Statuses", allDisciplines: "All Disciplines", clear: "Clear filters", results: "Results",
     empty: "No designs registered", emptyHint: "Register the first design document for this project.", noResults: "No matching designs", noResultsHint: "Change search query or filter criteria.",
     design: "DWG Code & Title", discipline: "Discipline", revision: "Rev", status: "Approval State", updated: "Updated", owner: "Author", action: "Action", open: "Open DWG",
     formatSize: "Format & Size", authorDate: "Author & Date",
@@ -150,7 +150,7 @@ export function DesignHub({ projectId }: { projectId: string }) {
         discipline && { key: "discipline", label: disciplineLabel(discipline, locale), onRemove: () => setDiscipline("") }
       ].filter(Boolean) as FilterChip[]}
       search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>}
-      meta={<span><bdi>{designs.length}</bdi> {labels.results}</span>}
+      meta={<span>{labels.results}: <bdi>{designs.length}</bdi></span>}
     >
       <label className="adaptive-filter-field"><span className="adaptive-filter-field__label">{labels.status}</span><select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value as DesignStatus | "")} aria-label={labels.status}><option value="">{labels.allStatuses}</option>{DESIGN_STATUSES.map((item) => <option key={item} value={item}>{designStatusLabel(item, locale)}</option>)}</select></label>
       <label className="adaptive-filter-field"><span className="adaptive-filter-field__label">{labels.discipline}</span><select className="filter-select" value={discipline} onChange={(event) => setDiscipline(event.target.value as DesignDiscipline | "")} aria-label={labels.discipline}><option value="">{labels.allDisciplines}</option>{DESIGN_DISCIPLINES.map((item) => <option key={item} value={item}>{disciplineLabel(item, locale)}</option>)}</select></label>

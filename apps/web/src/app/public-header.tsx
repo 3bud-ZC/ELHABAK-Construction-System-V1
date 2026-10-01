@@ -43,7 +43,9 @@ export function PublicHeader({
   const alternateLink = alternateHref ?? (alternate === "ar" ? "/" : "/?lang=en");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
   const arrow = dir === "rtl" ? <ArrowLeft size={16} /> : <ArrowRight size={16} />;
 
   const items = navItems ?? [
@@ -64,16 +66,51 @@ export function PublicHeader({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close drawer on Escape
+  // Escape closes the drawer; Tab cycles inside it while it is open (modal drawer).
   useEffect(() => {
+    if (!menuOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && menuOpen) {
+      if (e.key === "Escape") {
         setMenuOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !drawerRef.current) return;
+      const focusable = Array.from(drawerRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"));
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [menuOpen]);
+
+  // Focus moves into the drawer when it opens and back to the menu button when it closes.
+  useEffect(() => {
+    if (menuOpen) {
+      wasOpen.current = true;
+      drawerRef.current?.querySelector<HTMLElement>(".mobile-drawer__close")?.focus();
+    } else if (wasOpen.current) {
+      wasOpen.current = false;
+      menuButtonRef.current?.focus();
+    }
+  }, [menuOpen]);
+
+  // A drawer left open while the viewport grows past the phone breakpoint closes itself.
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 981px)");
+    const onChange = () => {
+      if (wide.matches) setMenuOpen(false);
+    };
+    wide.addEventListener("change", onChange);
+    return () => wide.removeEventListener("change", onChange);
+  }, []);
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -146,6 +183,7 @@ export function PublicHeader({
             {labels.language}
           </a>
           <button
+            ref={menuButtonRef}
             type="button"
             className="mobile-menu-btn"
             onClick={() => setMenuOpen((prev) => !prev)}
@@ -170,6 +208,7 @@ export function PublicHeader({
         className={`mobile-drawer${menuOpen ? " is-open" : ""}`}
         aria-label={locale === "ar" ? "قائمة الموقع" : "Site menu"}
         aria-hidden={!menuOpen}
+        inert={!menuOpen}
       >
         <div className="mobile-drawer__header">
           <Image

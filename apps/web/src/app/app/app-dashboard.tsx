@@ -480,7 +480,7 @@ export function AppDashboard() {
                         <div>
                           <strong>{project.name}</strong>
                           <span className="mono">{project.code ?? "—"}</span>
-                          <small>{categoryLabel(project.category, locale)}{project.location ? ` · ${project.location}` : ""}</small>
+                          <small>{categoryLabel(project.category, locale)}{project.location ? <> · <bdi>{project.location}</bdi></> : null}</small>
                         </div>
                       </div>
                       <div className="dashboard-project-row__phase">

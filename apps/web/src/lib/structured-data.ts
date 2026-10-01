@@ -1,3 +1,5 @@
+import { companySocialProfiles } from "@elhabak/contracts";
+
 export const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://elhabak.com"
 ).replace(/\/+$/, "");
@@ -37,7 +39,7 @@ export function buildCanonicalOrganization(locale: Locale = "ar") {
     telephone: "+201130666726",
     email: "elhabakconstruction.eg@gmail.com",
     description: CANONICAL_COMPANY_DESCRIPTIONS[locale],
-    sameAs: ["https://maps.app.goo.gl/apBRMCmUquZ6XYXv7"],
+    sameAs: ["https://maps.app.goo.gl/apBRMCmUquZ6XYXv7", ...companySocialProfiles.map((profile) => profile.url)],
     hasMap: "https://maps.app.goo.gl/apBRMCmUquZ6XYXv7",
     areaServed: [{ "@type": "Country", name: "Egypt" }],
     contactPoint: [

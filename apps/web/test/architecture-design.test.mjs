@@ -14,9 +14,10 @@ const hero = source("app/public-hero.tsx");
 const motion = source("app/public-motion.tsx");
 
 test("architectural layers are wired in cascade order", () => {
-  assert.match(layout, /import "\.\/public-home\.css";\s*\nimport "\.\/public-architecture\.css";/);
+  assert.match(layout, /import "\.\/public-home\.css";\s*\nimport "\.\/public-architecture\.css";\s*\nimport "\.\/public-mobile\.css";/);
   const imports = [...globals.matchAll(/@import "([^"]+)";/g)].map((match) => match[1]);
-  assert.equal(imports.at(-1), "./styles/system/architecture.css");
+  // The architectural layer, then the final phone-hardening layer, close the system cascade.
+  assert.deepEqual(imports.slice(-2), ["./styles/system/architecture.css", "./styles/system/mobile.css"]);
   assert.match(publicCss, /^@layer public \{/m);
   assert.match(systemCss, /^@layer system \{/m);
 });

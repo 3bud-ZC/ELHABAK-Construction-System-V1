@@ -55,6 +55,7 @@ export function AppShell({ children }: AppShellProps) {
           clients: "العملاء",
           projects: "المشاريع",
           worker: "تحديثات الموقع",
+          workerShort: "التحديثات",
           finance: "الشؤون المالية",
           reports: "التقارير",
           search: "البحث",
@@ -91,6 +92,7 @@ export function AppShell({ children }: AppShellProps) {
           clients: "Clients",
           projects: "Projects",
           worker: "Site Updates",
+          workerShort: "Updates",
           finance: "Finance",
           reports: "Reports",
           search: "Search",
@@ -471,44 +473,44 @@ export function AppShell({ children }: AppShellProps) {
           className="app-bottom-nav"
           aria-label={locale === "ar" ? "التنقل السريع" : "Quick navigation"}
         >
-          <Link className={pathname === "/app" ? "active" : ""} href={href("/app")}>
+          <Link className={pathname === "/app" ? "active" : ""} aria-current={pathname === "/app" ? "page" : undefined} href={href("/app")}>
             <LayoutGrid size={19} />
             <span>{labels.dashboard}</span>
           </Link>
           {user.role === "ADMIN" ? (
             <Link
-              className={isActive("/app/admin/projects") || isActive("/app/projects") ? "active" : ""}
+              className={isActive("/app/admin/projects") || isActive("/app/projects") ? "active" : ""} aria-current={isActive("/app/admin/projects") || isActive("/app/projects") ? "page" : undefined}
               href={href("/app/admin/projects")}
             >
               <BriefcaseBusiness size={19} />
               <span>{labels.projects}</span>
             </Link>
           ) : user.role === "ACCOUNTANT" ? (
-            <Link className={isActive("/app/finance") ? "active" : ""} href={href("/app/finance")}>
+            <Link className={isActive("/app/finance") ? "active" : ""} aria-current={isActive("/app/finance") ? "page" : undefined} href={href("/app/finance")}>
               <Wallet size={19} />
               <span>{labels.finance}</span>
             </Link>
           ) : (
-            <Link className={isActive("/app/projects") ? "active" : ""} href={href("/app/projects")}>
+            <Link className={isActive("/app/projects") ? "active" : ""} aria-current={isActive("/app/projects") ? "page" : undefined} href={href("/app/projects")}>
               {user.role === "WORKER" ? <Camera size={19} /> : <BriefcaseBusiness size={19} />}
-              <span>{user.role === "WORKER" ? labels.worker : labels.projects}</span>
+              <span>{user.role === "WORKER" ? labels.workerShort : labels.projects}</span>
             </Link>
           )}
           {user.role === "ADMIN" ? (
-            <Link className={isActive("/app/data") ? "active" : ""} href={href("/app/data")}>
+            <Link className={isActive("/app/data") ? "active" : ""} aria-current={isActive("/app/data") ? "page" : undefined} href={href("/app/data")}>
               <Database size={19} />
               <span>{labels.dataOpsShort}</span>
             </Link>
           ) : (
             <Link
-              className={isActive("/app/notifications") ? "active" : ""}
+              className={isActive("/app/notifications") ? "active" : ""} aria-current={isActive("/app/notifications") ? "page" : undefined}
               href={href("/app/notifications")}
             >
               <Bell size={19} />
               <span>{labels.notifications}</span>
             </Link>
           )}
-          <Link className={isActive("/app/search") ? "active" : ""} href={href("/app/search")}>
+          <Link className={isActive("/app/search") ? "active" : ""} aria-current={isActive("/app/search") ? "page" : undefined} href={href("/app/search")}>
             <Search size={19} />
             <span>{labels.search}</span>
           </Link>

@@ -31,6 +31,7 @@ import { FaqAccordion } from "./faq-accordion";
 import { BlueprintPlan } from "./blueprint-art";
 import { ProcessRoute } from "./process-route";
 import { MobileContactBar, publicNavItems, SiteFooter } from "./seo-page";
+import { SocialLinks } from "./social-links";
 
 type PageProps = {
   searchParams?: Promise<{ lang?: string }>;
@@ -38,6 +39,13 @@ type PageProps = {
 
 function langHref(locale: "ar" | "en", path = "/") {
   return locale === "ar" ? path : `${path}?lang=en`;
+}
+
+/** Isolates Arabic runs inside English copy so brackets and line wraps keep their order. */
+function isolateArabic(text: string) {
+  return text.split(/([\u0600-\u06FF][\u0600-\u06FF\s]*[\u0600-\u06FF])/).map((part, index) =>
+    index % 2 === 1 ? <bdi lang="ar" dir="rtl" key={index}>{part}</bdi> : part
+  );
 }
 
 import {
@@ -330,7 +338,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             </>
           )}
         </h1>
-        <p className="hero-subtitle">{t.home.heroSubtitle}</p>
+        <p className="hero-subtitle">{locale === "en" ? isolateArabic(t.home.heroSubtitle) : t.home.heroSubtitle}</p>
         <div className="hero-actions">
           <Button
             href={whatsapp}
@@ -724,6 +732,7 @@ export default async function HomePage({ searchParams }: PageProps) {
               <a href={`mailto:${t.contact.email}`}>{t.contact.email}</a>
             </div>
           </div>
+          <SocialLinks locale={locale} variant="contact" title={locale === "ar" ? "تابع أعمالنا" : "Follow our work"} />
         </div>
       </section>
 
