@@ -641,7 +641,7 @@ export function PreviewDrawer({
     >
       <div className="ui-preview-drawer__stage">
         {url && isImage ? <img src={url} alt={typeof title === "string" ? title : "preview"} /> : null}
-        {url && isPdf ? <iframe src={url} title={typeof title === "string" ? title : "preview"} /> : null}
+        {url && isPdf ? <iframe src={url} title={typeof title === "string" ? title : "preview"} allow="fullscreen" /> : null}
         {url && isVideo ? <video src={url} controls /> : null}
         {url && !isImage && !isPdf && !isVideo ? (
           <p className="ui-preview-drawer__fallback">Preview is not available for this file type.</p>

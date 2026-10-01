@@ -104,14 +104,14 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
   const labels = ar
     ? {
       title: "سجل المستندات", lead: "مركز التحكم بالمستندات العامة للمشروع - عقود، تصاريح، تقارير، ومراسلات.",
-      add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات", allVisibility: "كل حالات المشاركة", sharedOnly: "مشترك مع العميل", internalOnly: "داخلي فقط", clear: "مسح المرشحات", results: "نتائج",
+      add: "تسجيل مستند جديد", search: "بحث بالمرجع أو العنوان أو اسم الملف...", allCategories: "كل الفئات", allStatuses: "كل الحالات", allVisibility: "كل حالات المشاركة", sharedOnly: "مشترك مع العميل", internalOnly: "داخلي فقط", clear: "مسح المرشحات", results: "النتائج",
       empty: "لا توجد مستندات مسجلة", emptyHint: "المستندات تحفظ ملفات المشروع المنضبطة بنسخ غير قابلة للتعديل. ابدأ بتسجيل أول مستند.", noResults: "لا توجد نتائج مطابقة", noResultsHint: "غيّر البحث أو المرشحات الحالية.",
       document: "المرجع والمستند", category: "الفئة", version: "النسخة", format: "الصيغة", visibility: "المشاركة", status: "الحالة", updated: "التحديث",
       action: "الإجراء", open: "فتح المستند", preview: "معاينة", download: "تنزيل", total: "إجمالي المستندات", shared: "مشتركة مع العميل", archived: "مؤرشفة", loading: "جاري تحميل السجل...", versions: "نسخ"
     }
     : {
       title: "Document Register", lead: "Control center for general project records - contracts, permits, reports, and correspondence.",
-      add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses", allVisibility: "All visibility", sharedOnly: "Client shared", internalOnly: "Internal only", clear: "Clear filters", results: "results",
+      add: "Register Document", search: "Search by reference, title, or filename...", allCategories: "All Categories", allStatuses: "All Statuses", allVisibility: "All visibility", sharedOnly: "Client shared", internalOnly: "Internal only", clear: "Clear filters", results: "Results",
       empty: "No project documents yet", emptyHint: "Documents stores controlled project files with immutable versions. Register the first document.", noResults: "No matching documents", noResultsHint: "Change search query or filter criteria.",
       document: "Reference & Document", category: "Category", version: "Version", format: "Format", visibility: "Visibility", status: "Status", updated: "Updated",
       action: "Action", open: "Open Document", preview: "Preview", download: "Download", total: "Total Documents", shared: "Client Shared", archived: "Archived", loading: "Loading register...", versions: "versions"
@@ -189,7 +189,7 @@ function InternalDocumentRegister({ projectId, locale }: { projectId: string; lo
           visibility && { key: "visibility", label: visibility === "shared" ? labels.sharedOnly : labels.internalOnly, onRemove: () => setVisibility("") }
         ].filter(Boolean) as FilterChip[]}
         search={<label className="register-search"><span className="sr-only">{labels.search}</span><input className="search-input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={labels.search} /></label>}
-        meta={<span><bdi>{documents.length}</bdi> {labels.results}</span>}
+        meta={<span>{labels.results}: <bdi>{documents.length}</bdi></span>}
       >
         <label className="adaptive-filter-field">
           <span className="adaptive-filter-field__label">{labels.category}</span>

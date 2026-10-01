@@ -28,7 +28,7 @@ export function ProcessRoute({ stages, layers, stageWord, boardLabel, children }
 
   useEffect(() => {
     const list = listRef.current;
-    const route = list?.parentElement;
+    const route = list?.closest<HTMLElement>(".process-route");
     if (!list || !route || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const stations = Array.from(list.querySelectorAll<HTMLElement>("[data-station]"));
     if (stations.length === 0) return;
@@ -38,9 +38,11 @@ export function ProcessRoute({ stages, layers, stageWord, boardLabel, children }
 
     // The reading line: the last station whose node has crossed it is the active stage.
     // Measured from positions (not crossing events) so jumps and fast flings stay correct.
+    // Compact screens pin the drawing to the bottom of the viewport, so the line sits in
+    // the open reading area above it and the active stage is never behind the drawing.
     const measure = () => {
       frame = 0;
-      const line = window.innerHeight * (compact.matches ? 0.62 : 0.5);
+      const line = window.innerHeight * (compact.matches ? 0.4 : 0.5);
       let next = 1;
       stations.forEach((station, index) => {
         if (station.getBoundingClientRect().top <= line + 1) next = index + 1;
@@ -82,49 +84,53 @@ export function ProcessRoute({ stages, layers, stageWord, boardLabel, children }
     <div className={`process-route${driven ? " is-driven" : ""}`} data-stage={active}>
       {children}
 
-      <div className="process-board" aria-hidden="true">
-        <div className="process-board__sheet">
-          <div className="process-board__stage">
-            <BlueprintBuildSequence className="process-board__art" />
+      {/* Board + stations: a layout box only on compact screens (display: contents on the
+          desktop grid), so the bottom-pinned drawing is bounded by the stations alone. */}
+      <div className="process-track">
+        <div className="process-board" aria-hidden="true">
+          <div className="process-board__sheet">
+            <div className="process-board__stage">
+              <BlueprintBuildSequence className="process-board__art" />
+            </div>
+            <div className="process-board__legend">
+              <span className="process-board__count">
+                <bdi>{String(active).padStart(2, "0")}</bdi>
+                <i />
+                <bdi>{String(total).padStart(2, "0")}</bdi>
+              </span>
+              <span className="process-board__layer" key={active}>
+                {layers[active - 1]}
+              </span>
+            </div>
           </div>
-          <div className="process-board__legend">
-            <span className="process-board__count">
-              <bdi>{String(active).padStart(2, "0")}</bdi>
-              <i />
-              <bdi>{String(total).padStart(2, "0")}</bdi>
-            </span>
-            <span className="process-board__layer" key={active}>
-              {layers[active - 1]}
-            </span>
-          </div>
+          <span className="process-board__label">{boardLabel}</span>
         </div>
-        <span className="process-board__label">{boardLabel}</span>
-      </div>
 
-      <ol className="process-stations" ref={listRef}>
-        {stages.map(([title, body], index) => {
-          const number = index + 1;
-          const state = number === active ? "current" : number < active ? "done" : "ahead";
-          return (
-            <li className="process-station" key={title} data-station={number} data-state={state}>
-              <button
-                type="button"
-                className="process-station__node"
-                onClick={() => setActive(number)}
-                onFocus={() => setActive(number)}
-                aria-pressed={number === active}
-                aria-label={`${stageWord} ${number}: ${title}`}
-              >
-                <bdi>{String(number).padStart(2, "0")}</bdi>
-              </button>
-              <div className="process-station__content">
-                <h3>{title}</h3>
-                <p>{body}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+        <ol className="process-stations" ref={listRef}>
+          {stages.map(([title, body], index) => {
+            const number = index + 1;
+            const state = number === active ? "current" : number < active ? "done" : "ahead";
+            return (
+              <li className="process-station" key={title} data-station={number} data-state={state}>
+                <button
+                  type="button"
+                  className="process-station__node"
+                  onClick={() => setActive(number)}
+                  onFocus={() => setActive(number)}
+                  aria-pressed={number === active}
+                  aria-label={`${stageWord} ${number}: ${title}`}
+                >
+                  <bdi>{String(number).padStart(2, "0")}</bdi>
+                </button>
+                <div className="process-station__content">
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
   );
 }

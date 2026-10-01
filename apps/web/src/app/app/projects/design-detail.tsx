@@ -324,7 +324,7 @@ export function DesignDetail({ projectId, designId }: { projectId: string; desig
 function FilePreview({ projectId, designId, revision, fallback }: { projectId: string; designId: string; revision: DesignRevisionRecord; fallback: string }) {
   const src = designFileUrl(projectId, designId, revision.id);
   if (revision.mimeType.startsWith("image/")) return <div className="file-preview file-preview--image"><img src={src} alt={revision.originalFilename} /></div>;
-  return <div className="file-preview file-preview--pdf"><iframe src={src} title={revision.originalFilename} /><p>{fallback}</p></div>;
+  return <div className="file-preview file-preview--pdf"><iframe src={src} title={revision.originalFilename} allow="fullscreen" /><p>{fallback}</p></div>;
 }
 
 function SubmitRevisionButton({ labels, revisionCode, disabled, onConfirm }: { labels: Record<string, string>; revisionCode: string; disabled: boolean; onConfirm: () => void }) {

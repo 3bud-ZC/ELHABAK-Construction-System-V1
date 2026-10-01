@@ -1,0 +1,328 @@
+/*
+ * System · mobile — final phone hardening for the sign-in screen and the
+ * authenticated workspace. Loaded last in the system layer, so these rules
+ * settle density across modules in one place instead of per-page patches:
+ *   - login: the form is the first screen; brand becomes a compact strip
+ *   - project workspace: one compact context block (identity · state · details
+ *     · module rail) so module content starts in the first viewport
+ *   - module headings / KPI strips / standalone filters: tighter phone rhythm
+ */
+@layer system {
+  /* ------------------------------- login ------------------------------- */
+  .login-brand__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--fs-label);
+  }
+
+  .login-brand__meta > span:last-child {
+    font-family: var(--font-mono);
+    font-size: var(--fs-caption);
+    letter-spacing: 0.08em;
+  }
+
+  .login-form .form-error {
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .login-shell {
+      min-height: 100dvh;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* Compact brand strip: logo + gateway label. The steps and meta repeat the card
+       below and pushed the form out of the first screen on small phones. */
+    .login-brand {
+      min-height: 0;
+      padding: calc(var(--space-4) + var(--safe-top)) var(--space-6) var(--space-4);
+      border-inline-end: 0;
+    }
+
+    .login-brand::after {
+      inset: 8px;
+    }
+
+    .login-brand__content {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      max-width: none;
+    }
+
+    .login-brand__content > img,
+    .login-brand img {
+      width: min(150px, 42vw);
+    }
+
+    .login-brand__copy {
+      min-width: 0;
+      text-align: end;
+    }
+
+    .login-brand__eyebrow {
+      margin: 0;
+      font-size: var(--fs-caption);
+      line-height: 1.4;
+    }
+
+    .login-brand__sequence,
+    .login-brand__meta {
+      display: none;
+    }
+
+    .login-panel {
+      align-content: start;
+      padding: var(--space-4) var(--space-4) calc(var(--space-4) + var(--safe-bottom));
+    }
+
+    .login-card {
+      padding: var(--space-5) var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .login-card__top {
+      margin-bottom: var(--space-4);
+    }
+
+    .login-card__top > * {
+      min-height: var(--control-height-touch);
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .login-card__heading {
+      margin-bottom: var(--space-2);
+    }
+
+    .login-card h2 {
+      font-size: var(--fs-title-lg);
+    }
+
+    .login-card p {
+      margin-top: var(--space-1);
+    }
+
+    .login-form {
+      margin-top: var(--space-3);
+      gap: var(--space-3);
+    }
+
+    /* ≥16px: no iOS focus zoom; touch-height controls. */
+    .login-form .ui-field input {
+      min-height: 48px;
+      font-size: var(--fs-body-lg);
+    }
+
+    .login-submit {
+      min-height: 48px;
+      font-size: var(--fs-body);
+    }
+  }
+
+  @media (max-width: 380px) and (max-height: 600px) {
+    .login-card p {
+      display: none;
+    }
+  }
+
+  /* ------------------------- project workspace ------------------------- */
+  /* Mixed-direction summaries (Latin names inside Arabic UI) keep their own
+     reading direction, so truncation trims the end, not the beginning. */
+  .adaptive-disclosure__summary {
+    unicode-bidi: plaintext;
+  }
+
+  @media (max-width: 767.98px) {
+    .project-context {
+      margin-bottom: var(--space-3);
+    }
+
+    .project-context__top {
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3) 0;
+    }
+
+    .project-context__identity {
+      gap: 0;
+    }
+
+    .project-context__name,
+    .project-context--overview .project-context__name {
+      font-size: var(--fs-body-lg);
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+    }
+
+    .project-context--overview .project-context__name {
+      font-size: var(--fs-title-sm);
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+    }
+
+    /* State: one line — phase chip · phase · status · progress. */
+    .project-context__state {
+      flex-wrap: nowrap;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      padding-inline-start: var(--space-3);
+    }
+
+    .project-context__phase > svg {
+      display: none;
+    }
+
+    .project-context__phase {
+      flex: 0 1 auto;
+      min-width: 0;
+      gap: 6px;
+    }
+
+    .project-context__phase > .mono {
+      min-width: 40px;
+      height: 22px;
+    }
+
+    .project-context__phase-label {
+      min-width: 0;
+    }
+
+    .project-context__phase-label strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-context__state > .ui-badge,
+    .project-context__state > [class*="badge"] {
+      flex: 0 0 auto;
+    }
+
+    .project-context__progress {
+      flex: 1 1 72px;
+      min-width: 72px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px;
+    }
+
+    .project-context__details .adaptive-disclosure__toggle {
+      min-height: 40px;
+      padding: 0 var(--space-3);
+      font-size: var(--fs-label);
+    }
+
+    /* Module rail: 44px touch rows, edge fade signals more modules. */
+    .project-context__nav {
+      padding: 0 var(--space-1);
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+    }
+
+    .project-context__nav a {
+      min-height: 44px;
+      gap: 6px;
+      padding: 0 var(--space-3);
+    }
+
+    .project-context__nav a svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Module heading below the rail: the active tab already names the module, so
+       the kicker steps aside and the title + primary action stay. */
+    .project-workspace-page .module-heading {
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+
+    .project-workspace-page .module-heading .section-kicker {
+      display: none;
+    }
+
+    .project-workspace-page .module-heading h1 {
+      font-size: var(--fs-title-sm);
+    }
+
+    .project-workspace-page .module-heading > .ui-button {
+      min-height: var(--control-height-touch);
+    }
+
+    /* KPI ledgers: one compact strip. */
+    .design-kpi-strip {
+      margin-bottom: var(--space-3);
+    }
+
+    .design-kpi-strip > span,
+    .design-kpi-strip > button {
+      padding: var(--space-2);
+      gap: 0;
+    }
+
+    .design-kpi-strip small {
+      line-height: 1.35;
+    }
+
+    .design-kpi-strip strong {
+      font-size: var(--fs-body-lg);
+    }
+
+    .register-filters--standalone.adaptive-filters {
+      gap: var(--space-2);
+      padding: var(--space-2);
+    }
+
+    .register-filters--standalone .adaptive-filters__meta {
+      font-size: var(--fs-caption);
+    }
+  }
+
+  /* ------------------------------- finance ------------------------------- */
+  @media (max-width: 767.98px) {
+    /* Currency · contract value · client: one swipeable line of chips instead of
+       two wrapped rows above the ledger tabs. */
+    .finance-context-strip {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin-bottom: var(--space-2);
+    }
+
+    .finance-context-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .finance-context-strip > div {
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .finance-subtabs {
+      margin-bottom: var(--space-3);
+    }
+
+    .finance-panel-heading .section-kicker,
+    .finance-panel-heading p {
+      display: none;
+    }
+  }
+
+  /* ----------------------------- dashboard ----------------------------- */
+  @media (max-width: 767.98px) {
+    /* Category · location mixes Arabic and Latin: wrap instead of an ellipsis that
+       would trim the start of a Latin location inside an Arabic line. */
+    .dashboard-project-row__identity small {
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+}

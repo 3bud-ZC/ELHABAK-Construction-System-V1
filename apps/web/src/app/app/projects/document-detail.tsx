@@ -393,7 +393,7 @@ export function DocumentDetail({ projectId, documentId }: { projectId: string; d
 function FilePreview({ projectId, documentId, version, fallback }: { projectId: string; documentId: string; version: DocumentVersionRecord; fallback: string }) {
   const src = documentFileUrl(projectId, documentId, version.id);
   if (version.mimeType.startsWith("image/")) return <div className="file-preview file-preview--image"><img src={src} alt={version.originalFilename} /></div>;
-  if (version.mimeType === "application/pdf") return <div className="file-preview file-preview--pdf"><iframe src={src} title={version.originalFilename} /><p>{fallback}</p></div>;
+  if (version.mimeType === "application/pdf") return <div className="file-preview file-preview--pdf"><iframe src={src} title={version.originalFilename} allow="fullscreen" /><p>{fallback}</p></div>;
   return (
     <div className="file-preview file-preview--pdf">
       <div className="empty-state">

@@ -1,0 +1,337 @@
+/*
+ * ELHABAK — public website, phone & tablet hardening.
+ * Loaded last inside the `public` cascade layer: equal specificity here wins over
+ * public-home.css / public-architecture.css. Phone composition is designed, not a
+ * scaled desktop: an opaque compact header, a modal drawer, a bottom-pinned workflow
+ * drawing and full-width reading measures.
+ */
+@layer public {
+
+/* ---------- header: opaque on touch layouts (no copy bleeding through) ---------- */
+@media (max-width: 980px) {
+  .site-header,
+  .site-header.is-scrolled {
+    background: #ffffff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .header-inner {
+    gap: 0.75rem;
+  }
+
+  .mobile-header-controls {
+    gap: 0.5rem;
+  }
+
+  .mobile-header-controls .lang-link,
+  .mobile-menu-btn {
+    min-height: 2.75rem;
+  }
+
+  .mobile-header-controls .lang-link {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mobile-menu-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .mobile-menu-btn[aria-expanded="true"] {
+    border-color: var(--public-orange-500);
+    color: var(--public-orange-500);
+  }
+
+  /* Modal drawer: full dynamic height, safe areas, touch-sized rows. */
+  .mobile-drawer {
+    height: 100dvh;
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    overscroll-behavior: contain;
+  }
+
+  .mobile-drawer:not(.is-open) {
+    visibility: hidden;
+    transition: transform var(--public-transition-slow), visibility 0s linear 0.4s;
+  }
+
+  .mobile-drawer.is-open {
+    visibility: visible;
+  }
+
+  .mobile-drawer__close {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .mobile-drawer__nav {
+    gap: 0.25rem;
+    padding: 1rem 0;
+  }
+
+  .mobile-drawer__link {
+    min-height: 3rem;
+  }
+
+  .mobile-drawer__btn {
+    min-height: 3rem;
+  }
+
+  .mobile-drawer__link:focus-visible,
+  .mobile-drawer__close:focus-visible,
+  .mobile-menu-btn:focus-visible,
+  .mobile-header-controls .lang-link:focus-visible {
+    outline: 2px solid var(--public-orange-500);
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-inner {
+    height: 4rem;
+  }
+
+  .brand-logo-img {
+    height: 2.4rem;
+  }
+
+  #about,
+  .blueprint-reality,
+  #services,
+  #process,
+  #platform,
+  #faq,
+  #contact {
+    scroll-margin-top: 4.5rem;
+  }
+}
+
+/* ---------- phone contact bar: legible call action ---------- */
+@media (max-width: 768px) {
+  .mobile-contact-bar {
+    background: #ffffff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .mobile-contact-bar__call {
+    border-color: var(--arch-navy);
+    color: #ffffff;
+  }
+}
+
+/* ---------- workflow: drawing pinned under the reading area ---------- */
+.process-track {
+  display: contents;
+}
+
+@media (max-width: 900px) {
+  .process-route {
+    --process-pin-bottom: 0px;
+  }
+
+  .process-track {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Stations first, the drawing pinned to the bottom edge: stages rise into the open
+     reading area above it, so an active stage is never hidden behind the drawing, and
+     the drawing releases right after stage six instead of covering it. */
+  .process-stations {
+    order: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .process-board {
+    order: 2;
+    align-self: stretch;
+    top: auto;
+    bottom: var(--process-pin-bottom);
+    margin-top: 0;
+    margin-bottom: 0;
+    border-top: 1px solid var(--arch-line);
+    border-bottom: 0;
+  }
+
+  .process-board__art {
+    height: min(26svh, 230px);
+  }
+
+  .process-board__legend {
+    min-height: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .process-route {
+    --process-pin-bottom: calc(4.125rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 900px) and (max-height: 520px) {
+  /* Landscape phones: too short to pin a drawing beside readable text. */
+  .process-board {
+    position: relative;
+    bottom: auto;
+  }
+}
+
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  /* Static, complete drawing: no need to pin it. */
+  .process-board {
+    position: relative;
+    bottom: auto;
+  }
+}
+
+/* ---------- platform proof: flat, legible screens on phones ---------- */
+@media (max-width: 640px) {
+  /* No perspective tilt and no overlap: the phone screen leads (it is what a phone
+     visitor will use), the desktop dashboard follows at the full content width. */
+  .platform-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0 0 1.5rem;
+    perspective: none;
+  }
+
+  .platform-stage__floor {
+    display: none;
+  }
+
+  .platform-showcase .platform-device--mobile {
+    position: relative;
+    inset: auto;
+    order: -1;
+    width: min(56%, 210px);
+    transform: none !important;
+  }
+
+  .platform-showcase .platform-device--desktop {
+    width: 100%;
+    transform: none !important;
+  }
+
+  .platform-device__phone-frame {
+    padding: 5px;
+    border-radius: 20px;
+  }
+
+  .platform-device__phone-img {
+    border-radius: 15px;
+  }
+}
+
+/* ---------- FAQ: answers use the full phone measure ---------- */
+@media (max-width: 640px) {
+  .faq-accordion-trigger {
+    gap: 0.85rem;
+    padding: 1rem 0.75rem;
+  }
+
+  .faq-accordion-panel,
+  [dir="rtl"] .faq-accordion-panel {
+    padding-inline: calc(0.75rem + 1.75rem + 0.85rem) 0.75rem;
+  }
+
+  .faq-accordion-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+/* ---------- official social profiles (footer + contact band) ---------- */
+.social-links {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.social-links__title {
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.social-links__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.social-links__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(188, 206, 240, 0.24);
+  border-radius: var(--public-radius-md, 8px);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(230, 238, 253, 0.88);
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.social-links__link svg {
+  flex: 0 0 auto;
+  color: var(--public-orange-500);
+}
+
+.social-links__link:hover {
+  border-color: var(--public-orange-500);
+  background: rgba(232, 118, 37, 0.1);
+  color: #ffffff;
+}
+
+.social-links__link:focus-visible {
+  outline: 2px solid var(--public-orange-500);
+  outline-offset: 2px;
+}
+
+.social-links--footer {
+  margin-top: 0.5rem;
+}
+
+.social-links--contact {
+  justify-items: center;
+  margin-top: 1.75rem;
+}
+
+.social-links--contact .social-links__title {
+  color: var(--arch-ink, rgba(230, 238, 253, 0.8));
+  font-weight: 700;
+}
+
+.social-links--contact .social-links__list {
+  justify-content: center;
+}
+
+@media (max-width: 560px) {
+  /* Three equal, thumb-sized buttons — never a giant social block. */
+  .social-links__list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .social-links--contact {
+    width: 100%;
+  }
+
+  .social-links__link {
+    justify-content: center;
+    padding: 0 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+}

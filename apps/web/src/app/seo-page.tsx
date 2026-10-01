@@ -8,6 +8,7 @@ import type { Locale } from "../i18n/translations";
 import { dictionary, textDirections } from "../i18n/translations";
 import { PublicHeader } from "./public-header";
 import { PublicMotion } from "./public-motion";
+import { SocialLinks } from "./social-links";
 
 export function langHref(locale: Locale, path = "/") {
   return locale === "ar" ? path : `${path}?lang=en`;
@@ -116,7 +117,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     { href: `${langHref(locale)}#process`, label: t.nav.process },
     { href: langHref(locale, "/platform"), label: t.nav.platform },
     { href: `${langHref(locale)}#faq`, label: t.home.faqEyebrow },
-    { href: langHref(locale, "/contact"), label: t.nav.contact }
+    { href: langHref(locale, "/contact"), label: t.nav.contact },
+    { href: langHref(locale, "/login"), label: ar ? "دخول منصة المشاريع" : "Project platform sign-in" }
   ];
   return (
     <footer className="site-footer">
@@ -135,6 +137,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
               <bdi>{t.home.footerText}</bdi>
               <bdi lang={ar ? "en" : "ar"}>{ar ? "ELHABAK Construction" : "الحباك للمقاولات والاستشارات الهندسية"}</bdi>
             </p>
+            <SocialLinks locale={locale} variant="footer" title={ar ? "تابعنا" : "Follow us"} />
           </div>
           <nav className="footer-col" aria-label={t.home.footerNav}>
             <span className="footer-col__title">{ar ? "الشركة" : "Company"}</span>
@@ -239,6 +242,7 @@ export function CtaBand({ locale }: { locale: Locale }) {
             <a href={`mailto:${companyContact.email}`}>{companyContact.email}</a>
           </div>
         </div>
+        <SocialLinks locale={locale} variant="contact" title={locale === "ar" ? "تابع أعمالنا" : "Follow our work"} />
       </div>
     </section>
   );

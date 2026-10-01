@@ -99,7 +99,8 @@
   --fw-regular: 400;
   --fw-medium: 700;
   --fw-bold: 800;
-  --font-mono: "SFMono-Regular", "Roboto Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  /* Arabic glyphs fall through to the brand Arabic face (mono faces cannot join Arabic). */
+  --font-mono: "SFMono-Regular", "Roboto Mono", Consolas, "Liberation Mono", Menlo, var(--font-arabic), monospace;
   /* legacy aliases */
   --text-xs: var(--fs-caption);
   --text-sm: var(--fs-label);

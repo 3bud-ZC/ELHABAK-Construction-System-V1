@@ -47,8 +47,13 @@ test("canonical Organization identity matches specification", () => {
   assert.equal(orgAr.foundingDate, undefined, "Organization JSON-LD must not fabricate founding date");
   assert.equal(orgAr.numberOfEmployees, undefined, "Organization JSON-LD must not fabricate employee count");
 
-  // Verified external map reference
-  assert.deepEqual(orgAr.sameAs, ["https://maps.app.goo.gl/apBRMCmUquZ6XYXv7"]);
+  // Verified external map reference + the official social profiles, exactly as supplied
+  assert.deepEqual(orgAr.sameAs, [
+    "https://maps.app.goo.gl/apBRMCmUquZ6XYXv7",
+    "https://www.instagram.com/elhabak.construction?stkn=N2lhYTFmbHBkNmVy",
+    "https://www.tiktok.com/@elhabak.construct",
+    "https://www.facebook.com/share/19rKHm9jSV/"
+  ]);
   assert.equal(orgAr.hasMap, "https://maps.app.goo.gl/apBRMCmUquZ6XYXv7");
 
   // Contact points
